@@ -31,7 +31,7 @@ return quicksqrt(dist);
 }
 
 
-void getTopBucketHashes(int* buckets, int cutoff,  int hashMod, int* topBuckets )
+void getTopBucketHashes(int* buckets, int cutoff,  int hashMod, int* topBuckets, int* topBucketCounts )
 {
   //the list of highest hit count buckets
     int i,k = 0;
@@ -49,12 +49,14 @@ void getTopBucketHashes(int* buckets, int cutoff,  int hashMod, int* topBuckets 
             }
         }
         topBuckets[k] = maxind;
+        topBucketCounts[k] = maxval;
         buckets[maxind] = 0;
     }
 }
 
 float* dist;
-void rpHashPhase1(float* ret, int numPoints, int dim, Quantizer* q, int hashMod, int cutoff,int* topBuckets){
+void rpHashPhase1Map(float* ret, int numPoints, int dim, Quantizer* q, int hashMod, int cutoff,
+                       int* topBuckets, int* topBucketCounts){
     int d = q->dimensionality;
     int i=0;
     //size of the buckets
@@ -72,11 +74,70 @@ void rpHashPhase1(float* ret, int numPoints, int dim, Quantizer* q, int hashMod,
     }
     
     free(M);
-    getTopBucketHashes(buckets,cutoff, hashMod, topBuckets);
+    getTopBucketHashes(buckets,cutoff, hashMod, topBuckets, topBucketCounts);
+    //this is emit topBuckets,topBucketCounts in mapreduce parlance 
+    // furthermore, this step is akin to a pernode reduce as well
     free(buckets);
+
 }
 
-void rpHashPhase2(float* ret, int numPoints, int dim, Quantizer* q, int hashMod, 
+//merge buckets, sort and emit top 2*k
+// implementation is naive, but should be nearly optimal for small
+//k, for large k, use an nlogn sort algorithm
+void rpHashPhase1Reduce(int length, int* bucket1, int* bucketCounts1, int* bucket2, , int* bucketCounts2,  int* topBucket , int* topBucketCounts)
+{
+    //this method merges buckets 4*k go in 2*k come out
+    int i,k = 0;
+    //fill top bucket with bucket1's data (parallel implementation will choose
+    //computer on which this data resides to start with)
+    for(k=0;k<length;k++)
+    {   
+        topBucket[k] = bucket1[k];
+        topBucketCounts[k] = bucketCounts1[k];
+    }
+    //iterate over bucket2 , merge same buckets
+    for(k=0;k<length;k++)
+    {   
+        for(i=0;i<length;i++)
+        {
+            if(topBucket[k] == bucket2[i]){
+                topBucketCounts[k] += bucketCounts2[i];
+                bucketCounts2[i] = 0;
+            }
+        }
+        
+    }
+    /*          ^
+    * note these| have to be 2 steps, otherwise merged clusters
+    * could be  |  skipped, if they are replaced before merging ... i think
+                v  */ 
+    //iterate over bucket2 again
+    for(k=0;k<length;k++)    
+    {
+        //skip if already merged
+        if(bucketCounts2[k]!=0)
+        {
+            //find min in topBuckets, try to merge
+            int minind = 0;
+            int minval = bucketCounts2[k];
+            for(i=0;i<length;i++)
+            {
+                if(minval>topbuckets[i])
+                {
+                    minval = topbuckets[i];
+                    minind=i;
+                }
+            }
+            if(buckets2[k]>minval){
+                topBuckets[minind] = bucket2[k];
+                topBucketCounts[minind] = bucketCounts2[k];
+            }
+    }
+    //emit topBuckets, topBucketCounts
+}
+
+
+void rpHashPhase2Map(float* ret, int numPoints, int dim, Quantizer* q, int hashMod, 
                           int titularK, int cutoff,int* topBuckets, float* centroids)
 {
     
@@ -123,7 +184,8 @@ void rpHashPhase2(float* ret, int numPoints, int dim, Quantizer* q, int hashMod,
              curCentroid = &bucketsAvgs[hashCollisionIdx*dim];
              bucketsAvgAccums[hashCollisionIdx]++;
              
-             //printf("%i,%i,%i\n", bucketsAvgAccums[hashCollisionIdx],hashCollisionIdx,hash);
+             //printf("%i,%i,%i\n", bucketsAvgAccums[hashCollisionIdx],
+             //hashCollisionIdx,hash);
 
              if(bucketsAvgAccums[hashCollisionIdx]==1)
                  //initialize this centroid
@@ -138,8 +200,6 @@ void rpHashPhase2(float* ret, int numPoints, int dim, Quantizer* q, int hashMod,
     }
     
 
-    
-    
     for(i=0;i<cutoff;i++) 
     {    
         curCentroid = &bucketsAvgs[i*dim];
@@ -161,26 +221,109 @@ void rpHashPhase2(float* ret, int numPoints, int dim, Quantizer* q, int hashMod,
         for(j = 0;j<dim;j++)centroids[k*dim+j]=bucketsAvgs[topBuckets[k]*dim+j];
     }
     //printVecF(centroids,dim);
-
-
-
-    
-    
     //free(distances);
 }
 
 
-//more memory conservative 2x time complexity
+/*NEEDS BUCKET COUNTS TOO*/
+void rpHashPhase2Reduce(int length, int dim, int* bucket1, int* bucketCounts1, float* bucketCentroids1, int* bucket2, int* bucketCounts2, int* bucketCentroids2,  int* topBucket ,int* topBucketCentroids, int* topBucketCentroids)
+{
+    //this method merges buckets 4*k go in 2*k come out
+    int i,k,j = 0;
+    //fill top bucket with bucket1's data (parallel implementation will choose
+    //computer on which this data resides to start with)
+    
+    for(k=0;k<length;k++)
+    {   
+        topBucket[k] = bucket1[k];
+        topBucketCounts[k] = bucketCounts1[k];
+        memcpy(&topBucketCentroids[k],&bucketCentroids1[k],dim)
+        //for(j=k*dim;j<(k+1)dim;j++)
+        //    topBucketCentroids[j] = bucketCentroids[j];
+    }
+
+    //iterate over bucket2 , merge same buckets
+    for(k=0;k<length;k++)
+    {   
+
+
+
+         for(i=0;i<length;i++)
+        {
+ }
+            if(topBucket[k] == bucket2[i])
+            {   
+                //mixing ratio
+                for(j=0;j<dim;j++)
+                {
+                    topBucketCentroids[k*dim+j]= (bucketCentroids2[i*dim+j]*   bucketCounts2[i]
+                                            +   topBucketCentroids[k*dim+j]* topBucketCounts[k])
+                                                                    /2.0 ;
+                }
+                topBucketCounts[k] += bucketCounts2[k];
+                bucketCounts2[k] = 0;
+            }
+        }
+    }
+    /*          ^
+    * note these| have to be 2 steps, otherwise merged 
+    * clusters  | could be skipped, if they are replaced before merging
+                v  */ 
+    //iterate over bucket2 again
+    for(k=0;k<length;k++)    
+    {
+        //skip if already merged
+        if(bucketCounts2[k]!=0)
+        {
+            //find min in topBuckets, try to merge
+            int minind = 0;
+            int minval = bucketCounts2[k];
+            for(i=0;i<length;i++)
+            {
+                if(minval>topbuckets[i])
+                {
+                    minval = topbuckets[i];
+                    minind=i;
+                }
+            }
+            //if greater than min bucket, replace the min
+            if(buckets2[k]>minval){
+                for(j=0;j<dim;j++)
+                {
+                    topBucketCentroids[minind*dim+j]= (bucketCentroids2[k*dim+j]*   bucketCounts2[k]
+                                            +   topBucketCentroids[minind*dim+j]* topBucketCounts[minind])
+                                                                    /2.0 ;
+                }
+                topBuckets[minind] = bucket2[k];
+                topBucketCounts[minind] = bucketCounts2[k];
+            }
+    }
+    //emit topBuckets, topBucketCounts , topBucketCentroids
+}
+
+
+
+
+
+
+}
+
+
+//memory and network conservative @ 2x time complexity tradeoff
 //main idea is to probe twice, first round maintain counts for all buckets
 //second round only store and compute the top k bucket averages
 //the complexity is still linear, while memory is O(k*m) instead of O(k*m *||lambda||)
 void rpHash2(float* data, int numPoints, int dim, Quantizer* q, int hashMod, int k,float* centroids)
 {
 
-    int cutoff = 4*k;
+    int cutoff = 2*k;
     int* topBuckets = malloc(sizeof(int)*cutoff);//k or 2*k according to Edo Liberty
-    rpHashPhase1(data, numPoints, dim, q, hashMod, cutoff, topBuckets);
-    rpHashPhase2(data, numPoints, dim, q, hashMod, k , cutoff, topBuckets,centroids);
+    
+    rpHashPhase1Map(data, numPoints, dim, q, hashMod, cutoff, topBuckets);
+    rpHashPhase1Reduce(data, numPoints, dim, q, hashMod, cutoff, topBuckets);
+
+    rpHashPhase2Map(data, numPoints, dim, q, hashMod, k , cutoff, topBuckets,centroids);
+    rpHashPhase2Reduce(data, numPoints, dim, q, hashMod, k , cutoff, topBuckets,centroids);
 
 
     //<---------- this is the second phase---------->
@@ -362,7 +505,8 @@ int main(int argc, char* argv[])
 {
 
 
-  srand((unsigned int)1532711);
+  //srand((unsigned int)1532711);
+srand((unsigned int)time(0));
   //countUnique();
 //  testRatios(100000, 60, 24);
 //  testRatios(100000, 60, 240);
@@ -384,7 +528,7 @@ int main(int argc, char* argv[])
       return 0;
   }
 
-  srand((unsigned int)time(0));
+  
 
   //cluster a file and compare to another file with cluster centers
   if(argc>3) centsFile = argv[3];
