@@ -8,9 +8,9 @@
 
 # the goal is to rewrite this algorithm in efficient C for cuda
 # and eventual use as a Hashing Function
-# for use in a Cuda Parallel Locality Hash Based Clustering algorthm
+# for use in a Cuda Parallel Locality Hash Based Clustering algorithm
 # additional implementation may include MPI/Cuda, and
-#anonymous offline data clusering
+#anonymous offline data clustering
 
 
 #-------------QAM Stuff ----------------------
@@ -83,6 +83,10 @@ inline float quicksqrt(float b)
  * distances(this is why we keep the squares).
  */
 //#define golay
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 inline float distance(
     float *cp,
@@ -178,13 +182,13 @@ static const unsigned char H6CodeWordsRev[4][4][4][3]  = {
 //the unit scaled points of 16QAM centered at the origin.
 // along with their golay code + parity bit representations
 //000, 110 , 001, 111
-static const float evenAPts[4][2] = {{APT, DPT},{CPT, DPT},{CPT, BPT},{APT, BPT}};
+float evenAPts[4][2] = {{APT, DPT},{CPT, DPT},{CPT, BPT},{APT, BPT}};
 //010 100 011 101
-static const float oddAPts[4][2]  ={{BPT, CPT},{BPT, APT},{DPT, APT},{DPT, CPT}};
+float oddAPts[4][2]  ={{BPT, CPT},{BPT, APT},{DPT, APT},{DPT, CPT}};
 //000, 110 , 001, 111
-static const float evenBPts[4][2] = {{BPT, DPT},{DPT, DPT},{DPT, BPT},{BPT, BPT}};
+float evenBPts[4][2] = {{BPT, DPT},{DPT, DPT},{DPT, BPT},{BPT, BPT}};
 //010 100 011 101
-static const float oddBPts[4][2]  = {{CPT, CPT},{CPT, APT},{APT, APT},{APT, CPT}};
+float oddBPts[4][2]  = {{CPT, CPT},{CPT, APT},{APT, APT},{APT, CPT}};
 
 
 
@@ -193,12 +197,12 @@ void pp(
     int ct,
     int grsize)
 {
-  int i,j,err;
+  int i,j;//,err;
   for(i=0;i<ct;i++)
   {
       for(j=0;j<grsize;j++)
       {
-          printf("%d",ret&1);
+          printf("%li",ret&1);
           //err +=ret&1;
           ret=ret>>1;
 
@@ -229,7 +233,7 @@ void convertToCoords(
   int Bpoint = 0;
   while(u>0)
    {
-      if(u &1 == 1)Bpoint++;
+      if((u &1)== 1)Bpoint++;
       u = (u>>1);
   }
 
@@ -604,7 +608,7 @@ float minH6(
     //minimize over the 8 candidate Hexacode words
     float minCodeWt = 1000.0;
     unsigned char j = 0;
-    unsigned char  min = 0;
+    //unsigned char  min = 0;
     float m_dist;
 
     unsigned char  leastcan[6] = {0,0,0,0,0,0};
@@ -810,47 +814,56 @@ float kparity(
 
 
 //unsigned char* decode(float r[12][2], float *distance){
-unsigned long long decodeLeech(
-    float *r,
-float *distance)
+//unsigned long long decodeLeech(float *r,float *distance)
+unsigned long long decodeLeech(float *r,float *distance)
 {
 
 // #####################QAM Dijks ###################
-    float* dijs = malloc(sizeof(float)*12*4) ;
-    float* dijks =malloc(sizeof(float)*12*4) ;
+    //float* dijs = malloc(sizeof(float)*12*4) ;
+	float dijs[12][4];
+    //float* dijks =malloc(sizeof(float)*12*4) ;
+	float dijks[12][4];
     //there is a set for each quarter decoder, and the A/B_ij odd/even
-    unsigned char* kparities =malloc(sizeof(unsigned char)*12*4) ;
+    //unsigned char* kparities =malloc(sizeof(unsigned char)*12*4) ;
+	unsigned char kparities[12][4];
     QAM(r,evenAPts,oddAPts,dijs,dijks,kparities);
 
 
     // #####################Block Confidences ###################
     //         0  1    w   W
-    float* muEs = malloc(sizeof(float)*6*4*4) ;
-    float *muOs = malloc(sizeof(float)*6*4*4) ;
-    unsigned char* prefRepE=malloc(sizeof(unsigned char)*6*4*4) ;
-    unsigned char* prefRepO=malloc(sizeof(unsigned char)*6*4*4) ;
+    //float * muEs = malloc(sizeof(float)*6*4*4) ;
+    float muEs[6][4];
+    //float * muOs = malloc(sizeof(float)*6*4*4) ;
+    float muOs[6][4];
+    //unsigned char* prefRepE=malloc(sizeof(unsigned char)*6*4*4) ;
+    unsigned char prefRepE[6][4][4];
+    //unsigned char* prefRepO=malloc(sizeof(unsigned char)*6*4*4) ;
+    unsigned char prefRepO[6][4][4];
 
     blockConf(dijs,muEs,muOs,prefRepE,prefRepO); //just run through both as its faster, but could conserve array allocation
 
     unsigned char i;
 
     // #####################Construct Hexacode Word ###################
-    unsigned char *y = malloc(sizeof(unsigned char)*6) ;;
+    //unsigned char *y = malloc(sizeof(unsigned char)*6) ;
+    unsigned char y[6];
 
-
-    float* charwts = malloc(sizeof(float)*6) ;
+    //float* charwts = malloc(sizeof(float)*6) ;
+    float charwts[6];
     constructHexWord(muEs,y,charwts);
 
 
     // #####################Minimize over the Hexacode ###################
-    unsigned char* hexword =  malloc(sizeof(unsigned char)*6) ;
+    //unsigned char* hexword =  malloc(sizeof(unsigned char)*6) ;
     float weight = minH6(y,charwts,muEs);
 
 
 
     //****chars = y = hexword *****
-    unsigned char* codeword =  malloc(sizeof(unsigned char)*24);
-    unsigned char* codeParity =  malloc(sizeof(unsigned char)*12) ;
+    //unsigned char* codeword =  malloc(sizeof(unsigned char)*24);
+    unsigned char codeword[24];
+    //unsigned char* codeParity =  malloc(sizeof(unsigned char)*12) ;
+    unsigned char codeParity[12];
 
     int winner = 0;
 
@@ -862,9 +875,9 @@ float *distance)
 
 
     //unsigned long leastCodeword;
-    unsigned char* leastCodeword = malloc(24*sizeof(unsigned char));
+    //unsigned char* leastCodeword = malloc(24*sizeof(unsigned char));
+    //unsigned char leastCodeword[24];
     unsigned long long retOpt = 0UL;
-    unsigned char b;
 
     //A is default the least weight decoding
     for(i=0;i<24;i++)
@@ -954,19 +967,19 @@ float *distance)
     }
     *distance = winner;
     //*distance += leastweight;
-    free(dijs);
-    free(dijks);
-    free(kparities);
-    free(muEs);
-    free(muOs);
-    free(prefRepO);
-    free(prefRepE);
-    free(y);
-    free(hexword);
-    free(charwts);
-    free(codeword);
-    free(codeParity);
-    free(leastCodeword);
+    //free(dijs);
+    //free(dijks);
+    //free(kparities);
+    //free(muEs);
+    //free(muOs);
+    //free(prefRepO);
+    //free(prefRepE);
+    //free(y);
+    //free(hexword);
+    //free(charwts);
+    //free(codeword);
+    //free(codeParity);
+    //free(leastCodeword);
 
 
 

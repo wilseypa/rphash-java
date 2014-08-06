@@ -1,28 +1,31 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 float* mat(const char * infile,long * m,long *n){
      long length = 0;
      FILE    *fptr;
+     float* data = NULL;
      /* Open the file */
      if ((fptr = fopen(infile,"r")) == (char)0) {
           fprintf(stderr,"Unable to open data file\n");
           printf("%s",infile);
-          exit(0);
+          return data;
      }
 
      char* str = malloc(sizeof(char)*64);
-     fgets(str,64,fptr);
-     sscanf(str,"%i",m);
-     fgets(str,64,fptr);
-     sscanf(str,"%i",n);
+     char* tmp = fgets(str,64,fptr);
+     sscanf(str,"%li",m);
+     tmp =  fgets(str,64,fptr);
+     sscanf(str,"%li",n);
+     //free(tmp);
 
-     float* data = malloc(sizeof(float)*(int)(*m)*(int)(*n));
+     data = malloc(sizeof(float)*(int)(*m)*(int)(*n));
      /* Read as many points as we can */
 
      while (fgets(str,64,fptr) !=NULL) {
           if(length>((int)(*m)*(int)(*n))){
                printf("Malformed Data File\n");
-               return;
+               return data;
           }
           sscanf(str,"%f",&data[length++]);
 
@@ -39,8 +42,8 @@ float* mat(const char * infile,long * m,long *n){
 
 int write(const char * outfile,int m,int n, float* data){
 
-     int length = 0;
-     float d;
+     //int length = 0;
+     //float d;
      FILE    *fptr;
      /* Open the file */
      if ((fptr = fopen(outfile,"wt")) == NULL) {

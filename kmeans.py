@@ -27,14 +27,18 @@ def divide(X,Y,split):
     return [trainX,trainY,testX,testY]
 
 
+
+
+    
+
 CLUSTER_DISCREPANCY = 1.0 # makes visually acceptable clusters
 
-def getDataPoints(part,d,clu):
+def getDataPoints(part,d,clu,amtNoise=0):
     ret = [[] for j in xrange(part*clu)]
     clusterCenters = []
     #simulate different descriptor weightings
     varsDim = [random()*CLUSTER_DISCREPANCY for i in range(d)]
-    for i in range(clu):
+    for i in range(clu-amtNoise):
         #variance =CLUSTER_DISCREPANCY *(d**.5)
         means = [(random()*2.)-1.0 for b in range(d)] 
         clusterCenters.append(means)
@@ -46,7 +50,12 @@ def getDataPoints(part,d,clu):
             ret[i*part+j]=p
     #from mean_shift import drawPts
     #drawPts(clusterCenters,ret)
-    
+    for i in range(clu-amtNoise,clu):
+        means = [(random()*2.)-1.0 for b in range(d)] 
+        clusterCenters.append(means)
+        for j in range(part):
+            ret[i*part+j]=[(random()*2.)-1.0 for b in range(d)]
+
     
     return ret,clusterCenters 
 

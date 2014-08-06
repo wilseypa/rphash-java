@@ -1,12 +1,13 @@
 
 def online_freq(X,k,theta = .49):
     K = {}
+    theta = 1.0/theta
     for i in xrange(len(X)):
         if K.has_key(X[i]):
             K[X[i]]=K[X[i]]+1
         else:
             K[X[i]]=1
-        if len(K) > k*(1.0/theta):
+        if len(K) > theta:
             for a in K.keys():
                 K[a]= K[a]-1
                 if K[a] == 0: del(K[a])
@@ -40,11 +41,11 @@ def findmisses(X,Y):
     return len(X)-ct
 
 from random import gammavariate,gauss,shuffle,random
-tests = 10
+tests = 2
 
 from scipy.optimize import curve_fit
 from pylab import plot,var,axes,show,errorbar,polyval,log
-from xkcdify import *
+
 def runtest(ax,tK=10,objs=10000):
     ctRange = [tK,130]
     g = []
@@ -93,13 +94,14 @@ def runtest(ax,tK=10,objs=10000):
 
 
 ax = axes()
-for i in range(2,6):runtest(ax,i*4,)
+for i in range(1,4):runtest(ax,i*4,)
 ax.set_title("Karp Frequent Itemset Item Miss Rate")
 ax.set_xlabel("Memory Usage")
 ax.set_ylabel("Missed Frequent Items")
 ax.legend(loc="lower left")
 #ax.errorbar(x, g, yerr=errs, fmt='-',label="Karp FI")
-XKCDify(ax)
+#from xkcdify import *
+#XKCDify(ax)
 show()
 
 

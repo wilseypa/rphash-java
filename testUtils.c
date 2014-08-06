@@ -1,4 +1,5 @@
-
+#include <stdlib.h>
+#include <stdio.h>
 /*
  * Generate a 'good enough' gaussian random variate.
  * based on central limit thm , this is used if better than
@@ -20,7 +21,7 @@ void printTopK(int* buckets,int cutoff,int hashMod){
     int* storeOldIdx = malloc(sizeof(int)*cutoff);
     //show tops
     for(k=0;k<cutoff;k++)
-    {   
+    {
         int maxind = 0;
         int maxval = 0;
         for(i=0;i<hashMod;i++)
@@ -29,7 +30,7 @@ void printTopK(int* buckets,int cutoff,int hashMod){
             {
                 maxval = buckets[i];
                 maxind=i;
-            }    
+            }
         }
         printf("%i:%i, ",maxind,maxval);
         storeOld[k]=maxval;
@@ -43,7 +44,7 @@ void printTopK(int* buckets,int cutoff,int hashMod){
     }
 
 
-    
+
 }
 
 /*
@@ -76,12 +77,12 @@ printf("%.2f\n",v[i]);
  * to 3 bits
  */
 static void print(unsigned long ret,int ct,int grsize){
-    int i,j,err;
+    int i,j;//,err;
     for(i=0;i<ct;i++)
     {
         for(j=0;j<grsize;j++)
         {
-            printf("%d",ret&1);
+            printf("%lu",ret&1);
             //err +=ret&1;
             ret=ret>>1;
 
@@ -96,7 +97,7 @@ int weight(unsigned long u){
   int ret = 0;
   while(u>0)
    {
-      if(u&1 == 1)ret++;
+      if((u&1) == 1)ret++;
       u = (u>>1);
   }
   return ret;

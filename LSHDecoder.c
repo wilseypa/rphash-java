@@ -10,7 +10,7 @@
 
 typedef struct quantizer_t {
         int dimensionality;//could contain other data like entropy, nominal coding gain, density
-        long (* decode)();
+        unsigned long long (* decode)(float*,float*);
 } Quantizer;
 
 Quantizer q;
@@ -55,7 +55,7 @@ static void print2(unsigned long ret,int ct,int grsize){
     {
         for(j=0;j<grsize;j++)
         {
-            printf("%d",ret&1);
+            printf("%lu",ret&1);
             ret=ret>>1;
         }
 
@@ -74,23 +74,24 @@ void initLSH(Quantizer* quanti)
 
 void project(float* v, float* r,int* M,float randn, int n,int t){
   int i,j;//b=(int)((float)n/(float)6);
-  float sum;
+  float sum = 0.0;
   randn = 1.0/quicksqrt(n);
 
   unsigned int b = 0L;
   for(i=0;i<t;i++)
   {
+	  sum = 0.0;
    /*
 
-      sum = 0.0;
-      /* pre M matrix
+
+       pre M matrix
       for(j=0;j < b; j++ )
           sum+=v[M[i*b*2+j]]*randn;
 
       for(;j < 2*b; j++ )
           sum-=v[M[i*b*2+j]]*randn;
-      */
-/*
+
+
       //1/3, 2/3, 1/3
       for(j=0;j<n;j++)
            {
@@ -137,9 +138,9 @@ float* GenRandomN(int m,int n,int size){
         r = rand()%6;
         M[i] = 0.0;
         if(r%6==0)M[i] = scale;
-        if(r%6==1)M[i] = -scale; 
+        if(r%6==1)M[i] = -scale;
     }
-    
+
   //size throws things way to far from the lattice^^^interval, n seems better
   // proof this is  in the rnd proj method book
 
@@ -147,8 +148,8 @@ float* GenRandomN(int m,int n,int size){
 }
 
 void projectN(float* v, float* r,float* M, int n,int t){
-  int i,j,b=(int)((float)n/(float)6);
-  float sum;
+  int i,j;
+  register float sum;
   for(i=0;i<t;i++)
   {
       sum = 0.0;
@@ -184,7 +185,6 @@ void projectN(float* v, float* r,float* M, int n,int t){
 float GenRandom(int n,int m,int *M){
 
     int l,i,r,j,b=(int)((float)n/(float)6);
-    float sum;
     float randn = 1.0/(quicksqrt(((float)m)*3.0)) ;//variance scaled back a little
 
     unsigned char* bookkeeper = malloc(sizeof(unsigned char)*n);
@@ -197,8 +197,6 @@ float GenRandom(int n,int m,int *M){
     j=0;
     for(i=0;i<q.dimensionality;i++)
     {
-
-        sum = 0.0;
         for(l=0;l < b; l++ )
         {
             do{r =rand()%n;}
@@ -219,11 +217,11 @@ float GenRandom(int n,int m,int *M){
     }
     free(bookkeeper);
 
-    
+
     return randn;
     }
 
-const unsigned long fnvHash (unsigned  long key, int tablelength )
+unsigned long fnvHash (unsigned  long key, int tablelength )
 {
 
 
@@ -240,7 +238,7 @@ const unsigned long fnvHash (unsigned  long key, int tablelength )
       return hash %tablelength;
 }
 
-const unsigned long fnvHashStr(unsigned char* data, int len,int tablelength)
+unsigned long fnvHashStr(unsigned char* data, int len,int tablelength)
 {
    unsigned long hash= 2166136261U;
    int i =0;
@@ -327,7 +325,7 @@ unsigned long lshHash(float *r, int len, int times, long tableLength,float* R, f
 
 
 
-Quantizer * initializeQuantizer( long(* decode)(float*,float*),int dim)
+Quantizer * initializeQuantizer( unsigned long long(* decode)(float*,float*),int dim)
 {
     Quantizer *q=(Quantizer *)malloc(sizeof(Quantizer));
     q->dimensionality=dim;
