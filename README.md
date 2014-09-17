@@ -13,64 +13,69 @@ varying dimension.
 
 
 * Distributed how to Run
-an hadoop lxc server with native 64 bit libraries can be downloaded [here](http://homepages.uc.edu/~carrahle/master1.tar.bz2 "Hadoop Container")
+a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepages.uc.edu/~carrahle/cluster.tar.bz2 "Hadoop Containers")
 * username:ubuntu 
 * password:ubuntu
 * ubuntu has sudo access
 
 `cd /var/lib/lxc`
 
-`sudo tar -jxf master.tar.bz2`
+`sudo tar -jxf cluster.tar.bz2`
 
 > change if you want, but shouldn't matter as long as you keep your containers 
 > behind a firewall.
 
 `sudo lxc-start -n master1 -d`
-`sudo lxc-attach -n master1`
-> on master
-`shutdown now -r`
 
-> For single system deployments do not launch this container directly, instead 
-> created delta/snapshot containers of this one. Change /etc/hadoop/masters and
-> /etc/hadoop/slaves to match your # desired configuration. .ssh keys will all 
-> be the same so no need to update them.
-> contains my public key, which would give me access to a container of your's 
-> that is not behind a # firewall. delete it if your containers are public!
-> create containers slaves[1-7] as desired
+> Do not launch the 'master' container directly, instead 
+> launch the 'master1' and 'slave[1-3]' delta/snapshots.
+> the ssh keys are shared, but your /etc/hosts file will likely need to be changed
+> so the master1 node can contact the slave nodes.
 
 `sudo lxc-start -n master1 -d`
 `sudo lxc-start -n slave1 -d`
+`sudo lxc-start -n slave2 -d`
+`sudo lxc-start -n slave3 -d`
 ...
 
 
-> build and copy to master1 (assumes you have master1 running)
-`cd MRPipes`
-`make MRPIPES`
 
-> connect to the master
-`sudo lxc-attach -n master1`
-`su ubuntu`
 > as user ubuntu start hadoop
 `start-all.sh`
 `jps` > should have 6 entries, if namenode is not among them, 
 `hadoop namenode -format` > among them then "start-all.sh" again
 `start-all.sh`
-      
+`jps`
+> Should look like this
+|703 DataNode|
+|854 SecondaryNameNode|
+|1630 NameNode|
+|1009 ResourceManager|
+|2026 Jps|
+|1122 NodeManager|
 
-> create default directories for ubuntu user
-`hdfs dfs -mkdir -p /users/hadoop/bin`
-`hdfs dfs -mkdir -p /users/hadoop/data`
+* Manual Run
+> create default hadoop directories for ubuntu user
+`hdfs dfs -mkdir -p /user/hadoop/bin`
+`hdfs dfs -mkdir -p /user/hadoop/data`
+
+> enter Map Reduce RP Hash Directory
+`cd MRRPHash`
 
 > copy files to hadoop distributed file system
-`hdfs dfs -put SOME_LOCAL_DATAFILE.mat data`
-`hdfs dfs -put MRRPHash bin`
+`hdfs dfs -put ik2_10_100_10 data`
+`hdfs dfs -put mrhash bin` > rp hash
+`hdfs dfs -put kmeans bin` > kmeans for testing
 
 > run it
-
 `hadoop pipes -D hadoop.pipes.java.recordreader=true  -D \
 hadoop.pipes.java.recordwriter=true -input data  -output MRRPHash-out -program\
  /bin/MRRPHash `
-...
+
+* Automatic
+python filemaker.py
+`sh runner.sh PROGRAM_NAME`
+
 
 > check results
 `hdfs dfs -ls -r MRRPHash-out/`
