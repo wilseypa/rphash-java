@@ -13,9 +13,13 @@ varying dimension.
 
 
 * Distributed how to Run
+
 a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepages.uc.edu/~carrahle/cluster.tar.bz2 "Hadoop Containers")
+
 * username:ubuntu 
+* 
 * password:ubuntu
+* 
 * ubuntu has sudo access
 
 `cd /var/lib/lxc`
@@ -33,19 +37,29 @@ a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepa
 > so the master1 node can contact the slave nodes.
 
 `sudo lxc-start -n master1 -d`
+
 `sudo lxc-start -n slave1 -d`
+
 `sudo lxc-start -n slave2 -d`
+
 `sudo lxc-start -n slave3 -d`
+
 ...
 
 
 
 > as user ubuntu start hadoop
+
 `start-all.sh`
+
 `jps` > should have 6 entries, if namenode is not among them, 
+
 `hadoop namenode -format` > among them then "start-all.sh" again
+
 `start-all.sh`
+
 `jps`
+
 > Should look like this
 |703 DataNode|
 |854 SecondaryNameNode|
@@ -64,22 +78,29 @@ a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepa
 
 > copy files to hadoop distributed file system
 `hdfs dfs -put ik2_10_100_10 data`
+
 `hdfs dfs -put mrhash bin` > rp hash
+
 `hdfs dfs -put kmeans bin` > kmeans for testing
 
+
 > run it
+
 `hadoop pipes -D hadoop.pipes.java.recordreader=true  -D \
 hadoop.pipes.java.recordwriter=true -input data  -output MRRPHash-out -program\
  /bin/MRRPHash `
 
 * Automatic
-python filemaker.py
+
+`python filemaker.py`
+
 `sh runner.sh PROGRAM_NAME`
 
 
 > check results
-`hdfs dfs -ls -r MRRPHash-out/`
-`hdfs dfs -head MRRPHash-out/WHATEVER_OUTPUT_FROM_ABOVE`
+`hdfs dfs -ls -r mrhash-out/`
+
+`hdfs dfs -head mrhash-out/`
 
 
 
