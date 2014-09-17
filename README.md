@@ -59,6 +59,7 @@ a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepa
 `jps`
 
 > Should look like this
+
 |703 DataNode|
 |854 SecondaryNameNode|
 |1630 NameNode|
@@ -68,13 +69,17 @@ a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepa
 
 * Manual Run
 > create default hadoop directories for ubuntu user
+
 `hdfs dfs -mkdir -p /user/hadoop/bin`
+
 `hdfs dfs -mkdir -p /user/hadoop/data`
 
 > enter Map Reduce RP Hash Directory
+
 `cd MRRPHash`
 
 > copy files to hadoop distributed file system
+
 `hdfs dfs -put ik2_10_100_10 data`
 
 `hdfs dfs -put mrhash bin` > rp hash
@@ -96,6 +101,7 @@ hadoop.pipes.java.recordwriter=true -input data  -output MRRPHash-out -program\
 
 
 > check results
+
 `hdfs dfs -ls -r mrhash-out/`
 
 `hdfs dfs -head mrhash-out/`
