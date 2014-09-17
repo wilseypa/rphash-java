@@ -70,7 +70,7 @@ a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepa
 | col 2 is      | centered      |   $12 |
 | zebra stripes | are neat      |    $1 |
 
-| ------------- |:-------------:|---:
+| ------------- |:-------------:|---:|
 | 703  | DataNode          | |
 | 854  | SecondaryNameNode | |
 | 1630 | NameNode          | |
