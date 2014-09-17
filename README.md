@@ -14,9 +14,9 @@ varying dimension.
 
 * Distributed how to Run
 an hadoop lxc server with native 64 bit libraries can be downloaded [here](http://homepages.uc.edu/~carrahle/master1.tar.bz2 "Hadoop Container")
-username:ubuntu 
-password:ubuntu
-ubuntu has sudo access
+* username:ubuntu 
+* password:ubuntu
+* ubuntu has sudo access
 
 `cd /var/lib/lxc`
 
@@ -28,7 +28,7 @@ ubuntu has sudo access
 `sudo lxc-start -n master1 -d`
 `sudo lxc-attach -n master1`
 > on master
-shutdown now -r
+`shutdown now -r`
 
 > For single system deployments do not launch this container directly, instead 
 > created delta/snapshot containers of this one. Change /etc/hadoop/masters and
