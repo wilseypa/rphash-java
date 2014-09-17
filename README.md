@@ -60,12 +60,12 @@ a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepa
 
 > Should look like this
 
-|703 DataNode|
-|854 SecondaryNameNode|
-|1630 NameNode|
-|1009 ResourceManager|
-|2026 Jps|
-|1122 NodeManager|
+| 703  | DataNode          |
+| 854  | SecondaryNameNode |
+| 1630 | NameNode          |
+| 1009 | ResourceManager   |
+| 2026 | Jps               |
+| 1122 | NodeManager       |
 
 * Manual Run
 > create default hadoop directories for ubuntu user
@@ -89,8 +89,8 @@ a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepa
 
 > run it
 
-`hadoop pipes -D hadoop.pipes.java.recordreader=true  -D \
-hadoop.pipes.java.recordwriter=true -input data  -output MRRPHash-out -program\
+`hadoop pipes -D hadoop.pipes.java.recordreader=true  -D
+hadoop.pipes.java.recordwriter=true -input data  -output MRRPHash-out -program
  /bin/MRRPHash `
 
 * Automatic
