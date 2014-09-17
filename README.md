@@ -17,9 +17,7 @@ varying dimension.
 a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepages.uc.edu/~carrahle/cluster.tar.bz2 "Hadoop Containers")
 
 * username:ubuntu 
-* 
 * password:ubuntu
-* 
 * ubuntu has sudo access
 
 `cd /var/lib/lxc`
