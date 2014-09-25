@@ -3,8 +3,9 @@ RPHash
 
 Random Projection Hash For Scalable Data Clustering for the MapReduce Programming Model
 
-Software Accompaniment of my current dissertation proposal work found here:
-https://github.com/leecarraher/nsf_proposal
+Software Accompaniment of my current dissertation proposal work found
+[here](https://github.com/leecarraher/nsf_proposal) 
+
 
 * Very simple comparison test
 run.sh builds and runs the RPHash Algorithm on random gaussian clusters of 
@@ -12,66 +13,106 @@ varying dimension.
 
 
 * Distributed how to Run
-a master lxc server can be downloaded here. 
-username:ubuntu 
-password:ubuntu
-ubuntu has sudo access
 
-cd /var/lib/lxc
+a 64bit hadoop lxc container with 4 nodes can be downloaded [here](http://homepages.uc.edu/~carrahle/cluster.tar.bz2 "Hadoop Containers")
 
-sudo tar -jxf master.tar.bz2
+* username:ubuntu 
+* password:ubuntu
+* ubuntu has sudo access
 
-# change if you want, but shouldn't matter as long as you keep your containers 
-# behind a firewall.
+`cd /var/lib/lxc`
 
-sudo lxc-start -n master1 -d
-sudo lxc-attach -n master1
-# on master
-shutdown now -r
+`sudo tar -jxf cluster.tar.bz2`
 
-# For single system deployments do not launch this container directly, instead 
-# created delta/snapshot containers of this one. Change /etc/hadoop/masters and
-# /etc/hadoop/slaves to match your # desired configuration. .ssh keys will all 
-# be the same so no need to update them.
-# contains my public key, which would give me access to a container of your's 
-# that is not behind a # firewall. delete it if your containers are public!
-# create containers slaves[1-7] as desired
+> change if you want, but shouldn't matter as long as you keep your containers 
+> behind a firewall.
 
-sudo lxc-start -n master1 -d
-sudo lxc-start -n slave1 -d
+`sudo lxc-start -n master1 -d`
+
+> Do not launch the 'master' container directly, instead 
+> launch the 'master1' and 'slave[1-3]' delta/snapshots.
+> the ssh keys are shared, but your /etc/hosts file will likely need to be changed
+> so the master1 node can contact the slave nodes.
+
+`sudo lxc-start -n master1 -d`
+
+`sudo lxc-start -n slave1 -d`
+
+`sudo lxc-start -n slave2 -d`
+
+`sudo lxc-start -n slave3 -d`
+
 ...
 
 
-#build and copy to master1 (assumes you have master1 running)
-cd MRPipes
-make MRPIPES
 
-#
-sudo lxc-attach -n master1
+> as user ubuntu start hadoop
 
-su ubuntu
-#start hadoop
-start-all.sh
-jps # should have 6 entries, hadoop namenode -format if namenod is missing, 
-    # then "start-all.sh" again
+`start-all.sh`
 
-#create default directories for ubuntu user
-hdfs dfs -mkdir -p /users/hadoop/bin
-hdfs dfs -mkdir -p /users/hadoop/data
+`jps` > should have 6 entries, if namenode is not among them, 
 
-#copy files to hadoop distributed file system
-hdfs dfs -put SOME_LOCAL_DATAFILE.mat data
-hdfs dfs -put MRRPHash bin
+`hadoop namenode -format` > among them then "start-all.sh" again
 
-#run it
-hadoop pipes -D hadoop.pipes.java.recordreader=true  -D \
-hadoop.pipes.java.recordwriter=true -input data  -output MRRPHash-out -program\
- /bin/MRRPHash
-...
+`start-all.sh`
 
-#check results
-hdfs dfs -ls -r MRRPHash-out/
-hdfs dfs -head MRRPHash-out/WHATEVER_OUTPUT_FROM_ABOVE
+`jps`
+
+> Should look like this
+
+
+
+
+
+
+
+|      |                   |
+| ---- |:-----------------:|
+| 703  | DataNode          |
+| 854  | SecondaryNameNode |
+| 1630 | NameNode          |
+| 1009 | ResourceManager   |
+| 2026 | Jps               |
+| 1122 | NodeManager       |
+
+* Manual Run
+> create default hadoop directories for ubuntu user
+
+`hdfs dfs -mkdir -p /user/hadoop/bin`
+
+`hdfs dfs -mkdir -p /user/hadoop/data`
+
+> enter Map Reduce RP Hash Directory
+
+`cd MRRPHash`
+
+> copy files to hadoop distributed file system
+
+`hdfs dfs -put ik2_10_100_10 data`
+
+`hdfs dfs -put mrhash bin` > rp hash
+
+`hdfs dfs -put kmeans bin` > kmeans for testing
+
+
+> run it
+
+`hadoop pipes -D hadoop.pipes.java.recordreader=true  -D
+hadoop.pipes.java.recordwriter=true -input data  -output MRRPHash-out -program
+ /bin/MRRPHash `
+
+* Automatic
+
+`python filemaker.py`
+
+`sh runner.sh PROGRAM_NAME`
+
+
+> check results
+
+`hdfs dfs -ls -r mrhash-out/`
+
+`hdfs dfs -head mrhash-out/`
 
 
 
