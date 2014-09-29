@@ -17,6 +17,14 @@ public class DBFriendlyProjection implements Projector {
 		M =  GenRandom(n, t);
 	}
 	
+	public DBFriendlyProjection(int n,int t,int randomseed)
+	{
+		this.n = n;
+		this.t = t;
+		rand = new Random(randomseed);
+		M =  GenRandom(n, t);
+	}
+	
 	float quicksqrt(float b)
 	{
 	    float x = 1.1f;
@@ -144,4 +152,6 @@ public class DBFriendlyProjection implements Projector {
 		  }
 		  return r;
 		}
+	
+	
 }

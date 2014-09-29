@@ -10,11 +10,11 @@ public class LSH
 	HashAlgorithm hal;
 	Decoder dec;
 	int times;
-	public LSH(Projector p, HashAlgorithm hal, int tableLength, int times)
+	public LSH(Decoder dec,Projector p, HashAlgorithm hal)
 	{
 		this.p = p;
 		this.hal = hal;
-		this.times = times;
+		this.dec = dec;
 	}
 
 	/*
