@@ -1,11 +1,19 @@
 package uc.edu.rphash.Readers;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public interface RPHashObject {
-	int k = 0;
-	int n = 0;
-	int dim = 0;
-	int randomseed = 0;
-	int hashmod = 0 ;
+
+	int getk();
+	int getn();
+	int getdim();
+	int getRandomSeed();
+	int getHashmod();
 	float[] getNextVector();
+	void setIDs(long[] ids);
+	void setIDs(Set<Long> ids);
+	void reset();
+	long[] getIDs();
 
 }

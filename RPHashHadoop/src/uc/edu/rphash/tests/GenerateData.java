@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Random;
 
 public class GenerateData 
@@ -22,6 +21,9 @@ public class GenerateData
 		this.numClusters =numClusters;
 		this.numVectorsPerCluster=numVectorsPerCluster;
 		this.dimension=dimension;
+		this.medoids = null;
+		this.data = null;
+		
 		genfnc = new RandomDistributionFnc(){
 			@Override
 			public float genVariate() {
@@ -38,6 +40,9 @@ public class GenerateData
 		this.numVectorsPerCluster=numVectorsPerCluster;
 		this.dimension=dimension;
 		genfnc = genvariate;
+		this.medoids = null;
+		this.data = null;
+		
 		generateMem();
 	}
 	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension, File f)
@@ -46,6 +51,8 @@ public class GenerateData
 		this.numClusters =numClusters;
 		this.numVectorsPerCluster=numVectorsPerCluster;
 		this.dimension=dimension;
+		this.medoids = new float[0][0];
+		this.data = new float[0][0];
 		genfnc = new RandomDistributionFnc(){
 			@Override
 			public float genVariate() {
@@ -81,8 +88,9 @@ public class GenerateData
 				for(int k=0;k<dimension;k++){
 					data[l][k] = medoids[i][k]+(float)r.nextGaussian()/scaler;
 				}
+				l++;
 			}
-			l++;
+			
 		}
 	}
 	
@@ -149,8 +157,34 @@ public class GenerateData
 			e.printStackTrace();
 		}
 	}
-	public static void main(String[] args) {
+	
+	public float[][] data(){
 		
+		if(data==null)
+			generateMem();
+		return data;
+	}
+	
+	public float[][] medoids(){
+		if(medoids==null)
+			generateMem();
+		return medoids;
+	}
+	
+	
+	public static void main(String[] args) {
+		GenerateData gd = new GenerateData(5,10,10);
+		gd.generateMem();
+		for(float[] v:gd.data()){
+			for(float i : v)System.out.print(i+" ");
+			System.out.println();
+		}
+		for(float[] v:gd.medoids()){
+			for(float i : v)System.out.print(i+" ");
+			System.out.println();
+		}
+		File f = new File("/home/lee/Desktop/M.mat");
+		gd = new GenerateData(5,10,10,f);
 
 	}
 
