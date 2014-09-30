@@ -1,4 +1,4 @@
-#include "LSHDecoder.c"
+#include "LSHDecoder.cpp"
 #include "leechArrayDecoder.c"
 #include "testUtils.c"
 #include "IOUtils.c"
@@ -34,7 +34,7 @@ return quicksqrt(dist);
 }
 
 
-void getTopBucketHashes(int* buckets, int cutoff,  int hashMod, int* topBuckets, int* topBucketCounts )
+void getTopBucketHashes(long* buckets, int cutoff,  int hashMod, long* topBuckets, int* topBucketCounts )
 {
   //the list of highest hit count buckets
     int i,k = 0;
@@ -60,9 +60,9 @@ void getTopBucketHashes(int* buckets, int cutoff,  int hashMod, int* topBuckets,
 
 /***************** RP-Matrix is not being re-initialized **************/
 float* dist;
-void rpHashPhase1Map(float* ret, int numPoints, int dim, Quantizer* q, int hashMod, int cutoff,
-                       int* topBuckets, int* topBucketCounts){
-    int d = q->dimensionality;
+void rpHashPhase1Map(float* ret, int numPoints, int dim, Quantizer q, int hashMod, int cutoff,
+                       long* topBuckets, int* topBucketCounts){
+    int d = q.dimensionality;
     int i=0;
     for(i=0;i<cutoff;i++)
     {
@@ -72,7 +72,7 @@ void rpHashPhase1Map(float* ret, int numPoints, int dim, Quantizer* q, int hashM
 
 
     //size of the buckets
-    int* buckets = malloc(sizeof(int)*hashMod);
+    long* buckets = malloc(sizeof(int)*hashMod);
     for(i=0;i<hashMod;i++)
     {
        buckets[i] = 0;
@@ -101,7 +101,7 @@ void rpHashPhase1Map(float* ret, int numPoints, int dim, Quantizer* q, int hashM
 //merge buckets, sort and emit top 2*k
 // implementation is naive, but should be nearly optimal for small
 //k, for large k, use an nlogn sort algorithm
-void rpHashPhase1Reduce(int length, int* bucket1, int* bucketCounts1, int* bucket2, int* bucketCounts2,  int* topBucket , int* topBucketCounts)
+void rpHashPhase1Reduce(int length, long* bucket1, int* bucketCounts1, long* bucket2, int* bucketCounts2,  long* topBucket , int* topBucketCounts)
 {
     //this method merges buckets 4*k go in 2*k come out
     int i,k = 0;
@@ -157,11 +157,11 @@ void rpHashPhase1Reduce(int length, int* bucket1, int* bucketCounts1, int* bucke
 }
 
 
-void rpHashPhase2Map(float* ret, int numPoints, int dim, Quantizer* q, int hashMod,
-                     int cutoff,int* topBuckets,int * topBucketCounts, float* centroids)
+void rpHashPhase2Map(float* ret, int numPoints, int dim, Quantizer q, int hashMod,
+                     int cutoff,long* topBuckets,int * topBucketCounts, float* centroids)
 {
 
-    int d = q->dimensionality;
+    int d = q.dimensionality;
     int i,k,j=0;
     int numProbes = 0;
     while((1<<numProbes++) < numPoints  );// poor mans log(numPoints)
@@ -249,9 +249,9 @@ void rpHashPhase2Map(float* ret, int numPoints, int dim, Quantizer* q, int hashM
 
 
 
-void rpHashPhase2Reduce(int length, int dim, int* bucket1, 
-                        int* bucketCounts1, float* bucketCentroids1, int* bucket2, 
-                        int* bucketCounts2, float* bucketCentroids2,  int* topBucket , 
+void rpHashPhase2Reduce(int length, int dim, long* bucket1,
+                        int* bucketCounts1, float* bucketCentroids1, long* bucket2,
+                        int* bucketCounts2, float* bucketCentroids2,  long* topBucket ,
                         int* topBucketCounts,float* topBucketCentroids)
 {
     //this method merges buckets 4*k go in 2*k come out
@@ -339,20 +339,20 @@ void rpHashPhase2Reduce(int length, int dim, int* bucket1,
 //the complexity is still linear, while memory is O(k*m) instead of O(k*m *||lambda||)
 //future implementations will take advantage of Karp, et al: "A simple algorithm for finding
 //frequent elements in streams and bags
-void rpHash2(float* data, int numPoints, int dim, Quantizer* q, int hashMod, int k, float* centroids)
+void rpHash2(float* data, int numPoints, int dim, Quantizer q, int hashMod, int k, float* centroids)
 {
 
     int cutoff = 2*k;
-    int* topBuckets = malloc(sizeof(int)*cutoff);//k or 2*k according to Edo Liberty
+    long* topBuckets = malloc(sizeof(int)*cutoff);//k or 2*k according to Edo Liberty
     int* topBucketCounts = malloc(sizeof(int)*cutoff);
 
 
 
 
 /******* PHASE 1 *******/
-    int* buckets1 = malloc(sizeof(int)*cutoff);//k or 2*k according to Edo Liberty
+    long* buckets1 = malloc(sizeof(int)*cutoff);//k or 2*k according to Edo Liberty
     int* bucketCounts1 = malloc(sizeof(int)*cutoff);
-    int* buckets2 = malloc(sizeof(int)*cutoff);//k or 2*k according to Edo Liberty
+    long* buckets2 = malloc(sizeof(int)*cutoff);//k or 2*k according to Edo Liberty
     int* bucketCounts2 = malloc(sizeof(int)*cutoff);
 
 
@@ -390,7 +390,7 @@ void rpHash2(float* data, int numPoints, int dim, Quantizer* q, int hashMod, int
                                    topBuckets, topBucketCounts, centroids2K); //out
 
 
-    int* dummybuckets = malloc(sizeof(int)*k);//k or 2*k according to Edo Liberty
+    long* dummybuckets = malloc(sizeof(int)*k);//k or 2*k according to Edo Liberty
     int* dummyCounts = malloc(sizeof(int)*k);
 
     //in the final step we need to reduce to only k centroids
@@ -413,9 +413,9 @@ void rpHash2(float* data, int numPoints, int dim, Quantizer* q, int hashMod, int
  * max number of tests, l is the target bucket size before emitting to the parallel system
  * dim is the vector dimensionality
  */
-void rpHash(float* ret, int numPoints, int dim, Quantizer* q, int hashMod, int cutoff,float* centroids)
+void rpHash(float* ret, int numPoints, int dim, Quantizer q, int hashMod, int cutoff,float* centroids)
 {
-  int d = q->dimensionality;
+  int d = q.dimensionality;
   int i,k,j=0;
 
   int numProbes = 0;
@@ -537,8 +537,8 @@ void clusterFile(const char* infile , const char* clusterFile,int numClusters, i
 {
     long numVectors;
     long dim;
-    Quantizer * q= initializeQuantizer(decodeLeech, 24);
-    initLSH(q);
+    Quantizer q= Quantizer(decodeLeech, 24);
+    //initLSH(q);
     //printf("%s,%s,%i,%i\n",infile , clusterFile, numClusters,  hashMod);
     // somewhere to put stuff
     //int nu,i,jj;

@@ -8,15 +8,25 @@
 #include <stdio.h>
 
 
-typedef struct quantizer_t {
-        int dimensionality;//could contain other data like entropy, nominal coding gain, density
-        unsigned long long (* decode)(float*,float*);
-} Quantizer;
+//typedef struct quantizer_t {
+//        int dimensionality;//could contain other data like entropy, nominal coding gain, density
+//        unsigned long long (* decode)(float*,float*);
+//} Quantizer;
 
-Quantizer q;
+class Quantizer{
+   public:
 
+	int dimensionality;//could contain other data like entropy, nominal coding gain, density
+    unsigned long long (* decode)(float*,float*);
+    Quantizer( ){};
+	Quantizer( unsigned long long(* decoder)(float*,float*),int dim)
+	{
+	    dimensionality=dim;
+	    decode = decoder;
+	}
+};
 
-
+Quantizer q ;
 
 /*
  * Generate a 'good enough' gaussian random variate.
@@ -62,10 +72,12 @@ static void print2(unsigned long ret,int ct,int grsize){
     } printf("\n");
 }
 
-void initLSH(Quantizer* quanti)
+
+
+void initLSH(Quantizer quanti)
 {
   //srand((unsigned int)12412471);
-  q = *quanti;
+  q = quanti;
 }
 
 
@@ -129,7 +141,7 @@ void project(float* v, float* r,int* M,float randn, int n,int t){
 }
 
 float* GenRandomN(int m,int n,int size){
-  float* M = malloc(m*n*sizeof(float));
+  float* M = (float*)malloc(m*n*sizeof(float));
   int i =0;
   float scale = (1.0/quicksqrt((float)n));
   int r = 0;
@@ -187,8 +199,8 @@ float GenRandom(int n,int m,int *M){
     int l,i,r,j,b=(int)((float)n/(float)6);
     float randn = 1.0/(quicksqrt(((float)m)*3.0)) ;//variance scaled back a little
 
-    unsigned char* bookkeeper = malloc(sizeof(unsigned char)*n);
-    M = malloc(2*b*sizeof(float));
+    unsigned char* bookkeeper = (unsigned char*)malloc(sizeof(unsigned char)*n);
+    M = (int*)malloc(2*b*sizeof(float));
 
     //reset bookkeeper
     for(l=0;l < n; l++ )bookkeeper[l]=q.dimensionality+1;
@@ -278,7 +290,7 @@ unsigned long lshHash(float *r, int len, int times, long tableLength,float* R, f
     if(len==q.dimensionality)return fnvHash(q.decode(r,distance), tableLength);
 
 
-     float * r1 =malloc(q.dimensionality*sizeof(float));
+     float * r1 =(float*)malloc(q.dimensionality*sizeof(float));
      //float randn = 1.0/quicksqrt((float)len);
      int k=0;
      unsigned long ret = 0L;
@@ -325,11 +337,4 @@ unsigned long lshHash(float *r, int len, int times, long tableLength,float* R, f
 
 
 
-Quantizer * initializeQuantizer( unsigned long long(* decode)(float*,float*),int dim)
-{
-    Quantizer *q=(Quantizer *)malloc(sizeof(Quantizer));
-    q->dimensionality=dim;
-    q->decode = decode;
-    return q;
-}
 
