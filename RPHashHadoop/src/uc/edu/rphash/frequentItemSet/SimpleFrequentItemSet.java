@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-import uc.edu.rphash.frequentItemSet.ItemSet.tuple;
-
 public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 
 	int setsize;

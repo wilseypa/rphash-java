@@ -10,11 +10,11 @@ public class ELFHash implements HashAlgorithm {
 	@Override
 	public long hash(byte[] s) {
 		// TODO Auto-generated method stub
-		return ELFHash(s) %tablesize;
+		return elfHash(s) %tablesize;
 	}
 	
 	//unsigned long ELFHash(const unsigned char *key,int tablesize)
-	long ELFHash(byte[]hash)
+	long elfHash(byte[]hash)
 	{
 	  long h = 0;
 	  for(byte key : hash){

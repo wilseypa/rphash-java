@@ -98,7 +98,6 @@ public class GenerateData
 		try{
 			BufferedWriter bf = new BufferedWriter(new FileWriter(f));
 			int l = 0;
-			float scaler = (float)Math.sqrt(dimension);//normalize dimension
 			for(int i=0;i<numClusters;i++){
 				for(int k=0;k<dimension;k++)
 				{
@@ -118,7 +117,7 @@ public class GenerateData
 				bf.flush();
 				
 			}
-		
+			bf.close();
 		}catch(IOException e){
 			e.printStackTrace();
 		}
@@ -152,10 +151,11 @@ public class GenerateData
 				bf.flush();
 				
 			}
-		
+			bf.close();
 		}catch(IOException e){
 			e.printStackTrace();
 		}
+		
 	}
 	
 	public float[][] data(){
@@ -171,21 +171,4 @@ public class GenerateData
 		return medoids;
 	}
 	
-	
-	public static void main(String[] args) {
-		GenerateData gd = new GenerateData(5,10,10);
-		gd.generateMem();
-		for(float[] v:gd.data()){
-			for(float i : v)System.out.print(i+" ");
-			System.out.println();
-		}
-		for(float[] v:gd.medoids()){
-			for(float i : v)System.out.print(i+" ");
-			System.out.println();
-		}
-		File f = new File("/home/lee/Desktop/M.mat");
-		gd = new GenerateData(5,10,10,f);
-
-	}
-
 }

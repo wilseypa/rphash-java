@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 
 public interface ItemSet<E> {
-	class tuple<E> implements Comparable<tuple>{
+	class tuple<E> implements Comparable<tuple<E>>{
 		E key;
 		Integer value;
 
@@ -13,7 +13,7 @@ public interface ItemSet<E> {
 			this.value = value;
 		}
 		@Override
-		public int compareTo(tuple o) {
+		public int compareTo(tuple<E> o) {
 			return  o.value  -this.value;
 		}
 	}

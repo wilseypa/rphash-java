@@ -890,7 +890,7 @@ public class LeechDecoder implements Decoder{
 
 		blockConf(dijs,muEs,muOs,prefRepE,prefRepO); //just run through both as its faster, but could conserve array allocation
 
-		char i;
+		//char i;
 
 		// #####################Construct Hexacode Word ###################
 		//unsigned char *y = malloc(sizeof(unsigned char)*6) ;
@@ -914,7 +914,7 @@ public class LeechDecoder implements Decoder{
 		//unsigned char* codeParity =  malloc(sizeof(unsigned char)*12) ;
 		char[] cp = new char[12];
 
-		int winner = 0;
+		//int winner = 0;
 		float leastweight;
 		byte[] retOpt;
 		
@@ -938,7 +938,7 @@ public class LeechDecoder implements Decoder{
 		{
 			leastweight = weight;
 			retOpt = convertbin(cw,cp);
-			winner = 1;
+			//winner = 1;
 		}
 
 		
@@ -956,7 +956,7 @@ public class LeechDecoder implements Decoder{
 		if(weight<leastweight){
 			leastweight = weight;
 			retOpt = convertbin(cw,cp);
-			winner = 2;
+			//winner = 2;
 		}
 
 		//----------------B Odd Quarter Lattice Decoder----------------
@@ -968,7 +968,7 @@ public class LeechDecoder implements Decoder{
 		if(weight<leastweight){
 			leastweight = weight;
 			retOpt = convertbin(cw,cp);
-			winner =3;
+			//winner =3;
 		}
 		//distance = winner;
 
@@ -996,11 +996,11 @@ public class LeechDecoder implements Decoder{
 		return retOpt;//leastCodeword;
 	}
 
-	public static float[] cnv(double[] fff){
-		float[] ret = new float[fff.length];
-		for(int i = 0 ;i<fff.length;i++)ret[i] = (float)fff[i];
-		return ret;
-	}
+//	public static float[] cnv(double[] fff){
+//		float[] ret = new float[fff.length];
+//		for(int i = 0 ;i<fff.length;i++)ret[i] = (float)fff[i];
+//		return ret;
+//	}
 
 
 	/*public static void main(String[] args)
