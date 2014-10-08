@@ -3,51 +3,31 @@ package edu.uc.rphash.tests;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
+
+import org.streaminer.stream.frequency.BaseFrequency;
+import org.streaminer.stream.frequency.FrequencyException;
+import org.streaminer.stream.frequency.LossyCounting;
+import org.streaminer.stream.frequency.RealCounting;
+import org.streaminer.stream.frequency.SpaceSaving;
+import org.streaminer.stream.frequency.StickySampling;
+import org.streaminer.stream.frequency.util.CountEntry;
 
 import edu.uc.rphash.RPHash;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.LeechDecoder;
+import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.KarpFrequentItemSet;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 
 public class TestRPhash {
-	public static void main(String[] args){
-		GenerateData gen = new GenerateData(5,5000,24);
-		RPHashObject so = new SimpleArrayReader(gen.data(),5,1,25000);
-		RPHash clusterer = new RPHash();
-		
-		for(float[] vec : clusterer.mapP2(so))
-		{
-			for(float v : vec)
-				System.out.print(v+" ");
-			System.out.println();
-		}
-		
-		for(float[] vec : gen.medoids())
-		{
-			for(float v : vec)
-				System.out.print(v+" ");
-			System.out.println();
-		}
-		
-		GenerateData gd = new GenerateData(5,10,10);
-		for(float[] v:gd.data()){
-			for(float i : v)System.out.print(i+" ");
-			System.out.println();
-		}
-		for(float[] v:gd.medoids()){
-			for(float i : v)System.out.print(i+" ");
-			System.out.println();
-		}
-		File file = new File("/home/lee/Desktop/M.mat");
-		gd = new GenerateData(5,10,10,file);
-		
-		
-		
+	
+	static void testLeechDec(){
+
 		
 		
 		Decoder leech = new LeechDecoder();
@@ -92,43 +72,200 @@ public class TestRPhash {
 			System.out.println(leech.decode(cnv(k)));
 			System.out.println(leech.decode(cnv(y)));
 			System.out.println(leech.decode(cnv(o)));
-			
-			
-			
-			
-			
-			
-			
-			Random r = new Random();
-			KarpFrequentItemSet<Integer> karp = new KarpFrequentItemSet<Integer>((float)(1./10000.0));
-			SimpleFrequentItemSet<Integer> smpl = new SimpleFrequentItemSet<Integer>(20);
-			int testsize = 10000000;
-			int sets = 6;
-			int numsetsperpartition = 10;
-			int startval = 1000;
-			
-			/**START Make Test Data**/
-			ArrayList<Integer> ar = new ArrayList<Integer>(testsize);
-			for(int w = 0;w<sets;w++){
-				for(int i =numsetsperpartition*w;i<numsetsperpartition*(w+1);i++)
-				{
-					for(int j = 0 ;j<startval;j++)ar.add(i);
-				}
-				startval/=2;
+		
+	}
+	static public List<CountEntry<Long>> test(ArrayList<Integer> ar, BaseFrequency<Long> counter,int k)
+	{
+        long startTime = System.nanoTime();
+		for(int i =0;i<ar.size();i++)
+			try {
+				counter.add((long)ar.get(i));
+			} catch (FrequencyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			for(int i = ar.size();i<testsize;i++)ar.add(r.nextInt(testsize));
-			Collections.shuffle(ar, r);
-			/**END Make Test Data**/
-			System.out.println("Begin Test");
-			for(int i =0;i<testsize;i++)
+        System.out.print(counter.getClass().getName()+":\t"+ String.valueOf(System.nanoTime() - startTime));
+		return counter.peek(k);
+	}
+	
+//	static public List<Long> test(ArrayList<Integer> ar, ItemSet<Long> counter,int k)
+//	{
+//        long startTime = System.nanoTime();
+//		for(int i =0;i<ar.size();i++)
+//				counter.add((long)ar.get(i));
+//
+//        System.out.println(ar.getClass().getName()+":\t" + String.valueOf(System.nanoTime() - startTime));
+//		return counter.getTop();
+//	}
+	/*
+	 * Sticky Counting seems to be the best
+	 */
+	static public void testFrequentItems(){
+		Random r = new Random();
+		KarpFrequentItemSet<Integer> karp = new KarpFrequentItemSet<Integer>((float)(1./500.0));
+		SimpleFrequentItemSet<Integer> smpl = new SimpleFrequentItemSet<Integer>(20);
+		int testsize = 10_000_000;
+		int sets = 6;
+		int numsetsperpartition = 10;
+		int startval = 1000;
+		
+		/**START Make Test Data**/
+		ArrayList<Integer> ar = new ArrayList<Integer>(testsize);
+		for(int w = 0;w<sets;w++){
+			for(int i =numsetsperpartition*w;i<numsetsperpartition*(w+1);i++)
 			{
-				karp.add(ar.get(i));
-				smpl.add(ar.get(i));
+				for(int j = 0 ;j<startval;j++)ar.add(i);
 			}
-			HashMap<Integer,Integer> d = karp.getTop();
-			HashMap<Integer,Integer> e = smpl.getTop();//takes roughly 5x longer
-			for(Integer q: d.keySet())System.out.println(q+","+d.get(q));	
-			for(Integer q: e.keySet())System.out.println(q+","+e.get(q));
+			startval/=2;
+		}
+		for(int i = ar.size();i<testsize;i++)ar.add(r.nextInt(testsize));
+		Collections.shuffle(ar, r);
+		/**END Make Test Data**/
+		int k = 20;
+		LossyCounting<Long> lcounter = new LossyCounting<Long>(.1);
+		StickySampling<Long> scounter = new StickySampling<Long>(.01,.01,.001);
+        //SpaceSaving<Integer> sscounter = new SpaceSaving<Integer>(1000, .01, .1);
+        RealCounting<Long> rcounter = new RealCounting<Long>();
+		
+        final Runtime rt = Runtime.getRuntime();
+        for (int i = 0; i < 3; i++) rt.gc();
+        long startSize = rt.totalMemory()-rt.freeMemory();
+        List<CountEntry<Long>> ll = test(ar, lcounter,k);
+        for (int i = 0; i < 3; i++) rt.gc();
+        System.out.println("\t" +
+           String.valueOf(rt.totalMemory()-rt.freeMemory()-startSize));
+
+        for (int i = 0; i < 3; i++) rt.gc();
+        startSize = rt.totalMemory()-rt.freeMemory();
+        List<CountEntry<Long>> sl = test(ar, scounter,k);//fastest and pretty good results
+        for (int i = 0; i < 3; i++) rt.gc();//2nd smallest memory footprint, asymptotic growth may be important
+        System.out.println("\t" +
+           String.valueOf(rt.totalMemory()-rt.freeMemory()-startSize));
+        
+        for (int i = 0; i < 3; i++) rt.gc();
+        startSize = rt.totalMemory()-rt.freeMemory();
+        List<CountEntry<Long>> rl = test(ar, rcounter,k);
+        for (int i = 0; i < 3; i++) rt.gc();
+        System.out.println("\t" +
+           String.valueOf(rt.totalMemory()-rt.freeMemory()-startSize));
+        
+        
+//		for(int i =0;i<testsize;i++)
+//		{
+//			smpl.add(ar.get(i));
+//			rcounter.add(ar.get(i),1);
+//			karp.add(ar.get(i));
+//			lcounter.add(ar.get(i),1);
+//			scounter.add(ar.get(i),1);
+//			sscounter.add(ar.get(i),1);
+//		}
+        
+//		ArrayList<Integer> kl = karp.getTop();//but karp us pretty terrible
+//		ArrayList<Integer> sml = smpl.getTop();//takes roughly 5x longer
+//		List<CountEntry<Integer>> ll = lcounter.peek(kl.size());
+//		List<CountEntry<Integer>> sl = scounter.peek(kl.size());
+//		List<CountEntry<Integer>> ssl = sscounter.peek(kl.size());
+//		List<CountEntry<Integer>> rl = rcounter.peek(kl.size());
+		
+		System.out.println("Real \t Smpl \t karp \t lossy \t stcky \t ssave");
+		for(int i = 0;i<k;i++)
+			try{
+			System.out.println(//sml.get(i).intValue()+"\t" + 
+					rl.get(i).getItem()+"\t" + "\t \t"+
+					//kl.get(i).intValue()+"\t"+
+					ll.get(i).getItem()+"\t"+
+					sl.get(i).getItem()+"\t\t"+
+					" ");}//ssl.get(i).getItem()) ;}
+			catch(Exception E){
+						;
+					}
+	}
+	
+	static float distance(float[] x,float[] y)
+	{
+		float dist = 0f ;
+		for(int i = 0 ;i< x.length; i++)dist += (x[i]-y[i])*(x[i]-y[i]);
+		return dist;
+	}
+	
+	
+	static int findNearestDistance(float[] x,List <float[]> DB)
+	{
+		Iterator<float[]> it = DB.iterator();
+		float mindist = distance(x,it.next());
+		float tmp;
+		int minindex = 0;
+		int index = 0;
+		while(it.hasNext()){
+			tmp = distance(x,it.next());
+			index++;
+			if(tmp < mindist){
+				mindist = tmp;
+				minindex = index;
+			}
+
+		}
+		return minindex;
+	}
+	
+	
+	
+	static void testRPHash(){
+		GenerateData gen = new GenerateData(5,5000,24);
+
+		for(float[] vec : gen.medoids())
+		{
+		for(int i = 0 ; i < vec.length;i++)
+			System.out.printf("%.2f ",vec[i]);
+			System.out.println();
+		}
+		
+		System.out.print(  "------------------------------------");
+		System.out.print(  "------------------------------------");
+		System.out.print(  "------------------------------------");
+		System.out.println("------------------------------------");
+		RPHashObject so = new SimpleArrayReader(gen.data(),5,1,250000);
+		RPHash clusterer = new RPHash();
+		so = clusterer.mapP1(so);
+		so = clusterer.mapP2(so);
+		float [] centroid = so.getNextCentroid();
+		while(centroid!=null){
+			for(int i = 0 ; i < centroid.length;i++)
+				System.out.printf("%.2f ",centroid[i]);
+			int minindex = findNearestDistance(centroid,gen.medoids());
+			System.out.printf("\t| %d %.4f \n",minindex,distance(centroid,gen.medoids().get(minindex)));
+
+			findNearestDistance(centroid,gen.medoids());
+			centroid = so.getNextCentroid();
+		}
+
+	
+
+//		
+//		for(float[] vec : gen.medoids())
+//		{
+//			for(float v : vec)
+//				System.out.print(v+" ");
+//			System.out.println();
+//		}
+//		
+//		GenerateData gd = new GenerateData(5,10,10);
+//		for(float[] v:gd.data()){
+//			for(float i : v)System.out.print(i+" ");
+//			System.out.println();
+//		}
+//		for(float[] v:gd.medoids()){
+//			for(float i : v)System.out.print(i+" ");
+//			System.out.println();
+//		}
+//		File file = new File("/home/lee/Desktop/M.mat");
+//		gd = new GenerateData(5,10,10,file);
+		
+	}
+	
+	public static void main(String[] args){
+		//testFrequentItems();
+		testRPHash();
 			
 	}
 	
@@ -136,6 +273,6 @@ public class TestRPhash {
 	float[] ret = new float[fff.length];
 	for(int i = 0 ;i<fff.length;i++)ret[i] = (float)fff[i];
 	return ret;
-}
+	}
 
 }

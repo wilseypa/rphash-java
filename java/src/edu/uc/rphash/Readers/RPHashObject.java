@@ -1,6 +1,6 @@
 package edu.uc.rphash.Readers;
 
-import java.util.Set;
+import java.util.List;
 
 public interface RPHashObject {
 
@@ -10,9 +10,17 @@ public interface RPHashObject {
 	int getRandomSeed();
 	int getHashmod();
 	float[] getNextVector();
+	List<Long> getIDs();
+	List<float[]>  getCentroids();
+	float[] getNextCentroid();
+	
 	void setIDs(long[] ids);
-	void setIDs(Set<Long> ids);
+	void setIDs(List<Long> ids);
+	void setCounts(long[] ids);
+	void setCounts(List<Long> ids);
+	void addCentroid(float[] v);
+	void setCentroids(List<float[]> l);
 	void reset();
-	long[] getIDs();
+
 
 }

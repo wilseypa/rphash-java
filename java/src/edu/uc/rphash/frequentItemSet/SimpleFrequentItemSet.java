@@ -3,6 +3,7 @@ package edu.uc.rphash.frequentItemSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 
@@ -25,19 +26,24 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 	}
 
 	@Override
-	public HashMap<E, Integer> getTop() 
+	public ArrayList<E> getTop() 
 	{
 		ArrayList<tuple<E>> sortedData = new ArrayList<tuple<E>>(data.size());
 		for(E key:data.keySet())sortedData.add(new tuple<E>(key,data.get(key)));
 		Collections.sort(sortedData);
 		setsize = setsize<sortedData.size()?setsize:sortedData.size();
 		
-		
-		HashMap<E,Integer> ret = new HashMap<E,Integer>(setsize);
+		ArrayList<E> ret = new ArrayList<E>(setsize);
 		for(int i =0;i<setsize;i++){
-			ret.put(sortedData.get(i).key, sortedData.get(i).value);
+			ret.add(i,sortedData.get(i).key);
 		}
 		return ret;
+	}
+
+	@Override
+	public List<Long> getCounts() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

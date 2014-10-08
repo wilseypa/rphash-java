@@ -1,6 +1,6 @@
 package edu.uc.rphash.frequentItemSet;
 
-import java.util.HashMap;
+import java.util.List;
 
 
 public interface ItemSet<E> {
@@ -18,6 +18,7 @@ public interface ItemSet<E> {
 		}
 	}
 	public boolean add(E e);
-	public HashMap<E,Integer> getTop();
+	public List<E> getTop();
+	public List<Long> getCounts();
 
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 public class KarpFrequentItemSet<E> implements ItemSet<E> {
 
@@ -32,11 +33,9 @@ public class KarpFrequentItemSet<E> implements ItemSet<E> {
 			data.put(e,1);
 			return true;
 		}
-		
 		//doesnt already contain key and the list is full
 		//so we have to prune the list
 		Iterator<E> it = data.keySet().iterator();
-		
 		//for(E key:data.keySet())
 		int ct = 1;
 		while(it.hasNext() /*&& ct != 0*/)
@@ -48,28 +47,31 @@ public class KarpFrequentItemSet<E> implements ItemSet<E> {
 				it.remove();
 			}
 		}
-		
 		//now if the list is less than maxsize put new object
 		if(data.size()<setsize)
 			data.put(e,1);
-		
 		return false;
 	}
 
 	@Override
-	public HashMap<E,Integer> getTop() 
+	public ArrayList<E> getTop() 
 	{	
 		ArrayList<tuple<E>> sortedData = new ArrayList<tuple<E>>(data.size());
 		for(E key:data.keySet())sortedData.add(new tuple<E>(key,data.get(key)));
 		Collections.sort(sortedData);
 		setsize = setsize<sortedData.size()?setsize:sortedData.size();
 		
-		
-		HashMap<E,Integer> ret = new HashMap<E,Integer>(setsize);
+		ArrayList<E> ret = new ArrayList<E>(setsize);
 		for(int i =0;i<setsize;i++){
-			ret.put(sortedData.get(i).key, sortedData.get(i).value);
+			ret.add(i,sortedData.get(i).key);
 		}
 		return ret;
+	}
+
+	@Override
+	public List<Long> getCounts() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
