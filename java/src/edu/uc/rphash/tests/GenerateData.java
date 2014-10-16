@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -17,6 +18,7 @@ public class GenerateData
 	Random r;
 	List<float[]>  data;
 	List<float[]> medoids;
+	List<Integer> reps;
 	
 	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension){
 		r = new Random();
@@ -25,6 +27,7 @@ public class GenerateData
 		this.dimension=dimension;
 		this.medoids = null;
 		this.data = null;
+		this.reps = null;
 		
 		genfnc = new RandomDistributionFnc(){
 			@Override
@@ -72,6 +75,21 @@ public class GenerateData
 		generateDisk(f);
 	}
 	
+	private void permute(){
+		
+		reps = new ArrayList<Integer>(data.size());
+		ArrayList<float[]> newData = new ArrayList<float[]>(data.size());
+		for(int i = 0; i<data.size();i++)reps.add(i);
+		
+		Collections.shuffle(reps, r);
+		
+		for(int i = 0; i<reps.size();i++){
+			newData.add(data.get(reps.get(i)));
+			reps.set(i,(int)((float)reps.get(i)/(float)numVectorsPerCluster));
+		}
+		data = newData;
+	}
+	
 	private void generateMem()
 	{
 		this.data = new ArrayList<float[]>();//new float[numClusters*numVectorsPerCluster][dimension];
@@ -93,8 +111,12 @@ public class GenerateData
 				}
 				this.data.add(dat);
 			}
-			
 		}
+		permute();
+	}
+	
+	public int getClusterID(int vecIdx){
+		return reps.get(vecIdx);
 	}
 	
 	public void writeToFile(File f){

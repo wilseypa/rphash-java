@@ -1,6 +1,7 @@
 package edu.uc.rphash.tests;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -181,91 +182,51 @@ public class TestRPhash {
 					}
 	}
 	
-	static float distance(float[] x,float[] y)
-	{
-		float dist = 0f ;
-		for(int i = 0 ;i< x.length; i++)dist += (x[i]-y[i])*(x[i]-y[i]);
-		return dist;
-	}
 	
-	
-	static int findNearestDistance(float[] x,List <float[]> DB)
-	{
-		Iterator<float[]> it = DB.iterator();
-		float mindist = distance(x,it.next());
-		float tmp;
-		int minindex = 0;
-		int index = 0;
-		while(it.hasNext()){
-			tmp = distance(x,it.next());
-			index++;
-			if(tmp < mindist){
-				mindist = tmp;
-				minindex = index;
-			}
-
-		}
-		return minindex;
-	}
-	
-	
-	
-	static void testRPHash(){
-		GenerateData gen = new GenerateData(5,5000,24);
-
-		for(float[] vec : gen.medoids())
-		{
-		for(int i = 0 ; i < vec.length;i++)
-			System.out.printf("%.2f ",vec[i]);
-			System.out.println();
-		}
+	static void testRPHash(int k, int n,int d){
+		System.out.print(k+":"+n+":"+d+"\t");
+		GenerateData gen = new GenerateData(k,n/k,d);
 		
-		System.out.print(  "------------------------------------");
-		System.out.print(  "------------------------------------");
-		System.out.print(  "------------------------------------");
-		System.out.println("------------------------------------");
-		RPHashObject so = new SimpleArrayReader(gen.data(),5,1,250000);
+		long startTime = System.nanoTime();
+		List<float[]> M = ( new Kmeans(k,gen.data())).getCentroids();
+		long duration = (System.nanoTime() - startTime);
+
+		List<float[]> aligned = TestUtil.alignCentroids(M,gen.medoids());
+		System.out.print(StatTests.PR(aligned,gen)+":"+duration);
+		System.out.print("\t");
+		startTime = System.nanoTime();
+		RPHashObject so = new SimpleArrayReader(gen.data(),k,1,250000);
 		RPHash clusterer = new RPHash();
 		so = clusterer.mapP1(so);
 		so = clusterer.mapP2(so);
-		float [] centroid = so.getNextCentroid();
-		while(centroid!=null){
-			for(int i = 0 ; i < centroid.length;i++)
-				System.out.printf("%.2f ",centroid[i]);
-			int minindex = findNearestDistance(centroid,gen.medoids());
-			System.out.printf("\t| %d %.4f \n",minindex,distance(centroid,gen.medoids().get(minindex)));
-
-			findNearestDistance(centroid,gen.medoids());
-			centroid = so.getNextCentroid();
-		}
-
-	
-
-//		
-//		for(float[] vec : gen.medoids())
-//		{
-//			for(float v : vec)
-//				System.out.print(v+" ");
-//			System.out.println();
-//		}
-//		
-//		GenerateData gd = new GenerateData(5,10,10);
-//		for(float[] v:gd.data()){
-//			for(float i : v)System.out.print(i+" ");
-//			System.out.println();
-//		}
-//		for(float[] v:gd.medoids()){
-//			for(float i : v)System.out.print(i+" ");
-//			System.out.println();
-//		}
-//		File file = new File("/home/lee/Desktop/M.mat");
-//		gd = new GenerateData(5,10,10,file);
+		duration = (System.nanoTime() - startTime);
 		
+		aligned = TestUtil.alignCentroids(so.getCentroids(),gen.medoids());
+		System.out.print(StatTests.PR(aligned,gen)+":"+duration);
+		System.out.print("\n");
+	}
+	static void clusterPerformanceTests()
+	{
+		int k = 20;
+		int n = 50000;
+		int d = 1000;
+
+
+		System.out.println("-------varying k-------");
+		for(int i = 0 ;i<10;i++)
+			testRPHash(k+i,50000,1000);
+		System.out.println("-------varying n-------");
+		for(int i = 0 ;i<10;i++)
+			testRPHash(20,n+i*10000,1000);
+		System.out.println("-------varying d-------");
+		for(int i = 0 ;i<10;i++)
+			testRPHash(20,50000,d+i*1000);
 	}
 	
 	public static void main(String[] args){
 		//testFrequentItems();
-		testRPHash();
+		clusterPerformanceTests();
+
 			
 	}
 	

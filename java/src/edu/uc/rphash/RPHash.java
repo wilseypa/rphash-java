@@ -1,15 +1,13 @@
 package edu.uc.rphash;
 
-import java.util.ArrayList;
+
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.LeechDecoder;
 import edu.uc.rphash.frequentItemSet.ItemSet;
-import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.frequentItemSet.StickyWrapper;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
@@ -27,7 +25,7 @@ public class RPHash {
 			Projector p = new DBFriendlyProjection(so.getdim(), 
 					dec.getDimensionality(),so.getRandomSeed());
 			LSH lsh = new LSH(dec,p,hal);
-			ItemSet<Long> is = new StickyWrapper<Long>(so.getk());
+			ItemSet<Long> is = new StickyWrapper<Long>(so.getk(),so.getn());
 
 			//add to frequent itemset the hashed Decoded randomly projected vector
 			for (int i =0;i<so.getn();i++)
@@ -86,9 +84,4 @@ public class RPHash {
 		public RPHashObject reduceP2(RPHashObject so){
 			return so;
 		}
-		
-		
-		
-		
-
 }

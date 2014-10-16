@@ -109,8 +109,6 @@ public class DBFriendlyProjection implements Projector {
 
 	    //reset bookkeeper
 	    for(l=0;l < n; l++ )bookkeeper[l]=t+1;
-
-
 	    j=0;
 	    for(i=0;i<t;i++)
 	    {
@@ -119,10 +117,8 @@ public class DBFriendlyProjection implements Projector {
 	            do{r =rand.nextInt()%n;}
 	            while(bookkeeper[r]==l );
 	            bookkeeper[r]=l;
-
 	            M[j++] = r;
 	        }
-
 	        for(;l < 2*b; l++ )
 	        {
 	          do{ r =rand.nextInt()%n;}
