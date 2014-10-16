@@ -213,13 +213,13 @@ public class TestRPhash {
 
 
 		System.out.println("-------varying k-------");
-		for(int i = 0 ;i<10;i++)
+		for(int i = 10 ;i<20;i++)
 			testRPHash(k+i,50000,1000);
 		System.out.println("-------varying n-------");
-		for(int i = 0 ;i<10;i++)
+		for(int i = 10 ;i<20;i++)
 			testRPHash(20,n+i*10000,1000);
 		System.out.println("-------varying d-------");
-		for(int i = 0 ;i<10;i++)
+		for(int i = 10 ;i<20;i++)
 			testRPHash(20,50000,d+i*1000);
 	}
 	
