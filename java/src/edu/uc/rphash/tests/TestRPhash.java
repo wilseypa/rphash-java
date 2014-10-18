@@ -1,10 +1,9 @@
 package edu.uc.rphash.tests;
 
-import java.io.File;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
+
 import java.util.List;
 import java.util.Random;
 
@@ -12,7 +11,7 @@ import org.streaminer.stream.frequency.BaseFrequency;
 import org.streaminer.stream.frequency.FrequencyException;
 import org.streaminer.stream.frequency.LossyCounting;
 import org.streaminer.stream.frequency.RealCounting;
-import org.streaminer.stream.frequency.SpaceSaving;
+
 import org.streaminer.stream.frequency.StickySampling;
 import org.streaminer.stream.frequency.util.CountEntry;
 
@@ -21,9 +20,9 @@ import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.LeechDecoder;
-import edu.uc.rphash.frequentItemSet.ItemSet;
-import edu.uc.rphash.frequentItemSet.KarpFrequentItemSet;
-import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
+
+//import edu.uc.rphash.frequentItemSet.KarpFrequentItemSet;
+//import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 
 public class TestRPhash {
 	
@@ -37,7 +36,6 @@ public class TestRPhash {
 				-0.7260114 ,  1.19387512,  0.74441283, -0.31003198,  1.16529063,
 				0.03210929,  0.88011717,  0.98265615,  1.93322648, -0.05865583,
 				-0.56355944, -0.67748379,  0.03904684, -1.0102314};
-
 
 
 			double[] u = {0.65126908,  0.10690608,  1.16313656,  0.22987196, -1.43084181,
@@ -103,8 +101,8 @@ public class TestRPhash {
 	 */
 	static public void testFrequentItems(){
 		Random r = new Random();
-		KarpFrequentItemSet<Integer> karp = new KarpFrequentItemSet<Integer>((float)(1./500.0));
-		SimpleFrequentItemSet<Integer> smpl = new SimpleFrequentItemSet<Integer>(20);
+//		KarpFrequentItemSet<Integer> karp = new KarpFrequentItemSet<Integer>((float)(1./500.0));
+//		SimpleFrequentItemSet<Integer> smpl = new SimpleFrequentItemSet<Integer>(20);
 		int testsize = 10_000_000;
 		int sets = 6;
 		int numsetsperpartition = 10;
@@ -183,44 +181,82 @@ public class TestRPhash {
 	}
 	
 	
-	static void testRPHash(int k, int n,int d){
-		System.out.print(k+":"+n+":"+d+"\t");
-		GenerateData gen = new GenerateData(k,n/k,d);
+	static void testRPHash(int k, int n,int d,float variance){
 		
-		long startTime = System.nanoTime();
-		List<float[]> M = ( new Kmeans(k,gen.data())).getCentroids();
-		long duration = (System.nanoTime() - startTime);
+		GenerateData gen = new GenerateData(k,n/k,d,variance);
+		System.out.print(k+":"+n+":"+d+":"+variance+"\t");
+//		System.out.print(StatTests.PR(gen.medoids(),gen)+":\t");
+//		long startTime = System.nanoTime();
+//		List<float[]> M = ( new Kmeans(k,gen.data())).getCentroids();
+//		long duration = (System.nanoTime() - startTime);
+//
+//		List<float[]> aligned = TestUtil.alignCentroids(M,gen.medoids());
+//		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
+//		System.out.print("\t");
+//		System.gc();
+//		for(int i = 0 ; i< k;i++)
+//			System.out.println(i+":"+TestUtil.distance(aligned.get(i), gen.medoids().get(i)));
 
-		List<float[]> aligned = TestUtil.alignCentroids(M,gen.medoids());
-		System.out.print(StatTests.PR(aligned,gen)+":"+duration);
-		System.out.print("\t");
-		startTime = System.nanoTime();
+		long startTime = System.nanoTime();
 		RPHashObject so = new SimpleArrayReader(gen.data(),k,1,250000);
 		RPHash clusterer = new RPHash();
 		so = clusterer.mapP1(so);
 		so = clusterer.mapP2(so);
-		duration = (System.nanoTime() - startTime);
+		long duration = (System.nanoTime() - startTime);
 		
-		aligned = TestUtil.alignCentroids(so.getCentroids(),gen.medoids());
-		System.out.print(StatTests.PR(aligned,gen)+":"+duration);
+		List<float[]> aligned  = TestUtil.alignCentroids(so.getCentroids(),gen.medoids());
+		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
+//		for(int i = 0 ; i< k;i++)
+//			System.out.println(i+":"+TestUtil.distance(aligned.get(i), gen.medoids().get(i)));
 		System.out.print("\n");
+		System.gc();
 	}
 	static void clusterPerformanceTests()
 	{
 		int k = 20;
 		int n = 50000;
 		int d = 1000;
+		float v = .1f;
+		
+//		System.out.println("-------varying variance-------");
+//		GenerateData gen = new GenerateData(k,n/k,d,2f);
+//		System.out.println(StatTests.PR(gen.medoids(),gen));
+//		gen = new GenerateData(k,n/k,d,4f);
+//		System.out.println(StatTests.PR(gen.medoids(),gen));
+//		gen = new GenerateData(k,n/k,d,6f);
+//		System.out.println(StatTests.PR(gen.medoids(),gen));
+//		gen = new GenerateData(k,n/k,d,8f);
+//		System.out.println(StatTests.PR(gen.medoids(),gen));
+//		gen = new GenerateData(k,n/k,d,10.0f);
+//		System.out.println(StatTests.PR(gen.medoids(),gen));
 
+		System.out.println("-------varying variance-------");
+		for(int i = 1 ;i<40;i++){
+			testRPHash(k+i,n,d,i/100f);
+//			testRPHash(k+i,n,d,i/100f);
+//			testRPHash(k+i,n,d,i/100f);
+		}
 
 		System.out.println("-------varying k-------");
-		for(int i = 10 ;i<20;i++)
-			testRPHash(k+i,50000,1000);
+		for(int i = 0 ;i<100;i+=2){
+			testRPHash(k+i,n,d,v);
+			testRPHash(k+i,n,d,v);
+			testRPHash(k+i,n,d,v);
+		}
 		System.out.println("-------varying n-------");
-		for(int i = 10 ;i<20;i++)
-			testRPHash(20,n+i*10000,1000);
+		for(int i = 0 ;i<50;i+=2){
+			testRPHash(k,n+i*10000,d,v);
+			testRPHash(k,n+i*10000,d,v);
+			testRPHash(k,n+i*10000,d,v);
+		}
 		System.out.println("-------varying d-------");
-		for(int i = 10 ;i<20;i++)
-			testRPHash(20,50000,d+i*1000);
+		for(int i = 5 ;i<31;i++){
+			testRPHash(k,n,d+i*500,v);
+			testRPHash(k,n,d+i*500,v);
+			testRPHash(k,n,d+i*500,v);
+		}
+		
+		
 	}
 	
 	public static void main(String[] args){

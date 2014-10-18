@@ -2,9 +2,9 @@ package edu.uc.rphash.projections;
 
 import java.util.Random;
 
+
 public class DBFriendlyProjection implements Projector {
 	int RAND_MAX= 2147483647;
-	
 	float[] M;
 	int n;
 	int t;
@@ -33,16 +33,15 @@ public class DBFriendlyProjection implements Projector {
 	    for(;i<16;i++){
 	        x = (x+(b/x))/2.0f;
 	    }
-
 	    return x;
 	}
 
 
 	/*
 	 * from Achlioptas 01 and JL -THm
-	 * r_ij = sqr(n)*| +1    Pr =1/6
-	 *                      |    0    Pr=2/3
-	 *                      |  - 1   Pr =1/6
+	 * r_ij = sqr(3/m)*| +1    Pr =1/6
+	 *                       |    0    Pr=2/3
+	 *                       |  - 1   Pr =1/6
 	 *
 	 *                      Naive method O(n), faster select and bookkeeping
 	 *                      should be O((5/12 )n), still linear
@@ -50,21 +49,21 @@ public class DBFriendlyProjection implements Projector {
 	float[] GenRandom(int m,int n){
 	  float[] M = new float[n*m];
 	  int i =0;
-	  float scale = (1.0f/quicksqrt((float)n));
+	  float scale = (float)Math.sqrt(3.0f/(m));
 	  int r = 0;
 	  for(i=0;i<m*n;i++)
 	  {
-        r = rand.nextInt()%6;
+        r = rand.nextInt(6);
         M[i] = 0.0f;
-        if(r%6==0)M[i] = scale;
-        if(r%6==1)M[i] = -scale;
+        if(r==0)M[i] = scale;
+        if(r==5)M[i] = -scale;
+        
 	   }
 	  return M;
 	}
 	
 	@Override
 	public float[] project(float[] v) {
-		
 		return projectN(v,M,n,t);
 	}
 	
@@ -80,6 +79,8 @@ public class DBFriendlyProjection implements Projector {
 		          sum+=v[i]*M[i*n+j];
 		      r[i] = sum;
 		  }
+//		  System.out.println(TestUtil.max(r)+":"+TestUtil.max(v));
+//		  System.out.println(TestUtil.min(r)+":"+TestUtil.min(v));
 		  return r;
 		}
 

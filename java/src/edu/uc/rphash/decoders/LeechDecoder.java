@@ -1,105 +1,87 @@
 package edu.uc.rphash.decoders;
 
+/*Author: Lee Carraher
+#Institution: University of Cincinnati, Computer Science Dept.
+
+
+# this is a nearest lattice point decoder based on the hexacode based decoder of
+#Amrani, Be'ery IEEE Trans. on Comm. '96, with initial construction
+#from  Amrani, Be'ery,Vardy, Sun,Tilborg IEEE Info Thry'94
+
+# the goal is to rewrite this algorithm in efficient C for cuda
+# and eventual use as a Hashing Function
+# for use in a Cuda Parallel Locality Hash Based Clustering algorithm
+# additional implementation may include MPI/Cuda, and
+#anonymous offline data clustering
+
+
+#-------------QAM Stuff ----------------------
+# use a curtailed QAM for all positive signals
+#  7 A000 B000 A110 B110
+#  5 B101 A010 B010 A101
+#  3 A111 B111 A001 B001
+#  1 B011 A100 B100 A011
+#  0   1         3       5      7
+# still gets rotated    \ 4 /
+#                               1 \/ 3
+#                         /\
+#                           / 2 \
+
+Bs           100
+55    55    51  55   77   37   77   77    33  77   33   73
+010 010 001 010 011 000 011 011 111 011 111 100
+7.0,3.0,   3.0,3.0,   7.0,7.0   ,   3.0,3.0,   7.0,7.0,    7.0,7.0,    3.0,7.0,   7.0,7.0,    5.0,5.0   ,    5.0,1.0,   5.0,5.0,   5.0,5.0
+
+
+
+# leech decoder uses a rotated Z2 lattice, so to find leading cosets
+# just find the nearest point in 64QAM, A,B ; odd, even| to the rotated
+# input vector
+# rotate using the standard 2d rotation transform
+#                      [cos x -sin x ]
+#                  R = [sin x  cos x ]    cos(pi/4) = sin(pi/4)=1/sqrt(2)
+# for faster C implementation use these binary fp constants
+# 1/sqrt(2) = cc3b7f669ea0e63f ieee fp little endian
+#           = 3fe6a09e667f3bcc ieee fp big endian
+#           = 0.7071067811865475244008
+#
+#v' = v * R
+# integer lattice
+#
+#  4 A000 B000 A110 B110 | A000 B000 A110 B110
+#  3 B101 A010 B010 A101 | B101 A010 B010 A101
+#  2 A111 B111 A001 B001 | A111 B111 A001 B001
+#  1 B011 A100 B100 A011 | B011 A100 B100 A011
+#    --------------------|---------------------
+# -1 A000 B000 A110 B110 | A000 B000 A110 B110
+# -2 B101 A010 B010 A101 | B101 A010 B010 A101
+# -3 A111 B111v A001 B001 | A111 B111 A001 B001
+# -4 B011 A100 B100 A011 | B011 A100 B100 A011
+#even pts {000,110,111,001}
+#odd  pts {010,101,100,011}
+ */
+
+
+/*
+ * this thing converges really quickly this is more than enough for fp
+
+inline float quicksqrt(float b)
+{
+    float x = 1.1;
+    unsigned char i =0;
+
+    for(;i<16;i++){
+        x = (x+(b/x))/2.0;
+    }
+
+    return x;
+}*/
+
+
+
 public class LeechDecoder implements Decoder{
-
-
-	/*Author: Lee Carraher
-	#Institution: University of Cincinnati, Computer Science Dept.
-
-
-	# this is a nearest lattice point decoder based on the hexacode based decoder of
-	#Amrani, Be'ery IEEE Trans. on Comm. '96, with initial construction
-	#from  Amrani, Be'ery,Vardy, Sun,Tilborg IEEE Info Thry'94
-
-	# the goal is to rewrite this algorithm in efficient C for cuda
-	# and eventual use as a Hashing Function
-	# for use in a Cuda Parallel Locality Hash Based Clustering algorithm
-	# additional implementation may include MPI/Cuda, and
-	#anonymous offline data clustering
-
-
-	#-------------QAM Stuff ----------------------
-	# use a curtailed QAM for all positive signals
-	#  7 A000 B000 A110 B110
-	#  5 B101 A010 B010 A101
-	#  3 A111 B111 A001 B001
-	#  1 B011 A100 B100 A011
-	#  0   1         3       5      7
-	# still gets rotated    \ 4 /
-	#                               1 \/ 3
-	#                         /\
-	#                           / 2 \
-
-	Bs           100
-	55    55    51  55   77   37   77   77    33  77   33   73
-	010 010 001 010 011 000 011 011 111 011 111 100
-	7.0,3.0,   3.0,3.0,   7.0,7.0   ,   3.0,3.0,   7.0,7.0,    7.0,7.0,    3.0,7.0,   7.0,7.0,    5.0,5.0   ,    5.0,1.0,   5.0,5.0,   5.0,5.0
-
-
-
-	# leech decoder uses a rotated Z2 lattice, so to find leading cosets
-	# just find the nearest point in 64QAM, A,B ; odd, even| to the rotated
-	# input vector
-	# rotate using the standard 2d rotation transform
-	#                      [cos x -sin x ]
-	#                  R = [sin x  cos x ]    cos(pi/4) = sin(pi/4)=1/sqrt(2)
-	# for faster C implementation use these binary fp constants
-	# 1/sqrt(2) = cc3b7f669ea0e63f ieee fp little endian
-	#           = 3fe6a09e667f3bcc ieee fp big endian
-	#           = 0.7071067811865475244008
-	#
-	#v' = v * R
-	# integer lattice
-	#
-	#  4 A000 B000 A110 B110 | A000 B000 A110 B110
-	#  3 B101 A010 B010 A101 | B101 A010 B010 A101
-	#  2 A111 B111 A001 B001 | A111 B111 A001 B001
-	#  1 B011 A100 B100 A011 | B011 A100 B100 A011
-	#    --------------------|---------------------
-	# -1 A000 B000 A110 B110 | A000 B000 A110 B110
-	# -2 B101 A010 B010 A101 | B101 A010 B010 A101
-	# -3 A111 B111v A001 B001 | A111 B111 A001 B001
-	# -4 B011 A100 B100 A011 | B011 A100 B100 A011
-	#even pts {000,110,111,001}
-	#odd  pts {010,101,100,011}
-	 */
-
-
-	/*
-	 * this thing converges really quickly this is more than enough for fp
-
-	inline float quicksqrt(float b)
-	{
-	    float x = 1.1;
-	    unsigned char i =0;
-
-	    for(;i<16;i++){
-	        x = (x+(b/x))/2.0;
-	    }
-
-	    return x;
-	}
-	 */
-	/*WARNING: not true euclidean distance
-	 * compute the distance between two 24 dimensional vectors.
-	 * The square-root is omitted because the algorithm only needs
-	 * to know which is closer d(cp, pt.) or d(cp',pt) , for which
-	 * sqrt(d(cp, pt.)) and sqrt(d(cp', pt.)) inequality holds for positive
-	 * distances(this is why we keep the squares).
-	 */
-	//#define golay
-	float distance(
-			float pt[],
-			float cp[],
-			int startat
-			)
-	{
-		// printf("%f,%f : %f,%f = ",cp[0],cp[1],pt[0],pt[1]);
-		float s =(cp[0]-pt[startat])*(cp[0]-pt[startat]) + (cp[1]-pt[startat+1])*(cp[1]-pt[startat+1]);
-		// printf(" %f\n",s);
-		return s;
-
-	}
+	
+	
 	/*
 	 * an integer symbol encoding of an H6 encoder.
 	 * 0 1 2 3 = 0 1 w w'
@@ -185,6 +167,38 @@ public class LeechDecoder implements Decoder{
 	//010 100 011 101
 	float[][] oddBPts  = {{CPT, CPT},{CPT, APT},{APT, APT},{APT, CPT}};
 
+	
+	
+	public LeechDecoder(){}
+
+	public LeechDecoder(float scaler){
+		this.APT *=scaler;
+		this.BPT *=scaler;
+		this.CPT *=scaler;
+		this.DPT *=scaler;
+	}
+	
+	 
+	/*WARNING: not true euclidean distance
+	 * compute the distance between two 24 dimensional vectors.
+	 * The square-root is omitted because the algorithm only needs
+	 * to know which is closer d(cp, pt.) or d(cp',pt) , for which
+	 * sqrt(d(cp, pt.)) and sqrt(d(cp', pt.)) inequality holds for positive
+	 * distances(this is why we keep the squares).
+	 */
+	//#define golay
+	float distance(
+			float pt[],
+			float cp[],
+			int startat
+			)
+	{
+		// printf("%f,%f : %f,%f = ",cp[0],cp[1],pt[0],pt[1]);
+		float s =(cp[0]-pt[startat])*(cp[0]-pt[startat]) + (cp[1]-pt[startat+1])*(cp[1]-pt[startat+1]);
+		// printf(" %f\n",s);
+		return s;
+
+	}
 
 	void pp(float[] f){
 		int grsize =1;
@@ -302,7 +316,6 @@ public class LeechDecoder implements Decoder{
 			)
 	{
 		//void QAM(float *r, float *evenPts,float *oddPts,float *dijs,float *dijks,int *kparities){
-
 
 		//the closest even-type Z2 lattice point is used as the
 		//coset representatives for all points, not currently used

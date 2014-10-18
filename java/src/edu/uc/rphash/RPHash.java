@@ -3,7 +3,6 @@ package edu.uc.rphash;
 
 import java.util.HashMap;
 
-
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.LeechDecoder;
@@ -14,23 +13,28 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.FNVHash;
 import edu.uc.rphash.standardhash.HashAlgorithm;
+import edu.uc.rphash.tests.TestUtil;
 
 
 public class RPHash {
-		
 		public RPHashObject mapP1(RPHashObject so) {
 			//create our LSH Machine
 			HashAlgorithm hal = new FNVHash(so.getHashmod());
-			Decoder dec = new LeechDecoder();
+			float[] vec = so.getNextVector();
+			//trying to combat variance drifting issues by adjusting the
+			//scaling the lattice region radius
+			Decoder dec = new LeechDecoder(TestUtil.max(vec)*2);
+
 			Projector p = new DBFriendlyProjection(so.getdim(), 
 					dec.getDimensionality(),so.getRandomSeed());
 			LSH lsh = new LSH(dec,p,hal);
 			ItemSet<Long> is = new StickyWrapper<Long>(so.getk(),so.getn());
-
+			
 			//add to frequent itemset the hashed Decoded randomly projected vector
-			for (int i =0;i<so.getn();i++)
-				is.add(lsh.lshHash(so.getNextVector()));
-	
+			while(vec!=null){
+				is.add(lsh.lshHash(vec));
+				vec = so.getNextVector();
+			}
 			so.setIDs(is.getTop());
 			so.setCounts(is.getCounts());
 			so.reset();
@@ -42,11 +46,15 @@ public class RPHash {
 				return context ;
 			}
 		
-		
 		public RPHashObject mapP2(RPHashObject so) {
 			//create our LSH Machine
 			HashAlgorithm hal = new FNVHash(so.getHashmod());
-			Decoder dec = new LeechDecoder();
+			float[] vec = so.getNextVector();
+			
+			//trying to combat variance drifting issues by adjusting the
+			//scaling the lattice region radius
+			Decoder dec = new LeechDecoder(TestUtil.max(vec)*2);
+			
 			Projector p = new DBFriendlyProjection(so.getdim(), 
 					dec.getDimensionality(),so.getRandomSeed());
 			LSH lsh = new LSH(dec,p,hal);
@@ -55,10 +63,9 @@ public class RPHash {
 			HashMap<Long,Centroid> centroids = new HashMap<Long,Centroid>();
 			for(Long id:so.getIDs())
 				centroids.put(id, new Centroid(so.getdim()) );
+			
 			//start the calculation
 			long d;
-			float[] vec = so.getNextVector();
-			
 			//add to frequent itemset the hashed Decoded randomly projected vector
 			while(vec != null)
 			{
@@ -68,11 +75,9 @@ public class RPHash {
 					d = lsh.lshHash(vec);
 					cent = centroids.get(d);
 					if(cent!=null)cent.updateVec(vec);
-					
 				}while(cent ==null && j++<Math.log(so.getn()));
 				vec = so.getNextVector();
 			}
-			
 			
 			for (Long id: centroids.keySet()){
 				so.addCentroid(centroids.get(id).centroid());

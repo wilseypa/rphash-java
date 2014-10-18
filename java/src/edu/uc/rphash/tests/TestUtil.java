@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +33,14 @@ public class TestUtil {
 		}
 		return minindex;
 	}
-	static void prettyPrint(List<float[]> mat){
+	
+	public static void prettyPrint(float[][] mat){
+		ArrayList<float[]> tmp = new ArrayList<float[]>();
+		for(float[] m : mat)tmp.add(m);
+		prettyPrint(tmp);
+	}
+	
+	public static void prettyPrint(List<float[]> mat){
 		int m = mat.size();
 		int n = mat.get(0).length;
 		boolean curtailm = m>10;
@@ -52,10 +58,9 @@ public class TestUtil {
 				prettyPrint(mat.get(i));
 			}
 		}
-		
 	}
 	
-	static void prettyPrint(float[] mat){
+	public static void prettyPrint(float[] mat){
 		int n = mat.length;
 		boolean curtailm = n>10;
 		if(curtailm){
@@ -112,6 +117,36 @@ public class TestUtil {
 			}
 	}
 	
+	public static float max(float[] l){
+		float mx = l[0];
+		for(int i = 1; i<l.length;i++){
+			if(l[i]>mx){
+				mx=l[i];
+			}
+		}
+		return mx;
+	}
+	
+	public static float min(float[] l){
+		float mx = l[0];
+		for(int i = 1; i<l.length;i++){
+			if(l[i]<mx){
+				mx=l[i];
+			}
+		}
+		return mx;
+	}
+	
+	
+	/**Read a simple matrix format of 
+	 * row[newline]
+	 * col[newline]
+	 * data_1_1[newline]
+	 * ...[newline]
+	 * data_||row||_||col||
+	 * @param input
+	 * @return
+	 */
 	static List<float[]> readFile(File input){
 		BufferedReader in = null;
 		List<float[]> M = null;
@@ -126,11 +161,9 @@ public class TestUtil {
 					vec[j] = Float.parseFloat(in.readLine());
 				M.add(vec);
 			}
-			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 		if(in!=null){
 			try {
 				in.close();

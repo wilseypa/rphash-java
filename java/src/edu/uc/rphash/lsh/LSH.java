@@ -10,22 +10,23 @@ public class LSH
 	HashAlgorithm hal;
 	Decoder dec;
 	int times;
+
 	public LSH(Decoder dec,Projector p, HashAlgorithm hal)
 	{
 		this.p = p;
 		this.hal = hal;
 		this.dec = dec;
+		this.times = 1;
 	}
 
 	/*
 	 * Decode full n length vector. Concatenate codes and run universal hash(fnv,elf, murmur) on whole vector decoding.
 	 */
-	public long lshHash(float[] r){
-
+	public long lshHash(float[] r){	 
 	     int k=0;
 	     long ret = 0;
 	     do{
-	         float[] r1 = p.project(r);
+	         float[] r1 = p.project(r);	         
 	         ret =  hal.hash(dec.decode(r1)) ^ ret;
 	         k++;
 	     }while(k<times);

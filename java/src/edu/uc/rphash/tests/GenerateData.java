@@ -19,6 +19,7 @@ public class GenerateData
 	List<float[]>  data;
 	List<float[]> medoids;
 	List<Integer> reps;
+	float scaler;
 	
 	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension){
 		r = new Random();
@@ -28,8 +29,8 @@ public class GenerateData
 		this.medoids = null;
 		this.data = null;
 		this.reps = null;
-		
-		genfnc = new RandomDistributionFnc(){
+		this.scaler = (float)Math.sqrt(dimension);//normalize dimension
+		this.genfnc = new RandomDistributionFnc(){
 			@Override
 			public float genVariate() {
 				return (float)r.nextGaussian();
@@ -38,13 +39,39 @@ public class GenerateData
 		
 		generateMem();
 	}
+	
+	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension,float variance){
+		r = new Random();
+		this.numClusters =numClusters;
+		this.numVectorsPerCluster=numVectorsPerCluster;
+		this.dimension=dimension;
+		this.medoids = null;
+		this.data = null;
+		this.reps = null;
+		
+		if(variance>0)
+			this.scaler = variance;//normalize dimension
+		else
+			this.scaler = 1.0f/(float)Math.sqrt(dimension);
+		
+		this.genfnc = new RandomDistributionFnc(){
+			@Override
+			public float genVariate() {
+				return (float)r.nextGaussian();
+			}
+		};
+		
+		generateMem();
+	}
+	
 	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension, RandomDistributionFnc genvariate)
 	{
 		r = new Random();
 		this.numClusters =numClusters;
 		this.numVectorsPerCluster=numVectorsPerCluster;
 		this.dimension=dimension;
-		genfnc = genvariate;
+		this.genfnc = genvariate;
+		this.scaler =  1.0f/(float)Math.sqrt(dimension);//normalize dimension
 		this.medoids = null;
 		this.data = null;
 		
@@ -56,9 +83,10 @@ public class GenerateData
 		this.numClusters =numClusters;
 		this.numVectorsPerCluster=numVectorsPerCluster;
 		this.dimension=dimension;
+		this.scaler =  1.0f/(float)Math.sqrt(dimension);//normalize dimension
 		this.medoids = new ArrayList<float[]>();
 		this.data = new ArrayList<float[]>();
-		genfnc = new RandomDistributionFnc(){
+		this.genfnc = new RandomDistributionFnc(){
 			@Override
 			public float genVariate() {
 				return (float)r.nextGaussian();
@@ -71,7 +99,8 @@ public class GenerateData
 		this.numClusters =numClusters;
 		this.numVectorsPerCluster=numVectorsPerCluster;
 		this.dimension=dimension;
-		genfnc = genvariate;
+		this.scaler =  1.0f/(float)Math.sqrt(dimension);//normalize dimension
+		this.genfnc = genvariate;
 		generateDisk(f);
 	}
 	
@@ -94,7 +123,9 @@ public class GenerateData
 	{
 		this.data = new ArrayList<float[]>();//new float[numClusters*numVectorsPerCluster][dimension];
 		this.medoids = new ArrayList<float[]>();//new float[numClusters][dimension];
-		float scaler = (float)Math.sqrt(dimension);//normalize dimension
+		
+		//float 
+//		float maxval = 0.0f;
 		for(int i=0;i<numClusters;i++){
 			//gen cluster center
 			float[] medoid = new float[dimension];
@@ -107,7 +138,11 @@ public class GenerateData
 			for(int j=0;j<numVectorsPerCluster;j++){
 				float[] dat = new float[dimension];
 				for(int k=0;k<dimension;k++){
-					dat[k] = medoid[k]+(float)r.nextGaussian()/scaler;
+					dat[k] = medoid[k]+(float)r.nextGaussian()*scaler;
+//					if(dat[k]>maxval){
+//						maxval = dat[k];
+//						System.out.println(maxval);
+//					}
 				}
 				this.data.add(dat);
 			}
