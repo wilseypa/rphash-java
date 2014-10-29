@@ -15,16 +15,19 @@ public class Centroid {
 	{
 		if(centroidvec != null)
 			return centroidvec;
-		//else
 		centroidvec = new float[vec.length];
+		
 		for (int j =0;j<vec.length;j++)
 			centroidvec[j] = vec[j]/(float)count;
+		
 		return centroidvec;
 	}
-	
-	
+
 	public void updateVec(float[] n)
 	{
+		if(count==0){
+			for (int j =0;j<vec.length;j++)vec[j] = n[j];
+		}
 		for (int j =0;j<vec.length;j++)
 			vec[j] = vec[j]+n[j];
 		count++;

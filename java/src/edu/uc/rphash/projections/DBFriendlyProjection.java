@@ -2,6 +2,8 @@ package edu.uc.rphash.projections;
 
 import java.util.Random;
 
+import edu.uc.rphash.tests.TestUtil;
+
 
 public class DBFriendlyProjection implements Projector {
 	int RAND_MAX= 2147483647;
@@ -79,6 +81,7 @@ public class DBFriendlyProjection implements Projector {
 		          sum+=v[i]*M[i*n+j];
 		      r[i] = sum;
 		  }
+		  
 //		  System.out.println(TestUtil.max(r)+":"+TestUtil.max(v));
 //		  System.out.println(TestUtil.min(r)+":"+TestUtil.min(v));
 		  return r;

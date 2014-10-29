@@ -138,4 +138,10 @@ public class SimpleArrayReader implements RPHashObject {
 		return centroids.get(curCentroid++);
 	}
 
+	@Override
+	public List<Long> getCounts() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

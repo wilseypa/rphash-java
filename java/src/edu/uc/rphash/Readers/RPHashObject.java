@@ -11,6 +11,7 @@ public interface RPHashObject {
 	int getHashmod();
 	float[] getNextVector();
 	List<Long> getIDs();
+	List<Long> getCounts();
 	List<float[]>  getCentroids();
 	float[] getNextCentroid();
 	

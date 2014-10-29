@@ -1,5 +1,7 @@
 package edu.uc.rphash.lsh;
 
+import java.util.Random;
+
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
@@ -10,13 +12,14 @@ public class LSH
 	HashAlgorithm hal;
 	Decoder dec;
 	int times;
-
+	Random rand ;
 	public LSH(Decoder dec,Projector p, HashAlgorithm hal)
 	{
 		this.p = p;
 		this.hal = hal;
 		this.dec = dec;
 		this.times = 1;
+		rand = new Random();
 	}
 
 	/*
@@ -32,34 +35,28 @@ public class LSH
 	     }while(k<times);
 	  return ret ;
 	}
-
-
-    //sometimes the RP throws stuff out of the lattice
-    //check min/max are near the interval [-1,1]
-//    int d = 1;
-//    float sump = r1[0];
-//    float summ = r1[0];
-//    float avg = 0.0;
-//    for(;d<24;d++){
-//        if(summ>r1[d])summ =r1[d] ;
-//        if(sump<r1[d])sump =r1[d] ;
-//        avg+=r1[d];
-//    }
-//    printf("proj %f, %f, %f\n",summ,avg/24.0,sump)//;
-
-//    d = 1;
-//    sump = r[0];
-//    summ = r[0];
-//    avg = 0.0;
-//    for(;d<len;d++){
-//        if(summ>r[d])summ =r[d] ;
-//        if(sump<r[d])sump =r[d] ;
-//        avg+=r[d];
-//    }
-//    printf("norm %f, %f, %f\n",summ,avg/len,sump);
-
+	
 
 	
+	public long lshHash(float[] r,float[] perm){	 
+	  float[] permvec = new float[r.length];	
+	  for(int i =0;i<r.length;i++)permvec[i] = perm[i]+r[i];
+	  return lshHash(permvec) ;
+	}
+
+	public long lshHashRadius(float[] r,float radius){
+		 float[] permvec = new float[dec.getDimensionality()];
+	     //long ret = 0;
+	     float[] r1 = p.project(r);	
+	     for(int i =0;i<dec.getDimensionality();i++)
+	    	 permvec[i] = (float)rand.nextGaussian()*radius + r1[i];
+	     
+	     
+		 return hal.hash(dec.decode(permvec)); 
+		}
 	
+	public long lshHashRadius(float[] r){
+		  return lshHashRadius(r,dec.getErrorRadius()) ;
+	}
 
 }

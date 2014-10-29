@@ -15,7 +15,8 @@ public class GaussianProjection implements Projector{
 		this.n = n;
 		this.t = t;
 		r = new Random();
-		randn = quicksqrt(n);
+		GenGauss(n,t);
+		//randn = quicksqrt(n);
 	}
 	
 	float quicksqrt(float b)
@@ -46,8 +47,8 @@ public class GaussianProjection implements Projector{
 		  {
 		      sum = 0.0f;
 		      for(j=0;j < n; j++ )
-		          sum+=v[i]*M[i*n+j]*randn;
-		      r[i] = sum;
+		          sum+=v[i]*M[i*n+j];
+		      r[i] = sum*(float)(Math.sqrt(t)/Math.sqrt(n));//scaled
 		  }
 		  return r;
 		}
@@ -67,7 +68,7 @@ public class GaussianProjection implements Projector{
 		
 		void GenGauss(int n,int t)
 		{
-			
+			M = new float[n*t];
 			int i =0;
 			int elem = n*t;      //vv see which is faster on you machine
 			while(i<elem)M[i++] = (float)r.nextGaussian();//sampleNormal();

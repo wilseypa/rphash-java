@@ -3,7 +3,6 @@ package edu.uc.rphash.tests;
 
 import java.util.ArrayList;
 import java.util.Collections;
-
 import java.util.List;
 import java.util.Random;
 
@@ -11,7 +10,6 @@ import org.streaminer.stream.frequency.BaseFrequency;
 import org.streaminer.stream.frequency.FrequencyException;
 import org.streaminer.stream.frequency.LossyCounting;
 import org.streaminer.stream.frequency.RealCounting;
-
 import org.streaminer.stream.frequency.StickySampling;
 import org.streaminer.stream.frequency.util.CountEntry;
 
@@ -20,6 +18,12 @@ import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.LeechDecoder;
+import edu.uc.rphash.lsh.LSH;
+import edu.uc.rphash.projections.DBFriendlyProjection;
+import edu.uc.rphash.projections.GaussianProjection;
+import edu.uc.rphash.projections.Projector;
+import edu.uc.rphash.standardhash.FNVHash;
+import edu.uc.rphash.standardhash.HashAlgorithm;
 
 //import edu.uc.rphash.frequentItemSet.KarpFrequentItemSet;
 //import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
@@ -185,26 +189,27 @@ public class TestRPhash {
 		
 		GenerateData gen = new GenerateData(k,n/k,d,variance);
 		System.out.print(k+":"+n+":"+d+":"+variance+"\t");
-//		System.out.print(StatTests.PR(gen.medoids(),gen)+":\t");
-//		long startTime = System.nanoTime();
-//		List<float[]> M = ( new Kmeans(k,gen.data())).getCentroids();
-//		long duration = (System.nanoTime() - startTime);
-//
-//		List<float[]> aligned = TestUtil.alignCentroids(M,gen.medoids());
-//		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
-//		System.out.print("\t");
-//		System.gc();
+		System.out.print(StatTests.PR(gen.medoids(),gen)+":\t");
+		long startTime = System.nanoTime();
+		List<float[]> M = ( new Kmeans(k,gen.data())).getCentroids();
+		long duration = (System.nanoTime() - startTime);
+
+		List<float[]> aligned = TestUtil.alignCentroids(M,gen.medoids());
+		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
+		System.out.print("\t");
+		System.gc();
 //		for(int i = 0 ; i< k;i++)
 //			System.out.println(i+":"+TestUtil.distance(aligned.get(i), gen.medoids().get(i)));
 
-		long startTime = System.nanoTime();
+		startTime = System.nanoTime();
 		RPHashObject so = new SimpleArrayReader(gen.data(),k,1,250000);
 		RPHash clusterer = new RPHash();
 		so = clusterer.mapP1(so);
+	
 		so = clusterer.mapP2(so);
-		long duration = (System.nanoTime() - startTime);
+		duration = (System.nanoTime() - startTime);
 		
-		List<float[]> aligned  = TestUtil.alignCentroids(so.getCentroids(),gen.medoids());
+		aligned  = TestUtil.alignCentroids(so.getCentroids(),gen.medoids());
 		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
 //		for(int i = 0 ; i< k;i++)
 //			System.out.println(i+":"+TestUtil.distance(aligned.get(i), gen.medoids().get(i)));
@@ -214,9 +219,9 @@ public class TestRPhash {
 	static void clusterPerformanceTests()
 	{
 		int k = 20;
-		int n = 50000;
+		int n = 10000;
 		int d = 1000;
-		float v = .1f;
+		float v = .5f;
 		
 //		System.out.println("-------varying variance-------");
 //		GenerateData gen = new GenerateData(k,n/k,d,2f);
@@ -231,10 +236,10 @@ public class TestRPhash {
 //		System.out.println(StatTests.PR(gen.medoids(),gen));
 
 		System.out.println("-------varying variance-------");
-		for(int i = 1 ;i<40;i++){
-			testRPHash(k+i,n,d,i/100f);
-//			testRPHash(k+i,n,d,i/100f);
-//			testRPHash(k+i,n,d,i/100f);
+		for(int i = 50 ;i<100;i+=5){
+			testRPHash(k,n,d,i/100f);
+			testRPHash(k,n,d,i/100f);
+			testRPHash(k,n,d,i/100f);
 		}
 
 		System.out.println("-------varying k-------");
@@ -258,11 +263,57 @@ public class TestRPhash {
 		
 		
 	}
+	static void testRPH(int n,int d,int multi){
+		GenerateData gen = new GenerateData(n,2,d,.1f,false);
+		Random rand= new Random();
+		int nlog =multi;//(int)(Math.log(d) +.5)*multi;//round
+		float sum =0.0f;
+		float sumun = 0.0f;
+		float sumreal =0.0f;
+		float sumunreal = 0.0f;
+		
+		HashAlgorithm hal = new FNVHash(138018);
+		//Decoder dec = new LeechDecoder(1.3f);
+		
+		
+		Projector[] p1 = new Projector[ nlog]; 
+		for(int i =0;i<p1.length;i++)p1[i]=new GaussianProjection(d,24);
+		Projector[] p2 = new Projector[ nlog]; 
+		for(int i =0;i<p2.length;i++)p2[i]=new GaussianProjection(d,24);
+		
+		for(int i =0;i<gen.data.size();i+=2){
+			//LSH lsh =  new LSH(dec,p1[0],hal);
+
+			float[] f1 = RPHash.avgProjection(gen.data.get(i), p1, 24);
+			float[] f2 = RPHash.avgProjection(gen.data.get(i+1), p2, 24);
+			sum+=TestUtil.distance(f1,f2);
+			sumreal +=TestUtil.distance(gen.data.get(i),gen.data.get(i+1));
+
+			//get a random vector
+			float[] r2 = gen.data.get(rand.nextInt(gen.data.size()));
+			sumunreal +=TestUtil.distance(gen.data.get(i),r2);
+			f2 = RPHash.avgProjection(r2, p1, 24);
+			sumun+=TestUtil.distance(f1,f2);
+			
+//			TestUtil.prettyPrint(f1);
+//			TestUtil.prettyPrint(f2);
+//			System.out.print(lsh.lshHash(f1)+":"+lsh.lshHash(f2));
+//			System.out.println("----------------------------------"+sum+"--------------------------------------");
+			
+			
+		}
+		
+		   System.out.println(multi+":"+sum/sumun+"|"+sumreal/sumunreal);
+		
+		
+		
+	}
 	
+
 	public static void main(String[] args){
 		//testFrequentItems();
 		clusterPerformanceTests();
-
+	   /* for(int i = 0; i<100;i++)*/testRPH(1000,24,4);
 			
 	}
 	

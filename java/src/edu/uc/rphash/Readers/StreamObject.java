@@ -16,8 +16,46 @@ public class StreamObject implements RPHashObject {
 	int hashmod;
 	List<Long> ids;
 	List<Long> counts;
+	List<float[]> centroids;
+	int centit;
+	int ctit;
 	
-	String spacetoken(BufferedInputStream elements)throws IOException{
+	// input format
+	//per line
+	//top ids list (integers)
+	// --num of clusters ( == k)
+	// --num of data( == n)
+	// --num dimensions
+	// --input random seed;
+	StreamObject(BufferedInputStream elements)
+	{
+		
+		this.ids = new ArrayList<Long>();
+		this.counts = new ArrayList<Long>();;
+		this.centroids = new ArrayList<float[]>();
+		this.centit = 0;
+		this.ctit = 0;
+
+		try{
+			k = Integer.parseInt(spacetoken());
+			n = Integer.parseInt(spacetoken());
+			dim = Integer.parseInt(spacetoken());
+			randomseed = Integer.parseInt(spacetoken());
+			hashmod = Integer.parseInt(spacetoken());
+		}catch(IOException e){
+			System.err.println("Couldn't Read Datastream");
+		}
+		catch(NumberFormatException pe)
+		{
+			System.err.println("Couldn't Parse Stream Number Format Error ");	
+		}
+		
+	}
+	
+	
+	
+	
+	String spacetoken()throws IOException{
 		StringBuilder sb = new StringBuilder();
 		char b = (char)elements.read();
 		sb.append(elements.read());
@@ -31,13 +69,13 @@ public class StreamObject implements RPHashObject {
 	
 	String getNext()throws IOException
 	{
-		return spacetoken(elements);
+		return spacetoken();
 	}
 	
 	float getNextFloat()
 	{
 		try{
-			return Float.parseFloat(spacetoken(elements));
+			return Float.parseFloat(spacetoken());
 		}
 		catch(IOException e){
 			System.err.println("Couldn't Read Datastream");
@@ -55,7 +93,7 @@ public class StreamObject implements RPHashObject {
 		int i = 0;
 		try{
 			while(i<dim)
-				data[i++] = Float.parseFloat(spacetoken(elements));
+				data[i++] = Float.parseFloat(spacetoken());
 		}
 		catch(IOException e){
 			System.err.println("Couldn't Read Datastream");
@@ -67,30 +105,7 @@ public class StreamObject implements RPHashObject {
 		return data;
 	}
 
-	// input format
-	//per line
-	//top ids list (integers)
-	// --num of clusters ( == k)
-	// --num of data( == n)
-	// --num dimensions
-	// --input random seed;
-	StreamObject(BufferedInputStream elements)
-	{
-		try{
-			k = Integer.parseInt(spacetoken(elements));
-			n = Integer.parseInt(spacetoken(elements));
-			dim = Integer.parseInt(spacetoken(elements));
-			randomseed = Integer.parseInt(spacetoken(elements));
-			hashmod = Integer.parseInt(spacetoken(elements));
-		}catch(IOException e){
-			System.err.println("Couldn't Read Datastream");
-		}
-		catch(NumberFormatException pe)
-		{
-			System.err.println("Couldn't Parse Stream Number Format Error ");	
-		}
-		
-	}
+
 
 	@Override
 	public int getk() {
@@ -145,29 +160,43 @@ public class StreamObject implements RPHashObject {
 	
 	@Override
 	public void reset() {
-		//current = 0;
+			centit = 0;
+			ctit = 0;
+			try{
+				elements.reset();
+			}catch(IOException ioe){
+				ioe.printStackTrace();
+			}
+		
 	}
 
 	@Override
 	public void addCentroid(float[] v) {
-		// TODO Auto-generated method stub
+		centroids.add(v);
 		
 	}
 
 	@Override
 	public void setCentroids(List<float[]> l) {
-		// TODO Auto-generated method stub
+		centroids = l;
 		
 	}
 
 	@Override
 	public List<float[]> getCentroids() {
-		// TODO Auto-generated method stub
-		return null;
+		return centroids;
 	}
 
 	@Override
 	public float[] getNextCentroid() {
+		return centroids.get(centit++);
+	}
+
+
+
+
+	@Override
+	public List<Long> getCounts() {
 		// TODO Auto-generated method stub
 		return null;
 	}

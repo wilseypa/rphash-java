@@ -1,5 +1,7 @@
 package edu.uc.rphash.decoders;
 
+import edu.uc.rphash.tests.TestUtil;
+
 /*Author: Lee Carraher
 #Institution: University of Cincinnati, Computer Science Dept.
 
@@ -150,32 +152,52 @@ public class LeechDecoder implements Decoder{
 	#define DPT  7
 	 */
 
-	float APT = -.75f;
-	float  BPT = -.25f;
-	float CPT = .25f;
-	float  DPT = .75f;
+
 
 	// shaping -.75, -.25,+.25,+.75
 	//the unit scaled points of 16QAM centered at the origin.
 	// along with their golay code + parity bit representations
 	//000, 110 , 001, 111
-	float[][] evenAPts = {{APT, DPT},{CPT, DPT},{CPT, BPT},{APT, BPT}};
+	float[][] evenAPts ;
 	//010 100 011 101
-	float[][] oddAPts  ={{BPT, CPT},{BPT, APT},{DPT, APT},{DPT, CPT}};
+	float[][] oddAPts;
 	//000, 110 , 001, 111
-	float[][] evenBPts = {{BPT, DPT},{DPT, DPT},{DPT, BPT},{BPT, BPT}};
+	float[][] evenBPts;
 	//010 100 011 101
-	float[][] oddBPts  = {{CPT, CPT},{CPT, APT},{APT, APT},{APT, CPT}};
+	float[][] oddBPts ;
+	float APT = -.75f;
+	float  BPT = -.25f;
+	float CPT = .25f;
+	float  DPT = .75f;
+	
+	
+	public LeechDecoder(){
 
-	
-	
-	public LeechDecoder(){}
+		float[][] evenAPts = {{APT, DPT},{CPT, DPT},{CPT, BPT},{APT, BPT}};
+		float[][] oddAPts  ={{BPT, CPT},{BPT, APT},{DPT, APT},{DPT, CPT}};
+		float[][] evenBPts = {{BPT, DPT},{DPT, DPT},{DPT, BPT},{BPT, BPT}};
+		float[][] oddBPts  = {{CPT, CPT},{CPT, APT},{APT, APT},{APT, CPT}};
+		this.evenAPts  = evenAPts;
+		this.oddAPts = oddAPts;
+		this.evenBPts = evenBPts;
+		this.oddBPts = oddBPts;
+		
+	}
 
 	public LeechDecoder(float scaler){
-		this.APT *=scaler;
-		this.BPT *=scaler;
-		this.CPT *=scaler;
-		this.DPT *=scaler;
+		APT = this.APT*scaler;
+		BPT = this.BPT*scaler;
+		CPT =this.CPT*scaler;
+		DPT =this.DPT*scaler;
+		float[][] evenAPts = {{APT, DPT},{CPT, DPT},{CPT, BPT},{APT, BPT}};
+		float[][] oddAPts  ={{BPT, CPT},{BPT, APT},{DPT, APT},{DPT, CPT}};
+		float[][] evenBPts = {{BPT, DPT},{DPT, DPT},{DPT, BPT},{BPT, BPT}};
+		float[][] oddBPts  = {{CPT, CPT},{CPT, APT},{APT, APT},{APT, CPT}};
+		this.evenAPts  = evenAPts;
+		this.oddAPts = oddAPts;
+		this.evenBPts = evenBPts;
+		this.oddBPts = oddBPts;
+		
 	}
 	
 	 
@@ -240,14 +262,14 @@ public class LeechDecoder implements Decoder{
 		System.out.printf("\n");
 	}
 
-	void convertToCoords(long c,float point[])
+	float[] convertToCoords(long c)
 	{
 
+		float[] point = new float[24];
 		float axCoords[] = {APT,CPT, BPT,DPT,BPT,DPT,CPT,APT };
 		float ayCoords[] = {DPT,BPT,CPT,APT,APT,CPT,DPT,BPT};
 		float bxCoords[] = {BPT,DPT,CPT,APT,CPT,APT,DPT,BPT};
 		float byCoords[] = {DPT,BPT, CPT,APT,APT,CPT,DPT,BPT};
-
 
 		int parity = (int)(c&0xfff);//seperate these parts
 
@@ -286,7 +308,7 @@ public class LeechDecoder implements Decoder{
 				parity = parity>>>1;
 			}
 		}
-
+		return point;
 
 	}
 
@@ -844,11 +866,11 @@ public class LeechDecoder implements Decoder{
 	}
 
 
-	byte[] convertbin(char[] cw,char[] cp){
+	byte[] convertbin(char[] cw,char[] cp){//,byte[] quantization){
 		//unsigned long leastCodeword;
 		//unsigned char* leastCodeword = malloc(24*sizeof(unsigned char));
 		//unsigned char leastCodeword[24];
-		byte[] retOpt = new byte[9];
+		byte[] retOpt = new byte[5];//+24];
 
 		//A is default the least weight decoding
 		//for(i=0;i<24;i++)
@@ -865,21 +887,50 @@ public class LeechDecoder implements Decoder{
 		retOpt[3] = (byte)(cp[0]+(cp[1]<<1)+(cp[2]<<2)+(cp[3]<<3)
 				+(cp[4]<<4)+(cp[5]<<5)+(cp[6]<<6)+(cp[7]<<7));
 		retOpt[4] = (byte)(cp[8]+(cp[9]<<1)+(cp[10]<<2)+(cp[11]<<3));
+		//for(int i=0;i<quantization.length;i++)retOpt[i+5]=quantization[i];
+		
+		
+		
 		return retOpt;
 		
 	}
 
 	@Override
 	public int getDimensionality() {
-		// TODO Auto-generated method stub
 		return 24;
 	}
+	@Override
+	public float getErrorRadius() {
+		return (float)Math.sqrt(2)/ (5.099f*(1.0f/(DPT*2f)));
+	}
+	
+//	/** Generate the initial quantization vector for the lattice. ie <1,0,1,1,1,0,1,1> is a valid E8 vector
+//	 * as is <8,0,-8,4,1,0,1,1>, there is simply a quantization disparity. to fix this we simply solve the
+//	 * unscaled version equation cX = 1X
+//	 * @return
+//	 */
+//	public byte[] generateQuantizationVector(float[] r){
+//		byte[] ret = new byte[r.length];
+//		//4.0 -> 0.0 mean, 
+//		for(int i =0;i<r.length;i++)
+//		{
+//			//translate to [[-1,1], [-1,1]]
+//			byte wholeNumberPart = (byte)(r[i]%2);
+//			byte numberofshifts = (byte) (wholeNumberPart / 2);
+//			r[i] -= (2*numberofshifts);
+//			
+//			ret[i] = wholeNumberPart ;
+//			System.out.print(ret[i]+":"+String.valueOf(r[i]).substring(0, 5)+",");
+//		}
+//		System.out.println();
+//		return ret;
+//		
+//	}
 	
 	//unsigned char* decode(float r[12][2], float *distance){
 	//unsigned long long decodeLeech(float *r,float *distance)
 	public byte[] decode(float[] r)
 	{
-
 		// #####################QAM Dijks ###################
 		//float* dijs = malloc(sizeof(float)*12*4) ;
 		float[][] dijs = new float[12][4];
@@ -888,6 +939,9 @@ public class LeechDecoder implements Decoder{
 		//there is a set for each quarter decoder, and the A/B_ij odd/even
 		//unsigned char* kparities =malloc(sizeof(unsigned char)*12*4) ;
 		char[][] kparities = new char[12][4];
+		
+		
+		//byte[] append =  generateQuantizationVector(r);
 		QAM(r,evenAPts,oddAPts,dijs,dijks,kparities);
 
 		// #####################Block Confidences ###################
@@ -930,14 +984,14 @@ public class LeechDecoder implements Decoder{
 		//int winner = 0;
 		float leastweight;
 		byte[] retOpt;
-		
+
 		
 		weight = hparity(weight,y,prefRepE,dijs,0,cw);//byref
 		weight =kparity(weight,cw,(char)0, cp,dijks,dijs,kparities);
 		
 		//set as least
 		leastweight = weight;
-		retOpt = convertbin(cw,cp);
+		retOpt = convertbin(cw,cp);//,append);
 
 
 		//----------------A Odd Quarter Lattice Decoder----------------
@@ -950,7 +1004,7 @@ public class LeechDecoder implements Decoder{
 		if(weight<leastweight)
 		{
 			leastweight = weight;
-			retOpt = convertbin(cw,cp);
+			retOpt = convertbin(cw,cp);//,append);
 			//winner = 1;
 		}
 
@@ -968,7 +1022,7 @@ public class LeechDecoder implements Decoder{
 
 		if(weight<leastweight){
 			leastweight = weight;
-			retOpt = convertbin(cw,cp);
+			retOpt = convertbin(cw,cp);//,append);
 			//winner = 2;
 		}
 
@@ -980,50 +1034,29 @@ public class LeechDecoder implements Decoder{
 
 		if(weight<leastweight){
 			leastweight = weight;
-			retOpt = convertbin(cw,cp);
+			retOpt = convertbin(cw,cp);//,append);
 			//winner =3;
 		}
 		//distance = winner;
 
-
-		//	    int c;
-		//	    for(c=0;c<4;c++)System.out.print((int)codeword[c]);
-		//	    System.out.print("\t");
-		//	    for(c=0;c<4;c++)System.out.print((int)codeword[c+4]);
-		//	    System.out.print("\t");
-		//	    for(c=0;c<4;c++)System.out.print((int)codeword[c+8]);
-		//	    System.out.print("\t");
-		//	    for(c=0;c<4;c++)System.out.print((int)codeword[c+12]);
-		//	    System.out.print("\t");
-		//	    for(c=0;c<4;c++)System.out.print((int)codeword[c+16]);
-		//	    System.out.print("\t");
-		//	    for(c=0;c<4;c++)System.out.print((int)codeword[c+20]);
-		//	    System.out.print("\t");
-		//	    for(c=0;c<4;c++)System.out.print((int)codeParity[c]);
-		//	    System.out.print("\t");
-		//	    for(c=0;c<4;c++)System.out.print((int)codeParity[c+4]);
-		//	    System.out.print("\t");
-		//	    for(c=0;c<4;c++)System.out.print((int)codeParity[c+8]);
-		//	    System.out.println();//winner);
-
 		return retOpt;//leastCodeword;
 	}
 
-//	public static float[] cnv(double[] fff){
-//		float[] ret = new float[fff.length];
-//		for(int i = 0 ;i<fff.length;i++)ret[i] = (float)fff[i];
-//		return ret;
-//	}
+	public static float[] cnv(double[] fff){
+		float[] ret = new float[fff.length];
+		for(int i = 0 ;i<fff.length;i++)ret[i] = (float)fff[i];
+		return ret;
+	}
 
 
-	/*public static void main(String[] args)
+	public static void main(String[] args)
 {
 	Decoder leech = new LeechDecoder();
 	double[] f = {-0.98796955, -1.1529434 ,  1.4390883 ,  1.40046597,  0.40183179,
 			-0.56885575, -0.81956525,  1.25615557, -1.29526976, -0.62859484,
 			-0.7260114 ,  1.19387512,  0.74441283, -0.31003198,  1.16529063,
 			0.03210929,  0.88011717,  0.98265615,  1.93322648, -0.05865583,
-			-0.56355944, -0.67748379,  0.03904684, -1.0102314};
+			-0.56355944, -7.67748379,  0.03904684, -1.0102314};
 
 
 
@@ -1054,13 +1087,13 @@ public class LeechDecoder implements Decoder{
 				0.28450671,  0.20654879, -2.08840144, -1.72441501, -0.66277794,
 				-0.72239422, -0.44093551,  1.02989744,  1.28223695};
 
-		System.out.println(leech.decode(cnv(f)));
-		System.out.println(leech.decode(cnv(u)));
-		System.out.println(leech.decode(cnv(c)));
-		System.out.println(leech.decode(cnv(k)));
-		System.out.println(leech.decode(cnv(y)));
-		System.out.println(leech.decode(cnv(o)));
+		TestUtil.prettyPrint(leech.decode(cnv(f)));
+		TestUtil.prettyPrint(leech.decode(cnv(u)));
+		TestUtil.prettyPrint(leech.decode(cnv(c)));
+		TestUtil.prettyPrint(leech.decode(cnv(k)));
+		TestUtil.prettyPrint(leech.decode(cnv(y)));
+		TestUtil.prettyPrint(leech.decode(cnv(o)));
 
-}*/
+}
 }
 

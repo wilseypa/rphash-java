@@ -19,7 +19,7 @@ public class TestUtil {
 		return dist;
 	}
 	
-	static int findNearestDistance(float[] x,List <float[]> DB)
+	public static int findNearestDistance(float[] x,List <float[]> DB)
 	{
 		float mindist = distance(x,DB.get(0));
 		int minindex = 0;
@@ -83,7 +83,7 @@ public class TestUtil {
 	}
 	
 	
-	static List<float[]> alignCentroids(List<float[]> estCentroids, List<float[]> realCentroids)
+	public static List<float[]> alignCentroids(List<float[]> estCentroids, List<float[]> realCentroids)
 	{
 		List<float[]> aligned = new ArrayList<float[]>(realCentroids.size());
 		for(int i = 0 ; i< realCentroids.size();i++)aligned.add(new float[0]);
@@ -96,7 +96,7 @@ public class TestUtil {
 		return aligned;
 	}
 	
-	static void writeFile(File output,List<float[]> data){
+	public static void writeFile(File output,List<float[]> data){
 		BufferedWriter out = null;
 		try {
 			out = new BufferedWriter(new FileWriter(output));
@@ -126,6 +126,17 @@ public class TestUtil {
 		}
 		return mx;
 	}
+
+	public static double max(List l){
+		double mx = (double)l.get(0);
+		for(int i = 1; i<l.size();i++){
+			if((double)l.get(i) > mx){
+				mx=(double)l.get(i);
+			}
+		}
+		return mx;
+	}
+	
 	
 	public static float min(float[] l){
 		float mx = l[0];
@@ -135,6 +146,14 @@ public class TestUtil {
 			}
 		}
 		return mx;
+	}
+	public static String b2s(byte b){
+		String s = "";
+		for(int i =0;i<8;i++){
+			s+= Integer.valueOf(b)&1;
+			b>>>=1;
+		}
+		return s;
 	}
 	
 	
@@ -147,7 +166,7 @@ public class TestUtil {
 	 * @param input
 	 * @return
 	 */
-	static List<float[]> readFile(File input){
+	public static List<float[]> readFile(File input){
 		BufferedReader in = null;
 		List<float[]> M = null;
 		try {
@@ -172,6 +191,14 @@ public class TestUtil {
 			}
 		}
 		return M;
+	}
+	
+	public static void prettyPrint(byte[] b){
+		for(int i =0;i<b.length;i++){
+			System.out.print(b[i]+",");
+		}
+		System.out.println();
+		
 	}
 	
 

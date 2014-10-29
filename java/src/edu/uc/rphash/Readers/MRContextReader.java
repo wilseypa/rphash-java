@@ -1,22 +1,139 @@
-package edu.uc.rphash.MR;
+package edu.uc.rphash.Readers;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
- 
+
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
- 
-public class MrRPHash{
- 
+public class MRContextReader extends StreamObject implements RPHashObject {
+
+	Context elements;
+	MRContextReader(BufferedInputStream elements) {
+		super(elements);
+	}
+	
+	MRContextReader(Context elements) {
+		super(null);
+		this.elements = elements;
+	}
+
+	@Override
+	public int getk() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getn() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getdim() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getRandomSeed() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getHashmod() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public float[] getNextVector() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Long> getIDs() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<float[]> getCentroids() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public float[] getNextCentroid() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setIDs(long[] ids) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setIDs(List<Long> ids) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setCounts(long[] ids) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setCounts(List<Long> ids) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void addCentroid(float[] v) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setCentroids(List<float[]> l) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void reset() {
+		// TODO Auto-generated method stub
+
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
     public static class Map extends Mapper<LongWritable, Text, Text, Text> {
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
@@ -67,27 +184,12 @@ public class MrRPHash{
         }
     }
  
-    public static void main(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        
-        conf.set("m", "2");
-        conf.set("n", "5");
-        conf.set("p", "3");
-        
-        Job job = new Job(conf, "MatrixMatrixMultiplicationTwoSteps");
-        job.setJarByClass(MrRPHash.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
- 
-        job.setMapperClass(Map.class);
-        job.setReducerClass(Reduce.class);
- 
-        job.setInputFormatClass(TextInputFormat.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
- 
-        FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
- 
-        job.waitForCompletion(true);
-    }
+	
+	
+	
+	
+	
+	
+	
+
 }
