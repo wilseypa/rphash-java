@@ -55,10 +55,10 @@ public class RPHash {
 		while (vec != null) {
 			is.add(lsh.lshHash(vec));
 			int j = 0;
-//			while (j < probes) {
-//				is.add(lsh.lshHashRadius(vec));
-//				j++;
-//			}
+			while (j < probes) {
+				is.add(lsh.lshHashRadius(vec));
+				j++;
+			}
 			vec = so.getNextVector();
 		}
 		
@@ -100,15 +100,15 @@ public class RPHash {
 
 			d = lsh.lshHash(vec);
 			cent = centroids.get(d);
-			if (cent != null)cent.updateVec(p[0].project(vec));
-//
-//			while (cent == null && j < probes) {
-//				d = lsh.lshHashRadius(vec);
-//				cent = centroids.get(d);
-//				if (cent != null)
-//					cent.updateVec(p[0].project(vec));
-//				j++;
-//			}
+			if (cent != null)
+				cent.updateVec(p[0].project(vec));	
+			while (cent == null && j < probes) {
+				d = lsh.lshHashRadius(vec);
+				cent = centroids.get(d);
+				if (cent != null)
+					cent.updateVec(p[0].project(vec));
+				j++;
+			}
 			vec = so.getNextVector();
 		}
 		for (Long id : centroids.keySet()) {

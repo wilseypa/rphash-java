@@ -24,6 +24,16 @@ public class LSH
 		radius = dec.getErrorRadius();
 	}
 
+	public LSH(Decoder dec, Projector p, HashAlgorithm hal) {
+		this.p = new Projector[1];
+		this.p[0] = p;
+		this.hal = hal;
+		this.dec = dec;
+		this.times = 1;
+		rand = new Random();
+		radius = dec.getErrorRadius();
+	}
+
 	/*
 	 * Decode full n length vector. Concatenate codes and run universal hash(fnv,elf, murmur) on whole vector decoding.
 	 */

@@ -238,7 +238,7 @@ public class TestRPhash {
 //		System.out.println(StatTests.PR(gen.medoids(),gen));
 
 		System.out.println("-------varying variance-------");
-		for(int i = 50 ;i<200;i+=5){
+		for(int i = 100 ;i<400;i+=5){
 			testRPHash(k,n,d,i/100f);
 			//testRPHash(k,n,d,i/100f);
 			//testRPHash(k,n,d,i/100f);
