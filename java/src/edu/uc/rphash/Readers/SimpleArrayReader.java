@@ -14,11 +14,13 @@ public class SimpleArrayReader implements RPHashObject {
 	int randomseed;
 	int hashmod;
 	int k;
+	int times;
 	List<Long> ids;
 	List<Long> counts;
 	List<float[]> centroids;
 	
-	public SimpleArrayReader(List<float[]> X,int k,int randomseed, int hashmod){
+	
+	public SimpleArrayReader(List<float[]> X,int k,int randomseed, int hashmod,int times){
 		this.X = X;
 		this.n = X.size();
 		this.dim = X.get(0).length;
@@ -28,6 +30,7 @@ public class SimpleArrayReader implements RPHashObject {
 		curCentroid = 0;
 		current = 0;
 		centroids = null;
+		this.times = times;
 	}
 	
 //	public SimpleArrayReader(List<List<Float>> X,int k,int randomseed, int hashmod){
@@ -137,11 +140,15 @@ public class SimpleArrayReader implements RPHashObject {
 		if(curCentroid >=k)return null;
 		return centroids.get(curCentroid++);
 	}
-
+	
 	@Override
 	public List<Long> getCounts() {
-		// TODO Auto-generated method stub
-		return null;
+		return counts;
+	}
+
+	@Override
+	public int getTimes() {
+		return times;
 	}
 
 }

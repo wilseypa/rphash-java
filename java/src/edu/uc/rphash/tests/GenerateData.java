@@ -187,10 +187,6 @@ public class GenerateData
 				float[] dat = new float[dimension];
 				for(int k=0;k<dimension;k++){
 					dat[k] = medoid[k]+(float)r.nextGaussian()*scaler;
-//					if(dat[k]>maxval){
-//						maxval = dat[k];
-//						System.out.println(maxval);
-//					}
 				}
 				this.data.add(dat);
 			}

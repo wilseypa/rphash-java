@@ -1,5 +1,6 @@
 package edu.uc.rphash.decoders;
 
+import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.TestUtil;
 
 /*Author: Lee Carraher
@@ -866,11 +867,11 @@ public class LeechDecoder implements Decoder{
 	}
 
 
-	byte[] convertbin(char[] cw,char[] cp){//,byte[] quantization){
+	byte[] convertbin(char[] cw,char[] cp,byte[] quantization){
 		//unsigned long leastCodeword;
 		//unsigned char* leastCodeword = malloc(24*sizeof(unsigned char));
 		//unsigned char leastCodeword[24];
-		byte[] retOpt = new byte[5];//+24];
+		byte[] retOpt = new byte[5+24];
 
 		//A is default the least weight decoding
 		//for(i=0;i<24;i++)
@@ -887,7 +888,7 @@ public class LeechDecoder implements Decoder{
 		retOpt[3] = (byte)(cp[0]+(cp[1]<<1)+(cp[2]<<2)+(cp[3]<<3)
 				+(cp[4]<<4)+(cp[5]<<5)+(cp[6]<<6)+(cp[7]<<7));
 		retOpt[4] = (byte)(cp[8]+(cp[9]<<1)+(cp[10]<<2)+(cp[11]<<3));
-		//for(int i=0;i<quantization.length;i++)retOpt[i+5]=quantization[i];
+		for(int i=0;i<quantization.length;i++)retOpt[i+5]=quantization[i];
 		
 		
 		
@@ -901,31 +902,44 @@ public class LeechDecoder implements Decoder{
 	}
 	@Override
 	public float getErrorRadius() {
-		return (float)Math.sqrt(2)/ (5.099f*(1.0f/(DPT*2f)));
+		return (float)Math.sqrt(2)/ (5.099f*(1.0f/(DPT)));
 	}
 	
-//	/** Generate the initial quantization vector for the lattice. ie <1,0,1,1,1,0,1,1> is a valid E8 vector
-//	 * as is <8,0,-8,4,1,0,1,1>, there is simply a quantization disparity. to fix this we simply solve the
-//	 * unscaled version equation cX = 1X
-//	 * @return
-//	 */
-//	public byte[] generateQuantizationVector(float[] r){
-//		byte[] ret = new byte[r.length];
-//		//4.0 -> 0.0 mean, 
-//		for(int i =0;i<r.length;i++)
-//		{
-//			//translate to [[-1,1], [-1,1]]
-//			byte wholeNumberPart = (byte)(r[i]%2);
-//			byte numberofshifts = (byte) (wholeNumberPart / 2);
-//			r[i] -= (2*numberofshifts);
-//			
-//			ret[i] = wholeNumberPart ;
-//			System.out.print(ret[i]+":"+String.valueOf(r[i]).substring(0, 5)+",");
-//		}
-//		System.out.println();
-//		return ret;
-//		
-//	}
+	/** Generate the initial quantization vector for the lattice. ie <1,0,1,1,1,0,1,1> is a valid E8 vector
+	 * as is <8,0,-8,4,1,0,1,1>, there is simply a quantization disparity. to fix this we simply solve the
+	 * unscaled version equation cX = 1X
+	 * @return
+	 * 
+def conv(p,r):
+	if p<0:
+	    l=int(-p/(r))
+	    t=(l+1)/2
+	    return p+(t*2*r),t
+	else:
+		l=int(p/(r))
+	    t=(l+1)/2
+	    return p-(t*2*r),t
+	 */
+	public byte[] generateQuantizationVector(float[] r){
+		float radius = DPT+CPT;
+		byte[] ret = new byte[r.length];
+		//4.0 -> 0.0 mean, 
+		for(int i =0;i<r.length;i++)
+		{
+			
+			if(r[i]>0){
+				byte l= (byte)(r[i]/radius);
+				ret[i]=(byte)((l+1)/2);
+				r[i]-=ret[i]*2*(radius);
+			}else{
+				byte l= (byte)(-r[i]/radius);
+				ret[i]=(byte)(-(l+1)/2);
+				r[i]-=ret[i]*2*(radius);
+			}
+		}
+		return ret;
+		
+	}
 	
 	//unsigned char* decode(float r[12][2], float *distance){
 	//unsigned long long decodeLeech(float *r,float *distance)
@@ -941,7 +955,8 @@ public class LeechDecoder implements Decoder{
 		char[][] kparities = new char[12][4];
 		
 		
-		//byte[] append =  generateQuantizationVector(r);
+		byte[] append =  generateQuantizationVector(r);
+
 		QAM(r,evenAPts,oddAPts,dijs,dijks,kparities);
 
 		// #####################Block Confidences ###################
@@ -991,7 +1006,7 @@ public class LeechDecoder implements Decoder{
 		
 		//set as least
 		leastweight = weight;
-		retOpt = convertbin(cw,cp);//,append);
+		retOpt = convertbin(cw,cp,append);
 
 
 		//----------------A Odd Quarter Lattice Decoder----------------
@@ -1004,7 +1019,7 @@ public class LeechDecoder implements Decoder{
 		if(weight<leastweight)
 		{
 			leastweight = weight;
-			retOpt = convertbin(cw,cp);//,append);
+			retOpt = convertbin(cw,cp,append);
 			//winner = 1;
 		}
 
@@ -1022,7 +1037,7 @@ public class LeechDecoder implements Decoder{
 
 		if(weight<leastweight){
 			leastweight = weight;
-			retOpt = convertbin(cw,cp);//,append);
+			retOpt = convertbin(cw,cp,append);
 			//winner = 2;
 		}
 
@@ -1034,7 +1049,7 @@ public class LeechDecoder implements Decoder{
 
 		if(weight<leastweight){
 			leastweight = weight;
-			retOpt = convertbin(cw,cp);//,append);
+			retOpt = convertbin(cw,cp,append);
 			//winner =3;
 		}
 		//distance = winner;
@@ -1052,47 +1067,8 @@ public class LeechDecoder implements Decoder{
 	public static void main(String[] args)
 {
 	Decoder leech = new LeechDecoder();
-	double[] f = {-0.98796955, -1.1529434 ,  1.4390883 ,  1.40046597,  0.40183179,
-			-0.56885575, -0.81956525,  1.25615557, -1.29526976, -0.62859484,
-			-0.7260114 ,  1.19387512,  0.74441283, -0.31003198,  1.16529063,
-			0.03210929,  0.88011717,  0.98265615,  1.93322648, -0.05865583,
-			-0.56355944, -7.67748379,  0.03904684, -1.0102314};
-
-
-
-		double[] u = {0.65126908,  0.10690608,  1.16313656,  0.22987196, -1.43084181,
-		0.2755519 ,  0.46149737,  1.62229512,  1.84176411,  1.14668634,
-		-0.57105783, -0.25542529, -0.30482256,  0.38044721,  1.03321804,
-		-0.19284389,  1.07302753, -0.50554365,  1.09262201, -0.17338258,
-		-1.12363241, -0.98586661, -0.01722098,  2.4740535};
-
-		double[] c ={-1.25952848,  0.90974636,  1.18518797,  0.71649243,  0.00428519,
-				0.40136433, -0.44116449,  0.78036808,  1.22932536, -0.4739356 ,
-				1.26962219,  0.73379495, -0.37507624,  0.6359808 ,  0.04275665,
-				-0.06981256, -2.22652298,  2.10441221,  1.13049073, -0.1140077 ,
-				-0.88809368, -1.08038432,  0.73727081,  1.02316672};
-		double[] k={-0.06629867,  1.64363637, -0.27086515, -0.37690182, -0.20278382,
-				0.84133612, -0.78164611,  0.5310594 ,  0.25187642,  0.56032285,
-				-0.43311799,  0.34899539,  1.61118461,  0.82464746, -1.91355652,
-				0.48868273, -0.69186852, -0.07240643,  0.16149872,  0.28575778,
-				0.13803191, -0.18731954, -0.5343032 ,  0.67212346};
-		double[] y={-2.46778603,  1.02194656, -1.21799259,  0.27824392, -0.57911542,
-				0.22832422, -1.75776838, -0.09309783,  0.75097076,  0.15962876,
-				0.5119343 ,  0.37938917,  0.01796803,  1.03030119, -2.64303921,
-				0.32328967,  1.37198716, -0.50753097,  0.47852208,  0.10388366,
-				-0.74706363, -0.66855493, -0.35686416,  0.7092663};
-		double[] o = {-0.84282073,  0.59923037,  0.73899297,  1.22811334, -0.36589193,
-				-0.73147463,  0.31780028,  0.99248704, -0.41232863, -0.34636915,
-				0.17348888, -0.93814914, -0.05100204,  1.1133043 , -0.48937103,
-				0.28450671,  0.20654879, -2.08840144, -1.72441501, -0.66277794,
-				-0.72239422, -0.44093551,  1.02989744,  1.28223695};
-
-		TestUtil.prettyPrint(leech.decode(cnv(f)));
-		TestUtil.prettyPrint(leech.decode(cnv(u)));
-		TestUtil.prettyPrint(leech.decode(cnv(c)));
-		TestUtil.prettyPrint(leech.decode(cnv(k)));
-		TestUtil.prettyPrint(leech.decode(cnv(y)));
-		TestUtil.prettyPrint(leech.decode(cnv(o)));
+	GenerateData gen = new GenerateData(1, 10, 24);
+	for(float[] f: gen.data())TestUtil.prettyPrint(leech.decode(f));
 
 }
 }

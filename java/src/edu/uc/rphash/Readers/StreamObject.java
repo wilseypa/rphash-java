@@ -14,6 +14,7 @@ public class StreamObject implements RPHashObject {
 	int dim;
 	int randomseed;
 	int hashmod;
+	int times;
 	List<Long> ids;
 	List<Long> counts;
 	List<float[]> centroids;
@@ -42,6 +43,7 @@ public class StreamObject implements RPHashObject {
 			dim = Integer.parseInt(spacetoken());
 			randomseed = Integer.parseInt(spacetoken());
 			hashmod = Integer.parseInt(spacetoken());
+			times = Integer.parseInt(spacetoken());
 		}catch(IOException e){
 			System.err.println("Couldn't Read Datastream");
 		}
@@ -52,9 +54,7 @@ public class StreamObject implements RPHashObject {
 		
 	}
 	
-	
-	
-	
+
 	String spacetoken()throws IOException{
 		StringBuilder sb = new StringBuilder();
 		char b = (char)elements.read();
@@ -167,19 +167,16 @@ public class StreamObject implements RPHashObject {
 			}catch(IOException ioe){
 				ioe.printStackTrace();
 			}
-		
 	}
 
 	@Override
 	public void addCentroid(float[] v) {
 		centroids.add(v);
-		
 	}
 
 	@Override
 	public void setCentroids(List<float[]> l) {
 		centroids = l;
-		
 	}
 
 	@Override
@@ -192,18 +189,15 @@ public class StreamObject implements RPHashObject {
 		return centroids.get(centit++);
 	}
 
-
-
-
 	@Override
 	public List<Long> getCounts() {
-		// TODO Auto-generated method stub
-		return null;
+		return counts;
 	}
 
-
-//
-
+	@Override
+	public int getTimes() {
+		return times;
+	}
 	
 }
 

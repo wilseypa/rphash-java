@@ -2,7 +2,6 @@ package edu.uc.rphash.projections;
 
 import java.util.Random;
 
-import edu.uc.rphash.tests.TestUtil;
 
 
 public class DBFriendlyProjection implements Projector {

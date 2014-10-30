@@ -18,12 +18,10 @@ import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.LeechDecoder;
-import edu.uc.rphash.lsh.LSH;
-import edu.uc.rphash.projections.DBFriendlyProjection;
+
 import edu.uc.rphash.projections.GaussianProjection;
 import edu.uc.rphash.projections.Projector;
-import edu.uc.rphash.standardhash.FNVHash;
-import edu.uc.rphash.standardhash.HashAlgorithm;
+
 
 //import edu.uc.rphash.frequentItemSet.KarpFrequentItemSet;
 //import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
@@ -188,6 +186,10 @@ public class TestRPhash {
 	static void testRPHash(int k, int n,int d,float variance){
 		
 		GenerateData gen = new GenerateData(k,n/k,d,variance);
+		
+
+		
+		
 		System.out.print(k+":"+n+":"+d+":"+variance+"\t");
 		System.out.print(StatTests.PR(gen.medoids(),gen)+":\t");
 		long startTime = System.nanoTime();
@@ -202,11 +204,11 @@ public class TestRPhash {
 //			System.out.println(i+":"+TestUtil.distance(aligned.get(i), gen.medoids().get(i)));
 
 		startTime = System.nanoTime();
-		RPHashObject so = new SimpleArrayReader(gen.data(),k,1,250000);
+		RPHashObject so = new SimpleArrayReader(gen.data(),k,1,250000,1);
 		RPHash clusterer = new RPHash();
 		so = clusterer.mapP1(so);
-	
 		so = clusterer.mapP2(so);
+		so = clusterer.mapP3(so);
 		duration = (System.nanoTime() - startTime);
 		
 		aligned  = TestUtil.alignCentroids(so.getCentroids(),gen.medoids());
@@ -236,10 +238,10 @@ public class TestRPhash {
 //		System.out.println(StatTests.PR(gen.medoids(),gen));
 
 		System.out.println("-------varying variance-------");
-		for(int i = 50 ;i<100;i+=5){
+		for(int i = 50 ;i<200;i+=5){
 			testRPHash(k,n,d,i/100f);
-			testRPHash(k,n,d,i/100f);
-			testRPHash(k,n,d,i/100f);
+			//testRPHash(k,n,d,i/100f);
+			//testRPHash(k,n,d,i/100f);
 		}
 
 		System.out.println("-------varying k-------");
@@ -272,7 +274,6 @@ public class TestRPhash {
 		float sumreal =0.0f;
 		float sumunreal = 0.0f;
 		
-		HashAlgorithm hal = new FNVHash(138018);
 		//Decoder dec = new LeechDecoder(1.3f);
 		
 		

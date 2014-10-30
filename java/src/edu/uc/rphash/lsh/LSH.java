@@ -8,18 +8,20 @@ import edu.uc.rphash.standardhash.HashAlgorithm;
 
 public class LSH 
 {
-	Projector p;
+	Projector[] p;
 	HashAlgorithm hal;
 	Decoder dec;
 	int times;
 	Random rand ;
-	public LSH(Decoder dec,Projector p, HashAlgorithm hal)
+	float radius;
+	public LSH(Decoder dec,Projector[] p, HashAlgorithm hal,int times)
 	{
 		this.p = p;
 		this.hal = hal;
 		this.dec = dec;
-		this.times = 1;
+		this.times = times;
 		rand = new Random();
+		radius = dec.getErrorRadius();
 	}
 
 	/*
@@ -29,7 +31,7 @@ public class LSH
 	     int k=0;
 	     long ret = 0;
 	     do{
-	         float[] r1 = p.project(r);	         
+	         float[] r1 = p[k].project(r);	         
 	         ret =  hal.hash(dec.decode(r1)) ^ ret;
 	         k++;
 	     }while(k<times);
@@ -45,18 +47,21 @@ public class LSH
 	}
 
 	public long lshHashRadius(float[] r,float radius){
-		 float[] permvec = new float[dec.getDimensionality()];
-	     //long ret = 0;
-	     float[] r1 = p.project(r);	
-	     for(int i =0;i<dec.getDimensionality();i++)
-	    	 permvec[i] = (float)rand.nextGaussian()*radius + r1[i];
+	     int k = 0;
+	     long ret = 0;
+		 do{
+		     float[] r1 = p[k].project(r);	
+		     for(int i =0;i<dec.getDimensionality();i++)
+		    	 r1[i] += (float)rand.nextGaussian()*radius;
+		     ret =  hal.hash(dec.decode(r1)) ^ ret;
+	         k++;
+	     }while(k<times);
 	     
-	     
-		 return hal.hash(dec.decode(permvec)); 
+		 return ret; 
 		}
-	
+
 	public long lshHashRadius(float[] r){
-		  return lshHashRadius(r,dec.getErrorRadius()) ;
+		  return lshHashRadius(r,radius) ;
 	}
 
 }

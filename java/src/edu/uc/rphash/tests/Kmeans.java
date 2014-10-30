@@ -3,11 +3,17 @@ package edu.uc.rphash.tests;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uc.rphash.projections.DBFriendlyProjection;
+import edu.uc.rphash.projections.Projector;
+
 public class Kmeans {
+
+	
 	
 	int d;
 	int k;
 	int n;
+	Projector p;
 	float[] computerCentroid(List<float[]> vectors ){
 		float[] centroid = new float[d];
 		for(int i = 0 ; i<d;i++)
@@ -55,6 +61,9 @@ public class Kmeans {
 		this.n = data.size();
 		this.d = data.get(0).length;
 		this.k = k;
+		
+		p =  new DBFriendlyProjection(n,24, 1);
+
 		
 		//initialize the clusters to the n/k step first vectors
 		means = new ArrayList<float[]>(k);

@@ -9,6 +9,7 @@ public interface RPHashObject {
 	int getdim();
 	int getRandomSeed();
 	int getHashmod();
+	int getTimes();
 	float[] getNextVector();
 	List<Long> getIDs();
 	List<Long> getCounts();
