@@ -21,6 +21,7 @@ public class GenerateData
 	List<Integer> reps;
 	float scaler;
 	boolean shuffle;
+	float sparseness;
 	
 	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension){
 		r = new Random();
@@ -32,6 +33,7 @@ public class GenerateData
 		this.data = null;
 		this.reps = null;
 		this.scaler = (float)Math.sqrt(dimension);//normalize dimension
+		this.sparseness = 1.0f;
 		this.genfnc = new RandomDistributionFnc(){
 			@Override
 			public float genVariate() {
@@ -52,6 +54,7 @@ public class GenerateData
 		this.reps = null;
 		this.scaler = (float)Math.sqrt(dimension);//normalize dimension
 		this.shuffle = shuffle;
+		this.sparseness = 1.0f;
 		this.genfnc = new RandomDistributionFnc(){
 			@Override
 			public float genVariate() {
@@ -70,6 +73,30 @@ public class GenerateData
 		this.data = null;
 		this.reps = null;
 		this.shuffle = true;
+		this.sparseness = 1.0f;
+		if(variance>0)
+			this.scaler = variance;//normalize dimension
+		else
+			this.scaler = 1.0f/(float)Math.sqrt(dimension);
+		
+		this.genfnc = new RandomDistributionFnc(){
+			@Override
+			public float genVariate() {
+				return (float)r.nextGaussian();
+			}
+		};
+		generateMem();
+	}
+	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension,float variance,boolean shuffle){
+		r = new Random();
+		this.numClusters =numClusters;
+		this.numVectorsPerCluster=numVectorsPerCluster;
+		this.dimension=dimension;
+		this.medoids = null;
+		this.data = null;
+		this.reps = null;
+		this.shuffle = shuffle;
+		this.sparseness = 1.0f;
 		if(variance>0)
 			this.scaler = variance;//normalize dimension
 		else
@@ -85,8 +112,7 @@ public class GenerateData
 		generateMem();
 	}
 	
-	
-	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension,float variance,boolean shuffle){
+	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension,float variance,boolean shuffle, float sparseness){
 		r = new Random();
 		this.numClusters =numClusters;
 		this.numVectorsPerCluster=numVectorsPerCluster;
@@ -95,6 +121,7 @@ public class GenerateData
 		this.data = null;
 		this.reps = null;
 		this.shuffle = shuffle;
+		this.sparseness = sparseness;
 		if(variance>0)
 			this.scaler = variance;//normalize dimension
 		else
@@ -121,6 +148,7 @@ public class GenerateData
 		this.medoids = null;
 		this.data = null;
 		this.shuffle = true;
+		this.sparseness = 1.0f;
 		generateMem();
 	}
 	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension, File f)
@@ -133,6 +161,7 @@ public class GenerateData
 		this.medoids = new ArrayList<float[]>();
 		this.data = new ArrayList<float[]>();
 		this.shuffle = true;
+		this.sparseness = 1.0f;
 		this.genfnc = new RandomDistributionFnc(){
 			@Override
 			public float genVariate() {
@@ -149,6 +178,7 @@ public class GenerateData
 		this.scaler =  1.0f/(float)Math.sqrt(dimension);//normalize dimension
 		this.genfnc = genvariate;
 		this.shuffle = true;
+		this.sparseness = 1.0f;
 		generateDisk(f);
 	}
 	
@@ -179,23 +209,28 @@ public class GenerateData
 			float[] medoid = new float[dimension];
 			for(int k=0;k<dimension;k++)
 			{
-				medoid[k] = r.nextFloat()*2.0f -1.0f;
+				if(r.nextInt()%(int)(1.0f/sparseness)==0)medoid[k] = r.nextFloat()*2.0f -1.0f;
 			}
 			this.medoids.add(medoid);
 			//gen data
 			for(int j=0;j<numVectorsPerCluster;j++){
 				float[] dat = new float[dimension];
-				for(int k=0;k<dimension;k++){
+				for(int k=0;k<dimension;k++)
+				{
 					dat[k] = medoid[k]+(float)r.nextGaussian()*scaler;
 				}
 				this.data.add(dat);
 			}
 		}
+
 		if(this.shuffle)permute();
+		
 	}
 	
 	public int getClusterID(int vecIdx){
+		if(shuffle)
 		return reps.get(vecIdx);
+		else return vecIdx;
 	}
 	
 	public void writeToFile(File f){

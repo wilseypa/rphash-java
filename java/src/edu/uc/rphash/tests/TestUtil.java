@@ -195,7 +195,7 @@ public class TestUtil {
 	
 	public static void prettyPrint(byte[] b){
 		for(int i =0;i<b.length;i++){
-			System.out.print(b[i]+",");
+			System.out.print(b2s(b[i])+",");
 		}
 		System.out.println();
 		

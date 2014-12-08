@@ -1,12 +1,16 @@
 package edu.uc.rphash.projections;
 
+import java.util.ArrayList;
 import java.util.Random;
+
+import edu.uc.rphash.tests.TestUtil;
 
 
 
 public class DBFriendlyProjection implements Projector {
 	int RAND_MAX= 2147483647;
-	float[] M;
+	ArrayList<Integer>[] M;//minus
+	ArrayList<Integer>[] P;//plus
 	int n;
 	int t;
 	Random rand;
@@ -15,7 +19,8 @@ public class DBFriendlyProjection implements Projector {
 		this.n = n;
 		this.t = t;
 		rand = new Random();
-		M =  GenRandom(n, t);
+		M =  GenRandom();
+		P =  GenRandom();
 	}
 	
 	public DBFriendlyProjection(int n,int t,int randomseed)
@@ -23,19 +28,11 @@ public class DBFriendlyProjection implements Projector {
 		this.n = n;
 		this.t = t;
 		rand = new Random(randomseed);
-		M =  GenRandom(n, t);
+		M =  GenRandom();
+		P =  GenRandom();
 	}
 	
-	float quicksqrt(float b)
-	{
-	    float x = 1.1f;
-	    char i =0;
 
-	    for(;i<16;i++){
-	        x = (x+(b/x))/2.0f;
-	    }
-	    return x;
-	}
 
 
 	/*
@@ -47,39 +44,61 @@ public class DBFriendlyProjection implements Projector {
 	 *                      Naive method O(n), faster select and bookkeeping
 	 *                      should be O((5/12 )n), still linear
 	 */
-	float[] GenRandom(int m,int n){
-	  float[] M = new float[n*m];
-	  int i =0;
-	  float scale = (float)Math.sqrt(3.0f/(m));
+	ArrayList<Integer>[] GenRandom(){
+	  ArrayList<Integer>[] M = new ArrayList[t];
+	
+	 // float scale = (float)Math.sqrt(3.0f/(m));
 	  int r = 0;
-	  for(i=0;i<m*n;i++)
+	  for(int i=0;i<t;i++)
 	  {
-        r = rand.nextInt(6);
-        M[i] = 0.0f;
-        if(r==0)M[i] = scale;
-        if(r==5)M[i] = -scale;
-        
-	   }
+		  M[i]=new ArrayList<Integer>(n/3);
+		  for(int j=0;j<n;j++)
+		  {
+	        r = rand.nextInt(6);//2^32 we need 1/6 or roughly 3 bits per => 10 selects per for faster generation
+	        if(r==0)M[i].add(j);
+		   }
+	  }
 	  return M;
 	}
 	
 	@Override
 	public float[] project(float[] v) {
-		return projectN(v,M,n,t);
+		return projectN(v,P,M,n,t);
 	}
 	
 	
-	static float[] projectN(float[] v, float[] M, int n,int t){
-		  int i,j;
+	static float[] projectN(float[] v,ArrayList<Integer>[] P, ArrayList<Integer>[] M, int n,int t){
+		  int i;
 		  float[] r = new float[t];
 		  float sum;
+		  float scale = (float)Math.sqrt(3.0f/(n));
 		  for(i=0;i<t;i++)
 		  {
 		      sum = 0.0f;
-		      for(j=0;j < n; j++ )
-		          sum+=v[i]*M[i*n+j];
+		      for(Integer j:P[i] )
+		      {
+		          sum+=v[j]*scale;
+		      }
+		      for(Integer j:M[i] )
+		      {
+		          sum-=v[j]*scale;
+		      }
 		      r[i] = sum;
 		  }
+//		  WiP
+//		  do{ 
+//				b= 0;
+//		        r = rand.nextInt();//2^32 we need 1/6 or roughly 3 bits per => 10 selects per for faster generation
+//		        while(r>6){
+//		        	if((r&0x7)<6)
+//		        	{	b++;
+//		        		if( (r&0x7) ==0)M[i].add(j);
+//		        	}
+//		        	r>>=3;
+//		        }
+//		        System.out.println(b);
+//		        j+=b;
+//			   }while(j<n);
 		  
 //		  System.out.println(TestUtil.max(r)+":"+TestUtil.max(v));
 //		  System.out.println(TestUtil.min(r)+":"+TestUtil.min(v));
@@ -105,7 +124,7 @@ public class DBFriendlyProjection implements Projector {
 	float GenRandomBook(int n,int m,int M[]){
 
 	    int l,i,r,j,b=(int)((float)n/(float)6);
-	    float randn = 1.0f/(quicksqrt(((float)n))) ;//variance scaled back a little
+	    float randn = (float) (1.0f/(Math.sqrt(n))) ;//variance scaled back a little
 
 	    int[] bookkeeper = new int [n];
 	    M = new int[2*b];

@@ -11,6 +11,7 @@ import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.StickyWrapper;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
+import edu.uc.rphash.projections.GaussianProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
@@ -43,14 +44,14 @@ public class RPHash {
 		Decoder dec = new LeechDecoder(TestUtil.max(vec));
 		Projector[] p = new Projector[so.getTimes()];
 		for (int i = 0; i < so.getTimes(); i++) {
-			p[i] = new DBFriendlyProjection(so.getdim(),
+			p[i] = new /*DBFriendlyProjection*/GaussianProjection(so.getdim(),
 					dec.getDimensionality(), (i + 1) * so.getRandomSeed());
 		}
 		LSH lsh = new LSH(dec, p, hal, so.getTimes());
 		ItemSet<Long> is = new StickyWrapper<Long>(so.getk(), so.getn());
 
-
-		int probes = /*(int) (Math.log(so.getn()) + .5);*/ (int)(Math.pow(so.getn(),0.2671)+.5);
+		
+		int probes = /*(int) (Math.log(so.getn()) + .5);/*/ (int)(Math.pow(so.getn(),0.2671)+.5);
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vec != null) {
 			is.add(lsh.lshHash(vec));
@@ -61,6 +62,7 @@ public class RPHash {
 			}
 			vec = so.getNextVector();
 		}
+		
 		
 		so.setIDs(is.getTop());
 		so.setCounts(is.getCounts());
@@ -81,7 +83,7 @@ public class RPHash {
 
 		Projector[] p = new Projector[so.getTimes()];
 		for (int i = 0; i < so.getTimes(); i++) {
-			p[i] = new DBFriendlyProjection(so.getdim(),
+			p[i] = new GaussianProjection/*DBFriendlyProjection*/(so.getdim(),
 					dec.getDimensionality(), (i + 1) * so.getRandomSeed());
 		}
 
@@ -114,6 +116,7 @@ public class RPHash {
 		for (Long id : centroids.keySet()) {
 			so.addCentroid(centroids.get(id).centroid());
 		}
+
 		so.reset();
 		return so;
 	}
@@ -122,7 +125,7 @@ public class RPHash {
 		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
 		Projector[] p = new Projector[so.getTimes()];
 		for (int i = 0; i < so.getTimes(); i++) {
-			p[i] = new DBFriendlyProjection(so.getdim(),
+			p[i] = new GaussianProjection/*DBFriendlyProjection*/(so.getdim(),
 					24, (i + 1) * so.getRandomSeed());
 		}
 		

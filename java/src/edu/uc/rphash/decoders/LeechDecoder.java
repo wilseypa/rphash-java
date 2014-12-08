@@ -274,8 +274,6 @@ public class LeechDecoder implements Decoder{
 
 		int parity = (int)(c&0xfff);//seperate these parts
 
-
-
 		//compute A/B point from parity
 		int u = parity;
 		int Bpoint = 0;
@@ -310,11 +308,7 @@ public class LeechDecoder implements Decoder{
 			}
 		}
 		return point;
-
 	}
-
-
-
 
 	/*
 	 *    this function returns all of the pertinent information
@@ -405,8 +399,6 @@ public class LeechDecoder implements Decoder{
 		}
 	}
 
-
-
 	/*
 	    computes the Z2 block confidence of the concatenated points projections onto GF4 characters
 	 */
@@ -464,7 +456,6 @@ public class LeechDecoder implements Decoder{
 				prefRepE[i][1][3] = 0;
 			}
 
-
 			//1010 0101
 			s = dijs[2*i][2]+dijs[2*i+1][2];
 			t = dijs[2*i][1]+dijs[2*i+1][1];
@@ -504,10 +495,7 @@ public class LeechDecoder implements Decoder{
 				prefRepE[i][3][3] = 1;
 			}
 
-
-
 			//this operation could be parallel, but probably doesnt need to be
-
 			//1000 0111
 			s = dijs[2*i][2]+dijs[2*i+1][0];
 			t = dijs[2*i][1]+dijs[2*i+1][3];
@@ -527,7 +515,6 @@ public class LeechDecoder implements Decoder{
 				prefRepO[i][0][2] = 1;
 				prefRepO[i][0][3] = 1;
 			}
-
 			//0100 1011
 			s = dijs[2*i][1]+dijs[2*i+1][0];
 			t = dijs[2*i][2]+dijs[2*i+1][3];
@@ -588,9 +575,7 @@ public class LeechDecoder implements Decoder{
 				prefRepO[i][3][3] = 0;
 			}
 		}
-
 	}
-
 
 	/*here we are looking for the least character in the H6 hexacode word
 	   returns the hexacode word and the wt, for using in locating the least reliable symbol
@@ -607,22 +592,18 @@ public class LeechDecoder implements Decoder{
 		{
 			char leastChar = 0;
 			float leastwt = mus[i][0];
-
 			if(mus[i][1]<leastwt){
 				leastwt = mus[i][1];
 				leastChar = 1;
 			}
-
 			if(mus[i][2]<leastwt){
 				leastwt = mus[i][2];
 				leastChar = 2;
 			}
-
 			if(mus[i][3]<leastwt){
 				leastwt = mus[i][3];
 				leastChar = 3;
 			}
-
 			chars[i] = leastChar;
 			charwts[i]=leastwt;
 		}
@@ -637,11 +618,6 @@ public class LeechDecoder implements Decoder{
 			float[][] mus)//[6][4])
 	{
 
-
-
-
-
-
 		//locate least reliable
 		float leastreliablewt = charwts[0];
 		char leastreliablechar = 0;
@@ -654,7 +630,6 @@ public class LeechDecoder implements Decoder{
 			leastreliablechar = 2;
 		}
 
-
 		//minimize over the 8 candidate Hexacode words
 		float minCodeWt = 1000.0f;
 		char j = 0;
@@ -665,11 +640,7 @@ public class LeechDecoder implements Decoder{
 		//build candidate list
 		// unsigned char  candslst[8][6]=  {{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},
 		//                                                     {0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0}};
-
-
 		char[]  cand = {0,0,0,0,0,0};
-
-
 		//(unsigned char[8][6]) (malloc(8*6*sizeof(unsigned char)));//{
 		char i;
 		for(i = 0;i<4;i++){
@@ -689,8 +660,6 @@ public class LeechDecoder implements Decoder{
 			}
 		}
 
-
-
 		//y2
 		//locate the least reliable symbol in each
 		leastreliablewt = charwts[3];
@@ -706,14 +675,12 @@ public class LeechDecoder implements Decoder{
 
 		for(;i<8;i++){
 			y[leastreliablechar] = (char) (i-4);
-
 			cand[0] = H6CodeWordsRev[y[3]][y[4]][y[5]][0];
 			cand[1] = H6CodeWordsRev[y[3]][y[4]][y[5]][1];
 			cand[2] = H6CodeWordsRev[y[3]][y[4]][y[5]][2];
 			cand[3] = y[3] ;
 			cand[4] = y[4];
 			cand[5] = y[5] ;
-
 
 			m_dist = 0.0f;
 			for( j=0;j<6;j++)m_dist += mus[j][cand[j]];
@@ -722,18 +689,12 @@ public class LeechDecoder implements Decoder{
 			{
 				minCodeWt = m_dist;
 				for(j=0;j<6;j++) leastcan[j] = cand[j];
-
 			}
 		}
-
 		for(j=0;j<6;j++)y[j] = leastcan[j];
-
-		//printf("%i %i %i   %i %i %i\n",y[0],y[1],y[2],y[3],y[4],y[5],y[6]);
 
 		return minCodeWt;
 	}
-
-
 
 	/*
 	    here we are resolving the h-parity. which requires that the overall least significant bit parities equal the
@@ -754,13 +715,11 @@ public class LeechDecoder implements Decoder{
 
 
 		for(i=0;i<6;i++){
-
 			//create the golay codeword from the hexacode representation
 			codeword[i*4]=prefReps[i][hexword[i]][0];
 			codeword[i*4+1]=prefReps[i][hexword[i]][1];
 			codeword[i*4+2]=prefReps[i][hexword[i]][2];
 			codeword[i*4+3]=prefReps[i][hexword[i]][3];
-
 			//
 			parity = (char) (parity ^ prefReps[i][hexword[i]][0]);//this should be the highest order bit
 
@@ -796,9 +755,7 @@ public class LeechDecoder implements Decoder{
 				leastwt = deltaX;
 				least = (char) (i*4);
 			}
-
 		}
-
 
 		weight = weight + leastwt;
 
@@ -830,14 +787,11 @@ public class LeechDecoder implements Decoder{
 		/*
 	        this last parity check assures that all A or B points have even/odd parity
 		 */
-
 		char parity = 0;
 		char i =0;
-
 		float least =1000;
 		float dif;
 		char argLeast = 0;
-
 
 		for( ;i <12;i++)
 		{
@@ -860,12 +814,8 @@ public class LeechDecoder implements Decoder{
 		}
 
 		codeParity[argLeast ]=  (char) (codeParity[argLeast ] ^1);
-
-
-
 		return weight+least;
 	}
-
 
 	byte[] convertbin(char[] cw,char[] cp,byte[] quantization){
 		//unsigned long leastCodeword;
@@ -889,11 +839,7 @@ public class LeechDecoder implements Decoder{
 				+(cp[4]<<4)+(cp[5]<<5)+(cp[6]<<6)+(cp[7]<<7));
 		retOpt[4] = (byte)(cp[8]+(cp[9]<<1)+(cp[10]<<2)+(cp[11]<<3));
 		for(int i=0;i<quantization.length;i++)retOpt[i+5]=quantization[i];
-		
-		
-		
 		return retOpt;
-		
 	}
 
 	@Override
@@ -909,16 +855,6 @@ public class LeechDecoder implements Decoder{
 	 * as is <8,0,-8,4,1,0,1,1>, there is simply a quantization disparity. to fix this we simply solve the
 	 * unscaled version equation cX = 1X
 	 * @return
-	 * 
-def conv(p,r):
-	if p<0:
-	    l=int(-p/(r))
-	    t=(l+1)/2
-	    return p+(t*2*r),t
-	else:
-		l=int(p/(r))
-	    t=(l+1)/2
-	    return p-(t*2*r),t
 	 */
 	public byte[] generateQuantizationVector(float[] r){
 		float radius = DPT+CPT;
@@ -926,7 +862,6 @@ def conv(p,r):
 		//4.0 -> 0.0 mean, 
 		for(int i =0;i<r.length;i++)
 		{
-			
 			if(r[i]>0){
 				byte l= (byte)(r[i]/radius);
 				ret[i]=(byte)((l+1)/2);
@@ -938,7 +873,6 @@ def conv(p,r):
 			}
 		}
 		return ret;
-		
 	}
 	
 	//unsigned char* decode(float r[12][2], float *distance){
@@ -1029,7 +963,7 @@ def conv(p,r):
 		blockConf(dijs,muEs,muOs,prefRepE,prefRepO);
 
 
-		//----------------B Even Quarter Lattice Decoder----------------
+		//----------------B Even Quarter Lattice Decoder---------------- 
 		constructHexWord(muEs,y,charwts);
 		weight = minH6(y,charwts,muEs);
 		weight = hparity(weight,y,prefRepE,dijs,0,cw);//byref
@@ -1062,8 +996,6 @@ def conv(p,r):
 		for(int i = 0 ;i<fff.length;i++)ret[i] = (float)fff[i];
 		return ret;
 	}
-
-
 	public static void main(String[] args)
 {
 	Decoder leech = new LeechDecoder();

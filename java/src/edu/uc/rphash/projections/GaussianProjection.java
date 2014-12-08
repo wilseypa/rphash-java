@@ -2,6 +2,8 @@ package edu.uc.rphash.projections;
 
 import java.util.Random;
 
+import edu.uc.rphash.tests.TestUtil;
+
 public class GaussianProjection implements Projector{
 	int RAND_MAX= 2147483647;
 	
@@ -10,13 +12,14 @@ public class GaussianProjection implements Projector{
 	int t;
 	Random r;
 	float randn;
-	public GaussianProjection(int n,int t)
+	public GaussianProjection(int n,int t,int randomseed)
 	{
 		this.n = n;
 		this.t = t;
-		r = new Random();
+		r = new Random(randomseed);
 		GenGauss(n,t);
-		//randn = quicksqrt(n);
+		
+		randn = quicksqrt(n);
 	}
 	
 	float quicksqrt(float b)
@@ -48,7 +51,7 @@ public class GaussianProjection implements Projector{
 		      sum = 0.0f;
 		      for(j=0;j < n; j++ )
 		          sum+=v[i]*M[i*n+j];
-		      r[i] = sum*(float)(Math.sqrt(t)/Math.sqrt(n));//scaled
+		      r[i] = sum*((float)Math.sqrt((float)t/(float)n));//scaled
 		  }
 		  return r;
 		}

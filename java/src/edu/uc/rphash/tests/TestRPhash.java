@@ -18,7 +18,6 @@ import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.LeechDecoder;
-
 import edu.uc.rphash.projections.GaussianProjection;
 import edu.uc.rphash.projections.Projector;
 
@@ -183,17 +182,16 @@ public class TestRPhash {
 	}
 	
 	
-	static void testRPHash(int k, int n,int d,float variance){
+	static void testRPHash(int k, int n,int d,float variance,int projdim){
 		
-		GenerateData gen = new GenerateData(k,n/k,d,variance);
+		GenerateData gen = new GenerateData(k,n/k,d,variance,true,.1f);
 		
-
-		
-		
-		System.out.print(k+":"+n+":"+d+":"+variance+"\t");
+		System.out.print(k+":"+n+":"+d+":"+variance+":"+projdim+"\t");
 		System.out.print(StatTests.PR(gen.medoids(),gen)+":\t");
+		
+		
 		long startTime = System.nanoTime();
-		List<float[]> M = ( new Kmeans(k,gen.data())).getCentroids();
+		List<float[]> M = ( new Kmeans(k,gen.data(),projdim)).getCentroids();
 		long duration = (System.nanoTime() - startTime);
 
 		List<float[]> aligned = TestUtil.alignCentroids(M,gen.medoids());
@@ -220,10 +218,11 @@ public class TestRPhash {
 	}
 	static void clusterPerformanceTests()
 	{
-		int k = 20;
-		int n = 10000;
-		int d = 1000;
-		float v = .5f;
+		int k = 30;
+		int n = 5000;
+		int d = 5000;
+		float v = .3f;
+		int projdim = 24;
 		
 //		System.out.println("-------varying variance-------");
 //		GenerateData gen = new GenerateData(k,n/k,d,2f);
@@ -237,31 +236,38 @@ public class TestRPhash {
 //		gen = new GenerateData(k,n/k,d,10.0f);
 //		System.out.println(StatTests.PR(gen.medoids(),gen));
 
+//		System.out.println("-------varying dim-------");
+//		for(int i = 24 ;i<100;i+=20){
+//			testRPHash(k,n,d,1.0f,i);
+//			//testRPHash(k,n,d,i/100f);
+//			//testRPHash(k,n,d,i/100f);
+//		}
+		
 		System.out.println("-------varying variance-------");
-		for(int i = 100 ;i<400;i+=5){
-			testRPHash(k,n,d,i/100f);
-			//testRPHash(k,n,d,i/100f);
-			//testRPHash(k,n,d,i/100f);
+		for(int i = 50 ;i<200;i+=10){
+			testRPHash(k,n,d,i/100f,24);
+			testRPHash(k,n,d,i/100f,24);
+			testRPHash(k,n,d,i/100f,24);
 		}
 
-		System.out.println("-------varying k-------");
-		for(int i = 0 ;i<100;i+=2){
-			testRPHash(k+i,n,d,v);
-			testRPHash(k+i,n,d,v);
-			testRPHash(k+i,n,d,v);
-		}
-		System.out.println("-------varying n-------");
-		for(int i = 0 ;i<50;i+=2){
-			testRPHash(k,n+i*10000,d,v);
-			testRPHash(k,n+i*10000,d,v);
-			testRPHash(k,n+i*10000,d,v);
-		}
-		System.out.println("-------varying d-------");
-		for(int i = 5 ;i<31;i++){
-			testRPHash(k,n,d+i*500,v);
-			testRPHash(k,n,d+i*500,v);
-			testRPHash(k,n,d+i*500,v);
-		}
+//		System.out.println("-------varying k-------");
+//		for(int i = 0 ;i<100;i+=2){
+//			testRPHash(k+i,n,d,v,projdim);
+//			testRPHash(k+i,n,d,v,projdim);
+//			testRPHash(k+i,n,d,v,projdim);
+//		}
+//		System.out.println("-------varying n-------");
+//		for(int i = 0 ;i<50;i+=2){
+//			testRPHash(k,n+i*10000,d,v,projdim);
+//			testRPHash(k,n+i*10000,d,v,projdim);
+//			testRPHash(k,n+i*10000,d,v,projdim);
+//		}
+//		System.out.println("-------varying d-------");
+//		for(int i = 5 ;i<31;i++){
+//			testRPHash(k,n,d+i*500,v,projdim);
+//			testRPHash(k,n,d+i*500,v,projdim);
+//			testRPHash(k,n,d+i*500,v,projdim);
+//		}
 		
 		
 	}
@@ -278,9 +284,9 @@ public class TestRPhash {
 		
 		
 		Projector[] p1 = new Projector[ nlog]; 
-		for(int i =0;i<p1.length;i++)p1[i]=new GaussianProjection(d,24);
+		for(int i =0;i<p1.length;i++)p1[i]=new GaussianProjection(d,24,1);
 		Projector[] p2 = new Projector[ nlog]; 
-		for(int i =0;i<p2.length;i++)p2[i]=new GaussianProjection(d,24);
+		for(int i =0;i<p2.length;i++)p2[i]=new GaussianProjection(d,24,1);
 		
 		for(int i =0;i<gen.data.size();i+=2){
 			//LSH lsh =  new LSH(dec,p1[0],hal);
