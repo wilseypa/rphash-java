@@ -9,16 +9,49 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uc.rphash.projections.Projector;
+
 public class TestUtil {
-	static float distance(float[] x,float[] y)
+	
+	/**Return the euclidean distance between two vectors x and y
+	 * Returns infinite if vectors are misaligned
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public static float distance(float[] x,float[] y)
 	{
 		if(x.length<1)return Float.MAX_VALUE;
 		if(y.length<1)return Float.MAX_VALUE;
 		float dist = (x[0]-y[0])*(x[0]-y[0]) ;
 		for(int i = 1 ;i< x.length; i++)dist += ((x[i]-y[i])*(x[i]-y[i]));
-		return dist;
+		return (float)Math.sqrt(dist);
+	}
+	/** Resturns the euclidean distance between a vector region {i-k} of x with a vector region {j-k} of y
+	 * @param y second vector
+	 * @param i start indece of x
+	 * @param j start indece of y
+	 * @param k compare length
+	 * @return
+	 */
+	public static float distance(float[] x,float[] y,int i,int j,int k)
+	{
+		if(x.length<1)return Float.MAX_VALUE;
+		if(y.length<1)return Float.MAX_VALUE;
+
+		float dist = (x[i+0]-y[j+0])*(x[i+0]-y[j+0]) ;
+		for(int ii = 1 ;ii< k; ii++)
+			dist += ((x[i+ii]-y[j+ii])*(x[i+ii]-y[j+ii]));
+		
+		
+		return (float)Math.sqrt(dist);
 	}
 	
+	/**Linear search for x's nearest neighbor in DB
+	 * @param x
+	 * @param DB
+	 * @return
+	 */
 	public static int findNearestDistance(float[] x,List <float[]> DB)
 	{
 		float mindist = distance(x,DB.get(0));
@@ -34,12 +67,18 @@ public class TestUtil {
 		return minindex;
 	}
 	
+	/**Print a matrix, compress if the output is too big
+	 * @param mat
+	 */
 	public static void prettyPrint(float[][] mat){
 		ArrayList<float[]> tmp = new ArrayList<float[]>();
 		for(float[] m : mat)tmp.add(m);
 		prettyPrint(tmp);
 	}
 	
+	/**Print a matrix, compress if the output is too big
+	 * @param mat
+	 */
 	public static void prettyPrint(List<float[]> mat){
 		int m = mat.size();
 		int n = mat.get(0).length;
@@ -60,6 +99,9 @@ public class TestUtil {
 		}
 	}
 	
+	/**Print a vector, compress if the output is too big
+	 * @param mat
+	 */
 	public static void prettyPrint(float[] mat){
 		int n = mat.length;
 		boolean curtailm = n>10;
@@ -83,6 +125,12 @@ public class TestUtil {
 	}
 	
 	
+	/** Find the best labeling map from a set of known centroids
+	 * to a set of experimental centroids. greedy method.
+	 * @param estCentroids
+	 * @param realCentroids
+	 * @return
+	 */
 	public static List<float[]> alignCentroids(List<float[]> estCentroids, List<float[]> realCentroids)
 	{
 		List<float[]> aligned = new ArrayList<float[]>(realCentroids.size());
@@ -96,6 +144,15 @@ public class TestUtil {
 		return aligned;
 	}
 	
+	/**write a simple matrix format of 
+	 * row[newline]
+	 * col[newline]
+	 * data_1_1[newline]
+	 * ...[newline]
+	 * data_||row||_||col||
+	 * @param data - list of float arrays
+	 * @param output - file
+	 */
 	public static void writeFile(File output,List<float[]> data){
 		BufferedWriter out = null;
 		try {
@@ -147,6 +204,10 @@ public class TestUtil {
 		}
 		return mx;
 	}
+	/**Walk along a byte outputting the bits bigendian
+	 * @param b
+	 * @return
+	 */
 	public static String b2s(byte b){
 		String s = "";
 		for(int i =0;i<8;i++){
@@ -193,12 +254,58 @@ public class TestUtil {
 		return M;
 	}
 	
+	/**Print a byte array 8 bits at a time
+	 * @param b
+	 */
 	public static void prettyPrint(byte[] b){
 		for(int i =0;i<b.length;i++){
 			System.out.print(b2s(b[i])+",");
 		}
 		System.out.println();
 		
+	}
+	
+
+	
+	/** Print a diagonal distance matrix of all (n-1)(n-2)/2 distances
+	 * @param b
+	 * @param d
+	 */
+	public static void printDistanceMatrix (float[] b,int d){
+		
+		int s = d/b.length;
+		for(int i = 0; i < s;i++)
+		{
+			for(int j = 0; j < s;j++)
+			{
+				System.out.printf("%.3f",TestUtil.distance(b,b,i*d,j*d,d));
+				System.out.print("\t");
+			}
+			System.out.println();
+		}
+
+		
+	}
+	
+	/**
+	 * Get the average projection of a vector under multiple matrix projections
+	 * @param v
+	 * @param p
+	 * @param dim
+	 * @return
+	 */
+	public static float[] avgProjection(float[] v, Projector[] p, int dim) {
+		float[] ravg = new float[dim];
+		float sclr = 1f / (float) p.length;
+		for (int i = 0; i < dim; i++)
+			ravg[i] = 0.0f;
+		for (int i = 0; i < p.length; i++) {
+			float[] r1 = p[i].project(v);
+			for (int j = 0; j < dim; j++)
+				ravg[j] += (r1[j] * sclr);
+		}
+
+		return ravg;
 	}
 	
 

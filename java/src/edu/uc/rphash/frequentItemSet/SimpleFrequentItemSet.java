@@ -46,4 +46,10 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 		return null;
 	}
 
+	@Override
+	public Object getBaseClass() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

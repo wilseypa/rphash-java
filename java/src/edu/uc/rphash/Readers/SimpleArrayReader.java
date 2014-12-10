@@ -20,6 +20,7 @@ public class SimpleArrayReader implements RPHashObject {
 	List<float[]> centroids;
 	
 	
+	
 	public SimpleArrayReader(List<float[]> X,int k,int randomseed, int hashmod,int times){
 		this.X = X;
 		this.n = X.size();
@@ -31,6 +32,8 @@ public class SimpleArrayReader implements RPHashObject {
 		current = 0;
 		centroids = null;
 		this.times = times;
+		this.ids = new ArrayList<Long>();
+		for(int i = 0 ; i < X.size();i++)ids.add((long) 0);
 	}
 	
 //	public SimpleArrayReader(List<List<Float>> X,int k,int randomseed, int hashmod){
@@ -48,7 +51,7 @@ public class SimpleArrayReader implements RPHashObject {
 	
 	@Override
 	public float[] getNextVector() {
-		if(current >= this.n)return null;
+		if(current >= this.X.size())return null;
 		float[] vecX;
 //		if(X==null)
 //		{
@@ -64,7 +67,14 @@ public class SimpleArrayReader implements RPHashObject {
 		current++;
 		return vecX;
 	}
-
+	public Long getNextID() {
+		return ids.get(current-1);
+	}
+	public void setNextID(Long id) {
+		ids.set(current-1,id);
+	}
+	
+	
 	@Override
 	public int getk() {
 		return k;
@@ -72,7 +82,7 @@ public class SimpleArrayReader implements RPHashObject {
 
 	@Override
 	public int getn() {
-		return n;
+		return X.size();
 	}
 
 	@Override
@@ -149,6 +159,24 @@ public class SimpleArrayReader implements RPHashObject {
 	@Override
 	public int getTimes() {
 		return times;
+	}
+
+	Long largest = null;
+	@Override
+	public Long getPreviousTopID() {
+
+		return largest;
+	}
+	
+	@Override
+	public void setPreviousTopID(Long top) 
+	{largest = top;
+	}
+	
+
+	public void setData(List<float[]> X) 
+	{
+		this.X = X;
 	}
 
 }

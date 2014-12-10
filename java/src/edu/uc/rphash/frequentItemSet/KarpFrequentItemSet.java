@@ -73,6 +73,10 @@ public class KarpFrequentItemSet<E> implements ItemSet<E> {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	@Override
+	public Object getBaseClass() {
+		return null;
+	}
 
 
 }

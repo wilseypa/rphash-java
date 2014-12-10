@@ -4,7 +4,7 @@ import java.util.List;
 
 public class StatTests {
 	
-	static float PR(List<float[]> estCentroids, GenerateData gen){
+	public static float PR(List<float[]> estCentroids, GenerateData gen){
 		int count = 0 ;
 		List<float[]> data = gen.data();
 		for(int i = 0; i< data.size();i++)

@@ -198,6 +198,31 @@ public class StreamObject implements RPHashObject {
 	public int getTimes() {
 		return times;
 	}
+
+	long largest;
+	@Override
+	public Long getPreviousTopID() {
+
+		return largest;
+	}
+	
+	@Override
+	public void setPreviousTopID(Long top) 
+	{largest = top;
+	}
+
+
+	@Override
+	public Long getNextID() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public void setNextID(Long i) {
+		// TODO Auto-generated method stub
+	}
 	
 }
 

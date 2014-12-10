@@ -13,6 +13,8 @@ public class StickyWrapper<E> implements ItemSet<E> {
 	ArrayList<E> topItems;
 	ArrayList<Long> topCounts;
 	
+	
+	
 	public StickyWrapper(int k, int n){
 		this.k=k;
 		topItems = null;
@@ -49,6 +51,10 @@ public class StickyWrapper<E> implements ItemSet<E> {
 	public List<Long> getCounts() {
 		if(topItems == null)populateLists();
 		return topCounts;
+	}
+	@Override
+	public Object getBaseClass() {
+		return scounter;
 	}
 
 }

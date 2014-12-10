@@ -17,6 +17,8 @@ public interface ItemSet<E> {
 			return  o.value  -this.value;
 		}
 	}
+	
+	public Object getBaseClass();
 	public boolean add(E e);
 	public List<E> getTop();
 	public List<Long> getCounts();

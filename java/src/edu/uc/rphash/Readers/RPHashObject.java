@@ -11,10 +11,17 @@ public interface RPHashObject {
 	int getHashmod();
 	int getTimes();
 	float[] getNextVector();
+	public Long getNextID();
+	public void setNextID(Long i) ;
+	
+	
 	List<Long> getIDs();
 	List<Long> getCounts();
 	List<float[]>  getCentroids();
 	float[] getNextCentroid();
+	
+	Long getPreviousTopID();
+	void setPreviousTopID(Long i);
 	
 	void setIDs(long[] ids);
 	void setIDs(List<Long> ids);
