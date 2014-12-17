@@ -1,5 +1,6 @@
 package edu.uc.rphash.decoders;
 
+import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.TestUtil;
 
@@ -84,7 +85,7 @@ inline float quicksqrt(float b)
 
 public class LeechDecoder implements Decoder{
 	
-	
+	public static int Dim = 24;
 	/*
 	 * an integer symbol encoding of an H6 encoder.
 	 * 0 1 2 3 = 0 1 w w'
@@ -173,7 +174,7 @@ public class LeechDecoder implements Decoder{
 	
 	
 	public LeechDecoder(){
-
+		this.scaler = 1.0f;
 		float[][] evenAPts = {{APT, DPT},{CPT, DPT},{CPT, BPT},{APT, BPT}};
 		float[][] oddAPts  ={{BPT, CPT},{BPT, APT},{DPT, APT},{DPT, CPT}};
 		float[][] evenBPts = {{BPT, DPT},{DPT, DPT},{DPT, BPT},{BPT, BPT}};
@@ -185,7 +186,9 @@ public class LeechDecoder implements Decoder{
 		
 	}
 
+	public float scaler;
 	public LeechDecoder(float scaler){
+		this.scaler = scaler;
 		APT = this.APT*scaler;
 		BPT = this.BPT*scaler;
 		CPT =this.CPT*scaler;
@@ -705,7 +708,7 @@ public class LeechDecoder implements Decoder{
 			char[] hexword,//[6],
 			char[][][] prefReps,//[6][4][4],
 			float[][] dijs,//[12][4],
-			int j,
+			int subSetParity,
 			char[] codeword)
 	{
 
@@ -716,17 +719,17 @@ public class LeechDecoder implements Decoder{
 
 		for(i=0;i<6;i++){
 			//create the golay codeword from the hexacode representation
-			codeword[i*4]=prefReps[i][hexword[i]][0];
-			codeword[i*4+1]=prefReps[i][hexword[i]][1];
-			codeword[i*4+2]=prefReps[i][hexword[i]][2];
-			codeword[i*4+3]=prefReps[i][hexword[i]][3];
+			codeword[i<<2]=prefReps[i][hexword[i]][0];
+			codeword[(i<<2)+1]=prefReps[i][hexword[i]][1];
+			codeword[(i<<2)+2]=prefReps[i][hexword[i]][2];
+			codeword[(i<<2)+3]=prefReps[i][hexword[i]][3];
 			//
 			parity = (char) (parity ^ prefReps[i][hexword[i]][0]);//this should be the highest order bit
 
 			//printf("%i%i%i%i ", codeword[i*4],codeword[i*4+1],codeword[i*4+2],codeword[i*4+3]);
 		}
 
-		if((parity&1) == j){
+		if((parity&1) == subSetParity){
 			//printf("\n");
 			return weight;
 		}
@@ -744,16 +747,16 @@ public class LeechDecoder implements Decoder{
 		//walk along the codeword again
 		for(i=0;i<6;i++){
 
-			idx1 =(char) ((codeword[4*i]<<1) +codeword[4*i+1]);
-			idx2 =(char) ((codeword[4*i+2]<<1) +codeword[4*i+3]);
+			idx1 =(char) ((codeword[i<<2]<<1) +codeword[(i<<2)+1]);
+			idx2 =(char) ((codeword[(i<<2)+2]<<1) +codeword[(i<<2)+3]);
 			// compute cost of complementing the hexacode representation ^3 of bits
 			//select minimal cost complement.
-			deltaX = (dijs[2*i][idx1^3] + dijs[2*i+1][idx2^3]) - (dijs[2*i][idx1] + dijs[2*i+1][idx2]);
+			deltaX = (dijs[i<<1][idx1^3] + dijs[(i<<1)+1][idx2^3]) - (dijs[i<<1][idx1] + dijs[(i<<1)+1][idx2]);
 			//printf("%f \n" , deltaX);
 
 			if (deltaX < leastwt){
 				leastwt = deltaX;
-				least = (char) (i*4);
+				least = (char) (i<<2);
 			}
 		}
 
@@ -777,7 +780,7 @@ public class LeechDecoder implements Decoder{
 	float kparity(
 			float weight,
 			char[] codeword,
-			char Btype,
+			char ABtype,
 			char[] codeParity,
 			float[][] dijks,//[12][4],
 			float[][] dijs,//[12][4],
@@ -795,7 +798,7 @@ public class LeechDecoder implements Decoder{
 
 		for( ;i <12;i++)
 		{
-			char n =(char) ((codeword[2*i]<<1)+codeword[2*i+1]);
+			char n =(char) ((codeword[i<<1]<<1)+codeword[(i<<1)+1]);
 			parity= (char) ((char) parity^kparities[i][n]);
 			codeParity[i] = kparities[i][n];
 
@@ -809,19 +812,19 @@ public class LeechDecoder implements Decoder{
 
 		/*something here as this parity check doesnt fix anything*/
 		//not sure why this doesnt at least double the set cardinality
-		if(parity== Btype ){
+		if(parity== ABtype )
+		{
 			return weight;
 		}
-
 		codeParity[argLeast ]=  (char) (codeParity[argLeast ] ^1);
 		return weight+least;
 	}
 
-	byte[] convertbin(char[] cw,char[] cp,byte[] quantization){
+	byte[] convertbin(char[] cw,char[] cp){//,byte[] quantization){
 		//unsigned long leastCodeword;
 		//unsigned char* leastCodeword = malloc(24*sizeof(unsigned char));
 		//unsigned char leastCodeword[24];
-		byte[] retOpt = new byte[5+24];
+		byte[] retOpt = new byte[5];//+24];
 
 		//A is default the least weight decoding
 		//for(i=0;i<24;i++)
@@ -838,7 +841,14 @@ public class LeechDecoder implements Decoder{
 		retOpt[3] = (byte)(cp[0]+(cp[1]<<1)+(cp[2]<<2)+(cp[3]<<3)
 				+(cp[4]<<4)+(cp[5]<<5)+(cp[6]<<6)+(cp[7]<<7));
 		retOpt[4] = (byte)(cp[8]+(cp[9]<<1)+(cp[10]<<2)+(cp[11]<<3));
-		for(int i=0;i<quantization.length;i++)retOpt[i+5]=quantization[i];
+		
+		//System.out.printf("\t%d%d%d%d %d%d%d%d %d%d%d%d\n",
+		//(int)cp[0],(int)cp[1],(int)cp[2],(int)cp[3],(int)cp[4],(int)cp[5],(int)cp[6],
+		//(int)cp[7],(int)cp[8],(int)cp[9],(int)cp[10],(int)cp[11]);
+		
+		
+		
+		//for(int i=0;i<quantization.length;i++)retOpt[i+5]=quantization[i];
 		return retOpt;
 	}
 
@@ -874,7 +884,11 @@ public class LeechDecoder implements Decoder{
 		}
 		return ret;
 	}
-	
+	//TODO figure out why these keep coming up
+//	-369372827648 010 010 010 010, 001 001 001 001,010 010  010 010           inner  A         near 0 mean
+//	-241->              001 001 001 001,001 001 001 001,001 001 001 001,           inner4 A            near 0 mean
+//	-1448472832     001 001 001 001,010 010 010 010 ,010 010 010 010           inner 4 A           near 0 mean
+//	-370810028017 010  010 010  010,  010  010  010 010, 001 001 001 001      inner 4 A			near 0 mean
 	//unsigned char* decode(float r[12][2], float *distance){
 	//unsigned long long decodeLeech(float *r,float *distance)
 	public byte[] decode(float[] r)
@@ -889,7 +903,7 @@ public class LeechDecoder implements Decoder{
 		char[][] kparities = new char[12][4];
 		
 		
-		byte[] append =  generateQuantizationVector(r);
+		//byte[] append =  generateQuantizationVector(r);
 
 		QAM(r,evenAPts,oddAPts,dijs,dijks,kparities);
 
@@ -940,7 +954,7 @@ public class LeechDecoder implements Decoder{
 		
 		//set as least
 		leastweight = weight;
-		retOpt = convertbin(cw,cp,append);
+		retOpt = convertbin(cw,cp);//,append);
 
 
 		//----------------A Odd Quarter Lattice Decoder----------------
@@ -953,7 +967,7 @@ public class LeechDecoder implements Decoder{
 		if(weight<leastweight)
 		{
 			leastweight = weight;
-			retOpt = convertbin(cw,cp,append);
+			retOpt = convertbin(cw,cp);//,append);
 			//winner = 1;
 		}
 
@@ -971,7 +985,7 @@ public class LeechDecoder implements Decoder{
 
 		if(weight<leastweight){
 			leastweight = weight;
-			retOpt = convertbin(cw,cp,append);
+			retOpt = convertbin(cw,cp);//,append);
 			//winner = 2;
 		}
 
@@ -983,11 +997,11 @@ public class LeechDecoder implements Decoder{
 
 		if(weight<leastweight){
 			leastweight = weight;
-			retOpt = convertbin(cw,cp,append);
+			retOpt = convertbin(cw,cp);//,append);
 			//winner =3;
 		}
 		//distance = winner;
-
+		//if((new NoHash()).hash(retOpt)==-370810028017L) TestUtil.prettyPrint(r);
 		return retOpt;//leastCodeword;
 	}
 

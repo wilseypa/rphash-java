@@ -3,6 +3,7 @@ package edu.uc.rphash.Readers;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -15,11 +16,9 @@ public class StreamObject implements RPHashObject {
 	int randomseed;
 	int hashmod;
 	int times;
-	List<Long> ids;
-	List<Long> counts;
 	List<float[]> centroids;
-	int centit;
-	int ctit;
+	List<Long> topIDs;
+
 	
 	// input format
 	//per line
@@ -30,13 +29,9 @@ public class StreamObject implements RPHashObject {
 	// --input random seed;
 	StreamObject(BufferedInputStream elements)
 	{
-		
-		this.ids = new ArrayList<Long>();
-		this.counts = new ArrayList<Long>();;
-		this.centroids = new ArrayList<float[]>();
-		this.centit = 0;
-		this.ctit = 0;
 
+		this.centroids = new ArrayList<float[]>();
+		this.topIDs = new ArrayList<Long>();
 		try{
 			k = Integer.parseInt(spacetoken());
 			n = Integer.parseInt(spacetoken());
@@ -132,36 +127,13 @@ public class StreamObject implements RPHashObject {
 		return randomseed;
 	}
 
-	@Override
-	public void setIDs(long[] ids) {
-		this.ids = new ArrayList<Long>(ids.length);
-		for(int i=0;i<this.ids.size();i++)this.ids.add(ids[i]);
-	}
-	
-	public void setIDs(List<Long> ids){
-		this.ids = ids;
-	}
-	
-	@Override
-	public List<Long> getIDs() {	
-		return ids;
-	}
 
-	@Override
-	public void setCounts(long[] counts) {
-		this.counts = new ArrayList<Long>(counts.length);
-		for(int i=0;i<counts.length;i++)this.counts.add(counts[i]);
-	}
 
-	@Override
-	public void setCounts(List<Long> ids) {
-		this.ids = ids;
-	}
+
 	
 	@Override
 	public void reset() {
-			centit = 0;
-			ctit = 0;
+
 			try{
 				elements.reset();
 			}catch(IOException ioe){
@@ -179,50 +151,44 @@ public class StreamObject implements RPHashObject {
 		centroids = l;
 	}
 
-	@Override
-	public List<float[]> getCentroids() {
-		return centroids;
-	}
-
-	@Override
-	public float[] getNextCentroid() {
-		return centroids.get(centit++);
-	}
-
-	@Override
-	public List<Long> getCounts() {
-		return counts;
-	}
 
 	@Override
 	public int getTimes() {
 		return times;
 	}
 
-	long largest;
-	@Override
-	public Long getPreviousTopID() {
 
-		return largest;
+	@Override
+	public List<Long> getPreviousTopID() {
+
+		return topIDs;
 	}
 	
 	@Override
-	public void setPreviousTopID(Long top) 
-	{largest = top;
+	public void setPreviousTopID(List<Long> top) 
+	{
+		topIDs = top;
 	}
 
 
 	@Override
-	public Long getNextID() {
+	public Iterator<RPVector> getVectorIterator() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 
 	@Override
-	public void setNextID(Long i) {
+	public List<float[]> getCentroids() {
 		// TODO Auto-generated method stub
+		return null;
 	}
+	
+	@Override
+	public void setRandomSeed(int seed){
+		this.randomseed = seed;
+	}
+
 	
 }
 

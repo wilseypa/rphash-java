@@ -1,79 +1,59 @@
 package edu.uc.rphash.Readers;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 public class SimpleArrayReader implements RPHashObject {
 	
-	List<float[]> X;
+	List<RPVector> data;
 	//List<List<Float>> Xlist;
 	int n;
 	int dim;
-	int current;
-	int curCentroid;
+
 	int randomseed;
 	int hashmod;
 	int k;
 	int times;
-	List<Long> ids;
-	List<Long> counts;
+
 	List<float[]> centroids;
+	List<Long> topIDs;
 	
 	
 	
 	public SimpleArrayReader(List<float[]> X,int k,int randomseed, int hashmod,int times){
-		this.X = X;
+		
+		data = new LinkedList<RPVector>();
+		for(int i = 0 ; i < X.size();i++){
+			RPVector r = new RPVector();
+			r.data = X.get(i);
+			r.count = 0;
+			r.id = new HashSet<Long>() ;
+			data.add(r);
+		}
+		
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
 		this.randomseed = randomseed;
 		this.hashmod = hashmod;
-		curCentroid = 0;
-		current = 0;
-		centroids = null;
+
+		centroids =  new ArrayList<float[]>();;
 		this.times = times;
-		this.ids = new ArrayList<Long>();
-		for(int i = 0 ; i < X.size();i++)ids.add((long) 0);
+		this.topIDs = new ArrayList<Long>();
+		for(int i = 0 ; i < k;i++)topIDs.add((long) 0);
+		
+		
 	}
 	
-//	public SimpleArrayReader(List<List<Float>> X,int k,int randomseed, int hashmod){
-//		this.Xlist = X;
-//		this.X = null;
-//		this.n = X.size();
-//		this.dim = X.get(0).size();
-//		this.k = k;
-//		this.randomseed = randomseed;
-//		this.hashmod = hashmod;
-//		curCentroid = 0;
-//		current = 0;
-//		centroids = null;
-//	}
 	
-	@Override
-	public float[] getNextVector() {
-		if(current >= this.X.size())return null;
-		float[] vecX;
-//		if(X==null)
-//		{
-//			vecX = new float[dim];
-//			List<Float> ptr = Xlist.get(current);
-//			for(int i =0;i<dim;i++)
-//				vecX[i] = ptr.get(i);
-//		}
-//		else
-//		{
-			vecX = X.get(current);
-//		}
-		current++;
-		return vecX;
+	public Iterator<RPVector> getVectorIterator() {
+		return data.iterator();
 	}
-	public Long getNextID() {
-		return ids.get(current-1);
-	}
-	public void setNextID(Long id) {
-		ids.set(current-1,id);
-	}
-	
+
+
 	
 	@Override
 	public int getk() {
@@ -82,7 +62,7 @@ public class SimpleArrayReader implements RPHashObject {
 
 	@Override
 	public int getn() {
-		return X.size();
+		return data.size();
 	}
 
 	@Override
@@ -99,38 +79,11 @@ public class SimpleArrayReader implements RPHashObject {
 	
 	@Override
 	public void reset() {
-		current = 0;
+		
 	}
 	
-	@Override
-	public void setIDs(long[] ids) {
-		this.ids = new ArrayList<Long>(ids.length);
-		for(int i=0;i<this.ids.size();i++)this.ids.add(ids[i]);
-	}
-	
-	public void setIDs(List<Long> ids){
-		this.ids = ids;
-	}
-
-	@Override
-	public void setCounts(long[] counts) {
-		this.counts = new ArrayList<Long>(counts.length);
-		for(int i=0;i<counts.length;i++)this.counts.add(counts[i]);
-	}
-
-	@Override
-	public void setCounts(List<Long> counts) {
-		this.counts = counts;
-	}
-
-	@Override
-	public List<Long> getIDs() {
-		return ids;
-	}
-
 	@Override
 	public void addCentroid(float[] v) {
-		if(centroids==null)centroids = new ArrayList<float[]>();
 		centroids.add(v);
 	}
 
@@ -146,37 +99,22 @@ public class SimpleArrayReader implements RPHashObject {
 	}
 
 	@Override
-	public float[] getNextCentroid() {
-		if(curCentroid >=k)return null;
-		return centroids.get(curCentroid++);
-	}
-	
-	@Override
-	public List<Long> getCounts() {
-		return counts;
-	}
-
-	@Override
 	public int getTimes() {
 		return times;
 	}
 
-	Long largest = null;
 	@Override
-	public Long getPreviousTopID() {
-
-		return largest;
+	public List<Long> getPreviousTopID() {
+		return topIDs;
 	}
-	
+
 	@Override
-	public void setPreviousTopID(Long top) 
-	{largest = top;
+	public void setPreviousTopID(List<Long> top) {
+		topIDs=top;		
 	}
-	
-
-	public void setData(List<float[]> X) 
-	{
-		this.X = X;
+	@Override
+	public void setRandomSeed(int seed){
+		this.randomseed = seed;
 	}
 
 }

@@ -28,6 +28,7 @@ public class DBFriendlyProjection implements Projector {
 		this.n = n;
 		this.t = t;
 		rand = new Random(randomseed);
+		
 		M =  GenRandom();
 		P =  GenRandom();
 	}
@@ -46,18 +47,35 @@ public class DBFriendlyProjection implements Projector {
 	 */
 	ArrayList<Integer>[] GenRandom(){
 	  ArrayList<Integer>[] M = new ArrayList[t];
-	
 	 // float scale = (float)Math.sqrt(3.0f/(m));
 	  int r = 0;
+	  
 	  for(int i=0;i<t;i++)
 	  {
 		  M[i]=new ArrayList<Integer>(n/3);
-		  for(int j=0;j<n;j++)
+		  int j=0;
+		//2^32 we need 1/6 or roughly 3 bits per => 10 selects per for faster generation
+//		  while(j<n){
+//			  r = rand.nextInt();
+//			  while(r>0 && j<n)
+//			  {
+//				  if((r&0b111)<6)
+//				  {
+//				  	if((r&0b111)==0)M[i].add(j);
+//				  	j++;
+//				  }
+//				  r>>>=3;
+//			  }
+//		  }
+//		  
+		  for(;j<n;j++)
 		  {
-	        r = rand.nextInt(6);//2^32 we need 1/6 or roughly 3 bits per => 10 selects per for faster generation
+	        r = rand.nextInt(6);
 	        if(r==0)M[i].add(j);
 		   }
 	  }
+	  
+	  
 	  return M;
 	}
 	

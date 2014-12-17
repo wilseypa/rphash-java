@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.uc.rphash.projections.Projector;
@@ -67,6 +68,48 @@ public class TestUtil {
 		return minindex;
 	}
 	
+	/**Linear search for x's nearest neighbor in DB
+	 * @param x
+	 * @param DB
+	 * @return
+	 */
+	public static int findNearestDistance(float[] x,List <float[]> DB,float[] dist)
+	{
+		float mindist = distance(x,DB.get(0));
+		int minindex = 0;
+		float tmp;
+		for(int i=1;i<DB.size();i++){
+			tmp = distance(x,DB.get(i));
+			if(tmp <= mindist){
+				mindist = tmp;
+				minindex = i;
+			}
+		}
+		dist[0] = mindist;
+		return minindex;
+	}
+	
+	
+	
+	
+	
+	public static int findNearestDistance(float[] x,List <float[]> DB, HashSet<Integer> taken)
+	{
+		float mindist = Float.MAX_VALUE;//distance(x,DB.get(0));
+		int minindex = 0;
+		float tmp;
+
+		for(int i=0;i<DB.size();i++){
+			if(!taken.contains(i)){
+			tmp = distance(x,DB.get(i));
+			if(tmp <= mindist){
+				mindist = tmp;
+				minindex = i;
+			}}
+		}
+		return minindex;
+	}
+	
 	/**Print a matrix, compress if the output is too big
 	 * @param mat
 	 */
@@ -99,10 +142,12 @@ public class TestUtil {
 		}
 	}
 	
+	
+
 	/**Print a vector, compress if the output is too big
 	 * @param mat
 	 */
-	public static void prettyPrint(float[] mat){
+	public static void prettyPrint(Integer[] mat){
 		int n = mat.length;
 		boolean curtailm = n>10;
 		if(curtailm){
@@ -122,6 +167,33 @@ public class TestUtil {
 			}
 		}
 		System.out.printf("\n");
+	}
+	
+	/**Print a vector, compress if the output is too big
+	 * @param mat
+	 */
+	public static void prettyPrint(float[] mat){
+		int n = mat.length;
+		float sum = 0.0f;
+		for(int i=0;i<mat.length;i++)sum+=mat[i];
+		boolean curtailm = n>10;
+		if(curtailm){
+			for(int i=0;i<4;i++){
+				if(mat[i]>0)System.out.printf(" ");
+				System.out.printf("%.4f ",mat[i]);
+			}
+			System.out.print("\t ... \t");
+			for(int i=mat.length-4;i<mat.length;i++){
+				if(mat[i]>0)System.out.printf(" ");
+				System.out.printf("%.4f ",mat[i]);
+			}
+		}else{
+			for(int i=0;i<mat.length;i++){
+				if(mat[i]>0)System.out.printf(" ");
+				System.out.printf("%.4f ",mat[i]);
+			}
+		}
+		System.out.printf(" \t avg = %f\n",sum/(float)mat.length);
 	}
 	
 	
@@ -260,6 +332,24 @@ public class TestUtil {
 	public static void prettyPrint(byte[] b){
 		for(int i =0;i<b.length;i++){
 			System.out.print(b2s(b[i])+",");
+		}
+		System.out.println();
+	}
+	
+	public static void prettyPrint(long b){
+		
+		byte chnk = (byte) (b&0xFF);
+		for(int i =0;i<8;i++){
+			System.out.print(b2s(chnk)+",");
+			b>>>=8;
+			chnk = (byte) (b&0xFF);
+		}
+		System.out.println();
+	}
+	
+	public static void prettyPrint(char[] b){
+		for(int i =0;i<b.length;i++){
+			System.out.print(b2s((byte)b[i])+",");
 		}
 		System.out.println();
 		

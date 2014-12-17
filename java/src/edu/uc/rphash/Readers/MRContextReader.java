@@ -65,11 +65,7 @@ public class MRContextReader extends StreamObject implements RPHashObject {
 		return null;
 	}
 
-	@Override
-	public List<Long> getIDs() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 
 	@Override
 	public List<float[]> getCentroids() {
@@ -77,35 +73,7 @@ public class MRContextReader extends StreamObject implements RPHashObject {
 		return null;
 	}
 
-	@Override
-	public float[] getNextCentroid() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public void setIDs(long[] ids) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setIDs(List<Long> ids) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setCounts(long[] ids) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setCounts(List<Long> ids) {
-		// TODO Auto-generated method stub
-
-	}
 
 	@Override
 	public void addCentroid(float[] v) {
@@ -124,14 +92,7 @@ public class MRContextReader extends StreamObject implements RPHashObject {
 		// TODO Auto-generated method stub
 
 	}
-	
-	
-	
-	
-	
-	
-	
-	
+
 	
 
     public static class Map extends Mapper<LongWritable, Text, Text, Text> {

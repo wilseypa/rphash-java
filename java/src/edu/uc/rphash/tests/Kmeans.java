@@ -15,7 +15,7 @@ public class Kmeans {
 	int k;
 	int n;
 	
-	float[] computerCentroid(List<Integer> vectors,List<float[]> data ){
+	public float[] computerCentroid(List<Integer> vectors,List<float[]> data ){
 		int d = data.get(0).length;
 		float[] centroid = new float[d];
 
@@ -60,7 +60,7 @@ public class Kmeans {
 	
 	List<float[]> means; 
 	List<List<Integer>> clusters;
-	Kmeans(int k, List<float[]> data,int projdim)
+	public Kmeans(int k, List<float[]> data,int projdim)
 	{
 		run(k,data,projdim);
 	} 
@@ -77,7 +77,7 @@ public class Kmeans {
 		data = new ArrayList<float[]>();
 		Projector p=null;
 		if(projdim!=0)
-			p =  new GaussianProjection/*DBFriendlyProjection*/(fulldata.size(),projdim, 1);
+			p =  new DBFriendlyProjection(fulldata.get(0).length,projdim, 19797);
 		
 		for(float[] v: fulldata){
 			if(p!=null)
@@ -117,7 +117,7 @@ public class Kmeans {
 	
 
 	
-	List<float[]> getCentroids()
+	public List<float[]> getCentroids()
 	{
 		return means;
 	}

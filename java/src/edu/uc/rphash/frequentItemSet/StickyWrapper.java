@@ -20,7 +20,7 @@ public class StickyWrapper<E> implements ItemSet<E> {
 		topItems = null;
 		topCounts = null;
 		scounter = null;
-		scounter = new StickySampling<E>((float)k/((float)n*10),.0001,.0001);
+		scounter = new StickySampling<E>((float)k/((float)n*100),.00001,.00001);
 	}
 	@Override
 	public boolean add(E e) {

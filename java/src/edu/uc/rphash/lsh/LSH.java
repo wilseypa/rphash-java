@@ -5,6 +5,7 @@ import java.util.Random;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
+import edu.uc.rphash.tests.TestUtil;
 
 public class LSH 
 {
@@ -38,14 +39,16 @@ public class LSH
 	 * Decode full n length vector. Concatenate codes and run universal hash(fnv,elf, murmur) on whole vector decoding.
 	 */
 	public long lshHash(float[] r){	 
-	     int k=0;
-	     long ret = 0;
-	     do{
-	         float[] r1 = p[k].project(r);	         
-	         ret =  hal.hash(dec.decode(r1)) ^ ret;
-	         k++;
-	     }while(k<times);
-	  return ret ;
+//	     int k=0;
+//	     long ret = 0;
+//	     do{
+//	         float[] r1 = p[k].project(r);	  
+////	         System.out.println(radius);
+////	         TestUtil.prettyPrint(r1);
+//	         ret =  hal.hash(dec.decode(r1)) ^ ret;
+//	         k++;
+//	     }while(k<times);
+	  return hal.hash(dec.decode(p[0].project(r)));
 	}
 	
 

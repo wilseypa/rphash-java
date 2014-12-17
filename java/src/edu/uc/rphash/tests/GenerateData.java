@@ -123,7 +123,7 @@ public class GenerateData
 		this.shuffle = shuffle;
 		this.sparseness = sparseness;
 		if(variance>0)
-			this.scaler = variance;//normalize dimension
+			this.scaler = variance;///(float)Math.sqrt(dimension);//normalize dimension
 		else
 			this.scaler = 1.0f/(float)Math.sqrt(dimension);
 		
@@ -197,6 +197,26 @@ public class GenerateData
 		data = newData;
 	}
 	
+	void normalize()
+	{
+		for(int i =0;i<dimension;i++){
+			float sum = 0.0f;
+			for(float[] f : data)
+			{
+				sum+= Math.abs(f[i]);
+			}
+			sum/=(float)data.size();
+			for(float[] f : data)
+			{
+				f[i]/=(sum);
+			}
+			for(float[] f :medoids)
+			{
+				f[i]/=(sum);
+			}
+		}
+	}
+	
 	private void generateMem()
 	{
 		this.data = new ArrayList<float[]>();//new float[numClusters*numVectorsPerCluster][dimension];
@@ -222,8 +242,10 @@ public class GenerateData
 				this.data.add(dat);
 			}
 		}
-
-		if(this.shuffle)permute();
+		normalize();
+		if(this.shuffle){
+			permute();
+		}
 		
 	}
 	
@@ -264,6 +286,7 @@ public class GenerateData
 		}
 	}
 	
+
 	
 	private void generateDisk(File f)
 	{

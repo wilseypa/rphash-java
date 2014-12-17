@@ -21,11 +21,9 @@ public class DBFriendlyBitwiseProjector implements Projector {
 	{
 	    float x = 1.1f;
 	    char i =0;
-
 	    for(;i<16;i++){
 	        x = (x+(b/x))/2.0f;
 	    }
-
 	    return x;
 	}
 	
