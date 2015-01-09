@@ -34,8 +34,7 @@ public class RPHash {
 		HashAlgorithm hal = new NoHash();// MurmurHash(so.getHashmod());
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if(!vecs.hasNext())return so;
-		RPVector vec = vecs.next();
-
+		
 		
 		
 		
@@ -45,38 +44,29 @@ public class RPHash {
 		for (int i = 0; i < probes ; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					LeechDecoder.Dim,  r.nextInt());
-			//float radius =1.5f;//TestUtil.max(vec.data);
 			Decoder dec = new LeechDecoder();
 			lshfuncs[i] = new LSH(dec, p, hal);
 		}
 		
-		ItemSet<Long> is = /*new SimpleFrequentItemSet<Long>(so.getk());*/
-		new StickyWrapper<Long>(so.getk(), so.getn());
+		ItemSet<Long> is = new StickyWrapper<Long>(so.getk(), so.getn());//new SimpleFrequentItemSet<Long>(so.getk());
 
 		long hash;
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
-			for (int j=0; j < probes;j++) {
-				hash = lshfuncs[j].lshHash(vec.data);
+			RPVector vec = vecs.next();
+			//for (int j=0; j < probes;j++) {
+				hash = lshfuncs[0].lshHash(vec.data);
 				is.add(hash);
 			    vec.id.add(hash);
-			    
-//				hash = lshfuncs[j].lshHashRadius(vec.data,.25f);
-//				is.add(hash);
-//			    vec.id.add(hash);
-			    
-			    
-
-			    
-			    
-			}
-			vec = vecs.next();
+				for (int j=0; j < probes;j++) {
+					hash = lshfuncs[0].lshHashRadius(vec.data);
+					is.add(hash);
+				    vec.id.add(hash);
+				}
+			//}
 		}
-		
-		//for(Long id :is.getCounts())System.out.println(id);
+		for(Long l : is.getCounts())System.out.println(l);
 		so.setPreviousTopID(is.getTop());
-		
-		
 		
 		return so;
 	}
@@ -103,6 +93,8 @@ public class RPHash {
 		
 		for (Centroid cent : centroids) {
 			so.addCentroid(cent.centroid());
+			for(Long l: cent.ids)System.out.printf("%d, ", l);
+			System.out.printf("\n");
 		}
 		return so;
 	}
@@ -145,10 +137,10 @@ public class RPHash {
 	
 	public static void main(String[] args) {
 
-		int k = 30;
-		int d = 2000;
-		int n = 20000;
-		GenerateData gen = new GenerateData(k, n / k, d, 1.0f, true, 1.f);
+		int k = 40;
+		int d = 10000;
+		int n = 30000;
+		GenerateData gen = new GenerateData(k, n / k, d, .3f, true, 1.f);
 		RPHash rphit = new RPHash(gen.data(), k);
 
 		long startTime = System.nanoTime();

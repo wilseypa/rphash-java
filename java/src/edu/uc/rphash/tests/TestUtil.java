@@ -174,8 +174,7 @@ public class TestUtil {
 	 */
 	public static void prettyPrint(float[] mat){
 		int n = mat.length;
-		float sum = 0.0f;
-		for(int i=0;i<mat.length;i++)sum+=mat[i];
+
 		boolean curtailm = n>10;
 		if(curtailm){
 			for(int i=0;i<4;i++){
@@ -193,9 +192,28 @@ public class TestUtil {
 				System.out.printf("%.4f ",mat[i]);
 			}
 		}
-		System.out.printf(" \t avg = %f\n",sum/(float)mat.length);
 	}
 	
+	void pp(
+			long ret,
+			int ct,
+			int grsize)
+	{
+		int i,j;//,err;
+		for(i=0;i<ct;i++)
+		{
+			for(j=0;j<grsize;j++)
+			{
+				System.out.printf("%li",ret&1);
+				//err +=ret&1;
+				ret=ret>>>1;
+
+			}
+			System.out.printf(" ");
+		}
+		//if(err%2) printf("error \n");else
+		System.out.printf("\n");
+	}
 	
 	/** Find the best labeling map from a set of known centroids
 	 * to a set of experimental centroids. greedy method.

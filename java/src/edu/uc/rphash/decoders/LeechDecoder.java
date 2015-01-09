@@ -1,6 +1,8 @@
 package edu.uc.rphash.decoders;
 
-import edu.uc.rphash.standardhash.NoHash;
+import java.util.HashSet;
+import java.util.Random;
+
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.TestUtil;
 
@@ -171,6 +173,11 @@ public class LeechDecoder implements Decoder{
 	float  BPT = -.25f;
 	float CPT = .25f;
 	float  DPT = .75f;
+//	float APT = .25f;
+//	float  BPT = .75f;
+//	float CPT = 1.25f;
+//	float  DPT = 1.75f;
+	
 	
 	
 	public LeechDecoder(){
@@ -188,7 +195,7 @@ public class LeechDecoder implements Decoder{
 
 	public float scaler;
 	public LeechDecoder(float scaler){
-		this.scaler = scaler;
+		this.scaler = 1f;//scaler;
 		APT = this.APT*scaler;
 		BPT = this.BPT*scaler;
 		CPT =this.CPT*scaler;
@@ -219,99 +226,58 @@ public class LeechDecoder implements Decoder{
 			int startat
 			)
 	{
-		// printf("%f,%f : %f,%f = ",cp[0],cp[1],pt[0],pt[1]);
-		float s =(cp[0]-pt[startat])*(cp[0]-pt[startat]) + (cp[1]-pt[startat+1])*(cp[1]-pt[startat+1]);
-		// printf(" %f\n",s);
-		return s;
-
+		return (cp[0]-pt[startat])*(cp[0]-pt[startat]) + (cp[1]-pt[startat+1])*(cp[1]-pt[startat+1]);
 	}
 
-	void pp(float[] f){
-		int grsize =1;
-		int ct = f.length;
-		if(ct %4 ==0){
-			grsize = 4;
-		}
-		for(int i=0;i<ct;i++)
-		{
-			for(int j=0;j<grsize;j++)
-			{
-				System.out.printf("%.3f ",f[i]);
-			}
-			System.out.printf("\t");
-		}
-		//if(err%2) printf("error \n");else
-		System.out.printf("\n");
 
-	}
 
-	void pp(
-			long ret,
-			int ct,
-			int grsize)
-	{
-		int i,j;//,err;
-		for(i=0;i<ct;i++)
-		{
-			for(j=0;j<grsize;j++)
-			{
-				System.out.printf("%li",ret&1);
-				//err +=ret&1;
-				ret=ret>>>1;
 
-			}
-			System.out.printf(" ");
-		}
-		//if(err%2) printf("error \n");else
-		System.out.printf("\n");
-	}
-
-	float[] convertToCoords(long c)
-	{
-
-		float[] point = new float[24];
-		float axCoords[] = {APT,CPT, BPT,DPT,BPT,DPT,CPT,APT };
-		float ayCoords[] = {DPT,BPT,CPT,APT,APT,CPT,DPT,BPT};
-		float bxCoords[] = {BPT,DPT,CPT,APT,CPT,APT,DPT,BPT};
-		float byCoords[] = {DPT,BPT, CPT,APT,APT,CPT,DPT,BPT};
-
-		int parity = (int)(c&0xfff);//seperate these parts
-
-		//compute A/B point from parity
-		int u = parity;
-		int Bpoint = 0;
-		while(u>0)
-		{
-			if((u &1)== 1)Bpoint++;
-			u = (u>>>1);
-		}
-
-		//this may verywell break this function
-		//c=(c&0xffffff000)>>12;
-
-		int i;
-		int pt = 0;
-		if((Bpoint &1)==0)
-		{
-			for(i=0;i<12;i++){
-				pt = (int) (((c&1)<<2)+(c&2)+(parity&1));
-				point[i*2]= bxCoords[pt];
-				point[i*2+1]=byCoords[pt];
-				c = c>>>2;
-				parity = parity>>>1;
-			}
-		}
-		else{
-			for(i=0;i<12;i++){
-				pt = (int) (((c&1)<<2)+(c&2)+(parity&1))  ;
-				point[i*2]= axCoords[pt];
-				point[i*2+1]=ayCoords[pt];
-				c = c>>>2;
-				parity = parity>>>1;
-			}
-		}
-		return point;
-	}
+//	float[] convertToCoords(long c)
+//	{
+//
+//		float[] point = new float[24];
+//		float axCoords[] = {APT,CPT, BPT,DPT,BPT,DPT,CPT,APT };
+//		float ayCoords[] = {DPT,BPT,CPT,APT,APT,CPT,DPT,BPT};
+//		float bxCoords[] = {BPT,DPT,CPT,APT,CPT,APT,DPT,BPT};
+//		float byCoords[] = {DPT,BPT, CPT,APT,APT,CPT,DPT,BPT};
+//
+//		int parity = (int)(c&0xfff);//seperate these parts
+//
+//		//compute A/B point from parity
+//		int u = parity;
+//		int Bpoint = 0;
+//		while(u>0)
+//		{
+//			if((u &1)== 1)Bpoint++;
+//			u = (u>>>1);
+//		}
+//
+//		//this may verywell break this function
+//		//c=(c&0xffffff000)>>12;
+//
+//		int i;
+//		int pt = 0;
+//		if((Bpoint &1)==0)
+//		{
+//			for(i=0;i<12;i++){
+//				pt = (int) (((c&1)<<2)+(c&2)+(parity&1));
+//				point[i*2]= bxCoords[pt];
+//				point[i*2+1]=byCoords[pt];
+//				c = c>>>2;
+//				parity = parity>>>1;
+//			}
+//		}
+//		else{
+//			for(i=0;i<12;i++){
+//				pt = (int) (((c&1)<<2)+(c&2)+(parity&1))  ;
+//				point[i*2]= axCoords[pt];
+//				point[i*2+1]=ayCoords[pt];
+//				c = c>>>2;
+//				parity = parity>>>1;
+//			}
+//		}
+//		return point;
+//	}
 
 	/*
 	 *    this function returns all of the pertinent information
@@ -326,7 +292,7 @@ public class LeechDecoder implements Decoder{
 	 * generalized 16bit qam, besides this has to be done anyway
 	 *  so we can get out the real number coordinates in the end
 	 */
-	void QAM(
+	int QAM(
 			float[] r,
 			float[][] evenPts, //[4][2],
 			float[][] oddPts, //[4][2],
@@ -336,20 +302,31 @@ public class LeechDecoder implements Decoder{
 			)
 	{
 		//void QAM(float *r, float *evenPts,float *oddPts,float *dijs,float *dijks,int *kparities){
-
 		//the closest even-type Z2 lattice point is used as the
 		//coset representatives for all points, not currently used
 		//quadrant = [0 for k in range(12)]
 
 		char i = 0;
-
+		//int ret = 0;
 		for(;i<12;i++){
+//			ret <<=2;
+//			if(r[i*2]    <0f) {
+//				r[i*2] = r[i*2]+2f ;
+//				ret+=2;
+//		    }
+//		    if(r[i*2+1]<0f) {
+//		    	r[i*2+1]= r[i*2+1]+2f ;
+//		    	ret+=1;
+//		    }
 
 			float dist000 = distance(r,evenPts[0],i*2);
 			float dist110 = distance(r,evenPts[1],i*2);
 			float dist001 = distance(r,evenPts[2],i*2);
 			float dist111 = distance(r,evenPts[3],i*2);
 
+			
+			//TODO dist111 is always least.. why
+			//System.out.printf("%.3f,%.3f,%.3f,%.3f\t\t\t",dist000,dist110,dist001,dist111);
 			if(dist000<dist001)
 			{
 				dijs[i][0]=dist000;
@@ -375,10 +352,13 @@ public class LeechDecoder implements Decoder{
 
 
 					//min over odds
-					float dist010 = distance(r,oddPts[0],i*2);
+			float dist010 = distance(r,oddPts[0],i*2);
 			float dist100 = distance(r,oddPts[1],i*2);
 			float dist011 = distance(r,oddPts[2],i*2);
 			float dist101 = distance(r,oddPts[3],i*2);
+			//System.out.printf("\t\t%.3f,%.3f,%.3f,%.3f\n",dist010,dist100,dist011,dist101);
+			
+			
 			if (dist010<dist011){
 				dijs[i][1]=dist010;
 				dijks[i][1]=dist011;
@@ -399,7 +379,10 @@ public class LeechDecoder implements Decoder{
 				dijks[i][2]=dist100;
 				kparities[i][2] = 1;
 			}
-		}
+		}  	
+
+
+		return 0;//ret;
 	}
 
 	/*
@@ -498,7 +481,6 @@ public class LeechDecoder implements Decoder{
 				prefRepE[i][3][3] = 1;
 			}
 
-			//this operation could be parallel, but probably doesnt need to be
 			//1000 0111
 			s = dijs[2*i][2]+dijs[2*i+1][0];
 			t = dijs[2*i][1]+dijs[2*i+1][3];
@@ -610,6 +592,8 @@ public class LeechDecoder implements Decoder{
 			chars[i] = leastChar;
 			charwts[i]=leastwt;
 		}
+
+
 	}
 
 	/*
@@ -621,9 +605,11 @@ public class LeechDecoder implements Decoder{
 			float[][] mus)//[6][4])
 	{
 
+
 		//locate least reliable
 		float leastreliablewt = charwts[0];
 		char leastreliablechar = 0;
+		
 		if(charwts[1]>leastreliablewt){
 			leastreliablewt = charwts[1];
 			leastreliablechar = 1;
@@ -641,10 +627,9 @@ public class LeechDecoder implements Decoder{
 
 		char[]  leastcan = {0,0,0,0,0,0};
 		//build candidate list
-		// unsigned char  candslst[8][6]=  {{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},
-		//                                                     {0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0}};
 		char[]  cand = {0,0,0,0,0,0};
-		//(unsigned char[8][6]) (malloc(8*6*sizeof(unsigned char)));//{
+
+		//try combinations of substitutions for the least reliable 
 		char i;
 		for(i = 0;i<4;i++){
 			y[leastreliablechar] = i;
@@ -696,6 +681,7 @@ public class LeechDecoder implements Decoder{
 		}
 		for(j=0;j<6;j++)y[j] = leastcan[j];
 
+
 		return minCodeWt;
 	}
 
@@ -723,22 +709,14 @@ public class LeechDecoder implements Decoder{
 			codeword[(i<<2)+1]=prefReps[i][hexword[i]][1];
 			codeword[(i<<2)+2]=prefReps[i][hexword[i]][2];
 			codeword[(i<<2)+3]=prefReps[i][hexword[i]][3];
-			//
-			parity = (char) (parity ^ prefReps[i][hexword[i]][0]);//this should be the highest order bit
 
-			//printf("%i%i%i%i ", codeword[i*4],codeword[i*4+1],codeword[i*4+2],codeword[i*4+3]);
+			parity = (char) (parity ^ prefReps[i][hexword[i]][0]);//this should be the highest order bit
 		}
 
+		//System.out.println("---------------Q------------------");
 		if((parity&1) == subSetParity){
-			//printf("\n");
 			return weight;
 		}
-		/*
-	    if(oddFlag)
-	    printf(" ---(Odd)>> ");
-	    else
-	      printf(" ---(Eve)>> ");
-		 */
 
 		float leastwt = 1000.0f;
 		char least = 0;
@@ -752,7 +730,6 @@ public class LeechDecoder implements Decoder{
 			// compute cost of complementing the hexacode representation ^3 of bits
 			//select minimal cost complement.
 			deltaX = (dijs[i<<1][idx1^3] + dijs[(i<<1)+1][idx2^3]) - (dijs[i<<1][idx1] + dijs[(i<<1)+1][idx2]);
-			//printf("%f \n" , deltaX);
 
 			if (deltaX < leastwt){
 				leastwt = deltaX;
@@ -820,7 +797,7 @@ public class LeechDecoder implements Decoder{
 		return weight+least;
 	}
 
-	byte[] convertbin(char[] cw,char[] cp){//,byte[] quantization){
+	byte[] convertbin(char[] cw,char[] cp, int quantization){
 		//unsigned long leastCodeword;
 		//unsigned char* leastCodeword = malloc(24*sizeof(unsigned char));
 		//unsigned char leastCodeword[24];
@@ -845,10 +822,9 @@ public class LeechDecoder implements Decoder{
 		//System.out.printf("\t%d%d%d%d %d%d%d%d %d%d%d%d\n",
 		//(int)cp[0],(int)cp[1],(int)cp[2],(int)cp[3],(int)cp[4],(int)cp[5],(int)cp[6],
 		//(int)cp[7],(int)cp[8],(int)cp[9],(int)cp[10],(int)cp[11]);
-		
-		
-		
-		//for(int i=0;i<quantization.length;i++)retOpt[i+5]=quantization[i];
+//		retOpt[5] = (byte)(quantization);
+//		retOpt[6] = (byte)(quantization>>>8);
+//		retOpt[7] = (byte)(quantization>>>16);
 		return retOpt;
 	}
 
@@ -858,7 +834,7 @@ public class LeechDecoder implements Decoder{
 	}
 	@Override
 	public float getErrorRadius() {
-		return (float)Math.sqrt(2)/ (5.099f*(1.0f/(DPT)));
+		return (float)Math.sqrt(2)/ (5.099f*(2.0f/(DPT)));
 	}
 	
 	/** Generate the initial quantization vector for the lattice. ie <1,0,1,1,1,0,1,1> is a valid E8 vector
@@ -884,7 +860,8 @@ public class LeechDecoder implements Decoder{
 		}
 		return ret;
 	}
-	//TODO figure out why these keep coming up
+	static int [] winners = new int[4];
+
 //	-369372827648 010 010 010 010, 001 001 001 001,010 010  010 010           inner  A         near 0 mean
 //	-241->              001 001 001 001,001 001 001 001,001 001 001 001,           inner4 A            near 0 mean
 //	-1448472832     001 001 001 001,010 010 010 010 ,010 010 010 010           inner 4 A           near 0 mean
@@ -901,11 +878,11 @@ public class LeechDecoder implements Decoder{
 		//there is a set for each quarter decoder, and the A/B_ij odd/even
 		//unsigned char* kparities =malloc(sizeof(unsigned char)*12*4) ;
 		char[][] kparities = new char[12][4];
-		
+		int winner = 0;
 		
 		//byte[] append =  generateQuantizationVector(r);
 
-		QAM(r,evenAPts,oddAPts,dijs,dijks,kparities);
+		int append = QAM(r,evenAPts,oddAPts,dijs,dijks,kparities);
 
 		// #####################Block Confidences ###################
 		//         0  1    w   W
@@ -950,11 +927,13 @@ public class LeechDecoder implements Decoder{
 
 		
 		weight = hparity(weight,y,prefRepE,dijs,0,cw);//byref
+
 		weight =kparity(weight,cw,(char)0, cp,dijks,dijs,kparities);
+		
 		
 		//set as least
 		leastweight = weight;
-		retOpt = convertbin(cw,cp);//,append);
+		retOpt = convertbin(cw,cp,append);
 
 
 		//----------------A Odd Quarter Lattice Decoder----------------
@@ -962,14 +941,16 @@ public class LeechDecoder implements Decoder{
 		constructHexWord(muOs,y,charwts);;
 		weight = minH6(y,charwts,muOs);
 		weight = hparity(weight,y,prefRepO,dijs,(char)1,cw);//byref
-		weight = kparity(weight,cw,(char)0,cp,dijks,dijs,kparities);
 
+		weight = kparity(weight,cw,(char)0,cp,dijks,dijs,kparities);
+		
 		if(weight<leastweight)
 		{
 			leastweight = weight;
-			retOpt = convertbin(cw,cp);//,append);
-			//winner = 1;
+			retOpt = convertbin(cw,cp,append);
+			winner = 1;
 		}
+
 
 		
 		//----------------H_24 Half Lattice Decoder for B points----------------
@@ -981,25 +962,28 @@ public class LeechDecoder implements Decoder{
 		constructHexWord(muEs,y,charwts);
 		weight = minH6(y,charwts,muEs);
 		weight = hparity(weight,y,prefRepE,dijs,0,cw);//byref
-		weight =kparity(weight,cw,(char)1,cp,dijks,dijs,kparities);
 
+		weight =kparity(weight,cw,(char)1,cp,dijks,dijs,kparities);
+		
 		if(weight<leastweight){
 			leastweight = weight;
-			retOpt = convertbin(cw,cp);//,append);
-			//winner = 2;
+			retOpt = convertbin(cw,cp,append);
+			winner = 2;
 		}
 
 		//----------------B Odd Quarter Lattice Decoder----------------
 		constructHexWord(muOs,y,charwts);
 		weight = minH6(y,charwts,muOs);
 		weight = hparity(weight,y,prefRepO,dijs,1,cw);//byref
-		weight =kparity(weight,cw,(char)1,cp,dijks,dijs,kparities);
 
+		weight = kparity(weight,cw,(char)1,cp,dijks,dijs,kparities);
+		
 		if(weight<leastweight){
 			leastweight = weight;
-			retOpt = convertbin(cw,cp);//,append);
-			//winner =3;
+			retOpt = convertbin(cw,cp,append);
+			winner =3;
 		}
+		winners[winner]++;
 		//distance = winner;
 		//if((new NoHash()).hash(retOpt)==-370810028017L) TestUtil.prettyPrint(r);
 		return retOpt;//leastCodeword;
@@ -1011,11 +995,46 @@ public class LeechDecoder implements Decoder{
 		return ret;
 	}
 	public static void main(String[] args)
-{
-	Decoder leech = new LeechDecoder();
-	GenerateData gen = new GenerateData(1, 10, 24);
-	for(float[] f: gen.data())TestUtil.prettyPrint(leech.decode(f));
+	{
+		Decoder leech = new LeechDecoder();
+		
+		
+		HashSet<Long> h = new HashSet<Long>();
+		int k = 0;
+		float[] f = new float[24];
+		byte[] b;
+		long t;
+		int j;
+		Random r = new Random();
+		winners[0]=0;winners[1]=0;winners[2]=0;winners[3]=0;
+		//even decoder subset selection and 4096 (codewords of golay code) * 4096 (2^12 parity combinations)
+		for(long i = 0;i<100000000;i++)
+		{
+			//System.out.println("------------------------------------------------------------");
+			for(j=0;j<24;j++){
+				f[j] = r.nextFloat()*2f-1f;
+			}
+			b= leech.decode(f);
+			t = 0;
+			for(j = 0;j<5;j++){
+				t = (t<<8)+b[j];
+				
+			}
+			h.add(t);
+			k++;
+			if(k%1000000==0){
+				System.out.printf("%d:{%f,%f,%f,%f}\n",
+						h.size(),
+						(float)winners[0]/k,
+						(float)winners[1]/k,
+						(float)winners[2]/k,
+						(float)winners[3]/k);
+			}
+//			for(int i = 0 ;i<f.length;i++)System.out.printf("%.2f, ",f[i]);
+//			System.out.printf("\n");
+//			TestUtil.prettyPrint(leech.decode(f));
+		}
 
-}
+	}
 }
 

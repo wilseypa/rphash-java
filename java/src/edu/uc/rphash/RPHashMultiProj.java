@@ -41,7 +41,7 @@ public class RPHashMultiProj {
 //		float[] counts = new float[k];
 		
 		
-		RPHash3Stage  rp ;
+		RPHash  rp ;
 		
 //		for(int j =0;j<k;j++)
 //		{
@@ -54,10 +54,10 @@ public class RPHashMultiProj {
 //		}
 		
 		ArrayList<float[]> manyCentroids = new ArrayList<float[]> (10*k);
-		for(int i=0;i<3 ;i++)
+		for(int i=0;i<10 ;i++)
 		{
 			//System.out.println("\nscan:"+String.valueOf(i));
-			rp = new RPHash3Stage (data,k,r.nextInt());
+			rp = new RPHash (data,k,r.nextInt());
 			manyCentroids.addAll(rp.getCentroids());
 		}
 		centroids =  ( new Kmeans(k,manyCentroids,d)).getCentroids();
@@ -68,7 +68,7 @@ public class RPHashMultiProj {
 		
 		int k = 20;
 		int d = 10000;	
-		int n = 10000;
+		int n = 1000;
 		gen = new GenerateData(k,n/k,d,2.0f,true,1.f);
 		RPHashMultiProj rphit = new RPHashMultiProj(gen.data(),k);
 		

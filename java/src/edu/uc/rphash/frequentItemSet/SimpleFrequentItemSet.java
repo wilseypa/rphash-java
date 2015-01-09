@@ -9,8 +9,13 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 
 	int setsize;
 	HashMap<E,Integer> data = new HashMap<E,Integer>();
+	ArrayList<E> ret ;
+	ArrayList<Long> counts ;
 	public SimpleFrequentItemSet(int i) {
 		this.setsize=i;
+		ret=null ;
+		counts=null ;
+
 	}
 
 	@Override
@@ -28,22 +33,31 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 	@Override
 	public ArrayList<E> getTop() 
 	{
+		if(ret!=null)return ret;
+		
 		ArrayList<tuple<E>> sortedData = new ArrayList<tuple<E>>(data.size());
+
 		for(E key:data.keySet())sortedData.add(new tuple<E>(key,data.get(key)));
+		
 		Collections.sort(sortedData);
+		
 		setsize = setsize<sortedData.size()?setsize:sortedData.size();
 		
-		ArrayList<E> ret = new ArrayList<E>(setsize);
+		ret = new ArrayList<E>(setsize);
+		counts = new ArrayList<Long>(setsize);
+		
 		for(int i =0;i<setsize;i++){
 			ret.add(i,sortedData.get(i).key);
+			counts.add((long)sortedData.get(i).value);
 		}
 		return ret;
 	}
 
 	@Override
 	public List<Long> getCounts() {
-		// TODO Auto-generated method stub
-		return null;
+		if(counts!=null)return counts;
+		getTop() ;
+		return counts;
 	}
 
 	@Override

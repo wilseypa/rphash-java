@@ -36,7 +36,7 @@ public class TestRPhash {
 	
 	static void testRPHash(int k, int n,int d,float variance,int projdim){
 		
-		GenerateData gen = new GenerateData(k,n/k,d,variance,true,.5f);
+		GenerateData gen = new GenerateData(k,n/k,d,variance,true,1.f);
 		
 		System.out.print(k+":"+n+":"+d+":"+variance+":"+projdim+"\t");
 		System.out.print(StatTests.PR(gen.medoids(),gen)+":\t");
@@ -50,8 +50,7 @@ public class TestRPhash {
 		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
 		System.out.print("\t");
 		System.gc();
-//		for(int i = 0 ; i< k;i++)
-//			System.out.println(i+":"+TestUtil.distance(aligned.get(i), gen.medoids().get(i)));
+
 
 		
 		RPHashObject so = new SimpleArrayReader(gen.data(),k,1,250000,1);
@@ -114,9 +113,9 @@ public class TestRPhash {
 	}
 	static void clusterPerformanceTests()
 	{
-		int k = 30;
-		int n = 1000;
-		int d = 100000;
+		int k = 50;
+		int n = 10000;
+		int d = 10000;
 		float v = .3f;
 		int projdim = 24;
 		
@@ -140,7 +139,7 @@ public class TestRPhash {
 //		}
 		System.out.println("k :  n  :  d  :var:dim\tNNPerf\t\tKMeans\t\t\tRPHash\t\t\tRPHash3S\t\tRPHashredux");
 		System.out.println("-------varying variance-------");
-		for(int i = 50 ;i<300;i+=10){
+		for(int i = 10 ;i<300;i+=10){
 			testRPHash(k,n,d,i/100f,24);
 			//testRPHash(k,n,d,i/100f,24);
 			//testRPHash(k,n,d,i/100f,24);
@@ -171,8 +170,8 @@ public class TestRPhash {
 	public static void main(String[] args){
 		
 //		ArrayList<float[]> data = new ArrayList<float[]>();
-//		Projector p = new DBFriendlyProjection(1000,	3,  3452);
-//		List<float[]> tmp = (new GenerateData(5,100,1000,.5f,false,1.0f)).data();
+//		Projector p = new DBFriendlyProjection(1000,	24,  34352);
+//		List<float[]> tmp = (new GenerateData(5,50,1000,1.0f,false,1.0f)).data();
 //		for(float[] d : tmp)data.add( p.project(d));
 //		TestUtil.writeFile(new File("/home/lee/Desktop/output") ,data);
 
