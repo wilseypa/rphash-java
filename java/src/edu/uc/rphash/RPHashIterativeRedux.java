@@ -32,19 +32,19 @@ import edu.uc.rphash.tests.TestUtil;
  */
 public class RPHashIterativeRedux 
 {
-	
+	float variance;
+	float radius = 1f;
 	Random r  = new Random();
 	public RPHashObject map(RPHashObject so) 
 	{
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		Iterator<RPVector> vecs = so.getVectorIterator();
-		if(!vecs.hasNext())return so;
+		//if(!vecs.hasNext())return so;
 		
 		RPVector vec = vecs.next();
-		
-		float radius = 1.0f;//TestUtil.max(vec.data);
-		
-		Decoder dec = new LeechDecoder(radius);
+
+
+		Decoder dec = new LeechDecoder(variance/.75f);
 		Projector p ;
 		
 		//for (int i = 0; i < so.getTimes(); i++) {
@@ -71,8 +71,8 @@ public class RPHashIterativeRedux
 			vec = vecs.next();
 		}
 
+		//System.out.println(is.getCounts().get(0));
 		so.setPreviousTopID(is.getTop());
-
 		return so;
 	}
 	
@@ -93,51 +93,49 @@ public class RPHashIterativeRedux
 	
 	public RPHashObject reduce(RPHashObject so) 
 	{
-		float[] centroid = new float[so.getdim()];
-		int ct = 0;
+		Long lastID = so.getPreviousTopID().get(0);
+		Centroid centroid = new Centroid(so.getdim(),lastID);
+
 		
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		RPVector vec;
-
+		
 		while(vecs.hasNext())
 		{
 			vec = vecs.next();
-			if(vec.id.contains(so.getPreviousTopID().get(0)))
+			if(vec.id.contains(lastID))
 			{
-				ct++;
-				for(int d = 0 ; d<so.getdim();d++)centroid[d]+=vec.data[d];
+				centroid.updateVec(vec);
 				vecs.remove();
 			}
 		}
 
-		float ctinv = 1.0f/(float)ct;
-		for(int d = 0 ; d<so.getdim();d++)centroid[d]*=ctinv;
 		
 		//sort and remove top n/k items		
-		vecs =  so.getVectorIterator();
-		ArrayList<Tuple> pq = new ArrayList<Tuple>();
-		while(vecs.hasNext())
-		{
-			vec = vecs.next();
-			pq.add(new Tuple(vec,TestUtil.distance(vec.data,centroid)));
-		}
+//		vecs =  so.getVectorIterator();
+//		ArrayList<Tuple> pq = new ArrayList<Tuple>();
+//		while(vecs.hasNext())
+//		{
+//			vec = vecs.next();
+//			pq.add(new Tuple(vec,TestUtil.distance(vec.data,centroid)));
+//		}
+//		
+//		Collections.sort(pq);
+//		float cutoff = pq.get(pq.size()/(so.getk()*100)).dist;
+//		//System.out.println(pq.get(pq.size()/so.getk()).dist;);
+//		vecs =  so.getVectorIterator();
+//		
+//		while(vecs.hasNext())
+//		{
+//				vec = vecs.next();
+//				if(TestUtil.distance(vec.data,centroid) < cutoff){
+//					ct++;
+//					for(int d = 0 ; d<so.getdim();d++)centroid[d]=( centroid[d]*ct++ + vec.data[d])/(float)ct;
+//					vecs.remove();
+//				}
+//		}	
 		
-		Collections.sort(pq);
-		float cutoff = pq.get(pq.size()/(so.getk()*100)).dist;
-		//System.out.println(pq.get(pq.size()/so.getk()).dist;);
-		vecs =  so.getVectorIterator();
-		
-		while(vecs.hasNext())
-		{
-				vec = vecs.next();
-				if(TestUtil.distance(vec.data,centroid) < cutoff){
-					ct++;
-					for(int d = 0 ; d<so.getdim();d++)centroid[d]=( centroid[d]*ct++ + vec.data[d])/(float)ct;
-					vecs.remove();
-				}
-		}	
-		
-		so.addCentroid(centroid);
+		so.addCentroid(centroid.centroid());
 		
 		return so;
 	}
@@ -148,13 +146,15 @@ public class RPHashIterativeRedux
 	private List<float[]> centroids=null;
 	private RPHashObject so;
 	public RPHashIterativeRedux (List<float[]> data,int k){
-		so = new SimpleArrayReader(data,k,1,250000,1);
+		variance = StatTests.varianceAll(data);
+		so = new SimpleArrayReader(data,k,1,250000);
 	}
 	public RPHashIterativeRedux (RPHashObject so){
 		this.so= so;
 	}
 	public RPHashIterativeRedux (List<float[]> data,int k,int rseed){
-		so = new SimpleArrayReader(data,k,rseed,250000,1);
+		variance = StatTests.varianceAll(data);
+		so = new SimpleArrayReader(data,k,rseed,250000);
 	}
 
 	
@@ -177,23 +177,16 @@ public class RPHashIterativeRedux
 		}
 		centroids = so.getCentroids();
 	}
-	
-	
-	
-	
-	
-	
-	
-	
+
 	
 	public static void main(String[] args){
 		
-		int k = 3;
-		int d = 1000;
-		int n = 50000;
-		GenerateData gen = new GenerateData(k,n/k,d,2.0f,true,1.f);
+		int k = 20;
+		int d = 5000;
+		int n = 10000;
+		GenerateData gen = new GenerateData(k,n/k,d,1.f,true,1.f);
 		
-		RPHashObject sar = new SimpleArrayReader(gen.data(),k,1,250000,1);
+		RPHashObject sar = new SimpleArrayReader(gen.data(),k,1,250000);
 		RPHashIterativeRedux rphit = new RPHashIterativeRedux(sar);
 		
 		long startTime = System.nanoTime();

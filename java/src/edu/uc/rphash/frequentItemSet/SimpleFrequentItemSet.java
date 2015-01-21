@@ -40,6 +40,7 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 		for(E key:data.keySet())sortedData.add(new tuple<E>(key,data.get(key)));
 		
 		Collections.sort(sortedData);
+
 		
 		setsize = setsize<sortedData.size()?setsize:sortedData.size();
 		
@@ -55,7 +56,10 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 
 	@Override
 	public List<Long> getCounts() {
-		if(counts!=null)return counts;
+		if(counts!=null){
+			
+			return counts;
+		}
 		getTop() ;
 		return counts;
 	}

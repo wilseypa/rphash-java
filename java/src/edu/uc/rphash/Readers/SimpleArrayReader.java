@@ -23,7 +23,7 @@ public class SimpleArrayReader implements RPHashObject {
 	
 	
 	
-	public SimpleArrayReader(List<float[]> X,int k,int randomseed, int hashmod,int times){
+	public SimpleArrayReader(List<float[]> X,int k,int randomseed, int hashmod){
 		
 		data = new LinkedList<RPVector>();
 		for(int i = 0 ; i < X.size();i++){

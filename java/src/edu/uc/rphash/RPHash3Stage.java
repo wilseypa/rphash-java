@@ -26,33 +26,34 @@ import edu.uc.rphash.tests.TestUtil;
 public class RPHash3Stage {
 
 
-
+	float variance;
 	public RPHashObject mapP1(RPHashObject so) {
+		
 		// create our LSH Machine
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if(!vecs.hasNext())return so;
 		RPVector vec = vecs.next();
 
-		Decoder dec = new LeechDecoder(TestUtil.max(vec.data));
-		Projector[] p = new Projector[so.getTimes()];
-		for (int i = 0; i < so.getTimes(); i++) {
-			p[i] = new DBFriendlyProjection(so.getdim(),
-					dec.getDimensionality(), (i + 1) * so.getRandomSeed());
-		}
+		Decoder dec = new LeechDecoder(variance/.75f);
+		Projector[] p = new Projector[1];
+
+		p[0] = new DBFriendlyProjection(so.getdim(),
+				dec.getDimensionality(),  so.getRandomSeed());
+		
 		LSH lsh = new LSH(dec, p, hal, so.getTimes());
 		ItemSet<Long> is = new StickyWrapper<Long>(so.getk(), so.getn());
-		int probes = 3; /* (int) (Math.log(so.getn()) + .5); (int) (Math.pow(
-				so.getn(), 0.2671) + .5);*/
+//		int probes = 1; /* (int) (Math.log(so.getn()) + .5); (int) (Math.pow(
+//				so.getn(), 0.2671) + .5);*/
 		
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
 			is.add(lsh.lshHash(vec.data));
-			int j = 0;
-			while (j < probes) {
-				is.add(lsh.lshHashRadius(vec.data));
-				j++;
-			}
+//			int j = 0;
+//			while (j < probes) {
+//				is.add(lsh.lshHashRadius(vec.data));
+//				j++;
+//			}
 			vec=vecs.next();
 		}
 		so.setPreviousTopID(is.getTop());
@@ -72,7 +73,7 @@ public class RPHash3Stage {
 		RPVector vec = vecs.next();
 		// trying to combat variance drifting issues by adjusting the
 		// scaling the lattice region radius
-		Decoder dec = new LeechDecoder(TestUtil.max(vec.data));
+		Decoder dec = new LeechDecoder(variance/.75f);
 		//Projector p = new Projector[so.getTimes()];
 		//for (int i = 0; i < so.getTimes(); i++) {
 		Projector p = new DBFriendlyProjection(so.getdim(),
@@ -85,12 +86,11 @@ public class RPHash3Stage {
 			centroids.put(id, new Centroid(100,id));
 		// start the calculation
 		long d;
-		int probes = 3;/* (int) (Math.log(so.getn()) + .5);(int) (Math.pow(
-				so.getn(), 0.2671) + .5); */
+		//int probes = 1;
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) 
 		{
-			int j = 0;
+			//int j = 0;
 			Centroid cent = null;
 			d = lsh.lshHash(vec.data);
 			cent = centroids.get(d);
@@ -98,13 +98,13 @@ public class RPHash3Stage {
 			if (cent != null)
 				cent.updateVec(p.project(vec.data));
 			
-			while (cent == null && j < probes) {
-				d = lsh.lshHashRadius(vec.data);
-				cent = centroids.get(d);
-				if (cent != null)
-					cent.updateVec(p.project(vec.data));
-				j++;
-			}
+//			while (cent == null && j < probes) {
+//				d = lsh.lshHashRadius(vec.data);
+//				cent = centroids.get(d);
+//				if (cent != null)
+//					cent.updateVec(p.project(vec.data));
+//				j++;
+//			}
 			vec =vecs.next();
 		}
 		for (Long id : centroids.keySet()) {
@@ -118,11 +118,8 @@ public class RPHash3Stage {
 
 	public RPHashObject mapP3(RPHashObject so) {
 		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
-		Projector[] p = new Projector[so.getTimes()];
-		for (int i = 0; i < so.getTimes(); i++) {
-			p[i] = new DBFriendlyProjection(so.getdim(), 100, (i + 1)
-					* so.getRandomSeed());
-		}
+		Projector[] p = new Projector[1];
+		p[0] = new DBFriendlyProjection(so.getdim(), 100,  so.getRandomSeed());
 		
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		for (int i = 0; i < so.getk(); i++){
@@ -140,9 +137,7 @@ public class RPHash3Stage {
 		so.setCentroids(new ArrayList<float[]>());
 		for (Centroid cent : centroids){
 			so.addCentroid(cent.centroid());
-			
 		}
-
 		return so;
 	}
 
@@ -150,7 +145,8 @@ public class RPHash3Stage {
 	private RPHashObject so;
 
 	public RPHash3Stage(List<float[]> data, int k) {
-		so = new SimpleArrayReader(data, k, 1, 250000, 1);
+		variance = StatTests.varianceAll(data);
+		so = new SimpleArrayReader(data, k, 1, 2500000);
 	}
 
 	public RPHash3Stage(RPHashObject so) {
@@ -158,7 +154,8 @@ public class RPHash3Stage {
 	}
 
 	public RPHash3Stage(List<float[]> data, int k, int rseed) {
-		so = new SimpleArrayReader(data, k, rseed, 250000, 1);
+		variance = StatTests.varianceAll(data);
+		so = new SimpleArrayReader(data, k, rseed, 2500000);
 	}
 
 	public List<float[]> getCentroids(RPHashObject so) {
@@ -185,9 +182,9 @@ public class RPHash3Stage {
 	public static void main(String[] args) {
 
 		int k = 20;
-		int d = 7000;
-		int n = 50;
-		GenerateData gen = new GenerateData(k, n / k, d, 2.0f, true, 1.f);
+		int d = 5000;
+		int n = 10000;
+		GenerateData gen = new GenerateData(k, n / k, d, 1.0f, true, 1.f);
 		RPHash3Stage rphit = new RPHash3Stage(gen.data(), k);
 
 		long startTime = System.nanoTime();

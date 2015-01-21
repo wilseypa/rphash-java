@@ -14,10 +14,10 @@ import org.streaminer.stream.frequency.RealCounting;
 import org.streaminer.stream.frequency.StickySampling;
 import org.streaminer.stream.frequency.util.CountEntry;
 
-import edu.uc.rphash.RPHash;
+import edu.uc.rphash.RPHashSimple;
 import edu.uc.rphash.RPHash3Stage;
 import edu.uc.rphash.RPHashIterativeRedux;
-import edu.uc.rphash.RPHashMultiProj;
+import edu.uc.rphash.RPHashMultiRP;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
@@ -53,8 +53,8 @@ public class TestRPhash {
 
 
 		
-		RPHashObject so = new SimpleArrayReader(gen.data(),k,1,250000,1);
-		RPHash rph = new RPHash(so);
+		RPHashObject so = new SimpleArrayReader(gen.data(),k,1,250000);
+		RPHashSimple rph = new RPHashSimple(so);
 		
 		
 		startTime = System.nanoTime();
@@ -113,9 +113,9 @@ public class TestRPhash {
 	}
 	static void clusterPerformanceTests()
 	{
-		int k = 50;
+		int k = 30;
 		int n = 10000;
-		int d = 10000;
+		int d = 5000;
 		float v = .3f;
 		int projdim = 24;
 		

@@ -43,8 +43,8 @@ public class LSH
 //	     long ret = 0;
 //	     do{
 //	         float[] r1 = p[k].project(r);	  
-////	         System.out.println(radius);
-////	         TestUtil.prettyPrint(r1);
+//	         System.out.println(radius);
+//	         TestUtil.prettyPrint(r1);
 //	         ret =  hal.hash(dec.decode(r1)) ^ ret;
 //	         k++;
 //	     }while(k<times);
@@ -63,6 +63,10 @@ public class LSH
 	     int k = 0;
 	     long ret = 0;
 		 do{
+//			 float[] r1 = r.clone();
+//			 for(int i =0;i<r.length;i++)
+//		    	 r1[i] += (float)rand.nextGaussian()*radius;
+//			 r1 = p[k].project(r1);
 		     float[] r1 = p[k].project(r);	
 		     for(int i =0;i<dec.getDimensionality();i++)
 		    	 r1[i] += (float)rand.nextGaussian()*radius;

@@ -1,7 +1,9 @@
 package edu.uc.rphash;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -12,76 +14,63 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.LeechDecoder;
 import edu.uc.rphash.frequentItemSet.ItemSet;
+import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.frequentItemSet.StickyWrapper;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
+import edu.uc.rphash.standardhash.FNVHash;
 import edu.uc.rphash.standardhash.HashAlgorithm;
+import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
 
-/**This is the correlated multi projections approach. In this RPHash variation we try to 
- * incorporate the advantage of multiple random projections in order to combat increasing
- * cluster error rates as the deviation between projected and full data increases. The
- * main idea is similar to the referential RPHash, however the set union is projection id
- * dependent. This will be done in a simplified bitmask addition to the hash code in lieu of
- * an array of sets data structures.
- * @author lee
- *
- */
-public class RPHashMultiProj {
+public class RPHashSimple {
 	float variance;
-	public RPHashObject mapP1(RPHashObject so) {
+	public RPHashObject map(RPHashObject so) {
 		// create our LSH Machine
 		Random r = new Random();
-		
-		HashAlgorithm hal = new NoHash();// MurmurHash(so.getHashmod());
+		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if(!vecs.hasNext())return so;
-		
-		
-		
-		int probes = 3;//(int) (Math.log(so.getdim()) + .5) ;
-		LSH[] lshfuncs = new LSH[probes];
 
+		//int probes = 1;//doesnt seem to add any benefit
 		
-		for (int i = 0; i < probes ; i++) {
-			Projector p = new DBFriendlyProjection(so.getdim(),
-					LeechDecoder.Dim,  r.nextInt());
-			Decoder dec = new LeechDecoder(variance/.75f);
-			lshfuncs[i] = new LSH(dec, p, hal);
-		}
 		
-		ItemSet<Long> is = new StickyWrapper<Long>(so.getk(), so.getn());//new SimpleFrequentItemSet<Long>(so.getk());
-		//int marker = 0;
+		Projector p = new DBFriendlyProjection(so.getdim(),
+				LeechDecoder.Dim,  r.nextInt());
+		Decoder dec = new LeechDecoder(variance/.75f);
+		LSH lshfunc = new LSH(dec, p, hal);
+		
+		ItemSet<Long> is =new StickyWrapper<Long>(so.getk(), so.getn());// new SimpleFrequentItemSet<Long>(so.getk());//
 		long hash;
+
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
 			RPVector vec = vecs.next();
-			hash = lshfuncs[0].lshHash(vec.data);
+			hash = lshfunc.lshHash(vec.data);
+			is.add(hash);
 		    vec.id.add(hash);
-		    is.add(hash);
-			
-			for (int j=1; j < probes;j++) {
-				hash = lshfuncs[j].lshHashRadius(vec.data,variance/.75f);
-			    vec.id.add(hash);
-			    is.add(hash);
-			}
-			//if(marker==0)System.out.println(vec.id.toString());
-			//marker++;
+
+//			for (int j=1; j < probes;j++) {
+//				hash = lshfunc.lshHashRadius(vec.data,variance/10f);
+//				is.add(hash);
+//			    vec.id.add(hash);
+//			}
 		}
 		
 		so.setPreviousTopID(is.getTop());
-
+		//for(Long l : is.getCounts())System.out.printf("%d,",l);System.out.printf("\n,");
+		//System.out.println( is.getCounts().toString());
 		return so;
 	}
 
 	/*
 	 * This is the second phase after the top ids have been in the reduce phase aggregated
 	 */
-	public RPHashObject mapP2(RPHashObject so) {
+	public RPHashObject reduce(RPHashObject so) {
 
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if(!vecs.hasNext())return so;
@@ -94,36 +83,30 @@ public class RPHashMultiProj {
 		
 		while (vecs.hasNext()) {
 			for(Centroid cent: centroids)
-			{
-				if(!Collections.disjoint(cent.ids,vec.id)){
-					cent.updateVec(vec);
-				}
-			}
+				if(!Collections.disjoint(cent.ids,vec.id))cent.updateVec(vec);
 			vec = vecs.next();
 		}
-		
+
 		for (Centroid cent : centroids) {
 			so.addCentroid(cent.centroid());
 		}
 		return so;
 	}
 
-	public RPHashObject reduceP2(RPHashObject so) {
-		return so;
-	}
+	
 	private List<float[]> centroids=null;
 	private RPHashObject so;
-	public RPHashMultiProj(List<float[]> data,int k){
+	public RPHashSimple(List<float[]> data,int k){
+		variance = StatTests.varianceAll(data);
 		so = new SimpleArrayReader(data,k,1,250000);
-		variance = StatTests.varianceAll(data);
 	}
-	public RPHashMultiProj(List<float[]> data,int k,int rseed){
+	public RPHashSimple(List<float[]> data,int k, int times,int rseed){
+		variance = StatTests.varianceAll(data);
 		so = new SimpleArrayReader(data,k,rseed,250000);
-		variance = StatTests.varianceAll(data);
 	}
 	
 	
-	public RPHashMultiProj(RPHashObject so){
+	public RPHashSimple(RPHashObject so){
 		this.so= so;
 	}
 
@@ -140,8 +123,8 @@ public class RPHashMultiProj {
 	
 	private  void run(RPHashObject so)
 	{
-		so = mapP1(so);
-		so = mapP2(so);
+		so = map(so);
+		so = reduce(so);
 		centroids = so.getCentroids();
 	}
 	
@@ -151,12 +134,9 @@ public class RPHashMultiProj {
 		int k = 20;
 		int d = 5000;
 		int n = 10000;
-		GenerateData gen = new GenerateData(k, n / k, d,1.f,true);
-		RPHashMultiProj rphit = new RPHashMultiProj(gen.data(), k);
+		GenerateData gen = new GenerateData(k, n / k, d, 1.0f, true, 1f);
 
-		System.out.println(StatTests.averageAll(gen.data()));
-		System.out.println(StatTests.varianceAll(gen.data()));
-		
+		RPHashSimple rphit = new RPHashSimple(gen.data(), k);
 		
 		long startTime = System.nanoTime();
 		rphit.getCentroids();
@@ -165,9 +145,10 @@ public class RPHashMultiProj {
 				gen.medoids());
 		System.out.println(StatTests.PR(aligned, gen) + ":" + duration
 				/ 1000000000f);
-		System.out.print("\n");
 		System.gc();
+		
+		
+		
 
 	}
-
 }

@@ -52,7 +52,7 @@ public class Centroid {
 //comment out to record variance
 	public void updateVec(RPVector rp)
 	{
-		//ids.addAll(rp.id);
+		ids.addAll(rp.id);
 		if(count==0){
 			for (int j =0;j<vec.length;j++){
 				vec[j] = rp.data[j];
@@ -79,6 +79,9 @@ public class Centroid {
 //			vec[j] = vec[j]+rp[j];
 		count++;
 		updateVariance(rp);
+	}
+	public long getCount() {
+		return count;
 	}
 
 }

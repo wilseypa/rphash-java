@@ -1,6 +1,7 @@
 package edu.uc.rphash.tests;
 
 import java.util.List;
+import java.util.Random;
 
 public class StatTests {
 	
@@ -13,4 +14,94 @@ public class StatTests {
 		}
 		return (float)count/(float)data.size();
 	}
+	
+	public static float varianceSample(List<float[]> data,float sampRatio){
+		float n = 0;
+		float mean = 0;
+		float M2 = 0;
+		Random r = new Random();
+		
+		int len = data.size();
+		
+		for(int i = 0 ; i<sampRatio*len; i++){
+			float[] row = data.get(r.nextInt(len));
+			
+			for(float x : row){
+				n++;
+				float delta = x - mean;
+				mean = mean + delta/n;
+				M2 = M2 + delta*(x-mean);
+			}	
+		}
+		if(n<2)return 0;
+		
+		return  M2/(n-1f);
+	}
+	
+	
+	public static float varianceAll(List<float[]> data){
+		float n = 0;
+		float mean = 0;
+		float M2 = 0;
+
+		for(float[] row : data){
+			for(float x : row){
+				n++;
+				float delta = x - mean;
+				mean = mean + delta/n;
+				M2 = M2 + delta*(x-mean);
+			}	
+		}
+		if(n<2)return 0;
+		
+		return  M2/(n-1f);
+		
+	}
+	
+	public static float averageAll(List<float[]> data){
+		float n = 0;
+		float mean = 0;
+		for(float[] row : data){
+			for(float x : row){
+				n++;
+				mean+=x;
+			}	
+		}return mean/n;
+	}
+	
+	public static float[] varianceCol(List<float[]> data){
+		if(data.size()<1)return null;
+		float[] vars = new float[data.get(0).length];
+		for(int i=0;i<data.size();i++ )
+		{
+			float n = 0;
+			float mean = 0;
+			float M2 = 0;
+			
+			for(float x : data.get(i)){
+				n++;
+				float delta = x - mean;
+				mean = mean + delta/n;
+				M2 = M2 + delta*(x-mean);
+			}
+			if(n<2)vars[i]=0;
+			else vars[i] = M2/(n-1f);
+		}
+		return vars;
+	}
+	
+	public static float[] averageCol(List<float[]> data){
+		if(data.size()<1)return null;
+		float[] avgs = new float[data.get(0).length];
+		for(int i=0;i<data.size();i++ ){
+			float n = 0;
+			float mean = 0;
+			for(float x : data.get(i)){
+				n++;
+				mean+=x;
+			}	
+			avgs[i] = mean/n;
+		}return avgs;
+	}
+
 }

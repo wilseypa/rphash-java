@@ -80,8 +80,9 @@ public class Kmeans {
 			p =  new DBFriendlyProjection(fulldata.get(0).length,projdim, 19797);
 		
 		for(float[] v: fulldata){
-			if(p!=null)
+			if(p!=null){
 				data.add(p.project(v));
+			}
 			else
 				data.add(v);
 		}

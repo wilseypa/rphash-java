@@ -242,6 +242,7 @@ public class GenerateData
 				this.data.add(dat);
 			}
 		}
+
 		//normalize();
 		if(this.shuffle){
 			permute();
