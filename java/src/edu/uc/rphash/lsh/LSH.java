@@ -32,7 +32,7 @@ public class LSH
 		this.dec = dec;
 		this.times = 1;
 		rand = new Random();
-		radius = dec.getErrorRadius();
+		radius = dec.getErrorRadius()/dec.getDimensionality();
 	}
 
 	/*
@@ -59,26 +59,27 @@ public class LSH
 	  return lshHash(permvec) ;
 	}
 
-	public long lshHashRadius(float[] r,float radius){
+	public long[] lshHashRadius(float[] r,float radius,int times){
 	     int k = 0;
-	     long ret = 0;
-		 do{
-//			 float[] r1 = r.clone();
-//			 for(int i =0;i<r.length;i++)
-//		    	 r1[i] += (float)rand.nextGaussian()*radius;
-//			 r1 = p[k].project(r1);
-		     float[] r1 = p[k].project(r);	
-		     for(int i =0;i<dec.getDimensionality();i++)
-		    	 r1[i] += (float)rand.nextGaussian()*radius;
-		     ret =  hal.hash(dec.decode(r1)) ^ ret;
-	         k++;
-	     }while(k<times);
-	     
+	     long[] ret = new long[times];
+	     float[] r1 = p[k].project(r);	
+	     float[] r2 = new float[dec.getDimensionality()];
+
+	     ret[0] =  hal.hash(dec.decode(r1)) ;
+
+		 for(int j =1;j<times;j++){
+		     for(int i =0;i<dec.getDimensionality();i++){
+		    	 r2[i] = r1[i]+(float)rand.nextGaussian()*radius;
+		     }
+		     ret[j] =  hal.hash(dec.decode(r2)) ;
+		     
+	     }
 		 return ret; 
 		}
 
-	public long lshHashRadius(float[] r){
-		  return lshHashRadius(r,radius) ;
+	public long[] lshHashRadius(float[] r,int times)
+	{
+		  return lshHashRadius(r,radius,times) ;
 	}
 
 }

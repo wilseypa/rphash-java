@@ -23,47 +23,42 @@ import edu.uc.rphash.standardhash.FNVHash;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.standardhash.NoHash;
+import edu.uc.rphash.tests.Agglomerative;
 import edu.uc.rphash.tests.GenerateData;
+import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
 
-public class RPHashSimple {
+public class RPHashSimple  implements Clusterer{
 	float variance;
 	public RPHashObject map(RPHashObject so) {
 		// create our LSH Machine
 		Random r = new Random();
-		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		HashAlgorithm hal = new NoHash();
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if(!vecs.hasNext())return so;
-
-		//int probes = 1;//doesnt seem to add any benefit
-		
 		
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				LeechDecoder.Dim,  r.nextInt());
 		Decoder dec = new LeechDecoder(variance/.75f);
 		LSH lshfunc = new LSH(dec, p, hal);
-		
-		ItemSet<Long> is =new StickyWrapper<Long>(so.getk(), so.getn());// new SimpleFrequentItemSet<Long>(so.getk());//
-		long hash;
-
+		//(int)(Math.log(so.getk())*so.getk()+.5);
+		//
+		long[] hash;
+		int probes = 3;
+		int k =so.getk()*probes;
+		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
 			RPVector vec = vecs.next();
-			hash = lshfunc.lshHash(vec.data);
-			is.add(hash);
-		    vec.id.add(hash);
-
-//			for (int j=1; j < probes;j++) {
-//				hash = lshfunc.lshHashRadius(vec.data,variance/10f);
-//				is.add(hash);
-//			    vec.id.add(hash);
-//			}
+		    hash = lshfunc.lshHashRadius(vec.data,probes);
+			for (int j=0; j < probes;j++) {
+				is.add(hash[j]);
+			    vec.id.add(hash[j]);
+			}
 		}
-		
 		so.setPreviousTopID(is.getTop());
 		//for(Long l : is.getCounts())System.out.printf("%d,",l);System.out.printf("\n,");
-		//System.out.println( is.getCounts().toString());
 		return so;
 	}
 
@@ -115,6 +110,8 @@ public class RPHashSimple {
 		if(centroids == null)run(so);
 		return centroids;
 	}
+	
+	@Override
 	public List<float[]> getCentroids(){
 		
 		if(centroids == null)run(so);
@@ -125,7 +122,8 @@ public class RPHashSimple {
 	{
 		so = map(so);
 		so = reduce(so);
-		centroids = so.getCentroids();
+		centroids =  ( new Kmeans(so.getk(),so.getCentroids())).getCentroids();
+		//centroids = so.getCentroids();
 	}
 	
 	
@@ -134,6 +132,7 @@ public class RPHashSimple {
 		int k = 20;
 		int d = 5000;
 		int n = 10000;
+		for(int i =0;i<5;i++){
 		GenerateData gen = new GenerateData(k, n / k, d, 1.0f, true, 1f);
 
 		RPHashSimple rphit = new RPHashSimple(gen.data(), k);
@@ -146,6 +145,7 @@ public class RPHashSimple {
 		System.out.println(StatTests.PR(aligned, gen) + ":" + duration
 				/ 1000000000f);
 		System.gc();
+		}
 		
 		
 		

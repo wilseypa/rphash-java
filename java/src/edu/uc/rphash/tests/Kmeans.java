@@ -2,18 +2,41 @@ package edu.uc.rphash.tests;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
+import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.GaussianProjection;
 import edu.uc.rphash.projections.Projector;
 
-public class Kmeans {
+public class Kmeans  implements Clusterer{
 
 	
 	
 
 	int k;
 	int n;
+	List<float[]> data;
+	int projdim;
+	
+	List<float[]> means; 
+	List<List<Integer>> clusters;
+	public Kmeans(int k, List<float[]> data)
+	{
+		this.k = k;
+		this.data = data;
+		this.projdim = 0;
+		this.clusters = null;
+	} 
+	
+	
+	public Kmeans(int k, List<float[]> data,int projdim)
+	{
+		this.k = k;
+		this.data = data;
+		this.projdim = projdim;
+		this.clusters = null;
+	} 
 	
 	public float[] computerCentroid(List<Integer> vectors,List<float[]> data ){
 		int d = data.get(0).length;
@@ -56,28 +79,16 @@ public class Kmeans {
 		return swaps;
 	}
 	
-	
-	
-	List<float[]> means; 
-	List<List<Integer>> clusters;
-	public Kmeans(int k, List<float[]> data,int projdim)
-	{
-		run(k,data,projdim);
-	} 
-//	public Kmeans(int k, List<float[]> data)
-//	{
-//	
-//		run(k,data,24);
-//	}
-//	
-	public void run(int k, List<float[]> data,int projdim){
+	public void run(){
+		StatTests.varianceAll(data);
 		int maxiters = 10000;
 		int swaps = 3;
 		List<float[]> fulldata = data;
 		data = new ArrayList<float[]>();
 		Projector p=null;
+		Random r  = new Random();
 		if(projdim!=0)
-			p =  new DBFriendlyProjection(fulldata.get(0).length,projdim, 19797);
+			p =  new DBFriendlyProjection(fulldata.get(0).length,projdim, r.nextInt());
 		
 		for(float[] v: fulldata){
 			if(p!=null){
@@ -88,7 +99,6 @@ public class Kmeans {
 		}
 		
 		this.n = data.size();
-		this.k = k;
 		
 		//initialize the clusters to the n/k step first vectors
 		means = new ArrayList<float[]>(k);
@@ -113,13 +123,11 @@ public class Kmeans {
 		updateMeans(data);
 		
 	}
-	
-	
-	
 
-	
+	@Override
 	public List<float[]> getCentroids()
 	{
+		if(means==null)run();
 		return means;
 	}
 	

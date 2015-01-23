@@ -10,7 +10,7 @@ import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
 
-public class RPHashMultiRP {
+public class RPHashMultiRP  implements Clusterer{
 
 	private List<float[]> centroids=null;
 	List<float[]> data;
@@ -24,10 +24,8 @@ public class RPHashMultiRP {
 		this.n = data.size();
 		this.d = data.get(0).length;
 	}
-
-
 	
-
+	@Override
 	public List<float[]> getCentroids(){
 		
 		if(centroids == null)run(data, k);

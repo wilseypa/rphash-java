@@ -14,6 +14,7 @@ import org.streaminer.stream.frequency.RealCounting;
 import org.streaminer.stream.frequency.StickySampling;
 import org.streaminer.stream.frequency.util.CountEntry;
 
+import edu.uc.rphash.RPHashMultiProj;
 import edu.uc.rphash.RPHashSimple;
 import edu.uc.rphash.RPHash3Stage;
 import edu.uc.rphash.RPHashIterativeRedux;
@@ -53,8 +54,7 @@ public class TestRPhash {
 
 
 		
-		RPHashObject so = new SimpleArrayReader(gen.data(),k,1,250000);
-		RPHashSimple rph = new RPHashSimple(so);
+		RPHashSimple rph = new RPHashSimple(gen.data(),k);
 		
 		
 		startTime = System.nanoTime();
@@ -66,8 +66,8 @@ public class TestRPhash {
 		System.out.print("\t");
 		System.gc();
 		
-//		so = new SimpleArrayReader(gen.data(),k,1,250000,1);
-//		RPHash3Stage rph3 = new RPHash3Stage(so);
+
+//		RPHash3Stage rph3 = new RPHash3Stage(gen.data(),k);
 //		
 //		startTime = System.nanoTime();
 //		centroids = rph3.getCentroids();
@@ -77,8 +77,8 @@ public class TestRPhash {
 //		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
 //		System.out.print("\t");
 //		System.gc();
-		
-//		so = new SimpleArrayReader(gen.data(),k,1,250000,1);
+//		
+//
 //		RPHashMultiProj rphmulti = new RPHashMultiProj(gen.data(),k);
 //		
 //		startTime = System.nanoTime();
@@ -89,17 +89,27 @@ public class TestRPhash {
 //		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
 //		System.out.print("\t");
 //		System.gc();
-		
-		
-		
-//		so = new SimpleArrayReader(gen.data(),k,1,250000,1);
-//		RPHashIterativeRedux rphit = new RPHashIterativeRedux(so);
+//		
+//		
+//		RPHashIterativeRedux rphit = new RPHashIterativeRedux(gen.data(),k);
 //		
 //		startTime = System.nanoTime();
 //		centroids = rphit.getCentroids();
 //		duration = (System.nanoTime() - startTime);
 //		
-//		aligned  = TestUtil.alignCentroids(so.getCentroids(),gen.medoids());
+//		aligned  = TestUtil.alignCentroids(centroids,gen.medoids());
+//		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
+//		System.out.print("\t");
+//		System.gc();
+//		
+//
+//		RPHashMultiRP rphmrp = new RPHashMultiRP(gen.data(),k);
+//		
+//		startTime = System.nanoTime();
+//		centroids = rphmrp.getCentroids();
+//		duration = (System.nanoTime() - startTime);
+//		
+//		aligned  = TestUtil.alignCentroids(centroids,gen.medoids());
 //		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
 //		System.out.print("\t");
 //		System.gc();
@@ -137,32 +147,32 @@ public class TestRPhash {
 //			//testRPHash(k,n,d,i/100f);
 //			//testRPHash(k,n,d,i/100f);
 //		}
-		System.out.println("k :  n  :  d  :var:dim\tNNPerf\t\tKMeans\t\t\tRPHash\t\t\tRPHash3S\t\tRPHashredux");
+		System.out.println("k :  n  :  d  :var:dim\tNNPerf\t\tKMeans\t\t\tSimple\t\t\t3Stage\t\tMultiProj\t\tIterRedux\t\tMultiRP");
 		System.out.println("-------varying variance-------");
-		for(int i = 10 ;i<300;i+=10){
+		for(int i = 5 ;i<306;i+=10){
 			testRPHash(k,n,d,i/100f,24);
-			//testRPHash(k,n,d,i/100f,24);
-			//testRPHash(k,n,d,i/100f,24);
+//			testRPHash(k,n,d,i/100f,24);
+//			testRPHash(k,n,d,i/100f,24);
 		}
 
-//		System.out.println("-------varying k-------");
-//		for(int i = 0 ;i<100;i+=2){
+		System.out.println("-------varying k-------");
+		for(int i = 0 ;i<100;i+=2){
+			testRPHash(k+i,n,d,v,projdim);
 //			testRPHash(k+i,n,d,v,projdim);
 //			testRPHash(k+i,n,d,v,projdim);
-//			testRPHash(k+i,n,d,v,projdim);
-//		}
-//		System.out.println("-------varying n-------");
-//		for(int i = 0 ;i<50;i+=2){
+		}
+		System.out.println("-------varying n-------");
+		for(int i = 0 ;i<50;i+=2){
+			testRPHash(k,n+i*1000,d,v,projdim);
 //			testRPHash(k,n+i*10000,d,v,projdim);
 //			testRPHash(k,n+i*10000,d,v,projdim);
-//			testRPHash(k,n+i*10000,d,v,projdim);
-//		}
-//		System.out.println("-------varying d-------");
-//		for(int i = 5 ;i<31;i++){
+		}
+		System.out.println("-------varying d-------");
+		for(int i = 5 ;i<31;i++){
+			testRPHash(k,n,d+i*500,v,projdim);
 //			testRPHash(k,n,d+i*500,v,projdim);
 //			testRPHash(k,n,d+i*500,v,projdim);
-//			testRPHash(k,n,d+i*500,v,projdim);
-//		}
+		}
 		
 		
 	}

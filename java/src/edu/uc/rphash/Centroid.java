@@ -62,7 +62,7 @@ public class Centroid {
 //		for (int j =0;j<vec.length;j++)
 //			vec[j] = vec[j]+rp.data[j];
 		count++;
-		updateVariance(rp.data);
+		//updateVariance(rp.data);
 	}
 	
 	public void updateVec(float[] rp)

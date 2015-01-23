@@ -14,12 +14,14 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.LeechDecoder;
 import edu.uc.rphash.frequentItemSet.ItemSet;
+import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.frequentItemSet.StickyWrapper;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
+import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
@@ -30,50 +32,40 @@ import edu.uc.rphash.tests.TestUtil;
  * density mode at each pass, up to k density modes. 
  * @author lee
  */
-public class RPHashIterativeRedux 
+public class RPHashIterativeRedux  implements Clusterer
 {
 	float variance;
-	float radius = 1f;
 	Random r  = new Random();
 	public RPHashObject map(RPHashObject so) 
 	{
-		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		Random r = new Random();
+		HashAlgorithm hal = new NoHash();
 		Iterator<RPVector> vecs = so.getVectorIterator();
-		//if(!vecs.hasNext())return so;
+		if(!vecs.hasNext())return so;
 		
-		RPVector vec = vecs.next();
-
-
-		Decoder dec = new LeechDecoder(variance/.75f);
-		Projector p ;
-		
-		//for (int i = 0; i < so.getTimes(); i++) {
-			p = new DBFriendlyProjection(so.getdim(),
-					dec.getDimensionality(), r.nextInt());
-		//}
-		LSH lsh = new LSH(dec, p, hal);
-		ItemSet<Long> is = new StickyWrapper<Long>(so.getk(), so.getn());
-		long hash;
-		int probes = 0;//(int) (Math.log(so.getn()) + .5);
-		
-		
-		while(vecs.hasNext())
-		{
-			hash = lsh.lshHash(vec.data);
-			is.add(hash);
-			vec.id.add(hash);
-			
+		Projector p = new DBFriendlyProjection(so.getdim(),
+				LeechDecoder.Dim,  r.nextInt());
+		Decoder dec = new LeechDecoder(variance/1.25f);
+		LSH lshfunc = new LSH(dec, p, hal);
+		//(int)(Math.log(so.getk())*so.getk()+.5);
+		//
+		long[] hash;
+		int probes = 3;
+		int k =so.getk()*probes;
+		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
+		// add to frequent itemset the hashed Decoded randomly projected vector
+		while (vecs.hasNext()) {
+			RPVector vec = vecs.next();
+		    hash = lshfunc.lshHashRadius(vec.data,probes);
 			for (int j=0; j < probes;j++) {
-				hash = lsh.lshHashRadius(vec.data);
-				is.add(hash);
-			    vec.id.add(hash);
+				is.add(hash[j]);
+			    vec.id.add(hash[j]);
 			}
-			vec = vecs.next();
 		}
-
-		//System.out.println(is.getCounts().get(0));
 		so.setPreviousTopID(is.getTop());
+		//for(Long l : is.getCounts())System.out.printf("%d,",l);System.out.printf("\n,");
 		return so;
+
 	}
 	
 	class Tuple implements Comparable<Tuple>{
@@ -100,40 +92,40 @@ public class RPHashIterativeRedux
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		RPVector vec;
 		
-		while(vecs.hasNext())
-		{
-			vec = vecs.next();
-			if(vec.id.contains(lastID))
-			{
-				centroid.updateVec(vec);
-				vecs.remove();
-			}
-		}
-
-		
-		//sort and remove top n/k items		
-//		vecs =  so.getVectorIterator();
-//		ArrayList<Tuple> pq = new ArrayList<Tuple>();
 //		while(vecs.hasNext())
 //		{
 //			vec = vecs.next();
-//			pq.add(new Tuple(vec,TestUtil.distance(vec.data,centroid)));
+//			if(vec.id.contains(lastID))
+//			{
+//				centroid.updateVec(vec);
+//				vecs.remove();
+//			}
 //		}
-//		
-//		Collections.sort(pq);
-//		float cutoff = pq.get(pq.size()/(so.getk()*100)).dist;
-//		//System.out.println(pq.get(pq.size()/so.getk()).dist;);
-//		vecs =  so.getVectorIterator();
-//		
-//		while(vecs.hasNext())
-//		{
-//				vec = vecs.next();
-//				if(TestUtil.distance(vec.data,centroid) < cutoff){
-//					ct++;
-//					for(int d = 0 ; d<so.getdim();d++)centroid[d]=( centroid[d]*ct++ + vec.data[d])/(float)ct;
-//					vecs.remove();
-//				}
-//		}	
+
+		int ct = 0;
+		//sort and remove top n/k items		
+		vecs =  so.getVectorIterator();
+		ArrayList<Tuple> pq = new ArrayList<Tuple>();
+		while(vecs.hasNext())
+		{
+			vec = vecs.next();
+			pq.add(new Tuple(vec,TestUtil.distance(vec.data,centroid.centroid())));
+		}
+		
+		Collections.sort(pq);
+		float cutoff = pq.get(pq.size()/(so.getk())).dist;
+		//System.out.println(pq.get(pq.size()/so.getk()).dist;);
+		vecs =  so.getVectorIterator();
+		
+		while(vecs.hasNext())
+		{
+				vec = vecs.next();
+				if(TestUtil.distance(vec.data,centroid.centroid()) < cutoff){
+					ct++;
+					for(int d = 0 ; d<so.getdim();d++)centroid.centroid()[d]=( centroid.centroid()[d]*ct++ + vec.data[d])/(float)ct;
+					vecs.remove();
+				}
+		}	
 		
 		so.addCentroid(centroid.centroid());
 		
@@ -162,6 +154,8 @@ public class RPHashIterativeRedux
 		if(centroids == null)run(so);
 		return centroids;
 	}
+	
+	@Override
 	public List<float[]> getCentroids(){
 		
 		if(centroids == null)run(so);
@@ -174,6 +168,7 @@ public class RPHashIterativeRedux
 		{
 			so = map(so);
 			so = reduce(so);
+
 		}
 		centroids = so.getCentroids();
 	}

@@ -18,7 +18,9 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.NoHash;
+import edu.uc.rphash.tests.Agglomerative;
 import edu.uc.rphash.tests.GenerateData;
+import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
 
@@ -31,7 +33,7 @@ import edu.uc.rphash.tests.TestUtil;
  * @author lee
  *
  */
-public class RPHashMultiProj {
+public class RPHashMultiProj  implements Clusterer{
 	float variance;
 	public RPHashObject mapP1(RPHashObject so) {
 		// create our LSH Machine
@@ -41,9 +43,7 @@ public class RPHashMultiProj {
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if(!vecs.hasNext())return so;
 		
-		
-		
-		int probes = 3;//(int) (Math.log(so.getdim()) + .5) ;
+		int probes = 3;
 		LSH[] lshfuncs = new LSH[probes];
 
 		
@@ -53,9 +53,8 @@ public class RPHashMultiProj {
 			Decoder dec = new LeechDecoder(variance/.75f);
 			lshfuncs[i] = new LSH(dec, p, hal);
 		}
-		
-		ItemSet<Long> is = new StickyWrapper<Long>(so.getk(), so.getn());//new SimpleFrequentItemSet<Long>(so.getk());
-		//int marker = 0;
+		int k =probes*so.getk();
+		ItemSet<Long> is = new StickyWrapper<Long>(k, so.getn());
 		long hash;
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
@@ -63,14 +62,11 @@ public class RPHashMultiProj {
 			hash = lshfuncs[0].lshHash(vec.data);
 		    vec.id.add(hash);
 		    is.add(hash);
-			
 			for (int j=1; j < probes;j++) {
-				hash = lshfuncs[j].lshHashRadius(vec.data,variance/.75f);
+				hash = lshfuncs[j].lshHash(vec.data);
 			    vec.id.add(hash);
 			    is.add(hash);
 			}
-			//if(marker==0)System.out.println(vec.id.toString());
-			//marker++;
 		}
 		
 		so.setPreviousTopID(is.getTop());
@@ -132,6 +128,8 @@ public class RPHashMultiProj {
 		if(centroids == null)run(so);
 		return centroids;
 	}
+	
+	@Override
 	public List<float[]> getCentroids(){
 		
 		if(centroids == null)run(so);
@@ -142,6 +140,7 @@ public class RPHashMultiProj {
 	{
 		so = mapP1(so);
 		so = mapP2(so);
+		centroids = new Kmeans(so.getk(),so.getCentroids()).getCentroids(); //( new Agglomerative(so.getk(),so.getCentroids())).getCentroids();
 		centroids = so.getCentroids();
 	}
 	

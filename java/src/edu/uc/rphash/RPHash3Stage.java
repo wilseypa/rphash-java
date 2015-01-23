@@ -23,7 +23,7 @@ import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
 
-public class RPHash3Stage {
+public class RPHash3Stage implements Clusterer{
 
 
 	float variance;
@@ -164,6 +164,7 @@ public class RPHash3Stage {
 		return centroids;
 	}
 
+	@Override
 	public List<float[]> getCentroids() {
 
 		if (centroids == null)
