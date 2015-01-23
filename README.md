@@ -7,10 +7,82 @@ Software Accompaniment of my current dissertation proposal work found
 [here](https://github.com/leecarraher/nsf_proposal) 
 
 
-* Very simple comparison test
+Running the RPHash algorithm
+===========================
+5 Variants of RPHash and 2 version of kmeans, and agglomerative clustering are available from the RPHash jar. Each can be called independently, or as a set.
+When run without a specific clustering type, the simple RPHash algorithm is run and the outputfile is the specified output file.
+When run as a set, each set of discovered centroids is stored in the given outputfile with a descriptive suffix, ie "smpl","3stg"... appended to it.
+
+Note: The algorithm tries to guess a good energy constellation for decoding the leech lattice based on the variance of the data, however it works best between -1,1  so scaling may help considerably.
+
+usage: java -jar RPHash.jar InputFile k OutputFile [simple(default),3stage,multiRP,multiProj,redux, kmeans, pkmeans, agglom]
+
+
+*.mat file format:
+#vectors
+#dimensions
+x_0_0
+x_0_1
+...
+x_0_#dimensions
+x_1_0
+...
+x_#vectors_#dimensions
+
+
+example:
+-------------Begin Example InputFile.mat------------
+5
+4
+1.0
+2.0
+3.0
+4.0
+1.1
+2.1
+3.1
+4.1
+1.2
+2.2
+3.2
+4.2
+1.3
+2.3
+3.3
+4.3
+1.4
+2.4
+3.4
+4.4
+-------------End Example InputFile.mat------------
+
+Simple Usage:
+    java -jar RPHash.jar InputFile.mat 2 out.mat
+Generates: out.mat
+
+Specific Clusterer:
+    java -jar RPHash.jar InputFile.mat 2 out.mat redux
+Generates: out.mat.itrdx
+
+Multiple Clusterers:
+    java -jar RPHash.jar InputFile.mat 2 out.mat redux simple 3stage multiRP kmeans
+
+Generates:
+out.mat.itrdx
+out.mat.smpl
+out.mat.3stg
+out.mat.multirp
+out.mat.kmeans
+
+
+
+Very simple comparison test
+===========================
 run.sh builds and runs the RPHash Algorithm on random gaussian clusters of 
 varying dimension.
 
+Parallel Deployment (WiP)
+=========================
 
 * Distributed how to Run
 
