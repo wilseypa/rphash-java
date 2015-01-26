@@ -8,30 +8,34 @@ Software Accompaniment of my current dissertation proposal work found
 
 
 Running the RPHash algorithm
-===========================
+=============================
 5 Variants of RPHash and 2 version of kmeans, and agglomerative clustering are available from the RPHash jar. Each can be called independently, or as a set.
 When run without a specific clustering type, the simple RPHash algorithm is run and the outputfile is the specified output file.
 When run as a set, each set of discovered centroids is stored in the given outputfile with a descriptive suffix, ie "smpl","3stg"... appended to it.
 
-Note: The algorithm tries to guess a good energy constellation for decoding the leech lattice based on the variance of the data, however it works best between -1,1  so scaling may help considerably.
+* Note: The algorithm tries to guess a good energy constellation for decoding the leech lattice based on the variance of the data, however it works best between -1,1  so scaling may help considerably.
 
-usage: java -jar RPHash.jar InputFile k OutputFile [simple(default),3stage,multiRP,multiProj,redux, kmeans, pkmeans, agglom]
+* usage: 
 
+> java -jar RPHash.jar InputFile k OutputFile [simple(default),3stage,multiRP,multiProj,redux, kmeans, pkmeans, agglom]
 
-*.mat file format:
-#vectors
-#dimensions
-x_0_0
-x_0_1
+* \*.mat file format:
+<pre>
+vectors
+dimensions
+x\_0\_0
+x\_0\_1
 ...
-x_0_#dimensions
-x_1_0
+x\_0\_\#dimensions
+x\_1_0
 ...
-x_#vectors_#dimensions
+x\_\#vectors_\#dimensions
+</pre>
 
-
-example:
--------------Begin Example InputFile.mat------------
+* example:
+Begin Example InputFile.mat
+=======================================
+<pre>
 5
 4
 1.0
@@ -54,25 +58,40 @@ example:
 2.4
 3.4
 4.4
+</pre>
 -------------End Example InputFile.mat------------
 
-Simple Usage:
+* Simple Usage:
+    > 
     java -jar RPHash.jar InputFile.mat 2 out.mat
-Generates: out.mat
 
-Specific Clusterer:
+* Generates: 
+
+out.mat
+
+* Specific Clusterer:
+    > 
     java -jar RPHash.jar InputFile.mat 2 out.mat redux
-Generates: out.mat.itrdx
 
-Multiple Clusterers:
+* Generates: 
+
+ out.mat.itrdx
+
+* Multiple Clusterers:
+    > 
     java -jar RPHash.jar InputFile.mat 2 out.mat redux simple 3stage multiRP kmeans
 
-Generates:
-out.mat.itrdx
-out.mat.smpl
-out.mat.3stg
-out.mat.multirp
-out.mat.kmeans
+* Generates:
+
+ out.mat.itrdx
+ 
+ out.mat.smpl
+ 
+ out.mat.3stg
+ 
+ out.mat.multirp
+ 
+ out.mat.kmeans
 
 
 
