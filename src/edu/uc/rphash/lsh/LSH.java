@@ -68,7 +68,7 @@ public class LSH
 		 for(int j =1;j<times;j++)
 		 {
 	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
-			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*radius;
+			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius/dec.getDimensionality());
 			 ret[j] = hal.hash(dec.decode(rtmp));
 //			 if(dec.getDistance()<mindist){
 //				 minret = hal.hash(dec.decode(rtmp));

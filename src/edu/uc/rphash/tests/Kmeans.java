@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import edu.uc.rphash.Clusterer;
+import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.GaussianProjection;
 import edu.uc.rphash.projections.Projector;
@@ -28,6 +29,8 @@ public class Kmeans  implements Clusterer{
 		this.projdim = 0;
 		this.clusters = null;
 	} 
+	
+
 	
 	
 	public Kmeans(int k, List<float[]> data,int projdim)

@@ -41,7 +41,7 @@ public class RPHash3Stage implements Clusterer{
 		p[0] = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(),  so.getRandomSeed());
 		
-		LSH lsh = new LSH(dec, p, hal, so.getTimes());
+		LSH lsh = new LSH(dec, p, hal, so.getNumBlur());
 		ItemSet<Long> is = new StickyWrapper<Long>(so.getk(), so.getn());
 //		int probes = 1; /* (int) (Math.log(so.getn()) + .5); (int) (Math.pow(
 //				so.getn(), 0.2671) + .5);*/

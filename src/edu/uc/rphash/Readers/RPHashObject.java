@@ -3,14 +3,16 @@ package edu.uc.rphash.Readers;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.uc.rphash.decoders.Decoder;
+
 public interface RPHashObject {
 
 	int getk();
 	int getn();
 	int getdim();
-	int getRandomSeed();
-	int getHashmod();
-	int getTimes();
+	long getRandomSeed();
+	long getHashmod();
+	int getNumBlur();
 	Iterator <RPVector>getVectorIterator();
 	List<float[]> getCentroids( );
 	
@@ -21,13 +23,16 @@ public interface RPHashObject {
 	void addCentroid(float[] v);
 	void setCentroids(List<float[]> l);
 	
-	void setRandomSeed(int seed);
-	
 	void reset();
-	int getProbes();
-	void setProbes(int probes);
-	void setMultiDim(int multiDim);
-	int getMultiDim();
+	int getNumProjections();
+	void setNumProjections(int probes);
+	void setInnerDecoderMultiplier(int multiDim);
+	int getInnerDecoderMultiplier();
+	void setNumBlur(int parseInt);
+	void setRandomSeed(long parseLong);
+	void setHashMod(long parseLong);
+	void setDecoderType(Decoder dec);
+	Decoder getDecoderType();
 
 
 }

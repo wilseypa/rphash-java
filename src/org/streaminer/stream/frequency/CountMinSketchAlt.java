@@ -148,6 +148,8 @@ public class CountMinSketchAlt<E> implements ISimpleFrequency<E> {
             }
             return res;
         }
+        
+        
         return estimateCountLong((Long)item);
     }
 
@@ -169,7 +171,7 @@ public class CountMinSketchAlt<E> implements ISimpleFrequency<E> {
         long res = Long.MAX_VALUE;
         for (int i = 0; i < depth; ++i) {
             res = Math.min(res, table[i][hash((Long)item, i)]);
-        }    	
+        }
         return res;
     }
     

@@ -4,7 +4,8 @@ public class MurmurHash implements HashAlgorithm {
 	
 	final int seed =  216613626;
 	long tablesize;
-	public MurmurHash(int tablesize){
+	
+	public MurmurHash(long tablesize){
 		this.tablesize = tablesize;
 	}
 	

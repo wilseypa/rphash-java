@@ -5,37 +5,50 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.Readers.SimpleArrayReader;
+import edu.uc.rphash.tests.Agglomerative;
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
 
-public class RPHashMultiRP  implements Clusterer{
+public class RPHashConsensusRP  implements Clusterer{
 
 	private List<float[]> centroids=null;
-	List<float[]> data;
 	int k;
 	int d;
 	int n;
+	RPHashObject so;
 	
-	public RPHashMultiRP(List<float[]> data,int k){
-		this.data = data;
+	public RPHashConsensusRP(List<float[]> data,int k){
+
 		this.k =k;
 		this.n = data.size();
 		this.d = data.get(0).length;
+		this.so = new SimpleArrayReader(data,k);
 	}
 	
+	public RPHashConsensusRP(RPHashObject o) {
+
+		this.k =k;
+		this.n = o.getn();
+		this.d = o.getdim();
+		this.so = o;
+	}
+	
+
+
 	@Override
 	public List<float[]> getCentroids(){
 		
-		if(centroids == null)run(data, k);
+		if(centroids == null)run(so);
 		return centroids;
 	}
 	
-	private  void run(List<float[]> data, int k)
+	private  void run(RPHashObject so)
 	{
 			
-		RPHashSimple  rp ;
 		
 //		for(int j =0;j<k;j++)
 //		{
@@ -48,12 +61,13 @@ public class RPHashMultiRP  implements Clusterer{
 //		}
 		
 		ArrayList<float[]> manyCentroids = new ArrayList<float[]> (k);
-		for(int i=0;i<10 ;i++)
-		{
-			rp = new RPHashSimple (data,k);
-			manyCentroids.addAll(rp.getCentroids());
-		}
-		centroids =  ( new Kmeans(k,manyCentroids,0)).getCentroids();
+		manyCentroids.addAll(new RPHashSimple (so).getCentroids());
+		manyCentroids.addAll(new RPHash3Stage (so).getCentroids());
+		manyCentroids.addAll(new RPHashIterativeRedux(so).getCentroids());
+		//stream, multiproj, are simply sub versions of rphash.
+		//sphereical is not complete
+		centroids =  ( new Agglomerative(k,manyCentroids)).getCentroids();
+		
 	}
 	
 	public static GenerateData gen;
@@ -62,8 +76,8 @@ public class RPHashMultiRP  implements Clusterer{
 		int k = 20;
 		int d = 5000;	
 		int n = 10000;
-		gen = new GenerateData(k,n/k,d,1.0f,true,1.f);
-		RPHashMultiRP rphit = new RPHashMultiRP(gen.data(),k);
+		gen = new GenerateData(k,n/k,d,.1f,true,.1f);
+		RPHashConsensusRP rphit = new RPHashConsensusRP(gen.data(),k);
 		
 		long startTime = System.nanoTime();
 		rphit.getCentroids();

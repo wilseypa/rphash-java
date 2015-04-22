@@ -27,10 +27,10 @@ public class MultiDecoder implements Decoder {
 	{
 		
 		if(innerDec.getDimensionality() == f.length)return innerDec.decode(f);//no looping needed
-		float[] f24 = new float[innerDec.getDimensionality()];
+		float[] innerpartition = new float[innerDec.getDimensionality()];
 		int numRounds = (int) Math.ceil((double)dimension/(double)innerDec.getDimensionality());
-		System.arraycopy(f, 0, f24, 0, Math.min(f.length, f24.length));
-		byte[] tmp = innerDec.decode(f24);
+		System.arraycopy(f, 0, innerpartition, 0, Math.min(f.length, innerpartition.length));
+		byte[] tmp = innerDec.decode(innerpartition);
 		
 		int retLength = tmp.length;
 		
@@ -39,8 +39,8 @@ public class MultiDecoder implements Decoder {
 		this.distance = innerDec.getDistance();
 		for(int i = 1;i<numRounds;i++)
 		{
-			System.arraycopy(f, i*innerDec.getDimensionality(), f24, 0, Math.min(f.length-i*innerDec.getDimensionality(), f24.length));
-			tmp = innerDec.decode(f24);
+			System.arraycopy(f, i*innerDec.getDimensionality(), innerpartition, 0, Math.min(f.length-i*innerDec.getDimensionality(), innerpartition.length));
+			tmp = innerDec.decode(innerpartition);
 			
 			this.distance+=innerDec.getDistance();
 			System.arraycopy(tmp, 0, ret, i*retLength, retLength);

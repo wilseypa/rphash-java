@@ -31,6 +31,10 @@ public class PStableDistribution implements Decoder {
 		}
 	}
 
+	public PStableDistribution(float f) {
+		// TODO Auto-generated constructor stub
+	}
+
 	@Override
 	public int getDimensionality() {
 

@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.uc.rphash.decoders.Decoder;
+
 
 public class StreamObject implements RPHashObject {
 
@@ -20,6 +22,7 @@ public class StreamObject implements RPHashObject {
 	List<Long> topIDs;
 	int probes = 1;
 	int multiDim = 2;
+	Decoder dec ; 
 	
 	// input format
 	//per line
@@ -47,6 +50,7 @@ public class StreamObject implements RPHashObject {
 		{
 			System.err.println("Couldn't Parse Stream Number Format Error ");	
 		}
+		dec = null;
 		
 	}
 	
@@ -119,12 +123,12 @@ public class StreamObject implements RPHashObject {
 	}
 	
 	@Override
-	public int getHashmod(){
+	public long getHashmod(){
 		return hashmod;
 	}
 	
 	@Override
-	public int getRandomSeed(){
+	public long getRandomSeed(){
 		return randomseed;
 	}
 
@@ -154,7 +158,7 @@ public class StreamObject implements RPHashObject {
 
 
 	@Override
-	public int getTimes() {
+	public int getNumBlur() {
 		return times;
 	}
 
@@ -185,30 +189,61 @@ public class StreamObject implements RPHashObject {
 		return null;
 	}
 	
-	@Override
-	public void setRandomSeed(int seed){
-		this.randomseed = seed;
-	}
 
 	@Override
-	public void setProbes(int probes) {
+	public void setNumProjections(int probes) {
 		this.probes = probes;
 	}
 
 	@Override
-	public int getProbes() {
+	public int getNumProjections() {
 		return probes;
 	}
 	
 	@Override
-	public void setMultiDim(int multiDim) {
+	public void setInnerDecoderMultiplier(int multiDim) {
 		this.multiDim = multiDim;
 	}
 
 	@Override
-	public int getMultiDim() {
+	public int getInnerDecoderMultiplier() {
 		return multiDim;
 	}
+
+
+	@Override
+	public void setNumBlur(int parseInt) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void setRandomSeed(long parseLong) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void setHashMod(long parseLong) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void setDecoderType(Decoder dec) {
+		this.dec = dec;
+		
+	}
+
+
+	@Override
+	public Decoder getDecoderType() {
+		return dec;
+	}
+	
 	
 }
 

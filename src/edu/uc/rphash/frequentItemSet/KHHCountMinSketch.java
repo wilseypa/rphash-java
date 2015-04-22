@@ -53,7 +53,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	{
 		this.k=k;
 
-		scounter = new CountMinSketchAlt<E>(.0001,.99,101223);
+		scounter = new CountMinSketchAlt<E>(.00001,.995,(int)System.currentTimeMillis());
 		p = new PriorityQueue<Tuple>();
 		items = new HashSet<>();
 	}
@@ -63,7 +63,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	int seed,int k)
 	{
 		this.k=k;
-		scounter = new CountMinSketchAlt<E>(.00001,.995,101223);
+		scounter = new CountMinSketchAlt<E>(.00001,.995,(int)System.currentTimeMillis());
 		p = new PriorityQueue<Tuple>();
 	}
 	
@@ -86,6 +86,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		while(it.hasNext()){
 			ret.add(it.next().count);
 		}
+		Collections.sort(ret);
 		return ret;
 	}
 	@Override
