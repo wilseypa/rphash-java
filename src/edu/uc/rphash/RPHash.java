@@ -28,11 +28,11 @@ public class RPHash {
 		if (args.length < 3) {
 			System.out.print("Usage: rphash InputFile k OutputFile [");
 			for(String s:rphashes)System.out.print(s+" ,");
-			System.out.print("] [args]\nargs:\n");
+			System.out.print("] [arg=value...]\n \t Optional Args:\n");
 			
 			for(String s:ops)
 				System.out.println("\t\t"+s);
-			System.out.print("\t\t\t[");
+			System.out.print("\t\t\t\t:[");
 			for(String s:decoders)System.out.print(s+" ,");
 			System.out.print("]\n");
 			
