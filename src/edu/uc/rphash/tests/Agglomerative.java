@@ -7,6 +7,7 @@ import java.util.PriorityQueue;
 import java.util.TreeSet;
 
 import edu.uc.rphash.Clusterer;
+import edu.uc.rphash.Readers.RPHashObject;
 
 public class Agglomerative implements Clusterer{
 	
@@ -80,6 +81,12 @@ public class Agglomerative implements Clusterer{
 	public List<float[]> getCentroids() {
 		run();
 		return data;
+	}
+
+	@Override
+	public RPHashObject getParam() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	

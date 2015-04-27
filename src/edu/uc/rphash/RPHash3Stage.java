@@ -25,9 +25,9 @@ import edu.uc.rphash.tests.TestUtil;
 
 public class RPHash3Stage implements Clusterer{
 
-
+	RPHashObject so;
 	float variance;
-	public RPHashObject mapP1(RPHashObject so) {
+	public RPHashObject mapP1() {
 		
 		// create our LSH Machine
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
@@ -64,7 +64,7 @@ public class RPHash3Stage implements Clusterer{
 	 * This step is temporary for testing, it should be performed during the
 	 * reduce phase 1.
 	 */
-	public RPHashObject mapP2(RPHashObject so) {
+	public RPHashObject mapP2() {
 
 		// create our LSH Machine
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
@@ -116,7 +116,7 @@ public class RPHash3Stage implements Clusterer{
 		return so;
 	}
 
-	public RPHashObject mapP3(RPHashObject so) {
+	public RPHashObject mapP3() {
 		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
 		Projector[] p = new Projector[1];
 		p[0] = new DBFriendlyProjection(so.getdim(), 100,  so.getRandomSeed());
@@ -142,7 +142,7 @@ public class RPHash3Stage implements Clusterer{
 	}
 
 	private List<float[]> centroids = null;
-	private RPHashObject so;
+
 
 	public RPHash3Stage(List<float[]> data, int k) {
 		variance = StatTests.varianceAll(data);
@@ -173,9 +173,9 @@ public class RPHash3Stage implements Clusterer{
 	}
 
 	private void run(RPHashObject so) {
-		so = mapP1(so);
-		so = mapP2(so);
-		so = mapP3(so);
+		so = mapP1();
+		so = mapP2();
+		so = mapP3();
 
 		centroids = so.getCentroids();
 	}
@@ -198,5 +198,11 @@ public class RPHash3Stage implements Clusterer{
 		System.out.print("\n");
 		System.gc();
 
+	}
+
+	@Override
+	public RPHashObject getParam() {
+		
+		return so;
 	}
 }

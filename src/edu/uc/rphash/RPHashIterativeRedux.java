@@ -36,7 +36,7 @@ public class RPHashIterativeRedux  implements Clusterer
 {
 	float variance;
 	Random r  = new Random();
-	public RPHashObject map(RPHashObject so) 
+	public RPHashObject map() 
 	{
 		Random r = new Random();
 		HashAlgorithm hal = new NoHash(Long.MAX_VALUE);
@@ -86,7 +86,7 @@ public class RPHashIterativeRedux  implements Clusterer
 	}
 	
 	
-	public RPHashObject reduce(RPHashObject so) 
+	public RPHashObject reduce() 
 	{
 		Long lastID = so.getPreviousTopID().get(0);
 		Centroid centroid = new Centroid(so.getdim(),lastID);
@@ -154,23 +154,23 @@ public class RPHashIterativeRedux  implements Clusterer
 
 	
 	public List<float[]> getCentroids(RPHashObject so){
-		if(centroids == null)run(so);
+		if(centroids == null)run();
 		return centroids;
 	}
 	
 	@Override
 	public List<float[]> getCentroids(){
 		
-		if(centroids == null)run(so);
+		if(centroids == null)run();
 		return centroids;
 	}
 	
-	private  void run(RPHashObject so)
+	private  void run()
 	{
 		for(int i = 0;i<so.getk();i++)
 		{
-			so = map(so);
-			so = reduce(so);
+			so = map();
+			so = reduce();
 
 		}
 		centroids = so.getCentroids();
@@ -195,6 +195,10 @@ public class RPHashIterativeRedux  implements Clusterer
 		System.out.print("\n");
 		System.gc();
 		
+	}
+	@Override
+	public RPHashObject getParam() {
+		return so;
 	}
 
 }

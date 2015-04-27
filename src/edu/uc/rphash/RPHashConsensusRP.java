@@ -31,7 +31,7 @@ public class RPHashConsensusRP  implements Clusterer{
 	
 	public RPHashConsensusRP(RPHashObject o) {
 
-		this.k =k;
+		this.k =o.getk();
 		this.n = o.getn();
 		this.d = o.getdim();
 		this.so = o;
@@ -42,11 +42,11 @@ public class RPHashConsensusRP  implements Clusterer{
 	@Override
 	public List<float[]> getCentroids(){
 		
-		if(centroids == null)run(so);
+		if(centroids == null)run();
 		return centroids;
 	}
 	
-	private  void run(RPHashObject so)
+	private  void run()
 	{
 			
 		
@@ -87,6 +87,11 @@ public class RPHashConsensusRP  implements Clusterer{
 		System.out.print("\n");
 		System.gc();
 		
+	}
+
+	@Override
+	public RPHashObject getParam() {
+		return so;
 	}
 	
 	

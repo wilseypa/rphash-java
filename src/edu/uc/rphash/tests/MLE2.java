@@ -3,6 +3,9 @@ package edu.uc.rphash.tests;
 import java.util.List;
 
 import edu.uc.rphash.Clusterer;
+import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.Readers.SimpleArrayReader;
+
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Random;
@@ -288,6 +291,11 @@ public class MLE2 implements Clusterer {
 		
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public RPHashObject getParam() {
+		return new SimpleArrayReader(null, 0);
 	}
 
 }

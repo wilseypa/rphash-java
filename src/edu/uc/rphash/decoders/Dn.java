@@ -83,8 +83,7 @@ public class Dn implements Decoder {
 
 	@Override
 	public int getDimensionality() {
-		// TODO Auto-generated method stub
-		return 0;
+		return n;
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import java.util.Map;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
+import edu.uc.rphash.decoders.Dn;
 import edu.uc.rphash.decoders.E8;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
@@ -19,23 +20,28 @@ import edu.uc.rphash.tests.TestUtil;
 
 public class RPHash {
 
-	static String[] rphashes = { "simple", "3stage", "mproj", "mprobe", "redux" };
-	static String[] ops = { "NumProjections", "InnerDecoderMultiplier", "NumBlur",
-			"RandomSeed", "Hashmod", "DecoderType" };
-	static String[] decoders = {"Dn","E8","MultiE8","Leech","MultiLeech","PStable","Sphere"};
+	static String[] rphashes = { "simple", "3stage", "multiProj", "multiRP",
+			"redux", "kmeans", "pkmeans" };
+	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
+			"NumBlur", "RandomSeed", "Hashmod", "DecoderType" };
+	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
+			"PStable", "Sphere" };
+
 	public static void main(String[] args) {
 
 		if (args.length < 3) {
 			System.out.print("Usage: rphash InputFile k OutputFile [");
-			for(String s:rphashes)System.out.print(s+" ,");
+			for (String s : rphashes)
+				System.out.print(s + " ,");
 			System.out.print("] [arg=value...]\n \t Optional Args:\n");
-			
-			for(String s:ops)
-				System.out.println("\t\t"+s);
+
+			for (String s : ops)
+				System.out.println("\t\t" + s);
 			System.out.print("\t\t\t\t:[");
-			for(String s:decoders)System.out.print(s+" ,");
+			for (String s : decoders)
+				System.out.print(s + " ,");
 			System.out.print("]\n");
-			
+
 			System.exit(0);
 		}
 
@@ -45,105 +51,119 @@ public class RPHash {
 		if (args.length == 3) {
 
 			RPHashSimple clusterer = new RPHashSimple(data, k);
-			TestUtil.writeFile(new File(outputFile), clusterer.getCentroids());
+			TestUtil.writeFile(new File(outputFile + "."
+					+ clusterer.getClass().getName()), clusterer.getCentroids());
 		}
-		Map<String, String> taggedArgs = argsUI(args);
-		List<Clusterer> runs = runConfigs(args, taggedArgs);
+		List<String> truncatedArgs = new ArrayList<String>();
+		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
+		List<Clusterer> runs = runConfigs(truncatedArgs, taggedArgs, data);
 		runner(runs, outputFile);
 	}
 
 	public static void runner(List<Clusterer> runitems, String outputFile) {
 		for (Clusterer clu : runitems) {
-			System.out.print(Clusterer.class.getName() + " processing time : ");
+			
+			String[] ClusterHashName = clu.getClass().getName().split("\\.");
+			String[] DecoderHashName = clu.getParam().toString().split("\\.");
+			System.out.print(ClusterHashName[ClusterHashName.length-1] + "{"
+					+ DecoderHashName[DecoderHashName.length-1] + "} processing time : ");
 			long startTime = System.nanoTime();
 			clu.getCentroids();
 			System.out.println((System.nanoTime() - startTime) / 1000000000f);
-			TestUtil.writeFile(
-					new File(outputFile + Clusterer.class.getName()),
-					clu.getCentroids());
+			TestUtil.writeFile(new File(outputFile + "."
+					+ ClusterHashName[ClusterHashName.length-1]), clu.getCentroids());
 		}
 
 	}
 
-	public static List<Clusterer> runConfigs(String[] untaggedArgs,
-			Map<String, String> taggedArgs) {
+	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
+			Map<String, String> taggedArgs, List<float[]> data) {
 		List<Clusterer> runitems = new ArrayList<>();
-
 		int i = 3;
 
-		List<float[]> data = TestUtil.readFile(new File(untaggedArgs[0]));
+		// List<float[]> data = TestUtil.readFile(new
+		// File(untaggedArgs.get(0)));
 		float variance = StatTests.varianceSample(data, .01f);
-		
-		int k = Integer.parseInt(untaggedArgs[1]);
+
+		int k = Integer.parseInt(untaggedArgs.get(1));
 		RPHashObject o = new SimpleArrayReader(data, k);
 
-
-		if (taggedArgs.containsKey("NumProjections"))
+		if (taggedArgs.containsKey("numprojections"))
 			o.setNumProjections(Integer.parseInt(taggedArgs
-					.get("NumProjections")));
-		if (taggedArgs.containsKey("InnerDecoderMultiplier"))
+					.get("numprojections")));
+		if (taggedArgs.containsKey("innerdecodermultiplier"))
 			o.setInnerDecoderMultiplier(Integer.parseInt(taggedArgs
-					.get("InnerDecoderMultiplier")));
-		if (taggedArgs.containsKey("NumBlur"))
-			o.setNumBlur(Integer.parseInt(taggedArgs.get("NumBlur")));
-		if (taggedArgs.containsKey("RandomSeed"))
-			o.setRandomSeed(Long.parseLong(taggedArgs.get("RandomSeed")));
-		if (taggedArgs.containsKey("HashMod"))
-			o.setHashMod(Long.parseLong(taggedArgs.get("HashMod")));
-		if (taggedArgs.containsKey("DecoderType")) {
-			switch (taggedArgs.get("DecoderType")) {
-				case "E8":
+					.get("innerdecodermultiplier")));
+		if (taggedArgs.containsKey("numblur"))
+			o.setNumBlur(Integer.parseInt(taggedArgs.get("numblur")));
+		if (taggedArgs.containsKey("randomseed"))
+			o.setRandomSeed(Long.parseLong(taggedArgs.get("randomseed")));
+		if (taggedArgs.containsKey("hashmod"))
+			o.setHashMod(Long.parseLong(taggedArgs.get("hashmod")));
+
+		if (taggedArgs.containsKey("decodertype")) {
+			switch (taggedArgs.get("decodertype").toLowerCase()) {
+				case "dn":
+					o.setDecoderType(new Dn(o.getInnerDecoderMultiplier()));
+					break;
+				case "e8":
 					o.setDecoderType(new E8(variance));
-				case "MultiE8":
+					break;
+				case "multie8":
 					o.setDecoderType(new MultiDecoder(
 							o.getInnerDecoderMultiplier(), new E8(variance)));
-				case "Leech":
+					break;
+				case "leech":
 					o.setDecoderType(new Leech(variance));
-				case "MultiLeech":
+					break;
+				case "multileech":
 					o.setDecoderType(new MultiDecoder(
 							o.getInnerDecoderMultiplier(), new Leech(variance)));
-				case "PStable":
+					break;
+				case "pstable":
 					o.setDecoderType(new PStableDistribution(variance));
-				case "Sphere": {
-					System.out.println(taggedArgs.get("DecoderType")
+					break;
+				case "sphere": {
+					System.out.println(taggedArgs.get("decodertype")
 							+ " decoder does not exist yet");
 					o.setDecoderType(null);
+					break;
 				}
 				default: {
-					System.out.println(taggedArgs.get("DecoderType")
+					System.out.println(taggedArgs.get("decodertype")
 							+ " decoder does not exist");
 					o.setDecoderType(null);
 				}
 			}
 		}
 
-		while (i < untaggedArgs.length) {
-			switch (untaggedArgs[i]) {
-			case "simple":
-				runitems.add(new RPHashSimple(o));
-				break;
-			case "3stage":
-				runitems.add(new RPHash3Stage(o));
-				break;
-			case "multiRP":
-				runitems.add(new RPHashConsensusRP(o));
-				break;
-			case "multiProj":
-				runitems.add(new RPHashMultiProj(data, k));
-				break;
-			case "redux":
-				runitems.add(new RPHashIterativeRedux(data, k));
-				break;
-			case "kmeans":
-				runitems.add(new Kmeans(k, data));
-				break;
-			case "pkmeans":
-				runitems.add(new Kmeans(k, data, o.getNumProjections()));
-				break;
-			default:
-				System.out.println(untaggedArgs[i] + " does not exist");
-				break;
-			}
+		while (i < untaggedArgs.size()) {
+			switch (untaggedArgs.get(i)) {
+				case "simple":
+					runitems.add(new RPHashSimple(o));
+					break;
+				case "3stage":
+					runitems.add(new RPHash3Stage(o));
+					break;
+				case "multiRP":
+					runitems.add(new RPHashConsensusRP(o));
+					break;
+				case "multiProj":
+					runitems.add(new RPHashMultiProj(o));
+					break;
+				case "redux":
+					runitems.add(new RPHashIterativeRedux(o));
+					break;
+				case "kmeans":
+					runitems.add(new Kmeans(k, data));
+					break;
+				case "pkmeans":
+					runitems.add(new Kmeans(k, data, o.getNumProjections()));
+					break;
+				default:
+					System.out.println(untaggedArgs.get(i) + " does not exist");
+					break;
+				}
 			i++;
 		}
 
@@ -157,19 +177,20 @@ public class RPHash {
 	 * @param args
 	 * @param mpsim
 	 */
-	public static Map<String, String> argsUI(String[] args) {
+	public static Map<String, String> argsUI(String[] args,
+			List<String> truncatedArgs) {
 
-		List<String> ret = new ArrayList<String>();
 		Map<String, String> cmdMap = new HashMap<String, String>();
 		for (String s : args) {
 			String[] cmd = s.split("=");
 			if (cmd.length > 1)
 				cmdMap.put(cmd[0].toLowerCase(), cmd[1]);
 			else
-				ret.add(s);
+				truncatedArgs.add(s);
 		}
-
-		args = (String[]) ret.toArray();
+		args = new String[truncatedArgs.size()];
+		for (int i = 0; i < truncatedArgs.size(); i++)
+			args[i] = truncatedArgs.get(i);
 		return cmdMap;
 	}
 

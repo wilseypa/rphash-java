@@ -43,7 +43,7 @@ public class RPHashStream implements Clusterer {
 
 	float variance;
 
-	public RPHashObject map(RPHashObject so) {
+	public RPHashObject map() {
 		// create our LSH Machine
 		Random r = new Random();
 		HashAlgorithm hal = new MurmurHash((int) Long.MAX_VALUE);
@@ -101,7 +101,7 @@ public class RPHashStream implements Clusterer {
 	 * This is the second phase after the top ids have been in the reduce phase
 	 * aggregated
 	 */
-	public RPHashObject reduce(RPHashObject so) {
+	public RPHashObject reduce() {
 
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
@@ -144,8 +144,9 @@ public class RPHashStream implements Clusterer {
 	}
 
 	public List<float[]> getCentroids(RPHashObject so) {
+		this.so = so;
 		if (centroids == null)
-			run(so);
+			run();
 		return centroids;
 	}
 
@@ -153,13 +154,13 @@ public class RPHashStream implements Clusterer {
 	public List<float[]> getCentroids() {
 
 		if (centroids == null)
-			run(so);
+			run();
 		return centroids;
 	}
 
-	private void run(RPHashObject so) {
-		so = map(so);
-		so = reduce(so);
+	private void run() {
+		so = map();
+		so = reduce();
 		centroids = (new Kmeans(so.getk(), so.getCentroids())).getCentroids();
 
 	}
@@ -174,6 +175,11 @@ public class RPHashStream implements Clusterer {
 
 		}
 
+	}
+
+	@Override
+	public RPHashObject getParam() {
+		return so;
 	}
 
 }

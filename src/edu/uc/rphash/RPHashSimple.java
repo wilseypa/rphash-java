@@ -29,20 +29,21 @@ import edu.uc.rphash.tests.TestUtil;
 public class RPHashSimple implements Clusterer {
 	float variance;
 
-	public RPHashObject map(RPHashObject so) {
+	public RPHashObject map() {
 
 		// create our LSH Machine
-		HashAlgorithm hal = new MurmurHash(Integer.MAX_VALUE);
+		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
 		
 
 		Decoder dec = so.getDecoderType();
-		if(dec==null){
-			Decoder inner = new Leech(variance);
-			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
-		}
+
+//		if(dec==null){
+//			Decoder inner = new Leech(variance);
+//			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+//		}
 		
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
@@ -57,11 +58,9 @@ public class RPHashSimple implements Clusterer {
 			RPVector vec = vecs.next();
 			hash = lshfunc.lshHash(vec.data);
 			is.add(hash);
-			vec.id.add(hash);
+			//vec.id.add(hash);
 		}
-		so.setPreviousTopID(is.getTop());
-		
-		
+		so.setPreviousTopID(is.getTop());		
 //		for (Long l : is.getCounts())
 //			System.out.printf(" %d,", l);
 //		System.out.printf("\n,");
@@ -72,7 +71,7 @@ public class RPHashSimple implements Clusterer {
 	 * This is the second phase after the top ids have been in the reduce phase
 	 * aggregated
 	 */
-	public RPHashObject reduce(RPHashObject so) {
+	public RPHashObject reduce() {
 
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
@@ -80,9 +79,9 @@ public class RPHashSimple implements Clusterer {
 		RPVector vec = vecs.next();
 		int blurValue = so.getNumBlur();
 		
-		HashAlgorithm hal = new MurmurHash(Integer.MAX_VALUE);
-		Decoder inner = new Leech(variance);
-		Decoder dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		Decoder dec = so.getDecoderType();
+		
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
 		LSH lshfunc = new LSH(dec, p, hal);
@@ -137,32 +136,32 @@ public class RPHashSimple implements Clusterer {
 	}
 
 	public List<float[]> getCentroids(RPHashObject so) {
+		this.so=so;
 		if (centroids == null)
-			run(so);
+			run();
 		return centroids;
 	}
 
 	@Override
 	public List<float[]> getCentroids() {
-
 		if (centroids == null)
-			run(so);
+			run();
 		return centroids;
 	}
 
-	private void run(RPHashObject so) {
+	private void run() {
 		
-		so = map(so);
-		so = reduce(so);
+		map();
+		reduce();
 		centroids = so.getCentroids();//new Kmeans(so.getk(),so.getCentroids()).getCentroids();
 	}
 
 	public static void main(String[] args) {
 
-		int k = 20;
-		int d = 5000;
+		int k = 10;
+		int d = 1000;
 		int n = 10000;
-		float var = 0.001f;
+		float var = 1.0f;
 		for(float f = var;f<3.0;f+=.01f){
 			for (int i = 0; i < 5; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
@@ -180,5 +179,10 @@ public class RPHashSimple implements Clusterer {
 			}
 		}
 
+	}
+
+	@Override
+	public RPHashObject getParam() {
+		return so;
 	}
 }

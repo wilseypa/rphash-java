@@ -33,6 +33,7 @@ public interface RPHashObject {
 	void setHashMod(long parseLong);
 	void setDecoderType(Decoder dec);
 	Decoder getDecoderType();
+	String toString();
 
 
 }

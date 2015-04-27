@@ -60,7 +60,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.centroids = new ArrayList<float[]>();
 		this.numBlur = 0;
 		this.topIDs = new ArrayList<Long>();
-		this.dec = null;
+		this.dec = new Leech();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 	}
@@ -81,7 +81,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.k = k;
 		this.randomSeed = System.currentTimeMillis();
 		this.hashmod = Long.MAX_VALUE;
-		this.dec = null;
+		this.dec = new Leech();
 		this.decoderMultiplier = 1;
 		this.numProjections = 1;
 		this.centroids = new ArrayList<float[]>();
@@ -114,7 +114,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.centroids = new ArrayList<float[]>();
 		this.numBlur = blur;
 		this.topIDs = new ArrayList<Long>();
-		this.dec = null;
+		this.dec = new Leech();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 	}
@@ -154,7 +154,7 @@ public class SimpleArrayReader implements RPHashObject {
 		;
 		this.numBlur = blur;
 		this.topIDs = new ArrayList<Long>();
-		this.dec = null;
+		this.dec = new Leech();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 	}
@@ -256,13 +256,20 @@ public class SimpleArrayReader implements RPHashObject {
 		this.dec = dec;
 		
 	}
+	@Override
+	public String toString() {
+		String ret = "Decoder:"+dec.getClass().getName();
+		ret+=", Blur:"+numBlur;
+		ret+=", Projections:"+numProjections;
+		ret+=", Outer Decoder Multiplier:"+decoderMultiplier;
+		return ret;
+	}
 
 
 
 	@Override
 	public Decoder getDecoderType() {
-		// TODO Auto-generated method stub
-		return null;
+		return dec;
 	}
 
 }
