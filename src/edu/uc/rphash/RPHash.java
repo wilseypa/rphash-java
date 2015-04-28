@@ -20,7 +20,7 @@ import edu.uc.rphash.tests.TestUtil;
 
 public class RPHash {
 
-	static String[] rphashes = { "simple", "3stage", "multiProj", "multiRP",
+	static String[] rphashes = { "simple", "streaming", "3stage", "multiProj", "multiRP",
 			"redux", "kmeans", "pkmeans" };
 	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
 			"NumBlur", "RandomSeed", "Hashmod", "DecoderType" };
@@ -141,6 +141,9 @@ public class RPHash {
 			switch (untaggedArgs.get(i)) {
 				case "simple":
 					runitems.add(new RPHashSimple(o));
+					break;
+				case "streaming":
+					runitems.add(new RPHashStream(o));
 					break;
 				case "3stage":
 					runitems.add(new RPHash3Stage(o));
