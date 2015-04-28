@@ -227,9 +227,15 @@ public class GenerateData
 		for(int i=0;i<numClusters;i++){
 			//gen cluster center
 			float[] medoid = new float[dimension];
+			float[] variances = new float[dimension];
+			
 			for(int k=0;k<dimension;k++)
 			{
-				if(r.nextInt()%(int)(1.0f/sparseness)==0)medoid[k] = r.nextFloat()*2.0f -1.0f;
+				if(r.nextInt()%(int)(1.0f/sparseness)==0){
+					medoid[k] = r.nextFloat()*2.0f -1.0f;
+					variances[k] = scaler*(r.nextFloat()*2.0f -1.0f);
+				}
+			
 			}
 			this.medoids.add(medoid);
 			//gen data
@@ -237,7 +243,8 @@ public class GenerateData
 				float[] dat = new float[dimension];
 				for(int k=0;k<dimension;k++)
 				{
-					dat[k] = medoid[k]+(float)r.nextGaussian()*scaler;
+					if(r.nextInt()%(int)(1.0f/sparseness)==0)
+						dat[k] = medoid[k]+(float)r.nextGaussian()*variances[k];
 				}
 				this.data.add(dat);
 			}
@@ -298,9 +305,12 @@ public class GenerateData
 			for(int i=0;i<numClusters;i++){
 				//gen cluster center
 				float[] medoid = new float[dimension];
+				float[] variances = new float[dimension];
+				
 				for(int k=0;k<dimension;k++)
 				{
 					medoid[k] = r.nextFloat()*2.0f -1.0f;
+					variances[k] = scaler*(r.nextFloat()*2.0f -1.0f);
 					bf.write(String.valueOf(medoid[k]));
 					bf.write(' ');
 				}
@@ -308,7 +318,7 @@ public class GenerateData
 				//gen data
 				for(int j=0;j<numVectorsPerCluster;j++){
 					for(int k=0;k<dimension;k++){
-						bf.write(String.valueOf(medoid[k]+(float)r.nextGaussian()/scaler));
+						bf.write(String.valueOf(medoid[k]+(float)r.nextGaussian()*variances[k]));
 						bf.write(' ');
 					}
 					bf.write('\n');

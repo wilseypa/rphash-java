@@ -48,7 +48,7 @@ public class RPHashMultiProj implements Clusterer {
 
 		
 
-		Iterator<RPVector> vecs = so.getVectorIterator();
+		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
 
@@ -78,9 +78,9 @@ public class RPHashMultiProj implements Clusterer {
 
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
-			RPVector vec = vecs.next();
+			float[] vec = vecs.next();
 			for (int i = 0; i < probes; i++) {
-				hash = lshfuncs[i].lshHash(vec.data);
+				hash = lshfuncs[i].lshHash(vec);
 				// vec.id.add(hash);
 				is.add(hash);
 			}
@@ -100,7 +100,7 @@ public class RPHashMultiProj implements Clusterer {
 	 */
 	public RPHashObject reduce() {
 		
-		Iterator<RPVector> vecs = so.getVectorIterator();
+		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
 
@@ -136,10 +136,10 @@ public class RPHashMultiProj implements Clusterer {
 			blurValue = (int) Math.log(so.getdim() / dec.getDimensionality());
 		
 		while (vecs.hasNext()) {
-			RPVector vec = vecs.next();
+			float[] vec = vecs.next();
 			// iterate over the multiple projections
 			for (LSH lshfunc : lshfuncs) {
-				hash = lshfunc.lshHashRadius(vec.data, blurValue);
+				hash = lshfunc.lshHashRadius(vec, blurValue);
 				// iterate over the blurred vectors
 				for (Centroid cent : centroids) {
 					for (long h : hash) {
@@ -206,7 +206,7 @@ public class RPHashMultiProj implements Clusterer {
 		int k = 10;
 		int d = 1000;
 		int n = 10000;
-		float var = .01f;
+		float var = .3f;
 		for (float f = var; f < 1.0; f += .01f) {
 			for (int i = 0; i < 5; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);

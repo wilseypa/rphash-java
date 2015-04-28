@@ -14,7 +14,7 @@ import edu.uc.rphash.decoders.PStableDistribution;
 
 public class SimpleArrayReader implements RPHashObject {
 
-	List<RPVector> data;
+	public List<float[]> data;
 	// List<List<Float>> Xlist;
 	int n;
 	int dim;
@@ -40,15 +40,15 @@ public class SimpleArrayReader implements RPHashObject {
 	List<Long> topIDs;
 
 	public SimpleArrayReader(List<float[]> X, int k) {
-
-		data = new LinkedList<RPVector>();
-		for (int i = 0; i < X.size(); i++) {
-			RPVector r = new RPVector();
-			r.data = X.get(i);
-			r.count = 0;
-			r.id = new HashSet<Long>();
-			data.add(r);
-		}
+		data = X;
+//		data = new LinkedList<RPVector>();
+//		for (int i = 0; i < X.size(); i++) {
+//			RPVector r = new RPVector();
+//			r.data = X.get(i);
+//			r.count = 0;
+//			r.id = new HashSet<Long>();
+//			data.add(r);
+//		}
 		this.dec = null;
 		this.n = X.size();
 		this.dim = X.get(0).length;
@@ -66,14 +66,15 @@ public class SimpleArrayReader implements RPHashObject {
 
 	public SimpleArrayReader(List<float[]> X, int k, int blur) {
 
-		data = new LinkedList<RPVector>();
-		for (int i = 0; i < X.size(); i++) {
-			RPVector r = new RPVector();
-			r.data = X.get(i);
-			r.count = 0;
-			r.id = new HashSet<Long>();
-			data.add(r);
-		}
+		data = X;
+//		data = new LinkedList<RPVector>();
+//		for (int i = 0; i < X.size(); i++) {
+//			RPVector r = new RPVector();
+//			r.data = X.get(i);
+//			r.count = 0;
+//			r.id = new HashSet<Long>();
+//			data.add(r);
+//		}
 
 		this.n = X.size();
 		this.dim = X.get(0).length;
@@ -93,14 +94,15 @@ public class SimpleArrayReader implements RPHashObject {
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
 			int decoderMultiplier) {
 
-		data = new LinkedList<RPVector>();
-		for (int i = 0; i < X.size(); i++) {
-			RPVector r = new RPVector();
-			r.data = X.get(i);
-			r.count = 0;
-			r.id = new HashSet<Long>();
-			data.add(r);
-		}
+		data = X;
+//		data = new LinkedList<RPVector>();
+//		for (int i = 0; i < X.size(); i++) {
+//			RPVector r = new RPVector();
+//			r.data = X.get(i);
+//			r.count = 0;
+//			r.id = new HashSet<Long>();
+//			data.add(r);
+//		}
 
 		this.n = X.size();
 		this.dim = X.get(0).length;
@@ -132,14 +134,15 @@ public class SimpleArrayReader implements RPHashObject {
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
 			int decoderMutiplier, int numProjections) {
 
-		data = new LinkedList<RPVector>();
-		for (int i = 0; i < X.size(); i++) {
-			RPVector r = new RPVector();
-			r.data = X.get(i);
-			r.count = 0;
-			r.id = new HashSet<Long>();
-			data.add(r);
-		}
+		data = X;
+//		data = new LinkedList<RPVector>();
+//		for (int i = 0; i < X.size(); i++) {
+//			RPVector r = new RPVector();
+//			r.data = X.get(i);
+//			r.count = 0;
+//			r.id = new HashSet<Long>();
+//			data.add(r);
+//		}
 
 		this.n = X.size();
 		this.dim = X.get(0).length;
@@ -157,7 +160,7 @@ public class SimpleArrayReader implements RPHashObject {
 			topIDs.add((long) 0);
 	}
 
-	public Iterator<RPVector> getVectorIterator() {
+	public Iterator<float[]> getVectorIterator() {
 		return data.iterator();
 	}
 

@@ -32,10 +32,12 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		@Override
 		public int compareTo(Object o) {
 			return  (int) (this.count-((Tuple)o).count);
+
 		}
 		@Override
-		public boolean equals(Object obj) {
-			return item.equals(((Tuple)obj).item);
+		public boolean equals(Object obj) 
+		{
+			return item.hashCode() == ((Tuple)obj).item.hashCode();
 		}
 		@Override
 		public int hashCode() {
@@ -44,17 +46,17 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		
 	}
 //	StickySampling<E> scounter;
-	CountMinSketchAlt<E> scounter;
+	CountMinSketchAlt<Integer> scounter;
 //	CountMinSketch<E> scounter;
 	PriorityQueue<Tuple> p;
 	int k;
 	boolean pqfull = false;
-	HashMap<Long,Tuple> items;
+	HashMap<Integer,Tuple> items;
 
 	public KHHCountMinSketch(int k)
 	{
 		this.k=k;
-		scounter = new CountMinSketchAlt<E>(.00001,.995,(int)System.currentTimeMillis());
+		scounter = new CountMinSketchAlt<>(.00001,.995,(int)System.currentTimeMillis());
 		p = new PriorityQueue<Tuple>();
 		items = new HashMap<>();
 	}
@@ -64,7 +66,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	int seed,int k)
 	{
 		this.k=k;
-		scounter = new CountMinSketchAlt<E>(.00001,.995,(int)System.currentTimeMillis());
+		scounter = new CountMinSketchAlt<>(.00001,.995,(int)System.currentTimeMillis());
 		p = new PriorityQueue<Tuple>();
 	}
 	
@@ -100,29 +102,30 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	@Override
 	public boolean add(E e){
 		try {
-			scounter.add(e);
+			scounter.add(e.hashCode());
 		} catch (FrequencyException e1) {
 			e1.printStackTrace();
 		}
 		
-		long count = scounter.estimateCount(e);
-		Tuple t = items.get((long)e.hashCode());
+		long count = scounter.estimateCount(e.hashCode());
+		Tuple t = items.get(e.hashCode());
 		
 		if(t!=null){//update current in list item
 			t.count++;
 			if(e instanceof Centroid)((Centroid)t.item).updateVec(((Centroid)t.item).centroid());
 		}
 		else{
-			Tuple newt = new Tuple(e,1);
+			Tuple newt = new Tuple(e,count);
 			if(!pqfull){
-				items.put((long) e.hashCode(),newt);
+				items.put( e.hashCode(),newt);
 				p.add(newt);
 				pqfull = (p.size()==this.k);
 			}
 			else{
+				
 				if(count>p.peek().count){
 					items.remove(p.poll().item.hashCode());
-					items.put((long) e.hashCode(),newt);
+					items.put( e.hashCode(),newt);
 					p.add(newt);
 				}
 			}
@@ -133,17 +136,17 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	
 	public static void main(String[] t) throws FrequencyException{
 		Random r = new Random();
-		KHHCountMinSketch<Long> khh = new KHHCountMinSketch<Long>(10);
-		CountMinSketchAlt<Long> scounter = new CountMinSketchAlt<Long>(.00001,.995,101223);
+		KHHCountMinSketch<Integer> khh = new KHHCountMinSketch<>(50);
+		CountMinSketchAlt<Integer> scounter = new CountMinSketchAlt<>(.00001,.995,101223);
 		for(long i = 1 ; i< 1000000;i++){
 			
-			khh.add((long) r.nextInt((int)i)/100);
-			scounter.add((long) r.nextInt((int)i)/100);
+			khh.add( r.nextInt((int)i)/100);
+			scounter.add( r.nextInt((int)i)/100);
 		}
 
 		System.out.println(khh.getTop());
 		System.out.println(khh.getCounts());
-		for(long i = 1;i<100;i++)System.out.print(scounter.estimateCount(i)+", ");
+		for(int i = 1;i<100;i++)System.out.print(scounter.estimateCount(i)+", ");
 		
 	}
 

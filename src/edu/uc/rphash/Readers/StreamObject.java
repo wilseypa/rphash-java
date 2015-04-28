@@ -177,7 +177,7 @@ public class StreamObject implements RPHashObject {
 
 
 	@Override
-	public Iterator<RPVector> getVectorIterator() {
+	public Iterator<float[]> getVectorIterator() {
 		// TODO Auto-generated method stub
 		return null;
 	}

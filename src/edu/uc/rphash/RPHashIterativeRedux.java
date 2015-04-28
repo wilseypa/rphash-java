@@ -40,7 +40,7 @@ public class RPHashIterativeRedux  implements Clusterer
 	{
 		Random r = new Random();
 		HashAlgorithm hal = new NoHash(Long.MAX_VALUE);
-		Iterator<RPVector> vecs = so.getVectorIterator();
+		Iterator<float[]> vecs = so.getVectorIterator();
 		if(!vecs.hasNext())return so;
 		
 		Projector p = new DBFriendlyProjection(so.getdim(),
@@ -55,10 +55,10 @@ public class RPHashIterativeRedux  implements Clusterer
 		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
-			RPVector vec = vecs.next();
-			hash = lshfunc.lshHashRadius(vec.data, probes);
+			float[] vec = vecs.next();
+			hash = lshfunc.lshHashRadius(vec, probes);
 			is.add(hash[0]);
-			vec.id.add(hash[0]);
+//			vec.id = hash[0];//.add(hash[0]);
 //		    hash = lshfunc.lshHashRadius(vec.data,probes);
 //			for (int j=0; j < probes;j++) {
 //				is.add(hash[j]);
@@ -73,10 +73,10 @@ public class RPHashIterativeRedux  implements Clusterer
 	
 	class Tuple implements Comparable<Tuple>{
 		public float dist;
-		public RPVector vec;
-		public Tuple(RPVector next, float distance) {
+		public float[] vec;
+		public Tuple(float[] vec2, float distance) {
 			this.dist=distance;
-			this.vec = next;
+			this.vec = vec2;
 		}
 		@Override
 		public int compareTo(Tuple o) {
@@ -92,8 +92,8 @@ public class RPHashIterativeRedux  implements Clusterer
 		Centroid centroid = new Centroid(so.getdim(),lastID);
 
 		
-		Iterator<RPVector> vecs = so.getVectorIterator();
-		RPVector vec;
+		Iterator<float[]> vecs = so.getVectorIterator();
+		float[] vec;
 		
 //		while(vecs.hasNext())
 //		{
@@ -112,7 +112,7 @@ public class RPHashIterativeRedux  implements Clusterer
 		while(vecs.hasNext())
 		{
 			vec = vecs.next();
-			pq.add(new Tuple(vec,TestUtil.distance(vec.data,centroid.centroid())));
+			pq.add(new Tuple(vec,TestUtil.distance(vec,centroid.centroid())));
 		}
 		
 		Collections.sort(pq);
@@ -123,9 +123,9 @@ public class RPHashIterativeRedux  implements Clusterer
 		while(vecs.hasNext())
 		{
 				vec = vecs.next();
-				if(TestUtil.distance(vec.data,centroid.centroid()) < cutoff){
+				if(TestUtil.distance(vec,centroid.centroid()) < cutoff){
 					ct++;
-					for(int d = 0 ; d<so.getdim();d++)centroid.centroid()[d]=( centroid.centroid()[d]*ct++ + vec.data[d])/(float)ct;
+					for(int d = 0 ; d<so.getdim();d++)centroid.centroid()[d]=( centroid.centroid()[d]*ct++ + vec[d])/(float)ct;
 					vecs.remove();
 				}
 		}	

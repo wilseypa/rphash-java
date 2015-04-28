@@ -68,7 +68,6 @@ public class Centroid {
 
 	@Override
 	public int hashCode() {
-
 		return (int) id;
 	}
 

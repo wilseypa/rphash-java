@@ -33,7 +33,7 @@ public class RPHashStream implements Clusterer {
 
 	public RPHashObject processStream() {
 		// add to frequent itemset the hashed Decoded randomly projected vector
-		Iterator<RPVector> vecs = so.getVectorIterator();
+		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
 
@@ -62,22 +62,22 @@ public class RPHashStream implements Clusterer {
 		}
 		
 		int blurValue = so.getNumBlur();
-//		if (blurValue == 0)
-//			blurValue = (int) Math.log(so.getdim() / dec.getDimensionality());
+		if (blurValue == 0)
+			blurValue = (int) Math.log(so.getdim() / dec.getDimensionality());
 
 		while (vecs.hasNext()) {
-			RPVector vec = vecs.next();
+			float[] vec = vecs.next();
 			for (int i = 0; i < projections; i++) {
-				hash = lshfuncs[i].lshHashRadius(vec.data,blurValue);
+				hash = lshfuncs[i].lshHashRadius(vec,blurValue);
 				for(long h : hash)
-					is.add(new Centroid(h,vec.data));
+					is.add(new Centroid(h,vec));
 			}
 		}
 		
 		for(Centroid ff: is.getTop())
 			so.addCentroid(ff.centroid());
 
-//		for(long l: is.getCounts())System.out.print(l+",");
+		//for(long l: is.getCounts())System.out.print(l+",");
 		
 		return so;
 	}
@@ -124,7 +124,7 @@ public class RPHashStream implements Clusterer {
 	private void run() {
 		so = processStream();
 		centroids = (new Kmeans(so.getk(), so.getCentroids())).getCentroids();
-
+		//centroids = new Kmeans(so.getk(),((SimpleArrayReader)so).data,24).getCentroids();
 	}
 
 	public static void main(String[] args) {
@@ -133,7 +133,7 @@ public class RPHashStream implements Clusterer {
 		int d = 1000;
 		int n = 10000;
 		float var = .3f;
-		for (float f = var; f < 1.1; f += .01f) {
+		for (float f = var; f < 1.1; f += .1f) {
 			for (int i = 0; i < 5; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashStream rphit = new RPHashStream(gen.data(), k);
@@ -143,7 +143,7 @@ public class RPHashStream implements Clusterer {
 				long duration = (System.nanoTime() - startTime);
 				List<float[]> aligned = TestUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
-				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
+				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"+StatTests.SSE(aligned, gen)+":"
 						+ duration / 1000000000f);
 				System.gc();
 			}

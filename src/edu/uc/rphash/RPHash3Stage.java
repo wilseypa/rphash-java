@@ -31,9 +31,9 @@ public class RPHash3Stage implements Clusterer{
 		
 		// create our LSH Machine
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
-		Iterator<RPVector> vecs = so.getVectorIterator();
+		Iterator<float[]> vecs = so.getVectorIterator();
 		if(!vecs.hasNext())return so;
-		RPVector vec = vecs.next();
+		float[] vec = vecs.next();
 
 		Decoder dec = new Leech(variance/.75f);
 		Projector[] p = new Projector[1];
@@ -48,7 +48,7 @@ public class RPHash3Stage implements Clusterer{
 		
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
-			is.add(lsh.lshHash(vec.data));
+			is.add(lsh.lshHash(vec));
 //			int j = 0;
 //			while (j < probes) {
 //				is.add(lsh.lshHashRadius(vec.data));
@@ -68,9 +68,9 @@ public class RPHash3Stage implements Clusterer{
 
 		// create our LSH Machine
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
-		Iterator<RPVector> vecs = so.getVectorIterator();
+		Iterator<float[]> vecs = so.getVectorIterator();
 		if(!vecs.hasNext())return so;
-		RPVector vec = vecs.next();
+		float[] vec = vecs.next();
 		// trying to combat variance drifting issues by adjusting the
 		// scaling the lattice region radius
 		Decoder dec = new Leech(variance/.75f);
@@ -92,11 +92,11 @@ public class RPHash3Stage implements Clusterer{
 		{
 			//int j = 0;
 			Centroid cent = null;
-			d = lsh.lshHash(vec.data);
+			d = lsh.lshHash(vec);
 			cent = centroids.get(d);
 			
 			if (cent != null)
-				cent.updateVec(p.project(vec.data));
+				cent.updateVec(p.project(vec));
 			
 //			while (cent == null && j < probes) {
 //				d = lsh.lshHashRadius(vec.data);
@@ -121,15 +121,15 @@ public class RPHash3Stage implements Clusterer{
 		Projector[] p = new Projector[1];
 		p[0] = new DBFriendlyProjection(so.getdim(), 100,  so.getRandomSeed());
 		
-		Iterator<RPVector> vecs = so.getVectorIterator();
+		Iterator<float[]> vecs = so.getVectorIterator();
 		for (int i = 0; i < so.getk(); i++){
 			Centroid cent = new Centroid(so.getdim(),i);
 			centroids.add(cent);
 		}
-		RPVector vec = vecs.next();
+		float[] vec = vecs.next();
 		while (vecs.hasNext()) {
 
-			int nn = TestUtil.findNearestDistance(p[0].project(vec.data),
+			int nn = TestUtil.findNearestDistance(p[0].project(vec),
 					so.getCentroids());
 				centroids.get(nn).updateVec(vec);
 			vec = vecs.next();

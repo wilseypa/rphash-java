@@ -15,6 +15,18 @@ public class StatTests {
 		return (float)count/(float)data.size();
 	}
 	
+	
+	public static double SSE(List<float[]> estCentroids, GenerateData gen){
+		double count = 0.0 ;
+		List<float[]> data = gen.data();
+		for(int i = 0; i< data.size();i++)
+		{
+			count+=TestUtil.distance(data.get(i),estCentroids.get(TestUtil.findNearestDistance(data.get(i), estCentroids))) ;
+		}
+		return count;
+	}
+	
+	
 	public static float varianceSample(List<float[]> data,float sampRatio){
 		float n = 0;
 		float mean = 0;

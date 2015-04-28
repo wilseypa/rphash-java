@@ -13,7 +13,7 @@ public interface RPHashObject {
 	long getRandomSeed();
 	long getHashmod();
 	int getNumBlur();
-	Iterator <RPVector>getVectorIterator();
+	Iterator<float[]> getVectorIterator();
 	List<float[]> getCentroids( );
 	
 	List<Long> getPreviousTopID();

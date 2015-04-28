@@ -33,7 +33,7 @@ public class RPHashSimple implements Clusterer {
 
 		// create our LSH Machine
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
-		Iterator<RPVector> vecs = so.getVectorIterator();
+		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
 		
@@ -53,8 +53,8 @@ public class RPHashSimple implements Clusterer {
 		// add to frequent itemset the hashed Decoded randomly projected vector
 
 		while (vecs.hasNext()) {
-			RPVector vec = vecs.next();
-			hash = lshfunc.lshHash(vec.data);
+			float[] vec = vecs.next();
+			hash = lshfunc.lshHash(vec);
 			is.add(hash);
 			//vec.id.add(hash);
 		}
@@ -69,10 +69,10 @@ public class RPHashSimple implements Clusterer {
 	 */
 	public RPHashObject reduce() {
 
-		Iterator<RPVector> vecs = so.getVectorIterator();
+		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
-		RPVector vec = vecs.next();
+		float[] vec = vecs.next();
 		int blurValue = so.getNumBlur();
 		
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
@@ -94,7 +94,7 @@ public class RPHashSimple implements Clusterer {
 			centroids.add(new Centroid(so.getdim(), id));
 
 		while (vecs.hasNext()) {
-			hash = lshfunc.lshHashRadius(vec.data,blurValue);
+			hash = lshfunc.lshHashRadius(vec,blurValue);
 			for (Centroid cent : centroids){
 				for(long h:hash){
 					if(cent.ids.contains(h)){
