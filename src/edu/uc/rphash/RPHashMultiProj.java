@@ -45,69 +45,34 @@ public class RPHashMultiProj implements Clusterer {
 
 	public RPHashObject map() {
 
-		// Iterator<RPVector> vecs = so.getVectorIterator();
-		// if (!vecs.hasNext())
-		// return so;
-		//
-		// // create our LSH Machine
-		// Random r = new Random(so.getRandomSeed());
-		// int probes = so.getNumProjections();
-		// LSH[] lshfuncs = new LSH[probes];
-		// Decoder dec = so.getDecoderType();
-		// HashAlgorithm hal = new MurmurHash(so.getHashmod());
-		// for (int i = 0; i < probes; i++) {
-		// Projector p = new DBFriendlyProjection(so.getdim(),
-		// dec.getDimensionality(), r.nextLong());
-		// lshfuncs[i] = new LSH(dec, p, hal);
-		// }
-		//
-		// int k = (int) (so.getk()*probes);
-		//
-		// long hash;
-		// ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
-		// // add to frequent itemset the hashed Decoded randomly projected
-		// vector
-		//
-		// while (vecs.hasNext()) {
-		// RPVector vec = vecs.next();
-		// for (int i = 0; i < probes; i++) {
-		// hash = lshfuncs[i].lshHash(vec.data);
-		// //vec.id.add(hash);
-		// is.add(hash);
-		// }
-		// }
-		// // so.setPreviousTopID(is.getTop());
-		// // for (Long l : is.getCounts())
-		// // System.out.printf(" %d,", l);
-		// // System.out.printf("\n,");
-		// return so;
-		Random r = new Random(so.getRandomSeed());
+
+		
 
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
 
-		// create our LSH Machine
+		long hash;
 		int probes = so.getNumProjections();
+		int k = (int) (so.getk() * probes);
+		Random r = new Random(so.getRandomSeed());
+		
+		//initialize our counter
+		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
+		
+		// create our LSH Device
 		LSH[] lshfuncs = new LSH[probes];
 		Decoder dec = so.getDecoderType();
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		
+		//create projection matrices add to LSH Device
 		for (int i = 0; i < probes; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
 			lshfuncs[i] = new LSH(dec, p, hal);
 		}
-		// Decoder dec = so.getDecoderType();
-		// Projector p = new DBFriendlyProjection(so.getdim(),
-		// dec.getDimensionality(), so.getRandomSeed());
-		// LSH lshfunc = new LSH(dec, p, hal);
 
-		long hash;
-		int k = (int) (so.getk() * probes);
-
-		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
 		// add to frequent itemset the hashed Decoded randomly projected vector
-
 		while (vecs.hasNext()) {
 			RPVector vec = vecs.next();
 			for (int i = 0; i < probes; i++) {
@@ -130,39 +95,38 @@ public class RPHashMultiProj implements Clusterer {
 	 * aggregated
 	 */
 	public RPHashObject reduce() {
-		Random r = new Random(so.getRandomSeed());
+		
 		Iterator<RPVector> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
 
 		int blurValue = so.getNumBlur();
+		int probes = so.getNumProjections();
+		Random r = new Random(so.getRandomSeed());
 
-		//
-		// HashAlgorithm hal = new MurmurHash(so.getHashmod());
-		// Decoder dec = so.getDecoderType();
-		//
-		// Projector p = new DBFriendlyProjection(so.getdim(),
-		// dec.getDimensionality(), r.nextLong());
-		// LSH lshfunc = new LSH(dec, p, hal);
-		int probes = 1;// so.getNumProjections();
+		long hash[];
+		// make a set of k default centroid objects
+		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
+		for (long id : so.getPreviousTopID())
+			centroids.add(new Centroid(so.getdim(), id));
+		
+		
+		//create same LSH Device as before
 		LSH[] lshfuncs = new LSH[probes];
 		Decoder dec = so.getDecoderType();
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		
+		//create same projection matrices as before
 		for (int i = 0; i < probes; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
 			lshfuncs[i] = new LSH(dec, p, hal);
 		}
 
-		long hash[];
 
 		if (blurValue == 0)
 			blurValue = (int) Math.log(so.getdim() / dec.getDimensionality());
-		// make a set of k default centroid objects
-		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
-		for (long id : so.getPreviousTopID())
-			centroids.add(new Centroid(so.getdim(), id));
-
+		
 		while (vecs.hasNext()) {
 			RPVector vec = vecs.next();
 			// iterate over the multiple projections

@@ -14,6 +14,8 @@ import org.streaminer.stream.frequency.CountMinSketchAlt;
 import org.streaminer.stream.frequency.FrequencyException;
 import org.streaminer.stream.frequency.StickySampling;
 
+import edu.uc.rphash.Centroid;
+
 public class KHHCountMinSketch<E> implements ItemSet<E> {
 
 //	ArrayList<E> randomshit = new ArrayList<>();
@@ -47,15 +49,14 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	PriorityQueue<Tuple> p;
 	int k;
 	boolean pqfull = false;
-	HashSet<Tuple> items;
+	HashMap<Long,Tuple> items;
 
 	public KHHCountMinSketch(int k)
 	{
 		this.k=k;
-
 		scounter = new CountMinSketchAlt<E>(.00001,.995,(int)System.currentTimeMillis());
 		p = new PriorityQueue<Tuple>();
-		items = new HashSet<>();
+		items = new HashMap<>();
 	}
 	
 	
@@ -94,6 +95,8 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		return scounter;
 	}
 
+	
+	
 	@Override
 	public boolean add(E e){
 		try {
@@ -102,32 +105,25 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 			e1.printStackTrace();
 		}
 		
-		
 		long count = scounter.estimateCount(e);
-		Tuple t = new Tuple(e,count);
+		Tuple t = items.get((long)e.hashCode());
 		
-		if(items.contains(t)){//update current in list item
-			items.remove(t);
-			p.remove(t);
-			t = new Tuple(t.item,count+1);
-			items.add(t);
-			p.add(t);
+		if(t!=null){//update current in list item
+			t.count++;
+			if(e instanceof Centroid)((Centroid)t.item).updateVec(((Centroid)t.item).centroid());
 		}
-			
 		else{
-			if(!pqfull)
-			{
-				items.add(t);
-				p.add(t);
+			Tuple newt = new Tuple(e,1);
+			if(!pqfull){
+				items.put((long) e.hashCode(),newt);
+				p.add(newt);
 				pqfull = (p.size()==this.k);
-				
 			}
-			
 			else{
 				if(count>p.peek().count){
-					items.remove(p.poll());
-					items.add(t);
-					p.add(t);
+					items.remove(p.poll().item.hashCode());
+					items.put((long) e.hashCode(),newt);
+					p.add(newt);
 				}
 			}
 		}
@@ -138,8 +134,8 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	public static void main(String[] t) throws FrequencyException{
 		Random r = new Random();
 		KHHCountMinSketch<Long> khh = new KHHCountMinSketch<Long>(10);
-		CountMinSketchAlt<Long> scounter = new CountMinSketchAlt<Long>(.0001,.99,101223);
-		for(long i = 1 ; i< 100000;i++){
+		CountMinSketchAlt<Long> scounter = new CountMinSketchAlt<Long>(.00001,.995,101223);
+		for(long i = 1 ; i< 1000000;i++){
 			
 			khh.add((long) r.nextInt((int)i)/100);
 			scounter.add((long) r.nextInt((int)i)/100);

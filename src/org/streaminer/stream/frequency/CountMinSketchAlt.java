@@ -119,38 +119,44 @@ public class CountMinSketchAlt<E> implements ISimpleFrequency<E> {
             throw new IllegalArgumentException("Negative increments not implemented");
         }
         
-        if (item instanceof Integer) {
-            addLong(((Integer)item).longValue(), count);
-        } else if (item instanceof Long) {
-            addLong((Long)item, count);
-        } else if (item instanceof String) {
-            int[] buckets = HashUtils.getHashBuckets((String)item, depth, width);
-            for (int i = 0; i < depth; ++i) {
-                table[i][buckets[i]] += count;
-            }
-            size += count;
-        }
+//        if (item instanceof Integer) {
+//            addLong(((Integer)item).longValue(), count);
+//        } else if (item instanceof Long) {
+//            addLong((Long)item, count);
+//        } else if (item instanceof String) {
+//            int[] buckets = HashUtils.getHashBuckets((String)item, depth, width);
+//            for (int i = 0; i < depth; ++i) {
+//                table[i][buckets[i]] += count;
+//            }
+//            size += count;
+//        }
+//        else{
+        	addLong(item.hashCode(), count);
+//        }
         
         return true;
     }
 
     @Override
     public long estimateCount(E item) {
-        if (item instanceof Integer) {
-            estimateCountLong(((Integer)item).longValue());
-        } else if (item instanceof Long) {
-            estimateCountLong((Long)item);
-        } else if (item instanceof String) {
-            long res = Long.MAX_VALUE;
-            int[] buckets = HashUtils.getHashBuckets((String)item, depth, width);
-            for (int i = 0; i < depth; ++i) {
-                res = Math.min(res, table[i][buckets[i]]);
-            }
-            return res;
-        }
+//        if (item instanceof Integer) {
+//            estimateCountLong(((Integer)item).longValue());
+//        } else if (item instanceof Long) {
+//            estimateCountLong((Long)item);
+//        } else if (item instanceof String) {
+//            long res = Long.MAX_VALUE;
+//            int[] buckets = HashUtils.getHashBuckets((String)item, depth, width);
+//            for (int i = 0; i < depth; ++i) {
+//                res = Math.min(res, table[i][buckets[i]]);
+//            }
+//            return res;
+//        }else
+//        {
+        	return estimateCountLong(item.hashCode());
+//        }
         
         
-        return estimateCountLong((Long)item);
+//        return estimateCountLong((Long)item);
     }
 
     @Override
