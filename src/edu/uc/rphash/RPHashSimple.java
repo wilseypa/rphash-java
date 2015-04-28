@@ -37,13 +37,11 @@ public class RPHashSimple implements Clusterer {
 		if (!vecs.hasNext())
 			return so;
 		
-
 		Decoder dec = so.getDecoderType();
-
-//		if(dec==null){
-//			Decoder inner = new Leech(variance);
-//			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
-//		}
+		if(dec==null){
+			Decoder inner = new Leech(variance);
+			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+		}
 		
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
@@ -61,9 +59,7 @@ public class RPHashSimple implements Clusterer {
 			//vec.id.add(hash);
 		}
 		so.setPreviousTopID(is.getTop());		
-//		for (Long l : is.getCounts())
-//			System.out.printf(" %d,", l);
-//		System.out.printf("\n,");
+//		for(long l: is.getCounts())System.out.print(l+", ");
 		return so;
 	}
 
@@ -81,6 +77,10 @@ public class RPHashSimple implements Clusterer {
 		
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		Decoder dec = so.getDecoderType();
+		if(dec==null){
+			Decoder inner = new Leech(variance);
+			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+		}
 		
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
@@ -93,14 +93,11 @@ public class RPHashSimple implements Clusterer {
 		for (long id : so.getPreviousTopID())
 			centroids.add(new Centroid(so.getdim(), id));
 
-//		ItemSet<Long> is = new KHHCountMinSketch<Long>(so.getk());
-		
 		while (vecs.hasNext()) {
 			hash = lshfunc.lshHashRadius(vec.data,blurValue);
 			for (Centroid cent : centroids){
 				for(long h:hash){
 					if(cent.ids.contains(h)){
-//						is.add(h);
 						cent.updateVec(vec);
 						break;
 					}
@@ -109,9 +106,6 @@ public class RPHashSimple implements Clusterer {
 			vec = vecs.next();
 		}
 
-//		for (Long l : is.getCounts())
-//			System.out.printf(" %d,", l);
-//		System.out.printf("\n,");
 		
 		for (Centroid cent : centroids) so.addCentroid(cent.centroid());
 		
@@ -124,11 +118,13 @@ public class RPHashSimple implements Clusterer {
 	public RPHashSimple(List<float[]> data, int k) {
 		variance = StatTests.varianceSample(data, .01f);
 		so = new SimpleArrayReader(data, k);
+
 	}
 
 	public RPHashSimple(List<float[]> data, int k, int times, int rseed) {
-		variance = StatTests.varianceSample(data, .01f);
+		variance = StatTests.varianceSample(data, .001f);
 		so = new SimpleArrayReader(data, k);
+
 	}
 
 	public RPHashSimple(RPHashObject so) {
@@ -161,7 +157,7 @@ public class RPHashSimple implements Clusterer {
 		int k = 10;
 		int d = 1000;
 		int n = 10000;
-		float var = 1.0f;
+		float var = .3f;
 		for(float f = var;f<3.0;f+=.01f){
 			for (int i = 0; i < 5; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);

@@ -11,6 +11,7 @@ import edu.uc.rphash.Readers.RPVector;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
+import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
@@ -47,6 +48,10 @@ public class RPHashStream implements Clusterer {
 		// create LSH Device
 		LSH[] lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
+		if(dec==null){
+			Decoder inner = new Leech(variance);
+			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+		}
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		
 		//create projection matrices add to LSH Device
@@ -57,8 +62,8 @@ public class RPHashStream implements Clusterer {
 		}
 		
 		int blurValue = so.getNumBlur();
-		if (blurValue == 0)
-			blurValue = (int) Math.log(so.getdim() / dec.getDimensionality());
+//		if (blurValue == 0)
+//			blurValue = (int) Math.log(so.getdim() / dec.getDimensionality());
 
 		while (vecs.hasNext()) {
 			RPVector vec = vecs.next();
@@ -72,6 +77,8 @@ public class RPHashStream implements Clusterer {
 		for(Centroid ff: is.getTop())
 			so.addCentroid(ff.centroid());
 
+//		for(long l: is.getCounts())System.out.print(l+",");
+		
 		return so;
 	}
 
@@ -81,12 +88,18 @@ public class RPHashStream implements Clusterer {
 
 	public RPHashStream(List<float[]> data, int k) {
 		variance = StatTests.varianceSample(data, .001f);
-		so = new SimpleArrayReader(data, k, 1, 250000);
+		so = new SimpleArrayReader(data, k);
+		so.setNumProjections(3);
+		so.setNumBlur(5);
+
 	}
 
 	public RPHashStream(List<float[]> data, int k, int times, int rseed) {
 		variance = StatTests.varianceSample(data, .001f);
-		so = new SimpleArrayReader(data, k, rseed, 250000);
+		so = new SimpleArrayReader(data, k);
+		so.setNumProjections(3);
+		so.setNumBlur(5);
+
 	}
 
 	public RPHashStream(RPHashObject so) {
@@ -119,8 +132,8 @@ public class RPHashStream implements Clusterer {
 		int k = 10;
 		int d = 1000;
 		int n = 10000;
-		float var = .01f;
-		for (float f = var; f < 1.0; f += .01f) {
+		float var = .3f;
+		for (float f = var; f < 1.1; f += .01f) {
 			for (int i = 0; i < 5; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashStream rphit = new RPHashStream(gen.data(), k);

@@ -63,6 +63,10 @@ public class RPHashMultiProj implements Clusterer {
 		// create our LSH Device
 		LSH[] lshfuncs = new LSH[probes];
 		Decoder dec = so.getDecoderType();
+		if(dec==null){
+			Decoder inner = new Leech(variance);
+			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+		}
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		
 		//create projection matrices add to LSH Device
@@ -114,6 +118,10 @@ public class RPHashMultiProj implements Clusterer {
 		//create same LSH Device as before
 		LSH[] lshfuncs = new LSH[probes];
 		Decoder dec = so.getDecoderType();
+		if(dec==null){
+			Decoder inner = new Leech(variance);
+			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+		}
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		
 		//create same projection matrices as before
@@ -159,7 +167,7 @@ public class RPHashMultiProj implements Clusterer {
 
 	public RPHashMultiProj(List<float[]> data, int k, int numProjections) {
 		variance = StatTests.varianceSample(data, .01f);
-		so = new SimpleArrayReader(data, k, 0, 1, numProjections);
+		so = new SimpleArrayReader(data, k, 0, 2, numProjections);
 	}
 
 	public RPHashMultiProj(List<float[]> data, int k, int decmult,

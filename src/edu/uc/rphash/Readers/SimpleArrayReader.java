@@ -49,7 +49,7 @@ public class SimpleArrayReader implements RPHashObject {
 			r.id = new HashSet<Long>();
 			data.add(r);
 		}
-
+		this.dec = null;
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
@@ -60,7 +60,6 @@ public class SimpleArrayReader implements RPHashObject {
 		this.centroids = new ArrayList<float[]>();
 		this.numBlur = 0;
 		this.topIDs = new ArrayList<Long>();
-		this.dec = new Leech();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 	}
@@ -81,11 +80,10 @@ public class SimpleArrayReader implements RPHashObject {
 		this.k = k;
 		this.randomSeed = System.currentTimeMillis();
 		this.hashmod = Long.MAX_VALUE;
-		this.dec = new Leech();
+		this.dec = null;
 		this.decoderMultiplier = 1;
 		this.numProjections = 1;
 		this.centroids = new ArrayList<float[]>();
-		;
 		this.numBlur = blur;
 		this.topIDs = new ArrayList<Long>();
 		for (int i = 0; i < k; i++)
@@ -114,7 +112,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.centroids = new ArrayList<float[]>();
 		this.numBlur = blur;
 		this.topIDs = new ArrayList<Long>();
-		this.dec = new Leech();
+		this.dec = null;
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 	}
@@ -154,7 +152,7 @@ public class SimpleArrayReader implements RPHashObject {
 		;
 		this.numBlur = blur;
 		this.topIDs = new ArrayList<Long>();
-		this.dec = new Leech();
+		this.dec = null;
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 	}
@@ -258,7 +256,8 @@ public class SimpleArrayReader implements RPHashObject {
 	}
 	@Override
 	public String toString() {
-		String ret = "Decoder:"+dec.getClass().getName();
+		String ret = "Decoder:";
+		if(dec!=null)ret += dec.getClass().getName();
 		ret+=", Blur:"+numBlur;
 		ret+=", Projections:"+numProjections;
 		ret+=", Outer Decoder Multiplier:"+decoderMultiplier;
