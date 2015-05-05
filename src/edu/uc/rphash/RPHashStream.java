@@ -14,6 +14,7 @@ import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
+import edu.uc.rphash.frequentItemSet.KHHHashCounter;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
@@ -25,11 +26,12 @@ import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
 
-public class RPHashStream implements Clusterer {
+public class RPHashStream implements Clusterer, Runnable {
 
 
-
+	//TODO update variance over time
 	float variance;
+	KHHHashCounter<Centroid> is;
 
 	public RPHashObject processStream() {
 		// add to frequent itemset the hashed Decoded randomly projected vector
@@ -43,7 +45,7 @@ public class RPHashStream implements Clusterer {
 		long hash[];
 		
 		//initialize our counter
-		KHHCountMinSketch<Centroid> is = new KHHCountMinSketch<>(k);
+		is = new KHHHashCounter<>(k);
 		
 		// create LSH Device
 		LSH[] lshfuncs = new LSH[projections];
@@ -74,11 +76,9 @@ public class RPHashStream implements Clusterer {
 			}
 		}
 		
-		for(Centroid ff: is.getTop())
-			so.addCentroid(ff.centroid());
-
-		//for(long l: is.getCounts())System.out.print(l+",");
-		
+//		for (Long l : is.getCounts())
+//		System.out.printf(" %d,", l);
+//	System.out.printf("\n,");
 		return so;
 	}
 
@@ -110,7 +110,7 @@ public class RPHashStream implements Clusterer {
 		this.so = so;
 		if (centroids == null)
 			run();
-		return centroids;
+		return new Kmeans(so.getk(),centroids).getCentroids();
 	}
 
 	@Override
@@ -118,13 +118,17 @@ public class RPHashStream implements Clusterer {
 
 		if (centroids == null)
 			run();
+		
+		centroids = new ArrayList<float[]>();
+		int sk = so.getk()*so.getNumProjections();
+		for(Centroid c : is.getTop())centroids.add(c.centroid());
+//		System.out.println(is.getTop().size());
+//		TestUtil.prettyPrint(centroids);
 		return centroids;
 	}
 
-	private void run() {
+	public void run() {
 		so = processStream();
-		centroids = (new Kmeans(so.getk(), so.getCentroids())).getCentroids();
-		//centroids = new Kmeans(so.getk(),((SimpleArrayReader)so).data,24).getCentroids();
 	}
 
 	public static void main(String[] args) {
@@ -132,8 +136,8 @@ public class RPHashStream implements Clusterer {
 		int k = 10;
 		int d = 1000;
 		int n = 10000;
-		float var = .3f;
-		for (float f = var; f < 1.1; f += .1f) {
+		float var = 1.0f;
+		for (float f = var; f < 2.1; f += .1f) {
 			for (int i = 0; i < 5; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashStream rphit = new RPHashStream(gen.data(), k);
@@ -148,7 +152,6 @@ public class RPHashStream implements Clusterer {
 				System.gc();
 			}
 		}
-
 	}
 
 	@Override

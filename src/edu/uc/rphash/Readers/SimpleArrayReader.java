@@ -169,10 +169,6 @@ public class SimpleArrayReader implements RPHashObject {
 		return k;
 	}
 
-	@Override
-	public int getn() {
-		return data.size();
-	}
 
 	@Override
 	public int getdim() {

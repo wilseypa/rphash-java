@@ -137,16 +137,17 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	public static void main(String[] t) throws FrequencyException{
 		Random r = new Random();
 		KHHCountMinSketch<Integer> khh = new KHHCountMinSketch<>(50);
-		CountMinSketchAlt<Integer> scounter = new CountMinSketchAlt<>(.00001,.995,101223);
-		for(long i = 1 ; i< 1000000;i++){
+		//CountMinSketchAlt<Integer> scounter = new CountMinSketchAlt<>(.00001,.995,101223);
+		long ts = System.currentTimeMillis();
+		for(long i = 1 ; i< 10000000;i++){
 			
 			khh.add( r.nextInt((int)i)/100);
-			scounter.add( r.nextInt((int)i)/100);
+			//scounter.add( r.nextInt((int)i)/100);
 		}
-
+		System.out.println( System.currentTimeMillis()-ts);
 		System.out.println(khh.getTop());
 		System.out.println(khh.getCounts());
-		for(int i = 1;i<100;i++)System.out.print(scounter.estimateCount(i)+", ");
+		//for(int i = 1;i<100;i++)System.out.print(scounter.estimateCount(i)+", ");
 		
 	}
 

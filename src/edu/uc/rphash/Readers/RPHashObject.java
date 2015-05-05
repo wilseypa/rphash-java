@@ -8,7 +8,7 @@ import edu.uc.rphash.decoders.Decoder;
 public interface RPHashObject {
 
 	int getk();
-	int getn();
+	//int getn();
 	int getdim();
 	long getRandomSeed();
 	long getHashmod();

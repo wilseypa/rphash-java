@@ -18,13 +18,11 @@ public class RPHashConsensusRP  implements Clusterer{
 	private List<float[]> centroids=null;
 	int k;
 	int d;
-	int n;
 	RPHashObject so;
 	
 	public RPHashConsensusRP(List<float[]> data,int k){
 
 		this.k =k;
-		this.n = data.size();
 		this.d = data.get(0).length;
 		this.so = new SimpleArrayReader(data,k);
 	}
@@ -32,7 +30,7 @@ public class RPHashConsensusRP  implements Clusterer{
 	public RPHashConsensusRP(RPHashObject o) {
 
 		this.k =o.getk();
-		this.n = o.getn();
+
 		this.d = o.getdim();
 		this.so = o;
 	}
