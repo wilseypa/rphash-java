@@ -104,16 +104,21 @@ public class StatTests {
 	
 	public static float[] averageCol(List<float[]> data){
 		if(data.size()<1)return null;
-		float[] avgs = new float[data.get(0).length];
-		for(int i=0;i<data.size();i++ ){
-			float n = 0;
-			float mean = 0;
-			for(float x : data.get(i)){
-				n++;
-				mean+=x;
+		int n = data.size();
+		int d = data.get(0).length;
+		float[] avgs = new float[d];
+		
+
+		for(float[] tmp : data){
+
+			for(int j=0;j<d;j++)
+			{
+				
+				avgs[j]+=(tmp[j]/n);
 			}	
-			avgs[i] = mean/n;
-		}return avgs;
+			
+		}
+		return avgs;
 	}
 
 }

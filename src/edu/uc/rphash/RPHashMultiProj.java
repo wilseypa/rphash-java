@@ -192,7 +192,7 @@ public class RPHashMultiProj implements Clusterer {
 
 		if (centroids == null)
 			run();
-		return centroids;
+		return new Kmeans(so.getk(),centroids).getCentroids();
 	}
 
 	private void run() {
