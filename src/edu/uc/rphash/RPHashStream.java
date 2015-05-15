@@ -10,6 +10,7 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
+import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
 import edu.uc.rphash.frequentItemSet.KHHHashCounter;
 import edu.uc.rphash.lsh.LSH;
@@ -47,9 +48,12 @@ public class RPHashStream implements Clusterer, Runnable {
 		LSH[] lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
 		if(dec==null){
-			Decoder inner = new Leech(variance);
+			//Decoder inner = new Leech(variance);
+			Decoder inner = new Spherical(64,6,2);
 			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
 		}
+		dec =  new Spherical(64,6,2);
+		
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		
 		//create projection matrices add to LSH Device

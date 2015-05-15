@@ -1,5 +1,9 @@
 package edu.uc.rphash.decoders;
 
+import java.util.Random;
+
+import edu.uc.rphash.tests.TestUtil;
+
 
 public class Dn implements Decoder {
 
@@ -105,6 +109,38 @@ public class Dn implements Decoder {
 		return dist;
 	}
 
+	public static void main(String[] args) {
+		Random r = new Random();
+		int d = 64;
+		int K = 6;
+		int L = 2;
+		Dn sp = new Dn(64);
+		for (int i = 0; i < 100; i++) {
+			int ct = 0;
+			float distavg = 0.0f;
+			for (int j = 0; j < 10000; j++) {
+				float p1[] = new float[d];
+				float p2[] = new float[d];
+				for (int k = 0; k < d; k++) {
+					p1[k] = r.nextFloat() * 2 - 1;
+					p2[k] = (float) (p1[k] + r.nextGaussian()
+							* ((float) i / 1000f));
+				}
+
+				distavg += TestUtil.distance(p1, p2);
+				byte[] hp1 = sp.decode(p1);
+				byte[] hp2 = sp.decode(p2);
+				boolean test = true;
+				for (int k = 0; k < hp1.length && test == true; k++) {
+					if (hp1[k] != hp2[k])
+						test = false;
+				}
+				if (test)
+					ct++;
+			}
+			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
+		}
+	}
 	
 
 }

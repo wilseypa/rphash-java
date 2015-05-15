@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.tests.TestUtil;
+
 public class Spherical implements Decoder {
 	int HashBits = 64;
 	List<List<float[]>> vAll; // vAll[i][j] is the vector $A_i \tilde v_j$ from
@@ -33,6 +35,7 @@ public class Spherical implements Decoder {
 		}
 
 		Random[] r = new Random[d];
+		for(int i = 0 ; i< d;i++)r[i] = new Random();
 
 		// For orthoplex, the basis Vectortors v_i are permutations of the
 		// Vectortor (1, 0, ..., 0),
@@ -42,10 +45,11 @@ public class Spherical implements Decoder {
 		// This means we don't need any matrix multiplication; R matrix is the
 		// list of
 		// rotated vectors itself!
-		this.vAll = new ArrayList<List<float[]>>(); // random rotation matrices
+		this.vAll = new ArrayList<List<float[]>>(k*l); // random rotation matrices
+		
 		List<List<float[]>> rotationMatrices = this.vAll;
 
-		for (int i = 0; i < rotationMatrices.size(); i++) {
+		for (int i = 0; i < k*l; i++) {
 			rotationMatrices.add(i, randomRotation(this.d, r));
 		}
 	}
@@ -79,7 +83,7 @@ public class Spherical implements Decoder {
 			d >>>= 8;
 		}
 
-		return null;
+		return lg;
 	}
 
 	@Override
@@ -197,6 +201,40 @@ public class Spherical implements Decoder {
 			}
 		}
 		return g;
+	}
+	
+
+	
+	public static void main(String[] args){
+		Random r = new Random();
+		int d = 64;
+		int K = 6; 
+		int L = 2;
+		Spherical sp = new Spherical(d,K,L);
+		for(int i = 0; i<100;i++){
+			int ct = 0;
+			float distavg = 0.0f;
+			for(int j = 0; j<10000;j++){
+				float p1[] = new float[d];
+				float p2[] = new float[d];
+				for(int k = 0;k<d;k++)
+				{
+					p1[k] = r.nextFloat()*2-1;
+					p2[k] = (float) (p1[k]+r.nextGaussian()*((float)i/1000f));
+				}
+				
+				distavg+=TestUtil.distance(p1,p2);
+				int[] hp1 = sp.Hash(TestUtil.normalize(p1));
+				int[] hp2 = sp.Hash(TestUtil.normalize(p2));
+				boolean test = true;
+				for(int k = 0; k< hp1.length && test==true;k++)
+				{
+					if(hp1[k]!=hp2[k])test=false;
+				}
+				if(test)ct++;
+			}
+			System.out.println(distavg/10000f+"\t"+(float)ct/10000f);
+		}
 	}
 
 }

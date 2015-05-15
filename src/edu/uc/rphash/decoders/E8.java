@@ -3,6 +3,8 @@ package edu.uc.rphash.decoders;
 import java.util.HashSet;
 import java.util.Random;
 
+import edu.uc.rphash.tests.TestUtil;
+
 public class E8 implements Decoder {
 
 	int n = 8;
@@ -195,27 +197,60 @@ public class E8 implements Decoder {
 		return (float) (2 * Math.sqrt(2) / 3);
 	}
 
-	public static void main(String[] args) {
-		E8 e8 = new E8(1f);
-
-		byte[] hr = e8.decode(new float[] { 1.2f, 1.2f, 1.2f, 1.2f, 1.2f, 1.1f,
-				1.8f, 1.4f });
-		System.out.println(hr[0] + "," + hr[1] + "," + hr[2] + "," + hr[3]
-				+ "," + hr[4] + "," + hr[5] + "," + hr[6] + "," + hr[7]);
-		Random r = new Random();
-		HashSet<Long> s = new HashSet<Long>();
-		float[] x = new float[8];
-		for (int i = 0; i < 10000000; i++) {
-			for (int j = 0; j < 8; j++)
-				x[j] = r.nextFloat() * 2.f - 1f;
-			s.add(hash(e8.closestPoint(x)));
-		}
-		System.out.println(s.size());
-	}
+//	public static void main(String[] args) {
+//		E8 e8 = new E8(1f);
+//
+//		byte[] hr = e8.decode(new float[] { 1.2f, 1.2f, 1.2f, 1.2f, 1.2f, 1.1f,
+//				1.8f, 1.4f });
+//		System.out.println(hr[0] + "," + hr[1] + "," + hr[2] + "," + hr[3]
+//				+ "," + hr[4] + "," + hr[5] + "," + hr[6] + "," + hr[7]);
+//		Random r = new Random();
+//		HashSet<Long> s = new HashSet<Long>();
+//		float[] x = new float[8];
+//		for (int i = 0; i < 10000000; i++) {
+//			for (int j = 0; j < 8; j++)
+//				x[j] = r.nextFloat() * 2.f - 1f;
+//			s.add(hash(e8.closestPoint(x)));
+//		}
+//		System.out.println(s.size());
+//	}
 
 	@Override
 	public float getDistance() {
 		
 		return distance;
+	}
+	
+	public static void main(String[] args) {
+		Random r = new Random();
+		int d = 8;
+		int K = 6;
+		int L = 2;
+		E8 sp = new E8(1f);
+		for (int i = 0; i < 100; i++) {
+			int ct = 0;
+			float distavg = 0.0f;
+			for (int j = 0; j < 10000; j++) {
+				float p1[] = new float[d];
+				float p2[] = new float[d];
+				for (int k = 0; k < d; k++) {
+					p1[k] = r.nextFloat() * 2 - 1;
+					p2[k] = (float) (p1[k] + r.nextGaussian()
+							* ((float) i / 200f));
+				}
+
+				distavg += TestUtil.distance(p1, p2);
+				byte[] hp1 = sp.decode(p1);
+				byte[] hp2 = sp.decode(p2);
+				boolean test = true;
+				for (int k = 0; k < hp1.length && test == true; k++) {
+					if (hp1[k] != hp2[k])
+						test = false;
+				}
+				if (test)
+					ct++;
+			}
+			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
+		}
 	}
 }

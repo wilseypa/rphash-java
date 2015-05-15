@@ -416,5 +416,13 @@ public class TestUtil {
 		return ravg;
 	}
 	
+	public static float[] normalize(float[] x){
+		float length =0;
+		for(int i = 0; i<x.length;i++)length+=(x[i]*x[i]);
+		length = (float) Math.sqrt(length);
+		for(int i = 0; i<x.length;i++)x[i]/=length;
+		return x;
+	}
+	
 
 }
