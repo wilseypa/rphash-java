@@ -48,11 +48,10 @@ public class RPHashStream implements Clusterer, Runnable {
 		LSH[] lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
 		if(dec==null){
-			//Decoder inner = new Leech(variance);
-			Decoder inner = new Spherical(64,6,2);
+			Decoder inner = new Leech(variance);
+			//Decoder inner = new Spherical(64,6,3);
 			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
 		}
-		dec =  new Spherical(64,6,2);
 		
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		
@@ -89,11 +88,10 @@ public class RPHashStream implements Clusterer, Runnable {
 	public RPHashStream(List<float[]> data, int k) {
 		variance = StatTests.varianceSample(data, .01f);
 		this.average = StatTests.averageCol(data);
-
 		so = new SimpleArrayReader(data, k);
-		so.setNumProjections(2);
-		so.setNumBlur(0);
-		so.setInnerDecoderMultiplier(3);
+		so.setNumProjections(3);
+		so.setNumBlur(5);
+		so.setInnerDecoderMultiplier(1);
 
 	}
 	float[] average;
@@ -101,9 +99,9 @@ public class RPHashStream implements Clusterer, Runnable {
 		variance = StatTests.varianceSample(data, .01f);
 		this.average = StatTests.averageCol(data);
 		so = new SimpleArrayReader(data, k);
-		so.setNumProjections(2);
-		so.setNumBlur(0);
-		so.setInnerDecoderMultiplier(3);
+		so.setNumProjections(1);
+		so.setNumBlur(2);
+		so.setInnerDecoderMultiplier(1);
 
 	}
 
@@ -135,9 +133,9 @@ public class RPHashStream implements Clusterer, Runnable {
 	public static void main(String[] args) {
 
 		int k = 10;
-		int d = 500;
+		int d = 1000;
 		int n = 20000;
-		float var = .1f;
+		float var = 1.1f;
 		for (float f = var; f < 2.1; f += .1f) {
 			for (int i = 0; i < 5; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);

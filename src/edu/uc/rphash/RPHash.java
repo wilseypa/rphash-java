@@ -14,6 +14,7 @@ import edu.uc.rphash.decoders.E8;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PStableDistribution;
+import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
@@ -124,9 +125,7 @@ public class RPHash {
 					o.setDecoderType(new PStableDistribution(variance));
 					break;
 				case "sphere": {
-					System.out.println(taggedArgs.get("decodertype")
-							+ " decoder does not exist yet");
-					o.setDecoderType(null);
+					o.setDecoderType(new Spherical(64,6,3));
 					break;
 				}
 				default: {

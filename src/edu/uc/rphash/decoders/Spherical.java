@@ -188,6 +188,7 @@ public class Spherical implements Decoder {
 	//
 	// The complexity of this function is O(nL)
 	int[] Hash(float[] p) {
+		p = TestUtil.normalize(p);
 		int ri = 0;
 		Integer h;
 		int[] g = new int[this.l];

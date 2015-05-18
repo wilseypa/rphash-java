@@ -301,8 +301,8 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		StreamObject o = new StreamObject(in, Integer.parseInt(args[0]),
 				Integer.parseInt(args[1]));
 		System.out.println("creating RPHash Object");
-		RPHashStream strm = new RPHashStream(o);
-		Thread procThread = new Thread(strm);
+		final RPHashStream strm = new RPHashStream(o);
+		final Thread procThread = new Thread(strm);
 
 
 		class GenLoop implements Runnable {
