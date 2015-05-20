@@ -25,7 +25,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		@Override
 		public int compareTo(Object o) {
 			return (int) (this.count - ((Tuple) o).count);
-
+//	min sort		return (int) ( ((Tuple) o).count-this.count );
 		}
 
 		@SuppressWarnings("unchecked")
@@ -97,7 +97,8 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 				
 		while (!p.isEmpty()) {
 			Tuple tmp = p.poll();
-			this.topcent .add(tmp.item);
+			this.topcent.add(tmp.item);
+			//System.out.println(tmp.count);
 			this.counts.add(tmp.count);
 		}
 

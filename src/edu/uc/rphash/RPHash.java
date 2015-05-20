@@ -18,11 +18,13 @@ import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.kmeanspp.DoublePoint;
+import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
 
 public class RPHash {
 
-	static String[] rphashes = { "simple", "streaming", "3stage", "multiProj", "multiRP",
-			"redux", "kmeans", "pkmeans" };
+	static String[] rphashes = { "simple", "streaming", "3stage", "multiProj", "consensus",
+			"redux", "kmeans", "pkmeans","kmeansplusplus" };
 	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
 			"NumBlur", "RandomSeed", "Hashmod", "DecoderType" };
 	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
@@ -125,7 +127,7 @@ public class RPHash {
 					o.setDecoderType(new PStableDistribution(variance));
 					break;
 				case "sphere": {
-					o.setDecoderType(new Spherical(64,6,3));
+					o.setDecoderType(new Spherical(32,6,3,variance));
 					break;
 				}
 				default: {
@@ -147,7 +149,7 @@ public class RPHash {
 				case "3stage":
 					runitems.add(new RPHash3Stage(o));
 					break;
-				case "multiRP":
+				case "concensus":
 					runitems.add(new RPHashConsensusRP(o));
 					break;
 				case "multiProj":
@@ -161,6 +163,9 @@ public class RPHash {
 					break;
 				case "pkmeans":
 					runitems.add(new Kmeans(k, data, o.getNumProjections()));
+					break;
+				case "kmeansplusplus":
+					runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
 					break;
 				default:
 					System.out.println(untaggedArgs.get(i) + " does not exist");

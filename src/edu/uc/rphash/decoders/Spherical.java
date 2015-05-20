@@ -9,7 +9,8 @@ import edu.uc.rphash.tests.TestUtil;
 public class Spherical implements Decoder {
 	int HashBits = 64;
 	List<List<float[]>> vAll; // vAll[i][j] is the vector $A_i \tilde v_j$ from
-								// the article.
+				// the article.
+	float variance;
 	int hbits; // Ceil(Log2(2*d)).
 	int d; // the dimension of the feature space.
 	int k; // number of elementary hash functions (h) to be concataneted to
@@ -21,10 +22,11 @@ public class Spherical implements Decoder {
 			// scanned linearly during query.
 	float distance = 0;
 
-	public Spherical(int d, int k, int L) {
+	public Spherical(int d, int k, int L,float variance) {
 		this.d = d;
 		this.k = k;
 		this.l = L;
+		this.variance = variance;
 		double nvertex = 2.0 * this.d;
 		this.hbits = (int) Math.ceil(Math.log(nvertex) / Math.log(2));
 		int kmax = (int) (HashBits / this.hbits);
@@ -188,6 +190,7 @@ public class Spherical implements Decoder {
 	//
 	// The complexity of this function is O(nL)
 	int[] Hash(float[] p) {
+		p = TestUtil.scale(p,variance);
 		p = TestUtil.normalize(p);
 		int ri = 0;
 		Integer h;
@@ -211,7 +214,7 @@ public class Spherical implements Decoder {
 		int d = 64;
 		int K = 6; 
 		int L = 2;
-		Spherical sp = new Spherical(d,K,L);
+		Spherical sp = new Spherical(d,K,L,1);
 		for(int i = 0; i<100;i++){
 			int ct = 0;
 			float distavg = 0.0f;

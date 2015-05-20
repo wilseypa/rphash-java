@@ -56,9 +56,9 @@ public class SimpleArrayReader implements RPHashObject {
 		this.randomSeed = System.currentTimeMillis();
 		this.hashmod = Long.MAX_VALUE;
 		this.decoderMultiplier = 1;
-		this.numProjections = 1;
+		this.numProjections = 4;
 		this.centroids = new ArrayList<float[]>();
-		this.numBlur = 0;
+		this.numBlur = 2;
 		this.topIDs = new ArrayList<Long>();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
@@ -83,7 +83,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.hashmod = Long.MAX_VALUE;
 		this.dec = null;
 		this.decoderMultiplier = 1;
-		this.numProjections = 1;
+		this.numProjections = 4;
 		this.centroids = new ArrayList<float[]>();
 		this.numBlur = blur;
 		this.topIDs = new ArrayList<Long>();
@@ -109,7 +109,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.k = k;
 		this.randomSeed = System.currentTimeMillis();
 		this.hashmod = Long.MAX_VALUE;
-		this.numProjections = 1;
+		this.numProjections = 4;
 		this.decoderMultiplier = decoderMultiplier;
 		this.centroids = new ArrayList<float[]>();
 		this.numBlur = blur;

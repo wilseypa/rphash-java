@@ -18,6 +18,7 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
+import edu.uc.rphash.tests.Agglomerative;
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
@@ -49,8 +50,8 @@ public class RPHashStream implements Clusterer, Runnable {
 		Decoder dec = so.getDecoderType();
 		if(dec==null){
 			Decoder inner = new Leech(variance);
-			//Decoder inner = new Spherical(64,6,3);
 			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+//			dec = new Spherical(so.getInnerDecoderMultiplier(),6,3,variance);
 		}
 		
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
@@ -89,8 +90,8 @@ public class RPHashStream implements Clusterer, Runnable {
 		variance = StatTests.varianceSample(data, .01f);
 		this.average = StatTests.averageCol(data);
 		so = new SimpleArrayReader(data, k);
-		so.setNumProjections(3);
-		so.setNumBlur(5);
+		so.setNumProjections(8);
+		so.setNumBlur(2);
 		so.setInnerDecoderMultiplier(1);
 
 	}
@@ -99,8 +100,10 @@ public class RPHashStream implements Clusterer, Runnable {
 		variance = StatTests.varianceSample(data, .01f);
 		this.average = StatTests.averageCol(data);
 		so = new SimpleArrayReader(data, k);
-		so.setNumProjections(1);
-		so.setNumBlur(2);
+		//best sphere is 8,2,32
+		//best leech is  8,2,1
+		so.setNumProjections(8);
+		so.setNumBlur(1);
 		so.setInnerDecoderMultiplier(1);
 
 	}
@@ -135,9 +138,9 @@ public class RPHashStream implements Clusterer, Runnable {
 		int k = 10;
 		int d = 1000;
 		int n = 20000;
-		float var = 1.1f;
-		for (float f = var; f < 2.1; f += .1f) {
-			for (int i = 0; i < 5; i++) {
+		float var = 0f;
+		for (float f = var; f < 4.1; f += .2f) {
+			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashStream rphit = new RPHashStream(gen.data(), k);
 
