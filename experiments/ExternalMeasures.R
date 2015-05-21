@@ -4,7 +4,7 @@ library(mclust)
 K <- readline("Enter the number of clusters: ")
 K <- as.numeric(K)
 
-data <- read.csv('C:/Users/Anindya/Desktop/inR_caret.csv')
+data <- read.csv('dataset.csv')
 data.features <- data
 data.features$Class <- NULL
 
@@ -90,7 +90,7 @@ ARI_em <- adjustedRandIndex(model$classification, data$Class)
 print(paste0('EM Adjusted Rand Index: ', ARI_em), quote = FALSE)
 
 
-rphash <- read.csv('C:/Users/Anindya/Desktop/RPHash Outputs.csv')
+rphash <- read.csv('RPHash Outputs.csv')
 print("RPHash output:", quote = FALSE)
 
 t_rp <- rphash$Runtime
