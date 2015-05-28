@@ -238,4 +238,9 @@ public class Spherical implements Decoder {
 		}
 	}
 
+	@Override
+	public void setVariance(Float parameterObject) {
+		//System.out.println("WARNING: variance is not implemented for spherical normalized data");		
+	}
+
 }

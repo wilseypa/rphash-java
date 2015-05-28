@@ -56,5 +56,10 @@ public class MultiDecoder implements Decoder {
 	public float getDistance() {
 		return this.distance;
 	}
+	@Override
+	public void setVariance(Float parameterObject) {
+		innerDec.setVariance(parameterObject);
+		
+	}
 
 }

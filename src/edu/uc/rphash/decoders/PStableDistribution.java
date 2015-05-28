@@ -112,4 +112,10 @@ public class PStableDistribution implements Decoder {
 			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
 		}
 	}
+
+	@Override
+	public void setVariance(Float parameterObject) {
+		// TODO Auto-generated method stub
+		
+	}
 }

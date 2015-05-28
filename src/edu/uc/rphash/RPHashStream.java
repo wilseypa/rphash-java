@@ -50,7 +50,7 @@ public class RPHashStream implements Clusterer, Runnable {
 
 		// create LSH Device
 		LSH[] lshfuncs = new LSH[projections];
-		Decoder dec = new Spherical(64,6,4);//so.getDecoderType();
+		Decoder dec = so.getDecoderType();
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		
 		//create projection matrices add to LSH Device
@@ -82,10 +82,8 @@ public class RPHashStream implements Clusterer, Runnable {
 		variance = StatTests.varianceSample(data, .01f);
 		this.average = StatTests.averageCol(data);
 		so = new SimpleArrayReader(data, k);
-		so.setNumProjections(4);
-		so.setNumBlur(2);
-		so.setInnerDecoderMultiplier(1);
-
+		so.setDecoderType(new Leech(variance));
+		so.getDecoderType().setVariance(variance);
 	}
 	float[] average;
 //	public RPHashStream(List<float[]> data, int k, int times, int rseed) {

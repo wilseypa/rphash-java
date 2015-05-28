@@ -52,7 +52,6 @@ public class RPHash {
 		int k = Integer.parseInt(args[1]);
 		String outputFile = args[2];
 		if (args.length == 3) {
-
 			RPHashSimple clusterer = new RPHashSimple(data, k);
 			TestUtil.writeFile(new File(outputFile + "."
 					+ clusterer.getClass().getName()), clusterer.getCentroids());

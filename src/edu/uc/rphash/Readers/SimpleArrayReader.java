@@ -24,7 +24,16 @@ public class SimpleArrayReader implements RPHashObject {
 	long hashmod;
 	final int k;
 	int numBlur;
-	 Decoder dec;
+	Decoder dec;
+	 
+	 
+	 final static int DEFAULT_NUM_PROJECTIONS = 8;
+	 final static int DEFAULT_NUM_BLUR = 2;
+	 final static int DEFAULT_NUM_RANDOM_SEED = 0;
+	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
+	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
+	 final static Decoder DEFAULT_INNER_DECODER = new Leech();
+
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -40,27 +49,20 @@ public class SimpleArrayReader implements RPHashObject {
 	List<Long> topIDs;
 
 	public SimpleArrayReader(List<float[]> X, int k) {
-		data = X;
-//		data = new LinkedList<RPVector>();
-//		for (int i = 0; i < X.size(); i++) {
-//			RPVector r = new RPVector();
-//			r.data = X.get(i);
-//			r.count = 0;
-//			r.id = new HashSet<Long>();
-//			data.add(r);
-//		}
 
+		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.hashmod = DEFAULT_HASH_MODULUS;
+		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
+		this.dec = new MultiDecoder(this.decoderMultiplier,DEFAULT_INNER_DECODER);
+		this.numProjections = DEFAULT_NUM_PROJECTIONS;
+		this.numBlur = DEFAULT_NUM_BLUR;
+		
+		
+		data = X;
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
-		this.randomSeed = System.currentTimeMillis();
-		this.hashmod = Long.MAX_VALUE;
-		this.decoderMultiplier = 1;
-		Decoder inner = new Leech();
-		this.dec = new MultiDecoder(decoderMultiplier, inner);
-		this.numProjections = 4;
 		this.centroids = new ArrayList<float[]>();
-		this.numBlur = 2;
 		this.topIDs = new ArrayList<Long>();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
@@ -68,28 +70,19 @@ public class SimpleArrayReader implements RPHashObject {
 
 	public SimpleArrayReader(List<float[]> X, int k, int blur) {
 
+		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.hashmod = DEFAULT_HASH_MODULUS;
+		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
+		this.dec = new MultiDecoder(this.decoderMultiplier,DEFAULT_INNER_DECODER);
+		this.numProjections = DEFAULT_NUM_PROJECTIONS;
+		this.numBlur = blur;
+		
+		
 		data = X;
-//		data = new LinkedList<RPVector>();
-//		for (int i = 0; i < X.size(); i++) {
-//			RPVector r = new RPVector();
-//			r.data = X.get(i);
-//			r.count = 0;
-//			r.id = new HashSet<Long>();
-//			data.add(r);
-//		}
-
-
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
-		this.randomSeed = System.currentTimeMillis();
-		this.hashmod = Long.MAX_VALUE;
-		this.decoderMultiplier = 1;
-		Decoder inner = new Leech();
-		this.dec = new MultiDecoder(decoderMultiplier, inner);
-		this.numProjections = 4;
 		this.centroids = new ArrayList<float[]>();
-		this.numBlur = blur;
 		this.topIDs = new ArrayList<Long>();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
@@ -98,27 +91,20 @@ public class SimpleArrayReader implements RPHashObject {
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
 			int decoderMultiplier) {
 
+		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.hashmod = DEFAULT_HASH_MODULUS;
+		this.dec = new MultiDecoder(this.decoderMultiplier,DEFAULT_INNER_DECODER);
+		this.numProjections = DEFAULT_NUM_PROJECTIONS;
+		this.numBlur = blur;
+		this.decoderMultiplier = decoderMultiplier;
+		
+		
 		data = X;
-//		data = new LinkedList<RPVector>();
-//		for (int i = 0; i < X.size(); i++) {
-//			RPVector r = new RPVector();
-//			r.data = X.get(i);
-//			r.count = 0;
-//			r.id = new HashSet<Long>();
-//			data.add(r);
-//		}
-
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
-		this.randomSeed = System.currentTimeMillis();
-		this.hashmod = Long.MAX_VALUE;
-		this.numProjections = 4;
-		this.decoderMultiplier = decoderMultiplier;
 		this.centroids = new ArrayList<float[]>();
-		this.numBlur = blur;
 		this.topIDs = new ArrayList<Long>();
-		this.dec = null;
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 	}
@@ -136,30 +122,21 @@ public class SimpleArrayReader implements RPHashObject {
 	 * @param numProjections
 	 */
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
-			int decoderMutiplier, int numProjections) {
-
+			int decoderMultiplier, int numProjections) {
+		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.hashmod = DEFAULT_HASH_MODULUS;
+		this.dec = new MultiDecoder(this.decoderMultiplier,DEFAULT_INNER_DECODER);
+		this.numProjections = numProjections;
+		this.numBlur = blur;
+		this.decoderMultiplier = decoderMultiplier;
+		
+		
 		data = X;
-//		data = new LinkedList<RPVector>();
-//		for (int i = 0; i < X.size(); i++) {
-//			RPVector r = new RPVector();
-//			r.data = X.get(i);
-//			r.count = 0;
-//			r.id = new HashSet<Long>();
-//			data.add(r);
-//		}
-
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
-		this.randomSeed = System.currentTimeMillis();
-		this.hashmod = Long.MAX_VALUE;
-		this.numProjections = numProjections;
-		this.decoderMultiplier = 1;
 		this.centroids = new ArrayList<float[]>();
-		;
-		this.numBlur = blur;
 		this.topIDs = new ArrayList<Long>();
-		this.dec = null;
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 	}

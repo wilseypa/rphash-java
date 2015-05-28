@@ -1077,4 +1077,28 @@ public class Leech implements Decoder {
 	// }
 	//
 	// }
+
+	@Override
+	public void setVariance(Float parameterObject) {
+		scaler = parameterObject;
+		radius = (DPT + CPT) * scaler;
+		APT = (float) (this.APT * scaler);
+		BPT = (float) (this.BPT * scaler);
+		CPT = (float) (this.CPT * scaler);
+		DPT = (float) (this.DPT * scaler);
+
+		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
+				{ APT, BPT } };
+		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
+				{ DPT, CPT } };
+		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
+				{ BPT, BPT } };
+		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
+				{ APT, CPT } };
+		this.evenAPts = evenAPts;
+		this.oddAPts = oddAPts;
+		this.evenBPts = evenBPts;
+		this.oddBPts = oddBPts;
+		
+	}
 }
