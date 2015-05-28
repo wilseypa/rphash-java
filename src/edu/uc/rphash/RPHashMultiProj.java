@@ -161,19 +161,19 @@ public class RPHashMultiProj implements Clusterer {
 	private RPHashObject so;
 
 	public RPHashMultiProj(List<float[]> data, int k) {
-		variance = StatTests.varianceSample(data, .01f);
-		so = new SimpleArrayReader(data, k, 0, 2, 3);
+		variance = 1;//StatTests.varianceSample(data, .01f);
+		so = new SimpleArrayReader(data, k, 1, 2, 3);
 	}
 
 	public RPHashMultiProj(List<float[]> data, int k, int numProjections) {
-		variance = StatTests.varianceSample(data, .01f);
-		so = new SimpleArrayReader(data, k, 0, 2, numProjections);
+		variance = 1;//StatTests.varianceSample(data, .01f);
+		so = new SimpleArrayReader(data, k, 1, 2, numProjections);
 	}
 
 	public RPHashMultiProj(List<float[]> data, int k, int decmult,
 			int numProjections) {
-		variance = StatTests.varianceSample(data, .01f);
-		so = new SimpleArrayReader(data, k, 0, decmult, numProjections);
+		variance = 1;//StatTests.varianceSample(data, .01f);
+		so = new SimpleArrayReader(data, k, 1, decmult, numProjections);
 	}
 
 	public RPHashMultiProj(RPHashObject so) {
@@ -207,8 +207,8 @@ public class RPHashMultiProj implements Clusterer {
 		int d = 1000;
 		int n = 10000;
 		float var = .3f;
-		for (float f = var; f < 1.0; f += .01f) {
-			for (int i = 0; i < 5; i++) {
+		for (float f = var; f < 1.0; f += .3f) {
+			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashMultiProj rphit = new RPHashMultiProj(gen.data(), k);
 

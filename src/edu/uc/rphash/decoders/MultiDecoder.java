@@ -23,18 +23,18 @@ public class MultiDecoder implements Decoder {
 	}
 
 	@Override
-	public byte[] decode(float[] f) 
+	public long[] decode(float[] f) 
 	{
 		
 		if(innerDec.getDimensionality() == f.length)return innerDec.decode(f);//no looping needed
 		float[] innerpartition = new float[innerDec.getDimensionality()];
 		int numRounds = (int) Math.ceil((double)dimension/(double)innerDec.getDimensionality());
 		System.arraycopy(f, 0, innerpartition, 0, Math.min(f.length, innerpartition.length));
-		byte[] tmp = innerDec.decode(innerpartition);
+		long[] tmp = innerDec.decode(innerpartition);
 		
 		int retLength = tmp.length;
 		
-		byte[] ret = new byte[retLength*numRounds];
+		long[] ret = new long[retLength*numRounds];
 		System.arraycopy(tmp, 0, ret, 0, retLength);
 		this.distance = innerDec.getDistance();
 		for(int i = 1;i<numRounds;i++)

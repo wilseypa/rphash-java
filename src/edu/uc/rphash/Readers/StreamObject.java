@@ -1,24 +1,24 @@
 package edu.uc.rphash.Readers;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.decoders.Spherical;
 
 public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public List<float[]> data;
@@ -41,6 +41,9 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	int multiDim;
 	Decoder dec;
 
+	ExecutorService executor;
+	final PipedInputStream inputStream;
+
 	// input format
 	// per line
 	// top ids list (integers)
@@ -48,124 +51,36 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	// --num of data( == n)
 	// --num dimensions
 	// --input random seed;
-	StreamObject(InputStream elements, int k, int dim) {
+	public StreamObject(PipedOutputStream istream, int k, int dim,
+			 ExecutorService executor)
+			throws IOException {
 
-		this.elements = elements;
+		inputStream = new PipedInputStream(istream);
+		this.executor = executor;
+
 		this.k = k;
 		this.dim = dim;
-		Decoder inner = new Leech();
 		this.decoderMultiplier = 3;
+		//Decoder inner = new Leech();
+		//this.dec = new MultiDecoder(decoderMultiplier, inner);
 		this.numProjections = 3;
 		this.hashmod = Integer.MAX_VALUE;
 		this.randomseed = 0;
-		this.dec = new MultiDecoder(decoderMultiplier, inner);
-		this.numBlur = 0;
+		this.numBlur = 1;
 
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
-		try {
-			System.out.println(Integer.parseInt(spacetoken()));// for real
-																// streams these
-																// wont be here
-			System.out.println(Integer.parseInt(spacetoken()));// for real
-																// streams these
-																// wont be here
-			// k = Integer.parseInt(spacetoken());
-			// n = Integer.parseInt(spacetoken());
-			// dim = Integer.parseInt(spacetoken());
-			// randomseed = Integer.parseInt(spacetoken());
-			// hashmod = Integer.parseInt(spacetoken());
-			// times = Integer.parseInt(spacetoken());
-		} catch (IOException e) {
-			System.err.println("Couldn't Read Datastream");
-		} catch (NumberFormatException pe) {
-			System.err.println("Couldn't Parse Stream Number Format Error ");
-		}
-		dec = null;
+		dec = new Spherical(64, 6, 4);
+		//dec = new MultiDecoder( getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+
 
 	}
 
-	/**
-	 * Read as much data as the program wants, and as is available.
-	 * 
-	 * @return
-	 * @throws IOException
-	 */
-	char blockingRead() throws IOException {
-		int b = elements.read();
-
-		while (b == -1) {
-			// wait for new input
-			try {
-				Thread.sleep(1000);// waiting for new data
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			System.out.println("ended stream" + String.valueOf(b));
-			b = elements.read();
-
-		}
-		return (char) b;
-
-	}
-
-	/**
-	 * read until a space, for constant streams
-	 * 
-	 * @return
-	 * @throws IOException
-	 */
-	String spacetoken() throws IOException {
-		StringBuilder sb = new StringBuilder();
-		char b = blockingRead();
-
-		while (b != '\n' && b != ' ') {
-			sb.append(b);
-			b = blockingRead();
-		}
-		return sb.toString();
-	}
-
-	String getNext() throws IOException {
-		return spacetoken();
-	}
-
-	float getNextFloat() {
-		try {
-			return Float.parseFloat(spacetoken());
-		} catch (IOException e) {
-			System.err.println("Couldn't Read Datastream");
-		} catch (NumberFormatException pe) {
-			System.err.println("Couldn't Parse Stream Number Format Error ");
-		}
-		return 0.0f;
-	}
-
-	int vectorct = 0;
-
-	public synchronized float[] getNextVector() {
-		float[] data = new float[dim];
-		int i = 0;
-		try {
-			while (i < dim)
-				data[i++] = Float.parseFloat(spacetoken());
-		} catch (IOException e) {
-			System.err.println("Couldn't Read Datastream");
-		} catch (NumberFormatException pe) {
-			System.err.println("Couldn't Parse Stream Number Format Error ");
-		}
-		return data;
-	}
 
 	@Override
 	public void reset() {
 
 		this.centroids = null;
-		// try {
-		// elements.reset();
-		// } catch (IOException ioe) {
-		// ioe.printStackTrace();
-		// }
 	}
 
 	@Override
@@ -196,7 +111,6 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	@Override
 	public Iterator<float[]> getVectorIterator() {
-
 		return this;
 	}
 
@@ -284,6 +198,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	}
 
+	
 	@Override
 	public boolean hasNext() {
 		return true;
@@ -291,50 +206,43 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	@Override
 	public float[] next() {
-		return getNextVector();
-	}
-
-	public static void main(String[] args) throws FileNotFoundException,
-			InterruptedException {
-		InputStream in = new FileInputStream(new File(args[2]));
-		System.out.println("opening stream");
-		StreamObject o = new StreamObject(in, Integer.parseInt(args[0]),
-				Integer.parseInt(args[1]));
-		System.out.println("creating RPHash Object");
-		final RPHashStream strm = new RPHashStream(o);
-		final Thread procThread = new Thread(strm);
-
-
-		class GenLoop implements Runnable {
+		final DataInputStream d = new DataInputStream(inputStream);
+		float[] readFloat;
+		// Read data with timeout
+		Callable<float[]> readTask = new Callable<float[]>() {
 			@Override
-			public synchronized void run() {
-				while (true) {
-					try {
-						Thread.sleep(5000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+			public float[] call() {
+				float[] vec = new float[dim];
+				try {
+					for (int i = 0; i < dim; i++) {
+						vec[i] = d.readFloat();
 					}
-					System.out.println("writing...");
-					try {
-						procThread.wait();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					TestUtil.writeFile(
-							new File("/home/lee/Desktop/streamedoutput.mat"),
-							strm.getCentroids());
-					this.notify();
+					return vec;
+				} catch (IOException e) {
+					return null;
 				}
 			}
+		};
 
+		Future<float[]> future = executor.submit(readTask);
+		try {
+			readFloat = future.get(5000, TimeUnit.MILLISECONDS);
+			if (readFloat != null) {
+				return readFloat;
+			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TimeoutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
-		Thread looper = new Thread(new GenLoop());
-		procThread.start();
-		looper.start();
 
-
+		return null;
 	}
+
 
 }

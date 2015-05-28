@@ -791,7 +791,7 @@ public class LeechMulti implements Decoder {
 		return ret;
 	}
 
-	public byte[] decode(float[] r) {
+	public long[] decode(float[] r) {
 		return new Leech(scaler).decode(r);
 	}
 
@@ -949,7 +949,7 @@ public class LeechMulti implements Decoder {
 		HashSet<Long> h = new HashSet<Long>();
 		// int k = 0;
 		float[] f = new float[24];
-		byte[] b;
+		long[] b;
 		long t;
 		int j;
 		Random r = new Random();

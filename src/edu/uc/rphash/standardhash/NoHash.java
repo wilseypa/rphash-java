@@ -8,11 +8,10 @@ public class NoHash implements HashAlgorithm {
 		this.mod = mod;
 	}
 	@Override
-	public long hash(byte[] s) {
+	public long hash(long[] s) {
 		long ret = s[0];
 		for(int i = 1;i<s.length;i++){
-			ret<<=8;
-			ret+=s[i];
+			ret^=s[i];
 		}
 		return ret%mod;
 	}

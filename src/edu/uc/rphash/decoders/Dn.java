@@ -91,9 +91,9 @@ public class Dn implements Decoder {
 	}
 
 	@Override
-	public byte[] decode(float[] f) {
+	public long[] decode(float[] f) {
 		float[] tmp = closestPoint(f);
-		byte[] tmpbyte = new byte[n];
+		long[] tmpbyte = new long[n];
 		for(int i = 0;i<n;i++)tmpbyte[i] = (byte)tmp[i];
 		return tmpbyte;
 
@@ -127,16 +127,18 @@ public class Dn implements Decoder {
 							* ((float) i / 1000f));
 				}
 
-				distavg += TestUtil.distance(p1, p2);
-				byte[] hp1 = sp.decode(p1);
-				byte[] hp2 = sp.decode(p2);
-				boolean test = true;
-				for (int k = 0; k < hp1.length && test == true; k++) {
-					if (hp1[k] != hp2[k])
-						test = false;
+				distavg+=TestUtil.distance(p1,p2);
+				long[] hp1 = sp.decode(TestUtil.normalize(p1));
+				long[] hp2 = sp.decode(TestUtil.normalize(p2));
+				boolean test = false;
+				for(int k = 0; k< hp1.length;k++)
+				{
+					if(hp1[k]==hp2[k]){
+						test=true;
+						
+					}
 				}
-				if (test)
-					ct++;
+				if(test)ct++;
 			}
 			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
 		}

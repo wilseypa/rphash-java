@@ -10,7 +10,6 @@ public class Spherical implements Decoder {
 	int HashBits = 64;
 	List<List<float[]>> vAll; // vAll[i][j] is the vector $A_i \tilde v_j$ from
 				// the article.
-	float variance;
 	int hbits; // Ceil(Log2(2*d)).
 	int d; // the dimension of the feature space.
 	int k; // number of elementary hash functions (h) to be concataneted to
@@ -22,11 +21,10 @@ public class Spherical implements Decoder {
 			// scanned linearly during query.
 	float distance = 0;
 
-	public Spherical(int d, int k, int L,float variance) {
+	public Spherical(int d, int k, int L) {
 		this.d = d;
 		this.k = k;
 		this.l = L;
-		this.variance = variance;
 		double nvertex = 2.0 * this.d;
 		this.hbits = (int) Math.ceil(Math.log(nvertex) / Math.log(2));
 		int kmax = (int) (HashBits / this.hbits);
@@ -61,31 +59,29 @@ public class Spherical implements Decoder {
 		return d;
 	}
 
+	public static final byte[] intToByteArray(int value) {
+	    return new byte[] {
+	            (byte)(value >>> 24),
+	            (byte)(value >>> 16),
+	            (byte)(value >>> 8),
+	            (byte)value};
+	}
 	@Override
-	public byte[] decode(float[] f) {
-		byte[] lg = new byte[this.l * 8];
-		int[] dec = Hash(f);
-		int ct = 0;
-		for (int d : dec) {
-			lg[ct++] = (byte) (d & 0xFF);
-			d >>>= 8;
-			lg[ct++] = (byte) (d & 0xFF);
-			d >>>= 8;
-			lg[ct++] = (byte) (d & 0xFF);
-			d >>>= 8;
-			lg[ct++] = (byte) (d & 0xFF);
-			d >>>= 8;
-			lg[ct++] = (byte) (d & 0xFF);
-			d >>>= 8;
-			lg[ct++] = (byte) (d & 0xFF);
-			d >>>= 8;
-			lg[ct++] = (byte) (d & 0xFF);
-			d >>>= 8;
-			lg[ct++] = (byte) (d & 0xFF);
-			d >>>= 8;
-		}
-
-		return lg;
+	public long[] decode(float[] f) {
+//		byte[] lg = new byte[this.l * 8];
+		long[] dec = Hash(TestUtil.normalize(f));
+//		int ct = 0;
+//		for (long d:dec) {
+//			lg[ct++] = (byte)(d >>> 56);
+//			lg[ct++] = (byte)(d >>> 48);
+//			lg[ct++] = (byte)(d >>> 40);
+//			lg[ct++] = (byte)(d >>> 32);
+//			lg[ct++] = (byte)(d >>> 24);
+//			lg[ct++] = (byte)(d >>> 16);
+//			lg[ct++] = (byte)(d >>> 8 );
+//			lg[ct++] = (byte)(d       );
+//		}
+		return dec;
 	}
 
 	@Override
@@ -99,8 +95,8 @@ public class Spherical implements Decoder {
 		return distance;
 	}
 
-	int argmaxi(float[] p, List<float[]> vs) {
-		int maxi = 0;
+	long argmaxi(float[] p, List<float[]> vs) {
+		long maxi = 0;
 		float max = 0;
 
 		for (int i = 0; i < this.d; i++) {
@@ -189,18 +185,16 @@ public class Spherical implements Decoder {
 	// is required to take the normalization into account.
 	//
 	// The complexity of this function is O(nL)
-	int[] Hash(float[] p) {
-		p = TestUtil.scale(p,variance);
-		p = TestUtil.normalize(p);
+	long[] Hash(float[] p) {
 		int ri = 0;
-		Integer h;
-		int[] g = new int[this.l];
+		long h;
+		long[] g = new long[this.l];
 		for (int i = 0; i < this.l; i++) {
 			g[i] = 0;
 			for (int j = 0; j < this.k; j++) {
 				List<float[]> vs = this.vAll.get(ri);
 				h = this.argmaxi(p, vs);
-				g[i] |= h << (this.hbits * j);
+				g[i] |= (h << (this.hbits * j));
 				ri++;
 			}
 		}
@@ -213,8 +207,8 @@ public class Spherical implements Decoder {
 		Random r = new Random();
 		int d = 64;
 		int K = 6; 
-		int L = 2;
-		Spherical sp = new Spherical(d,K,L,1);
+		int L = 4;
+		Spherical sp = new Spherical(d,K,L);
 		for(int i = 0; i<100;i++){
 			int ct = 0;
 			float distavg = 0.0f;
@@ -224,16 +218,19 @@ public class Spherical implements Decoder {
 				for(int k = 0;k<d;k++)
 				{
 					p1[k] = r.nextFloat()*2-1;
-					p2[k] = (float) (p1[k]+r.nextGaussian()*((float)i/1000f));
+					p2[k] = (float) (p1[k]+r.nextGaussian()*((float)i/100f));
 				}
 				
 				distavg+=TestUtil.distance(p1,p2);
-				int[] hp1 = sp.Hash(TestUtil.normalize(p1));
-				int[] hp2 = sp.Hash(TestUtil.normalize(p2));
-				boolean test = true;
-				for(int k = 0; k< hp1.length && test==true;k++)
+				long[] hp1 = sp.Hash(TestUtil.normalize(p1));
+				long[] hp2 = sp.Hash(TestUtil.normalize(p2));
+				boolean test = false;
+				for(int k = 0; k< hp1.length;k++)
 				{
-					if(hp1[k]!=hp2[k])test=false;
+					if(hp1[k]==hp2[k]){
+						test=true;
+						
+					}
 				}
 				if(test)ct++;
 			}

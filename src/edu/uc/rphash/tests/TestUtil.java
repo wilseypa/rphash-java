@@ -416,12 +416,16 @@ public class TestUtil {
 		return ravg;
 	}
 	
-	public static float[] normalize(float[] x){
+	public static float[] normalize(float[] x)
+	{
 		float length =0;
+
 		for(int i = 0; i<x.length;i++)length+=(x[i]*x[i]);
 		length = (float) Math.sqrt(length);
-		for(int i = 0; i<x.length;i++)x[i]/=length;
-		return x;
+		
+		float[] ret = new float[x.length];
+		for(int i = 0; i<x.length;i++)ret[i]=x[i]/length;
+		return ret;
 	}
 	public static double distance(double[] x, double[] y) {
 		if(x.length<1)return Double.MAX_VALUE;

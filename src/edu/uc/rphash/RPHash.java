@@ -127,7 +127,7 @@ public class RPHash {
 					o.setDecoderType(new PStableDistribution(variance));
 					break;
 				case "sphere": {
-					o.setDecoderType(new Spherical(32,6,3,variance));
+					o.setDecoderType(new Spherical(64,6,4));
 					break;
 				}
 				default: {

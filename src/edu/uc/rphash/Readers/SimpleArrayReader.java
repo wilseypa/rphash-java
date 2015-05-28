@@ -16,15 +16,15 @@ public class SimpleArrayReader implements RPHashObject {
 
 	public List<float[]> data;
 	// List<List<Float>> Xlist;
-	int n;
-	int dim;
+	final int n;
+	final int dim;
 	int numProjections;
 	int decoderMultiplier;
 	long randomSeed;
 	long hashmod;
-	int k;
+	final int k;
 	int numBlur;
-	Decoder dec;
+	 Decoder dec;
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -49,13 +49,15 @@ public class SimpleArrayReader implements RPHashObject {
 //			r.id = new HashSet<Long>();
 //			data.add(r);
 //		}
-		this.dec = null;
+
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
 		this.randomSeed = System.currentTimeMillis();
 		this.hashmod = Long.MAX_VALUE;
 		this.decoderMultiplier = 1;
+		Decoder inner = new Leech();
+		this.dec = new MultiDecoder(decoderMultiplier, inner);
 		this.numProjections = 4;
 		this.centroids = new ArrayList<float[]>();
 		this.numBlur = 2;
@@ -76,13 +78,15 @@ public class SimpleArrayReader implements RPHashObject {
 //			data.add(r);
 //		}
 
+
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
 		this.randomSeed = System.currentTimeMillis();
 		this.hashmod = Long.MAX_VALUE;
-		this.dec = null;
 		this.decoderMultiplier = 1;
+		Decoder inner = new Leech();
+		this.dec = new MultiDecoder(decoderMultiplier, inner);
 		this.numProjections = 4;
 		this.centroids = new ArrayList<float[]>();
 		this.numBlur = blur;
