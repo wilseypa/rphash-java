@@ -161,7 +161,7 @@ print(paste0('EM Kappa Statistic: ', kappa_em), quote = FALSE)
 rphash_Strm <- read.csv('RPHash_Strm_Outputs.csv')
 print("Streaming RPHash output:", quote = FALSE)
 
-t_rpStrm <- rphash_Strm$Runtime
+t_rpStrm <- rphash_Strm$Runtime[1:n]
 ARI_rpStrm <- vector()
 accuracy_rpStrm <- vector()
 kappa_rpStrm <- vector()
@@ -208,7 +208,7 @@ print(paste0('Streaming RPHash Kappa Statistic with 95% CI : ', a_rpStrm_kappa, 
 rphash_2Pass <- read.csv('RPHash_2Pass_Outputs.csv')
 print("2-Pass RPHash output:", quote = FALSE)
 
-t_rp2Pass <- rphash_2Pass$Runtime
+t_rp2Pass <- rphash_2Pass$Runtime[1:n]
 ARI_rp2Pass <- vector()
 accuracy_rp2Pass <- vector()
 kappa_rp2Pass <- vector()
