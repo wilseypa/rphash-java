@@ -52,7 +52,6 @@ public class RPHash {
 		int k = Integer.parseInt(args[1]);
 		String outputFile = args[2];
 		if (args.length == 3) {
-
 			RPHashSimple clusterer = new RPHashSimple(data, k);
 			TestUtil.writeFile(new File(outputFile + "."
 					+ clusterer.getClass().getName()), clusterer.getCentroids());
@@ -127,7 +126,7 @@ public class RPHash {
 					o.setDecoderType(new PStableDistribution(variance));
 					break;
 				case "sphere": {
-					o.setDecoderType(new Spherical(32,6,3,variance));
+					o.setDecoderType(new Spherical(64,6,4));
 					break;
 				}
 				default: {

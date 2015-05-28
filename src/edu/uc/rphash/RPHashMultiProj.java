@@ -13,6 +13,7 @@ import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.E8;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
+import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
 import edu.uc.rphash.frequentItemSet.StickyWrapper;
@@ -63,10 +64,6 @@ public class RPHashMultiProj implements Clusterer {
 		// create our LSH Device
 		LSH[] lshfuncs = new LSH[probes];
 		Decoder dec = so.getDecoderType();
-		if(dec==null){
-			Decoder inner = new Leech(variance);
-			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
-		}
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		
 		//create projection matrices add to LSH Device
@@ -118,10 +115,6 @@ public class RPHashMultiProj implements Clusterer {
 		//create same LSH Device as before
 		LSH[] lshfuncs = new LSH[probes];
 		Decoder dec = so.getDecoderType();
-		if(dec==null){
-			Decoder inner = new Leech(variance);
-			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
-		}
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		
 		//create same projection matrices as before
@@ -130,10 +123,6 @@ public class RPHashMultiProj implements Clusterer {
 					dec.getDimensionality(), r.nextLong());
 			lshfuncs[i] = new LSH(dec, p, hal);
 		}
-
-
-		if (blurValue == 0)
-			blurValue = (int) Math.log(so.getdim() / dec.getDimensionality());
 		
 		while (vecs.hasNext()) {
 			float[] vec = vecs.next();
@@ -162,18 +151,22 @@ public class RPHashMultiProj implements Clusterer {
 
 	public RPHashMultiProj(List<float[]> data, int k) {
 		variance = StatTests.varianceSample(data, .01f);
-		so = new SimpleArrayReader(data, k, 0, 2, 3);
+		so = new SimpleArrayReader(data, k);
+		so.setDecoderType(new Spherical(64,6,4));
+		so.getDecoderType().setVariance(variance);
 	}
 
 	public RPHashMultiProj(List<float[]> data, int k, int numProjections) {
 		variance = StatTests.varianceSample(data, .01f);
-		so = new SimpleArrayReader(data, k, 0, 2, numProjections);
+		so.getDecoderType().setVariance(variance);
+		so = new SimpleArrayReader(data, k, 1, 2, numProjections);
 	}
 
 	public RPHashMultiProj(List<float[]> data, int k, int decmult,
 			int numProjections) {
 		variance = StatTests.varianceSample(data, .01f);
-		so = new SimpleArrayReader(data, k, 0, decmult, numProjections);
+		so.getDecoderType().setVariance(variance);
+		so = new SimpleArrayReader(data, k, 1, decmult, numProjections);
 	}
 
 	public RPHashMultiProj(RPHashObject so) {
@@ -204,12 +197,12 @@ public class RPHashMultiProj implements Clusterer {
 
 	public static void main(String[] args) {
 		int k = 10;
-		int d = 1000;
-		int n = 10000;
+		int d = 100;
+		int n = 1000;
 		float var = .3f;
-		for (float f = var; f < 1.0; f += .01f) {
-			for (int i = 0; i < 5; i++) {
-				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
+		for (float f = var; f < 4.1; f += .2f) {
+			for (int i = 0; i < 1; i++) {
+				GenerateData gen = new GenerateData(k, n / k, d, f);
 				RPHashMultiProj rphit = new RPHashMultiProj(gen.data(), k);
 
 				long startTime = System.nanoTime();

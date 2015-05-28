@@ -38,16 +38,11 @@ public class RPHashSimple implements Clusterer {
 			return so;
 		
 		Decoder dec = so.getDecoderType();
-		if(dec==null){
-			Decoder inner = new Leech(variance);
-			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
-		}
-		
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
 		LSH lshfunc = new LSH(dec, p, hal);
 		long hash;
-		int k = (int) (so.getk());
+		int k = (int) (so.getk()*Math.log(so.getk()));
 
 		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
 		// add to frequent itemset the hashed Decoded randomly projected vector
@@ -77,18 +72,12 @@ public class RPHashSimple implements Clusterer {
 		
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		Decoder dec = so.getDecoderType();
-		if(dec==null){
-			Decoder inner = new Leech(variance);
-			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
-		}
 		
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
 		LSH lshfunc = new LSH(dec, p, hal);
 		long hash[];
 		
-		if(blurValue==0)blurValue = (int) Math.log(so.getdim()/dec.getDimensionality());
-		// make a set of k default centroid objects
 		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
 		for (long id : so.getPreviousTopID())
 			centroids.add(new Centroid(so.getdim(), id));
@@ -135,14 +124,14 @@ public class RPHashSimple implements Clusterer {
 		this.so=so;
 		if (centroids == null)
 			run();
-		return centroids;
+		return new Kmeans(so.getk(),centroids).getCentroids();
 	}
 
 	@Override
 	public List<float[]> getCentroids() {
 		if (centroids == null)
 			run();
-		return centroids;
+		return new Kmeans(so.getk(),centroids).getCentroids();
 	}
 
 	private void run() {

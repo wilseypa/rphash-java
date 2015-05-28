@@ -9,9 +9,20 @@ public class FNVHash implements HashAlgorithm {
 	}
 	
 	@Override
-	public long hash(byte[] s) {
-		
-		return fnvHash(s)%tablesize;
+	public long hash(long[] s) {
+		byte[] s2 = new byte[s.length*8];
+		int ct = 0;
+		for (long d:s) {
+			s2[ct++] = (byte)(d >>> 56);
+			s2[ct++] = (byte)(d >>> 48);
+			s2[ct++] = (byte)(d >>> 40);
+			s2[ct++] = (byte)(d >>> 32);
+			s2[ct++] = (byte)(d >>> 24);
+			s2[ct++] = (byte)(d >>> 16);
+			s2[ct++] = (byte)(d >>> 8 );
+			s2[ct++] = (byte)(d       );
+		}
+		return fnvHash(s2)%tablesize;
 		
 	}
 	

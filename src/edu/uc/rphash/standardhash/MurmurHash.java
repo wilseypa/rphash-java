@@ -11,8 +11,26 @@ public class MurmurHash implements HashAlgorithm {
 	
 	
 	@Override			
-	  public long hash(byte[] data) {
-		    int m = 0x5bd1e995;
+	  public long hash(long[] data1) {
+		    
+			byte[] data = new byte[data1.length*8];
+			int ct = 0;
+			for (long d:data1) {
+				data[ct++] = (byte)(d >>> 56);
+				data[ct++] = (byte)(d >>> 48);
+				data[ct++] = (byte)(d >>> 40);
+				data[ct++] = (byte)(d >>> 32);
+				data[ct++] = (byte)(d >>> 24);
+				data[ct++] = (byte)(d >>> 16);
+				data[ct++] = (byte)(d >>> 8 );
+				data[ct++] = (byte)(d       );
+			}
+		
+		
+		
+		
+		
+			int m = 0x5bd1e995;
 		    int r = 24;
 
 		    int h = seed ^ data.length;

@@ -178,13 +178,13 @@ public class E8 implements Decoder {
 	 * @param r
 	 * @return
 	 */
-	public byte[] decode(float[] f) {
+	public long[] decode(float[] f) {
 		float[] tmp = new float[8];
 		float sclr = 1f/variance;
 		for (int i = 0; i < 8; i++)
 			tmp[i] = f[i]*sclr;
 		tmp = closestPoint(tmp);
-		byte[] tmp2 = new byte[8];
+		long[] tmp2 = new long[8];
 		for (int i = 0; i < 8; i++)
 			tmp2[i] = (byte) ((2 + tmp[i]*sclr) * 2);
 
@@ -239,18 +239,26 @@ public class E8 implements Decoder {
 							* ((float) i / 200f));
 				}
 
-				distavg += TestUtil.distance(p1, p2);
-				byte[] hp1 = sp.decode(p1);
-				byte[] hp2 = sp.decode(p2);
-				boolean test = true;
-				for (int k = 0; k < hp1.length && test == true; k++) {
-					if (hp1[k] != hp2[k])
-						test = false;
+				distavg+=TestUtil.distance(p1,p2);
+				long[] hp1 = sp.decode(TestUtil.normalize(p1));
+				long[] hp2 = sp.decode(TestUtil.normalize(p2));
+				boolean test = false;
+				for(int k = 0; k< hp1.length;k++)
+				{
+					if(hp1[k]==hp2[k]){
+						test=true;
+						
+					}
 				}
-				if (test)
-					ct++;
+				if(test)ct++;
 			}
 			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
 		}
+	}
+
+	@Override
+	public void setVariance(Float parameterObject) {
+		// TODO Auto-generated method stub
+		
 	}
 }

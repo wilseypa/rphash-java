@@ -791,7 +791,7 @@ public class LeechMulti implements Decoder {
 		return ret;
 	}
 
-	public byte[] decode(float[] r) {
+	public long[] decode(float[] r) {
 		return new Leech(scaler).decode(r);
 	}
 
@@ -949,7 +949,7 @@ public class LeechMulti implements Decoder {
 		HashSet<Long> h = new HashSet<Long>();
 		// int k = 0;
 		float[] f = new float[24];
-		byte[] b;
+		long[] b;
 		long t;
 		int j;
 		Random r = new Random();
@@ -994,6 +994,31 @@ public class LeechMulti implements Decoder {
 		float tmp2 = Math.min(distance[0], distance[1]);
 		
 		return Math.min(tmp, tmp2);
+	}
+
+	@Override
+	public void setVariance(Float parameterObject) {
+
+		scaler = parameterObject;
+		radius = (DPT + CPT) * scaler;
+		APT = (float) (this.APT * scaler);
+		BPT = (float) (this.BPT * scaler);
+		CPT = (float) (this.CPT * scaler);
+		DPT = (float) (this.DPT * scaler);
+
+		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
+				{ APT, BPT } };
+		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
+				{ DPT, CPT } };
+		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
+				{ BPT, BPT } };
+		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
+				{ APT, CPT } };
+		this.evenAPts = evenAPts;
+		this.oddAPts = oddAPts;
+		this.evenBPts = evenBPts;
+		this.oddBPts = oddBPts;
+		
 	}
 
 }

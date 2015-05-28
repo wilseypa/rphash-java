@@ -234,9 +234,29 @@ public class Leech implements Decoder {
 		this.oddAPts = oddAPts;
 		this.evenBPts = evenBPts;
 		this.oddBPts = oddBPts;
-		// RotateLattice90();
 		radius = DPT + CPT;
-
+	}
+	
+	public void setScaler(float scaler){
+		this.scaler = scaler;
+		APT = (float) (this.APT * scaler);
+		BPT = (float) (this.BPT * scaler);
+		CPT = (float) (this.CPT * scaler);
+		DPT = (float) (this.DPT * scaler);
+		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
+				{ APT, BPT } };
+		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
+				{ DPT, CPT } };
+		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
+				{ BPT, BPT } };
+		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
+				{ APT, CPT } };
+		this.evenAPts = evenAPts;
+		this.oddAPts = oddAPts;
+		this.evenBPts = evenBPts;
+		this.oddBPts = oddBPts;
+		radius = DPT + CPT;
+		
 	}
 
 	/*
@@ -787,40 +807,39 @@ public class Leech implements Decoder {
 		return weight + least;
 	}
 
-	byte[] convertbin(char[] cw, char[] cp, byte[] quantization) {
+	long[] convertbin(char[] cw, char[] cp, byte[] quant) {
 		// unsigned long leastCodeword;
 		// unsigned char* leastCodeword = malloc(24*sizeof(unsigned char));
 		// unsigned char leastCodeword[24];
 
-		byte[] retOpt;
-		if (quantization != null) {
-			retOpt = new byte[8];
-			// retOpt = new byte[quantization.length];
-			// for(int i =0;i<quantization.length;i++)
-			// retOpt[i] = quantization[i];
-			// generate a unique quantization hash identifier.
-			// retOpt[5] =
-			// (byte)(quantization[0]^quantization[1]^quantization[2]^quantization[3]^
-			// quantization[4]^quantization[5]^quantization[6]^quantization[7]);//(byte)(quantization);
-			// retOpt[6] =
-			// (byte)(quantization[8]^quantization[9]^quantization[10]^quantization[11]^
-			// quantization[12]^quantization[13]^quantization[14]^quantization[15]);
-			// //(byte)(quantization>>>8);
-			// retOpt[7] =
-			// (byte)(quantization[16]^quantization[17]^quantization[18]^quantization[19]^
-			// quantization[20]^quantization[21]^quantization[22]^quantization[23]);//(byte)(quantization>>>16);
-		} else
-			retOpt = new byte[5];
+		long[] retOpt;
 
-		retOpt[0] = (byte) (cw[0] + (cw[1] << 1) + (cw[2] << 2) + (cw[3] << 3)
-				+ (cw[4] << 4) + (cw[5] << 5) + (cw[6] << 6) + (cw[7] << 7));
-		retOpt[1] = (byte) (cw[8] + (cw[9] << 1) + (cw[10] << 2)
-				+ (cw[11] << 3) + (cw[12] << 4) + (cw[13] << 5) + (cw[14] << 6) + (cw[15] << 7));
-		retOpt[2] = (byte) (cw[16] + (cw[17] << 1) + (cw[18] << 2)
-				+ (cw[19] << 3) + (cw[20] << 4) + (cw[21] << 5) + (cw[22] << 6) + (cw[23] << 7));
-		retOpt[3] = (byte) (cp[0] + (cp[1] << 1) + (cp[2] << 2) + (cp[3] << 3)
-				+ (cp[4] << 4) + (cp[5] << 5) + (cp[6] << 6) + (cp[7] << 7));
-		retOpt[4] = (byte) (cp[8] + (cp[9] << 1) + (cp[10] << 2) + (cp[11] << 3));
+			retOpt = new long[1];
+			retOpt[0]=0;
+		    for(int i =0;i<24;i++){
+		    	retOpt[0]+=cw[i];
+		    	retOpt[0]<<=1;
+
+		    }
+		    for(int i =0;i<12;i++){
+		    	retOpt[0]+=cp[i];
+		    	retOpt[0]<<=1;
+		    }
+		    if(quant!=null)//use remaining 64-36 = 8 bits for a quantization vector
+		    for(int i =0;i<8;i++){
+		    	retOpt[0]^=quant[i];
+		    }
+		    
+//		retOpt[0] = (byte) (cw[0] + (cw[1] << 1) + (cw[2] << 2) + (cw[3] << 3)
+//				+ (cw[4] << 4) + (cw[5] << 5) + (cw[6] << 6) + (cw[7] << 7));
+//		retOpt[1] = (byte) (cw[8] + (cw[9] << 1) + (cw[10] << 2)
+//				+ (cw[11] << 3) + (cw[12] << 4) + (cw[13] << 5) + (cw[14] << 6) + (cw[15] << 7));
+//		retOpt[2] = (byte) (cw[16] + (cw[17] << 1) + (cw[18] << 2)
+//				+ (cw[19] << 3) + (cw[20] << 4) + (cw[21] << 5) + (cw[22] << 6) + (cw[23] << 7));
+//		retOpt[3] = (byte) (cp[0] + (cp[1] << 1) + (cp[2] << 2) + (cp[3] << 3)
+//				+ (cp[4] << 4) + (cp[5] << 5) + (cp[6] << 6) + (cp[7] << 7));
+//		retOpt[4] = (byte) (cp[8] + (cp[9] << 1) + (cp[10] << 2) + (cp[11] << 3));
+
 		return retOpt;
 	}
 
@@ -878,7 +897,8 @@ public class Leech implements Decoder {
 	// near 0 mean
 	// unsigned char* decode(float r[12][2], float *distance){
 	// unsigned long long decodeLeech(float *r,float *distance)
-	public byte[] decode(float[] r) {
+	public long[] decode(float[] r) {
+		//r = TestUtil.normalize(r);
 		// #####################QAM Dijks ###################
 		float[][] dijs = new float[12][4];
 		float[][] dijks = new float[12][4];
@@ -916,7 +936,7 @@ public class Leech implements Decoder {
 
 		// int winner = 0;
 		float leastweight;
-		byte[] retOpt;
+		long[] retOpt;
 
 		weight = hparity(weight, y, prefRepE, dijs, 0, cw);// byref
 
@@ -989,8 +1009,6 @@ public class Leech implements Decoder {
 	public static void main(String[] args) {
 		Random r = new Random();
 		int d = 24;
-		int K = 6;
-		int L = 2;
 		Leech sp = new Leech();
 		for (int i = 0; i < 100; i++) {
 			int ct = 0;
@@ -1001,19 +1019,12 @@ public class Leech implements Decoder {
 				for (int k = 0; k < d; k++) {
 					p1[k] = r.nextFloat() * 2 - 1;
 					p2[k] = (float) (p1[k] + r.nextGaussian()
-							* ((float) i / 1000f));
+							* ((float) i / 100f));
 				}
-
-				distavg += TestUtil.distance(p1, p2);
-				byte[] hp1 = sp.decode(p1);
-				byte[] hp2 = sp.decode(p2);
-				boolean test = true;
-				for (int k = 0; k < hp1.length && test == true; k++) {
-					if (hp1[k] != hp2[k])
-						test = false;
-				}
-				if (test)
-					ct++;
+				distavg+=TestUtil.distance(p1,p2);
+				long[] hp1 = sp.decode(p1);
+				long[] hp2 = sp.decode(p2);
+				if(hp1[0]==hp2[0])ct++;
 			}
 			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
 		}
@@ -1066,4 +1077,28 @@ public class Leech implements Decoder {
 	// }
 	//
 	// }
+
+	@Override
+	public void setVariance(Float parameterObject) {
+		scaler = parameterObject;
+		radius = (DPT + CPT) * scaler;
+		APT = (float) (this.APT * scaler);
+		BPT = (float) (this.BPT * scaler);
+		CPT = (float) (this.CPT * scaler);
+		DPT = (float) (this.DPT * scaler);
+
+		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
+				{ APT, BPT } };
+		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
+				{ DPT, CPT } };
+		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
+				{ BPT, BPT } };
+		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
+				{ APT, CPT } };
+		this.evenAPts = evenAPts;
+		this.oddAPts = oddAPts;
+		this.evenBPts = evenBPts;
+		this.oddBPts = oddBPts;
+		
+	}
 }

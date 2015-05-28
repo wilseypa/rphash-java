@@ -44,10 +44,10 @@ public class PStableDistribution implements Decoder {
 	}
 
 	@Override
-	public byte[] decode(float[] f) {
+	public long[] decode(float[] f) {
 		int byteindex = 0;
 		byte curbyte = 0;
-		byte[] ret = new byte[(int) Math.ceil(k * m / 8)];
+		long[] ret = new long[(int) Math.ceil(k * m )];
 		int bytes = 0;
 		for (int i = 0; i < m; i++) {
 			for (int j = 0; j < k; j++) {
@@ -96,18 +96,26 @@ public class PStableDistribution implements Decoder {
 							* ((float) i / 1000f));
 				}
 
-				distavg += TestUtil.distance(p1, p2);
-				byte[] hp1 = sp.decode(p1);
-				byte[] hp2 = sp.decode(p2);
-				boolean test = true;
-				for (int k = 0; k < hp1.length && test == true; k++) {
-					if (hp1[k] != hp2[k])
-						test = false;
+				distavg+=TestUtil.distance(p1,p2);
+				long[] hp1 = sp.decode(TestUtil.normalize(p1));
+				long[] hp2 = sp.decode(TestUtil.normalize(p2));
+				boolean test = false;
+				for(int k = 0; k< hp1.length;k++)
+				{
+					if(hp1[k]==hp2[k]){
+						test=true;
+						
+					}
 				}
-				if (test)
-					ct++;
+				if(test)ct++;
 			}
 			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
 		}
+	}
+
+	@Override
+	public void setVariance(Float parameterObject) {
+		// TODO Auto-generated method stub
+		
 	}
 }

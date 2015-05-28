@@ -136,7 +136,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 				pqfull = (p.size() == this.k);
 			} else {
 
-				if (count > p.peek().count) {
+				if (p.peek()!=null && count > p.peek().count) {
 					items.remove(p.poll().item.hashCode());
 					items.put(e.hashCode(), newt);
 					p.add(newt);

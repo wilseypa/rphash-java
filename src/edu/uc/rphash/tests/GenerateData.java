@@ -18,6 +18,7 @@ public class GenerateData
 	Random r;
 	List<float[]>  data;
 	List<float[]> medoids;
+	List<float[]>  variances;
 	List<Integer> reps;
 	float scaler;
 	boolean shuffle;
@@ -217,7 +218,7 @@ public class GenerateData
 		}
 	}
 	
-	private void generateMem()
+	public void generateMem()
 	{
 		this.data = new ArrayList<float[]>();//new float[numClusters*numVectorsPerCluster][dimension];
 		this.medoids = new ArrayList<float[]>();//new float[numClusters][dimension];
@@ -296,7 +297,7 @@ public class GenerateData
 	
 
 	
-	private void generateDisk(File f)
+	public void generateDisk(File f)
 	{
 		try{
 			BufferedWriter bf = new BufferedWriter(new FileWriter(f));
