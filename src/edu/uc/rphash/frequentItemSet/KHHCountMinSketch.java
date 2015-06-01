@@ -28,16 +28,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 //	min sort		return (int) ( ((Tuple) o).count-this.count );
 		}
 
-		@SuppressWarnings("unchecked")
-		@Override
-		public boolean equals(Object obj) {
-			return item.hashCode() == ((Tuple) obj).item.hashCode();
-		}
 
-		@Override
-		public int hashCode() {
-			return item.hashCode();
-		}
 
 	}
 
@@ -120,22 +111,38 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 
 	@Override
 	public boolean add(E e) {
-
-		long count = addLong(e.hashCode(), 1);
-		Tuple t = items.get(e.hashCode());
+		Tuple t = null;
+		Long count = null;
+		
+		if (e instanceof Centroid){
+			Centroid c = (Centroid)e;			
+			for(Long l: c.ids)
+			{
+				t = items.get(l);
+				count = addLong(l, 1);
+				if(t!=null){
+					break;
+				}
+			}
+		}
+		else{//normal stuff
+			count = (long) addLong(e.hashCode(), 1);
+			t = items.get(e.hashCode());
+		}
 
 		if (t != null) {// update current in list item
-			t.count++;
 			if (e instanceof Centroid)
-				((Centroid) t.item).updateVec(((Centroid) t.item).centroid());
-		} else {
+				((Centroid) t.item).updateVec(((Centroid) e).centroid());
+			t.count+=1;
+		} 
+		else {
+			count = 1L;
 			Tuple newt = new Tuple(e, count);
 			if (!pqfull) {
 				items.put(e.hashCode(), newt);
 				p.add(newt);
 				pqfull = (p.size() == this.k);
 			} else {
-
 				if (p.peek()!=null && count > p.peek().count) {
 					items.remove(p.poll().item.hashCode());
 					items.put(e.hashCode(), newt);
@@ -145,14 +152,37 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		}
 		return false;
 	}
+	
+//	much slower, former does better book keeping
+//	@Override
+//	public boolean add(E e) {
+//		long count = addLong(e.hashCode(), 1);
+//		
+//		if(itemMap.containsKey(e.hashCode())){//faster to check first before removing
+//			E item = itemMap.get(e.hashCode());
+//			if(e instanceof Centroid && item instanceof Centroid)
+//				((Centroid)item).updateVec(((Centroid)e).centroid());
+//			p.remove(new Tuple(e.hashCode(),count));
+//			p.add(new Tuple(e.hashCode(),count));
+//			return true;
+//		}
+//		//new object
+//		p.add(new Tuple(e.hashCode(),count));
+//		itemMap.put(e.hashCode(),e);
+//		//System.out.println(itemMap);
+//		if (itemMap.size() > this.k)
+//			itemMap.remove(p.poll().itemhash);
+//		
+//		return true;
+//	}
 
 	public static void main(String[] t) {
 		Random r = new Random();
-		KHHCountMinSketch<Integer> khh = new KHHCountMinSketch<>(50);
+		KHHCountMinSketch<Integer> khh = new KHHCountMinSketch<>(10);
 		// CountMinSketchAlt<Integer> scounter = new
 		// CountMinSketchAlt<>(.00001,.995,101223);
 		long ts = System.currentTimeMillis();
-		for (long i = 1; i < 10000000; i++) {
+		for (long i = 1; i < 5000000; i++) {
 			khh.add(r.nextInt((int) i) / 100);
 			// scounter.add( r.nextInt((int)i)/100);
 		}
@@ -172,14 +202,14 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		return ((int) hash) % width;
 	}
 
-	private int addLong(long item, long count) {
-		table[0][hash((Long) item, 0)] += count;
-		int min = (int) table[0][hash((Long) item, 0)];
+	private long addLong(long item, long count) {
+		table[0][hash( item, 0)] += count;
+		int min = (int) table[0][hash( item, 0)];
+		
 		for (int i = 1; i < depth; ++i) {
-
-			table[i][hash((Long) item, i)] += count;
-			if (table[i][hash((Long) item, i)] < min)
-				min = (int) table[i][hash((Long) item, i)];
+			table[i][hash( item, i)] += count;
+			if (table[i][hash( item, i)] < min)
+				min = (int) table[i][hash( item, i)];
 		}
 		size += count;
 		return min;

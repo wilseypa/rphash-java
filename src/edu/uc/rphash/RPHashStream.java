@@ -30,11 +30,11 @@ public class RPHashStream implements Clusterer, Runnable {
 	//TODO update variance over time
 	float variance;
 	KHHCountMinSketch<Centroid> is;
-	boolean threadRunning = false;
+
 
 	public RPHashObject processStream() {
 		
-		threadRunning = true;
+	
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
@@ -61,16 +61,16 @@ public class RPHashStream implements Clusterer, Runnable {
 		}
 
 		while (vecs.hasNext()) {
-			is.add(new Centroid(r.nextLong(),vecs.next()));
-			float[] vec = vecs.next();
+			Centroid c = new Centroid(vecs.next());
+			float[] vec = c.centroid();
 
 			for (int i = 0; i < projections; i++) {
 				hash = lshfuncs[i].lshHashRadius(vec,so.getNumBlur());
 				for(long h : hash)
-					is.add(new Centroid(h,vec));			
+					c.addID(h);		
 			}
+			is.add(c);
 		}
-		
 		return so;
 	}
 
@@ -120,8 +120,11 @@ public class RPHashStream implements Clusterer, Runnable {
 	}
 
 	public void run() {
-		if(!threadRunning)//start processing
 			so = processStream();
+	}
+	
+	public List<Long> getTopIdSizes(){
+		return is.getCounts();
 	}
 
 	public static void main(String[] args) {

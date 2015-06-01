@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,48 +15,39 @@ import java.util.concurrent.Executors;
 import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.Readers.StreamObject;
 
-public class GenerateStreamData extends GenerateData implements Runnable {
+public class GenerateStreamData implements Runnable {
 
-	public GenerateStreamData(int numClusters, int dimension) {
-		super(numClusters, 0, dimension);
-	}
-
-	public GenerateStreamData(int numClusters, int dimension, boolean shuffle) {
-		super(numClusters, 0, dimension, shuffle);
-	}
-
+	RandomDistributionFnc genfnc;
+	int numClusters;
+	int numVectorsPerCluster;
+	int dimension;
+	Random r;
+	List<float[]>  data;
+	List<float[]> medoids;
+	List<float[]>  variances;
+	List<Integer> reps;
+	float scaler;
+	boolean shuffle;
+	float sparseness;
+	
 	public GenerateStreamData(int numClusters, int dimension, float variance) {
-		super(numClusters, 0, dimension, variance);
+		this.r = new Random();
+		this.numClusters =numClusters;
+		this.dimension=dimension;
+		this.shuffle = true;
+		this.medoids = null;
+		this.data = null;
+		this.reps = null;
+		this.scaler = 1f/(variance*(float)Math.sqrt(dimension));//normalize dimension
+		this.sparseness = 1.0f;
+		this.init();
 	}
 
-	public GenerateStreamData(int numClusters, int dimension, float variance,
-			boolean shuffle) {
-		super(numClusters, 0, dimension, variance, shuffle);
-	}
 
-	public GenerateStreamData(int numClusters, int dimension, float variance,
-			boolean shuffle, float sparseness) {
-		super(numClusters, 0, dimension, variance, shuffle, sparseness);
-	}
-
-	public GenerateStreamData(int numClusters, int dimension,
-			RandomDistributionFnc genvariate) {
-		super(numClusters, 0, dimension);
-	}
-
-	public GenerateStreamData(int numClusters, int dimension, File f) {
-		super(numClusters, 0, dimension, f);
-	}
-
-	public GenerateStreamData(int numClusters, int dimension, File f,
-			RandomDistributionFnc genvariate) {
-		super(numClusters, 0, dimension, f, genvariate);
-	}
 
 	PipedOutputStream outputStream;
 
-	@Override
-	public void generateMem() {
+	public void init() {
 		outputStream = new PipedOutputStream();
 		medoids = new ArrayList<float[]>(numClusters);
 		variances = new ArrayList<float[]>(numClusters);
@@ -79,11 +72,7 @@ public class GenerateStreamData extends GenerateData implements Runnable {
 		return outputStream;
 	}
 
-	@Override
-	public void generateDisk(File f) {
-		System.out.println("Just pipe the data to a file");
-		return;
-	}
+
 
 	volatile long pause = 0;
 	@Override
@@ -120,11 +109,19 @@ public class GenerateStreamData extends GenerateData implements Runnable {
 			ExecutionException, IOException {
 		ExecutorService executor = Executors.newFixedThreadPool(3);
 		
-		final GenerateStreamData b = new GenerateStreamData(10, 10000);
+		final GenerateStreamData b = new GenerateStreamData(10, 10000,1f);
+		System.out.println("Centroids");
 		for(float[] f:b.medoids){
 			TestUtil.prettyPrint(f);
 			System.out.println();
 		}
+		
+		System.out.println("Variances");
+		for(float[] f:b.variances){
+			TestUtil.prettyPrint(f);
+			System.out.println();
+		}
+		
 		StreamObject obj = new StreamObject(b.outputStream, b.numClusters,
 				b.dimension, executor);
 		executor.submit(b);
@@ -138,15 +135,16 @@ public class GenerateStreamData extends GenerateData implements Runnable {
     	while(true)
 		{
 			try {
-				Thread.sleep(100000);
+				Thread.sleep(10000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			b.pause = 1000;
 			for(float[] l : rps.getCentroids()){
-				System.out.println();
 				TestUtil.prettyPrint(l);
+				System.out.println();
 			}
+			
 			b.pause = 0;
 		}
 	}
