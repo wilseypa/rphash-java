@@ -23,7 +23,7 @@ import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
 
 public class RPHash {
 
-	static String[] rphashes = { "simple", "streaming", "3stage", "multiProj", "consensus",
+	static String[] rphashes = { "simple", "streaming", "3stage", "multiproj", "consensus",
 			"redux", "kmeans", "pkmeans","kmeansplusplus" };
 	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
 			"NumBlur", "RandomSeed", "Hashmod", "DecoderType" };
@@ -138,7 +138,7 @@ public class RPHash {
 		}
 
 		while (i < untaggedArgs.size()) {
-			switch (untaggedArgs.get(i)) {
+			switch (untaggedArgs.get(i).toLowerCase()) {
 				case "simple":
 					runitems.add(new RPHashSimple(o));
 					break;
@@ -151,7 +151,7 @@ public class RPHash {
 				case "concensus":
 					runitems.add(new RPHashConsensusRP(o));
 					break;
-				case "multiProj":
+				case "multiproj":
 					runitems.add(new RPHashMultiProj(o));
 					break;
 				case "redux":

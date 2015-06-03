@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.streaminer.stream.frequency.SimpleTopKCounting;
+
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.RPVector;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -16,6 +18,7 @@ import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
+import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.frequentItemSet.StickyWrapper;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
@@ -45,10 +48,6 @@ public class RPHashMultiProj implements Clusterer {
 	float variance;
 
 	public RPHashObject map() {
-
-
-		
-
 		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
@@ -59,7 +58,7 @@ public class RPHashMultiProj implements Clusterer {
 		Random r = new Random(so.getRandomSeed());
 		
 		//initialize our counter
-		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
+		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
 		
 		// create our LSH Device
 		LSH[] lshfuncs = new LSH[probes];
