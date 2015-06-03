@@ -17,7 +17,6 @@ public class Centroid {
 
 	Centroid(int dim, long id) {
 		this.vec = new float[dim];
-
 		this.count = 0;
 		this.id = id;
 		this.ids = new HashSet<Long>();
@@ -28,17 +27,15 @@ public class Centroid {
 
 	}
 
-	public Centroid(long h, float[] data) {
+	public Centroid(float[] data) {
 		this.vec=data;
-		this.id = h;
 		this.ids = new HashSet<Long>();
-		ids.add(id);
 	}
+	
 
 	private void updateVariance(float[] data) {
 		float delta;
 		count++;
-
 		for (int i = 0; i < data.length; i++) {
 			float x = data[i];
 			delta = x - vec[i];
@@ -73,12 +70,12 @@ public class Centroid {
 		return (int) id;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Centroid)
-			return ((Centroid) obj).id == id;
-		return false;
-	}
+//	@Override
+//	public boolean equals(Object obj) {
+//		if (obj instanceof Centroid)
+//			return ((Centroid) obj).id == id;
+//		return false;
+//	}
 
 	public void addID(long h) {
 		ids.add(h);

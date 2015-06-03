@@ -22,9 +22,9 @@ public class Spherical implements Decoder {
 	float distance = 0;
 
 	public Spherical(int d, int k, int L) {
-		this.d = d;
-		this.k = k;
-		this.l = L;
+		this.d = d;//number of dimensions
+		this.k = k;//number of elementary hash functions
+		this.l = L;//number of copies to search
 		double nvertex = 2.0 * this.d;
 		this.hbits = (int) Math.ceil(Math.log(nvertex) / Math.log(2));
 		int kmax = (int) (HashBits / this.hbits);

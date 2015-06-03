@@ -138,7 +138,7 @@ public class RPHash {
 		}
 
 		while (i < untaggedArgs.size()) {
-			switch (untaggedArgs.get(i)) {
+			switch (untaggedArgs.get(i).toLowerCase()) {
 				case "simple":
 					runitems.add(new RPHashSimple(o));
 					break;
@@ -151,7 +151,7 @@ public class RPHash {
 				case "concensus":
 					runitems.add(new RPHashConsensusRP(o));
 					break;
-				case "multiProj":
+				case "multiproj":
 					runitems.add(new RPHashMultiProj(o));
 					break;
 				case "redux":
@@ -190,7 +190,7 @@ public class RPHash {
 		for (String s : args) {
 			String[] cmd = s.split("=");
 			if (cmd.length > 1)
-				cmdMap.put(cmd[0].toLowerCase(), cmd[1]);
+				cmdMap.put(cmd[0].toLowerCase(), cmd[1].toLowerCase());
 			else
 				truncatedArgs.add(s);
 		}

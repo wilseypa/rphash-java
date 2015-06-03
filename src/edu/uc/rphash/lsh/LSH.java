@@ -24,7 +24,7 @@ public class LSH
 		this.dec = dec;
 		this.times = times;
 		rand = new Random();
-		radius = dec.getErrorRadius();
+		radius = dec.getErrorRadius()/dec.getDimensionality();
 	}
 
 	public LSH(Decoder dec, Projector p, HashAlgorithm hal) {
@@ -57,6 +57,7 @@ public class LSH
 //	  return lshHash(permvec) ;
 //	}
 
+	
 	public long[] lshHashRadius(float[] r,float radius,int times){
 
 	     float[] pr_r = p[0].project(r);

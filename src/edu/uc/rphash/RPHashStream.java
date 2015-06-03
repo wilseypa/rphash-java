@@ -30,11 +30,11 @@ public class RPHashStream implements Clusterer, Runnable {
 	//TODO update variance over time
 	float variance;
 	KHHCountMinSketch<Centroid> is;
-	boolean threadRunning = false;
+
 
 	public RPHashObject processStream() {
 		
-		threadRunning = true;
+	
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
@@ -61,18 +61,19 @@ public class RPHashStream implements Clusterer, Runnable {
 		}
 
 		while (vecs.hasNext()) {
-			is.add(new Centroid(r.nextLong(),vecs.next()));
-			float[] vec = vecs.next();
-
+			Centroid c = new Centroid(vecs.next());
+			float[] vec = c.centroid();
 			for (int i = 0; i < projections; i++) {
 				hash = lshfuncs[i].lshHashRadius(vec,so.getNumBlur());
 				for(long h : hash)
 				{
-					is.add(new Centroid(h,vec));	
+					is.add(new Centroid(vec));
+					c.addID(h);
 				}
 			}
+			is.add(c);
 		}
-		
+		//System.out.println(is.getCounts().toString());
 		return so;
 	}
 
@@ -113,7 +114,6 @@ public class RPHashStream implements Clusterer, Runnable {
 
 	@Override
 	public List<float[]> getCentroids() {
-
 		if (centroids == null)
 			run();
 		centroids = new ArrayList<float[]>();
@@ -122,8 +122,11 @@ public class RPHashStream implements Clusterer, Runnable {
 	}
 
 	public void run() {
-		if(!threadRunning)//start processing
 			so = processStream();
+	}
+	
+	public List<Long> getTopIdSizes(){
+		return is.getCounts();
 	}
 
 	public static void main(String[] args) {
@@ -141,7 +144,7 @@ public class RPHashStream implements Clusterer, Runnable {
 				long duration = (System.nanoTime() - startTime);
 				List<float[]> aligned = TestUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
-				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"+StatTests.SSE(aligned, gen)+":"
+				System.out.println(f + ":" + StatTests.PR(aligned, gen)+":" + StatTests.SSE(gen.medoids(), gen) + ":"+StatTests.SSE(aligned, gen)+":"
 						+ duration / 1000000000f);
 				System.gc();
 			}
