@@ -27,7 +27,7 @@ public class SimpleArrayReader implements RPHashObject {
 	Decoder dec;
 	 
 	 
-	 final static int DEFAULT_NUM_PROJECTIONS = 8;
+	 final static int DEFAULT_NUM_PROJECTIONS = 6;
 	 final static int DEFAULT_NUM_BLUR = 2;
 	 final static int DEFAULT_NUM_RANDOM_SEED = 0;
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;

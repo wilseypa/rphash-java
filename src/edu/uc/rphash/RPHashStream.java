@@ -63,14 +63,14 @@ public class RPHashStream implements Clusterer, Runnable {
 		while (vecs.hasNext()) {
 			Centroid c = new Centroid(vecs.next());
 			float[] vec = c.centroid();
-
 			for (int i = 0; i < projections; i++) {
 				hash = lshfuncs[i].lshHashRadius(vec,so.getNumBlur());
 				for(long h : hash)
-					c.addID(h);		
+					c.addID(h);	
 			}
 			is.add(c);
 		}
+		//System.out.println(is.getCounts().toString());
 		return so;
 	}
 
@@ -111,7 +111,6 @@ public class RPHashStream implements Clusterer, Runnable {
 
 	@Override
 	public List<float[]> getCentroids() {
-
 		if (centroids == null)
 			run();
 		centroids = new ArrayList<float[]>();
@@ -133,7 +132,7 @@ public class RPHashStream implements Clusterer, Runnable {
 		int d = 1000;
 		int n = 20000;
 		float var = .3f;
-		for (float f = var; f < 4.1; f += .2f) {
+		for (float f = var; f < 4.0; f += .3f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashStream rphit = new RPHashStream(gen.data(), k);
@@ -143,7 +142,7 @@ public class RPHashStream implements Clusterer, Runnable {
 				long duration = (System.nanoTime() - startTime);
 				List<float[]> aligned = TestUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
-				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"+StatTests.SSE(aligned, gen)+":"
+				System.out.println(f + ":" + StatTests.PR(aligned, gen)+":" + StatTests.SSE(gen.medoids(), gen) + ":"+StatTests.SSE(aligned, gen)+":"
 						+ duration / 1000000000f);
 				System.gc();
 			}

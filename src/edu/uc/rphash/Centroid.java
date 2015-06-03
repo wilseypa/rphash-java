@@ -73,11 +73,11 @@ public class Centroid {
 		return (int) id;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Centroid)
-			return ((Centroid) obj).id == id;
-		return false;
-	}
+//	@Override
+//	public boolean equals(Object obj) {
+//		if (obj instanceof Centroid)
+//			return ((Centroid) obj).id == id;
+//		return false;
+//	}
 
 }

@@ -24,7 +24,7 @@ public class LSH
 		this.dec = dec;
 		this.times = times;
 		rand = new Random();
-		radius = dec.getErrorRadius();
+		radius = dec.getErrorRadius()/dec.getDimensionality();
 	}
 
 	public LSH(Decoder dec, Projector p, HashAlgorithm hal) {
@@ -62,20 +62,20 @@ public class LSH
 	     float[] pr_r = p[0].project(r);
 	     long[] dectmp = dec.decode(pr_r);
 	     long[] ret = new long[times*dectmp.length];
-	     for(int i = 0 ; i< dectmp.length;i++)ret[0+i]=dectmp[i];
+	     for(int i = 0 ; i< dectmp.length;i++)ret[i]=dectmp[i];
 	     //long minret = ret;
 	     //float mindist = dec.getDistance();
 	     
 	     float[] rtmp = new float[pr_r.length];
-
-		 for(int j =1;j<times*dectmp.length;j++)
+		 for(int j =1;j<times;j++)
 		 {
 	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
-			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius);
+			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+(float)rand.nextGaussian()*(radius/2f);
+			 
 			 dectmp = dec.decode(rtmp);
 			 for(int i = 0 ; i< dectmp.length;i++)ret[j*dectmp.length+i]=dectmp[i];
-//			 ret[j] = hal.hash(dec.decode(rtmp));
 			 
+//			 ret[j] = hal.hash(dec.decode(rtmp));
 //			 if(dec.getDistance()<mindist){
 //				 minret = hal.hash(dec.decode(rtmp));
 //				 mindist = dec.getDistance();
