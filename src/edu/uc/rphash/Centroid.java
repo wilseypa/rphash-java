@@ -31,6 +31,8 @@ public class Centroid {
 	public Centroid(long h, float[] data) {
 		this.vec=data;
 		this.id = h;
+		this.ids = new HashSet<Long>();
+		ids.add(id);
 	}
 
 	private void updateVariance(float[] data) {
@@ -54,7 +56,7 @@ public class Centroid {
 	}
 
 	public void updateVec(RPVector rp) {
-		ids.addAll(rp.id);
+		//ids.addAll(rp.id);
 		updateVariance(rp.data);
 	}
 
@@ -76,6 +78,11 @@ public class Centroid {
 		if (obj instanceof Centroid)
 			return ((Centroid) obj).id == id;
 		return false;
+	}
+
+	public void addID(long h) {
+		ids.add(h);
+		
 	}
 
 }

@@ -67,7 +67,9 @@ public class RPHashStream implements Clusterer, Runnable {
 			for (int i = 0; i < projections; i++) {
 				hash = lshfuncs[i].lshHashRadius(vec,so.getNumBlur());
 				for(long h : hash)
-					is.add(new Centroid(h,vec));			
+				{
+					is.add(new Centroid(h,vec));	
+				}
 			}
 		}
 		
@@ -130,11 +132,10 @@ public class RPHashStream implements Clusterer, Runnable {
 		int d = 1000;
 		int n = 20000;
 		float var = .3f;
-		for (float f = var; f < 4.1; f += .2f) {
+		for (float f = var; f < 4.3; f += .2f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashStream rphit = new RPHashStream(gen.data(), k);
-
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);

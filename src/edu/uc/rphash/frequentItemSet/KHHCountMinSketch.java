@@ -127,7 +127,10 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		if (t != null) {// update current in list item
 			t.count++;
 			if (e instanceof Centroid)
-				((Centroid) t.item).updateVec(((Centroid) t.item).centroid());
+			{
+				((Centroid) t.item).updateVec(((Centroid) e).centroid());
+				((Centroid) t.item).addID(((Centroid) e).id);
+			}
 		} else {
 			Tuple newt = new Tuple(e, count);
 			if (!pqfull) {
@@ -148,12 +151,12 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 
 	public static void main(String[] t) {
 		Random r = new Random();
-		KHHCountMinSketch<Integer> khh = new KHHCountMinSketch<>(50);
+		KHHCountMinSketch<Integer> khh = new KHHCountMinSketch<>(10);
 		// CountMinSketchAlt<Integer> scounter = new
 		// CountMinSketchAlt<>(.00001,.995,101223);
 		long ts = System.currentTimeMillis();
 		for (long i = 1; i < 10000000; i++) {
-			khh.add(r.nextInt((int) i) / 100);
+			khh.add(r.nextInt((int) i) / 1000);
 			// scounter.add( r.nextInt((int)i)/100);
 		}
 

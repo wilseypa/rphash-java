@@ -79,6 +79,28 @@ public class LSH
 		 return ret; 
 		}
 
+//	public long[] lshHashRadius(float[] r,float radius,int times){
+//
+//	     float[] pr_r = p[0].project(r);
+//	     long[] dectmp = dec.decode(pr_r);
+//	     long[] ret = new long[times*dectmp.length];
+//	     for(int i = 0 ; i< dectmp.length;i++)ret[i]=dectmp[i];
+//	     //long minret = ret;
+//	     //float mindist = dec.getDistance();
+//	     
+//	     float[] rtmp = new float[pr_r.length];
+//		 for(int j =1;j<times;j++)
+//		 {
+//	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
+//			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+(float)rand.nextGaussian()*(radius/2f);
+//			 
+//			 dectmp = dec.decode(rtmp);
+//			 for(int i = 0 ; i< dectmp.length;i++)ret[j*dectmp.length+i]=dectmp[i];
+//			 
+//	     }
+//		 return ret; 
+//		}
+
 	public long[] lshHashRadius(float[] r,int times)
 	{
 		  return lshHashRadius(r,radius,times) ;
