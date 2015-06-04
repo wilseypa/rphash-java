@@ -118,7 +118,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	@Override
 	public List<E> getTop() {
 		if (this.topcent != null)
-			return this.topcent;
+			return this.topcent.subList(k-origk, k);
 		this.topcent = new ArrayList<>();
 		this.counts = new ArrayList<>();
 
@@ -128,15 +128,15 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 			this.counts.add((long) count(tmp.hashCode()));
 		}
 
-		return topcent;
+		return topcent.subList(k-origk, k);
 	}
 
 	@Override
 	public List<Long> getCounts() {
 		if (this.counts != null)
-			return this.counts;
+			return this.counts.subList(k-origk, k);
 		getTop();
-		return this.counts;
+		return this.counts.subList(k-origk, k);
 	}
 
 	@Override

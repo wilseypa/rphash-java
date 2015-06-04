@@ -14,8 +14,8 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.frequentItemSet.ItemSet;
+import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
-import edu.uc.rphash.frequentItemSet.StickyWrapper;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
@@ -38,35 +38,42 @@ public class RPHashIterativeRedux  implements Clusterer
 	Random r  = new Random();
 	public RPHashObject map() 
 	{
-		Random r = new Random();
-		HashAlgorithm hal = new NoHash(Long.MAX_VALUE);
 		Iterator<float[]> vecs = so.getVectorIterator();
-		if(!vecs.hasNext())return so;
+		if (!vecs.hasNext())
+			return so;
+
+		long hash;
+		int probes = so.getNumProjections();
+		int k = (int) (so.getk() * probes);
 		
-		Projector p = new DBFriendlyProjection(so.getdim(),
-				Leech.Dim,  r.nextInt());
-		Decoder dec = new Leech(variance/1.25f);
-		LSH lshfunc = new LSH(dec, p, hal);
-		//(int)(Math.log(so.getk())*so.getk()+.5);
-		//
-		long[] hash;
-		int probes = 3;
-		int k =so.getk()*probes;
-		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
+		//initialize our counter
+		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
+		// create our LSH Device
+		//create same LSH Device as before
+		Random r = new Random(so.getRandomSeed());
+		LSH[] lshfuncs = new LSH[probes];
+		
+		Decoder dec = new Leech(variance);
+		//Decoder dec = new MultiDecoder(1, innerdec);
+		
+		
+		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		
+		//create same projection matrices as before
+		for (int i = 0; i < probes; i++) {
+			Projector p = new DBFriendlyProjection(so.getdim(),
+					dec.getDimensionality(), r.nextLong());
+			lshfuncs[i] = new LSH(dec, p, hal);
+		}
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
 			float[] vec = vecs.next();
-			hash = lshfunc.lshHashRadius(vec, probes);
-			is.add(hash[0]);
-//			vec.id = hash[0];//.add(hash[0]);
-//		    hash = lshfunc.lshHashRadius(vec.data,probes);
-//			for (int j=0; j < probes;j++) {
-//				is.add(hash[j]);
-//			    vec.id.add(hash[j]);
-//			}
+			for (int i = 0; i < probes; i++) {
+				hash = lshfuncs[i].lshHash(vec);
+				is.add(hash);
+			}
 		}
-		so.setPreviousTopID(is.getTop());
-		//for(Long l : is.getCounts())System.out.printf("%d,",l);System.out.printf("\n,");
+		so.setPreviousTopID(is.getTop().subList(k-1, k));//just the last one
 		return so;
 
 	}
@@ -80,7 +87,10 @@ public class RPHashIterativeRedux  implements Clusterer
 		}
 		@Override
 		public int compareTo(Tuple o) {
-			return this.dist < o.dist?0:1;
+			if(dist<o.dist)return -1;
+			else if(dist>o.dist)return 1;
+			return 0;
+
 		}
 
 	}
@@ -90,22 +100,11 @@ public class RPHashIterativeRedux  implements Clusterer
 	{
 		Long lastID = so.getPreviousTopID().get(0);
 		Centroid centroid = new Centroid(so.getdim(),lastID);
-
-		
 		Iterator<float[]> vecs = so.getVectorIterator();
 		float[] vec;
 		
-//		while(vecs.hasNext())
-//		{
-//			vec = vecs.next();
-//			if(vec.id.contains(lastID))
-//			{
-//				centroid.updateVec(vec);
-//				vecs.remove();
-//			}
-//		}
 
-		int ct = 0;
+		
 		//sort and remove top n/k items		
 		vecs =  so.getVectorIterator();
 		ArrayList<Tuple> pq = new ArrayList<Tuple>();
@@ -116,22 +115,17 @@ public class RPHashIterativeRedux  implements Clusterer
 		}
 		
 		Collections.sort(pq);
-		float cutoff = pq.get(pq.size()/(so.getk())).dist;
-		//System.out.println(pq.get(pq.size()/so.getk()).dist;);
+		float cutoff = pq.get(pq.size()/2).dist;//(so.getk())).dist;
 		vecs =  so.getVectorIterator();
-		
 		while(vecs.hasNext())
 		{
 				vec = vecs.next();
 				if(TestUtil.distance(vec,centroid.centroid()) < cutoff){
-					ct++;
-					for(int d = 0 ; d<so.getdim();d++)centroid.centroid()[d]=( centroid.centroid()[d]*ct++ + vec[d])/(float)ct;
+					centroid.updateVec(vec);
 					vecs.remove();
 				}
-		}	
-		
+		}
 		so.addCentroid(centroid.centroid());
-		
 		return so;
 	}
 	
@@ -171,31 +165,37 @@ public class RPHashIterativeRedux  implements Clusterer
 		{
 			so = map();
 			so = reduce();
-
 		}
 		centroids = so.getCentroids();
 	}
 
 	
-	public static void main(String[] args){
-		
-		int k = 20;
-		int d = 5000;
-		int n = 10000;
-		GenerateData gen = new GenerateData(k,n/k,d,1.f,true,1.f);
-		
-		RPHashObject sar = new SimpleArrayReader(gen.data(),k,1,250000);
-		RPHashIterativeRedux rphit = new RPHashIterativeRedux(sar);
-		
-		long startTime = System.nanoTime();
+	public static void main(String[] args) {
 
-		long duration = (System.nanoTime() - startTime);
-		List<float[]> aligned  = TestUtil.alignCentroids(rphit.getCentroids(),gen.medoids());
-		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
-		System.out.print("\n");
-		System.gc();
-		
+		int k = 10;
+		int d = 1000;
+		int n = 20000;
+
+		float var = .3f;
+		for (float f = var; f < 4.1; f += .2f) {
+			for (int i = 0; i < 1; i++) {
+				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
+				RPHashIterativeRedux rphit = new RPHashIterativeRedux(gen.data(), k);
+
+				long startTime = System.nanoTime();
+				rphit.getCentroids();
+				long duration = (System.nanoTime() - startTime);
+				List<float[]> aligned = TestUtil.alignCentroids(
+						rphit.getCentroids(), gen.medoids());
+				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
+						+ StatTests.SSE(aligned, gen) + ":" + duration
+						/ 1000000000f);
+				System.gc();
+			}
+		}
+
 	}
+
 	@Override
 	public RPHashObject getParam() {
 		return so;

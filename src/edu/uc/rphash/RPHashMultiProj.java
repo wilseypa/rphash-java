@@ -14,7 +14,6 @@ import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
-import edu.uc.rphash.frequentItemSet.StickyWrapper;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
@@ -120,10 +119,10 @@ public class RPHashMultiProj implements Clusterer {
 			float[] vec = vecs.next();
 			// iterate over the multiple projections
 			for (LSH lshfunc : lshfuncs) {
+				//could do a big parallel projection here
 				hash = lshfunc.lshHashRadius(vec, blurValue);
 				// iterate over the blurred vectors
 				for (Centroid cent : centroids) {
-					
 					for (long hh : hash) {
 						if (cent.ids.contains(hh)) 
 						{
@@ -195,7 +194,7 @@ public class RPHashMultiProj implements Clusterer {
 		int d = 1000;
 		int n = 20000;
 
-		float var = .3f;
+		float var = 1.5f;
 		for (float f = var; f < 4.1; f += .2f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
