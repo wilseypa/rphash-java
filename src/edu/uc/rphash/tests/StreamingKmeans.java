@@ -139,8 +139,8 @@ public class StreamingKmeans implements Clusterer {
 	/**
 	 * Creates a new instance of online KMeans clustering.
 	 */
-	public StreamingKmeans(int numClusters, float numPoints, List<float[]> X) {
-
+	public StreamingKmeans(List<float[]> X,int numClusters) {
+		int numPoints = X.size();
 		this.data = X;
 		centroids = null;
 		// Create initial data structures.

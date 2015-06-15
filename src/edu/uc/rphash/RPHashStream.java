@@ -22,6 +22,7 @@ import edu.uc.rphash.tests.Agglomerative;
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.StreamingKmeans;
 import edu.uc.rphash.tests.TestUtil;
 
 public class RPHashStream implements Clusterer, Runnable {
@@ -138,7 +139,7 @@ public class RPHashStream implements Clusterer, Runnable {
 		for (float f = var; f < 4.3; f += .2f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
-				RPHashStream rphit = new RPHashStream(gen.data(), k);
+				StreamingKmeans rphit = new StreamingKmeans(gen.data(), k);
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
@@ -147,6 +148,12 @@ public class RPHashStream implements Clusterer, Runnable {
 				System.out.println(f + ":" + StatTests.PR(aligned, gen)+":" + StatTests.SSE(gen.medoids(), gen) + ":"+StatTests.SSE(aligned, gen)+":"
 						+ duration / 1000000000f);
 				System.gc();
+				
+				
+				
+				
+				
+				
 			}
 		}
 	}

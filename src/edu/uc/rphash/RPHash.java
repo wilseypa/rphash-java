@@ -168,7 +168,7 @@ public class RPHash {
 					runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
 					break;
 				case "streamingkmeans":
-					runitems.add(new StreamingKmeans(k,data.size(), data));
+					runitems.add(new StreamingKmeans(data, k));
 					break;
 				default:
 					System.out.println(untaggedArgs.get(i) + " does not exist");
