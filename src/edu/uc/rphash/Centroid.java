@@ -15,7 +15,7 @@ public class Centroid {
 	// float[] M2;
 	// float[] sumvec;
 
-	Centroid(int dim, long id) {
+	public Centroid(int dim, long id) {
 		this.vec = new float[dim];
 		this.count = 0;
 		this.id = id;

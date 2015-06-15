@@ -17,6 +17,7 @@ import edu.uc.rphash.decoders.PStableDistribution;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.StreamingKmeans;
 import edu.uc.rphash.tests.TestUtil;
 import edu.uc.rphash.tests.kmeanspp.DoublePoint;
 import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
@@ -24,7 +25,7 @@ import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
 public class RPHash {
 
 	static String[] rphashes = { "simple", "streaming", "3stage", "multiProj", "consensus",
-			"redux", "kmeans", "pkmeans","kmeansplusplus" };
+			"redux", "kmeans", "pkmeans","kmeansplusplus","streamingkmeans" };
 	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
 			"NumBlur", "RandomSeed", "Hashmod", "DecoderType" };
 	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
@@ -165,6 +166,9 @@ public class RPHash {
 					break;
 				case "kmeansplusplus":
 					runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
+					break;
+				case "streamingkmeans":
+					runitems.add(new StreamingKmeans(k,data.size(), data));
 					break;
 				default:
 					System.out.println(untaggedArgs.get(i) + " does not exist");

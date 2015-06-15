@@ -7,6 +7,7 @@ import java.util.Random;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
+import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
 import edu.uc.rphash.frequentItemSet.KHHHashCounter;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
@@ -19,7 +20,7 @@ import edu.uc.rphash.tests.TestUtil;
 public class RPHashAltStream implements Clusterer, Runnable {
 
 	float variance;
-	KHHHashCounter is;
+	KHHCountMinSketch<Centroid> is;
 	Random r;
 
 	public RPHashObject processStream() {
@@ -32,7 +33,7 @@ public class RPHashAltStream implements Clusterer, Runnable {
 		int k =so.getk();// (int) (so.getk()) * projections;
 
 		//initialize our counter
-		is = new KHHHashCounter(k,so.getdim());
+		is = new KHHCountMinSketch<>(k);
 
 		while (vecs.hasNext()) {
 			float[] vec = vecs.next();
