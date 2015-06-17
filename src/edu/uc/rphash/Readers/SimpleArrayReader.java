@@ -11,6 +11,7 @@ import edu.uc.rphash.decoders.E8;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PStableDistribution;
+import edu.uc.rphash.decoders.Spherical;
 
 public class SimpleArrayReader implements RPHashObject {
 
@@ -32,7 +33,7 @@ public class SimpleArrayReader implements RPHashObject {
 	 final static int DEFAULT_NUM_RANDOM_SEED = 0;
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	 final static Decoder DEFAULT_INNER_DECODER = new Leech();
+	 final static Decoder DEFAULT_INNER_DECODER = new Leech(); //Spherical(64,5,2);
 
 
 	public void setRandomSeed(long randomSeed) {

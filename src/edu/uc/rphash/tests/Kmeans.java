@@ -23,14 +23,25 @@ public class Kmeans  implements Clusterer{
 	
 	List<float[]> means; 
 	List<List<Integer>> clusters;
+	List<Long> weights;
 	public Kmeans(int k, List<float[]> data)
 	{
 		this.k = k;
 		this.data = data;
 		this.projdim = 0;
 		this.clusters = null;
+		this.weights = new ArrayList<Long>(data.size());
+		for(int i = 0;i<data.size();i++)weights.add(1L);
 	} 
 	
+	public Kmeans(int k, List<float[]> data,List<Long> weights)
+	{
+		this.k = k;
+		this.data = data;
+		this.projdim = 0;
+		this.clusters = null;
+		this.weights = weights;
+	} 
 
 	
 	
@@ -40,7 +51,10 @@ public class Kmeans  implements Clusterer{
 		this.data = data;
 		this.projdim = projdim;
 		this.clusters = null;
+		this.weights = new ArrayList<Long>(data.size());
+		for(int i = 0;i<data.size();i++)weights.add(1L);
 	} 
+	
 	
 	public float[] computerCentroid(List<Integer> vectors,List<float[]> data ){
 		int d = data.get(0).length;
@@ -50,11 +64,19 @@ public class Kmeans  implements Clusterer{
 			centroid[i] = 0.0f;
 
 		float scalr = 1.0f/(float)vectors.size();
+		Long w_total = 0L;
+		for(Integer v : vectors)
+		{
+			w_total+=weights.get(v);
+		}
+		
 		for(Integer v : vectors)
 		{
 			float[] vec = data.get(v);
+			float weight = (float)weights.get(v)/(float)w_total;
 			for(int i = 0 ; i<d;i++)
-				centroid[i] += (vec[i]*scalr);	
+				centroid[i] += (vec[i]*weight);	
+			
 		}
 		
 		return centroid;

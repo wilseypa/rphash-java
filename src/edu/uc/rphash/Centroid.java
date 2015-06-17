@@ -24,7 +24,6 @@ public class Centroid {
 		// this.variance = new float[dim];
 		// this.M2 = new float[dim];
 		// this.sumvec = new float[dim];
-
 	}
 
 	public Centroid(float[] data) {
@@ -32,8 +31,15 @@ public class Centroid {
 		this.ids = new HashSet<Long>();
 	}
 	
+	public Centroid(float[] data,long id) {
+		this.vec=data;
+		this.ids = new HashSet<Long>();
+		ids.add(id);
+		this.id = id;
+	}
+	
 
-	private void updateVariance(float[] data) {
+	public void updateVariance(float[] data) {
 		float delta;
 		count++;
 		for (int i = 0; i < data.length; i++) {
@@ -79,6 +85,7 @@ public class Centroid {
 
 	public void addID(long h) {
 		ids.add(h);
+		if(id==0)id = h;
 		
 	}
 

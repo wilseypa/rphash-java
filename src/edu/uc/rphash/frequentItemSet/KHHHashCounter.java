@@ -33,7 +33,7 @@ public class KHHHashCounter {
 	boolean pqfull = false;
 	HashMap<Integer, Centroid> items;
 
-	public KHHHashCounter(int k,Decoder d) {
+	public KHHHashCounter(int k) {
 		this.origk = k;
 		this.k = (int) (k * Math.log(k));
 
@@ -76,11 +76,13 @@ public class KHHHashCounter {
 	public List<Centroid> getTop() {
 		if (this.topcent != null)
 			return this.topcent.subList(k-origk, k);
+		
 		this.topcent = new ArrayList<>();
 		this.counts = new ArrayList<>();
 
 		while (p.size() > 0) {
 			Long tmp = p.remove();
+			System.out.println(count(tmp.hashCode()));
 			this.topcent.add(items.get(tmp));
 			this.counts.add((long) count(tmp.hashCode()));
 		}
@@ -106,10 +108,10 @@ public class KHHHashCounter {
 			addLong(e.hashCode(), 1);
 			p.add((long) e.hashCode());
 			items.put(e.hashCode(), e);
-			System.out.println("adding");
+//			System.out.println("adding");
 		} else // remove the key an put it back
 		{
-			System.out.println("updating");
+//			System.out.println("updating");
 			p.remove(e);
 			addLong(e.hashCode(), 1);
 			p.add((long) e.hashCode());
@@ -118,7 +120,7 @@ public class KHHHashCounter {
 
 		if (p.size() > k) {
 			items.remove(p.poll());
-			System.out.println("removing");
+//			System.out.println("removing");
 		}
 		return false;
 	}
@@ -153,8 +155,8 @@ public class KHHHashCounter {
 
 	public static void main(String[] t) {
 		Random r = new Random();
-		Leech dec = new Leech();
-		KHHHashCounter khh = new KHHHashCounter(10,dec);
+		
+		KHHHashCounter khh = new KHHHashCounter(20);
 
 		long ts = System.currentTimeMillis();
 
@@ -162,9 +164,9 @@ public class KHHHashCounter {
 			khh.add(new Centroid(0,r.nextInt((int) i) ));
 		}
 
-		System.out.println(System.currentTimeMillis() - ts);
+//		System.out.println(System.currentTimeMillis() - ts);
 		for(Centroid c: khh.getTop())
-			System.out.println(c.id);
+			System.out.println(c);
 		
 		System.out.println(khh.getCounts());
 
