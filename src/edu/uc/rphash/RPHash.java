@@ -17,6 +17,7 @@ import edu.uc.rphash.decoders.PStableDistribution;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.StreamingKmeans;
 import edu.uc.rphash.tests.TestUtil;
 import edu.uc.rphash.tests.kmeanspp.DoublePoint;
 import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
@@ -24,7 +25,7 @@ import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
 public class RPHash {
 
 	static String[] rphashes = { "simple", "streaming", "3stage", "multiProj", "consensus",
-			"redux", "kmeans", "pkmeans","kmeansplusplus" };
+			"redux", "kmeans", "pkmeans","kmeansplusplus","streamingkmeans" };
 	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
 			"NumBlur", "RandomSeed", "Hashmod", "DecoderType" };
 	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
@@ -52,7 +53,6 @@ public class RPHash {
 		int k = Integer.parseInt(args[1]);
 		String outputFile = args[2];
 		if (args.length == 3) {
-
 			RPHashSimple clusterer = new RPHashSimple(data, k);
 			TestUtil.writeFile(new File(outputFile + "."
 					+ clusterer.getClass().getName()), clusterer.getCentroids());
@@ -127,7 +127,7 @@ public class RPHash {
 					o.setDecoderType(new PStableDistribution(variance));
 					break;
 				case "sphere": {
-					o.setDecoderType(new Spherical(32,6,3,variance));
+					o.setDecoderType(new Spherical(64,6,4));
 					break;
 				}
 				default: {
@@ -139,7 +139,7 @@ public class RPHash {
 		}
 
 		while (i < untaggedArgs.size()) {
-			switch (untaggedArgs.get(i)) {
+			switch (untaggedArgs.get(i).toLowerCase()) {
 				case "simple":
 					runitems.add(new RPHashSimple(o));
 					break;
@@ -152,7 +152,7 @@ public class RPHash {
 				case "concensus":
 					runitems.add(new RPHashConsensusRP(o));
 					break;
-				case "multiProj":
+				case "multiproj":
 					runitems.add(new RPHashMultiProj(o));
 					break;
 				case "redux":
@@ -166,6 +166,9 @@ public class RPHash {
 					break;
 				case "kmeansplusplus":
 					runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
+					break;
+				case "streamingkmeans":
+					runitems.add(new StreamingKmeans(data, k));
 					break;
 				default:
 					System.out.println(untaggedArgs.get(i) + " does not exist");
@@ -191,7 +194,7 @@ public class RPHash {
 		for (String s : args) {
 			String[] cmd = s.split("=");
 			if (cmd.length > 1)
-				cmdMap.put(cmd[0].toLowerCase(), cmd[1]);
+				cmdMap.put(cmd[0].toLowerCase(), cmd[1].toLowerCase());
 			else
 				truncatedArgs.add(s);
 		}

@@ -22,11 +22,11 @@ public class Spherical implements Decoder {
 			// scanned linearly during query.
 	float distance = 0;
 
-	public Spherical(int d, int k, int L,float variance) {
+	public Spherical(int d, int k, int L) {
 		this.d = d;
 		this.k = k;
 		this.l = L;
-		this.variance = variance;
+		this.variance = 1f;
 		double nvertex = 2.0 * this.d;
 		this.hbits = (int) Math.ceil(Math.log(nvertex) / Math.log(2));
 		int kmax = (int) (HashBits / this.hbits);
@@ -214,7 +214,7 @@ public class Spherical implements Decoder {
 		int d = 64;
 		int K = 6; 
 		int L = 2;
-		Spherical sp = new Spherical(d,K,L,1);
+		Spherical sp = new Spherical(d,K,L);
 		for(int i = 0; i<100;i++){
 			int ct = 0;
 			float distavg = 0.0f;

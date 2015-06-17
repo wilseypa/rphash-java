@@ -126,7 +126,7 @@ public class RPHashStream implements Clusterer, Runnable {
 			run();
 		centroids = new ArrayList<float[]>();
 		for(Centroid c : is.getTop())centroids.add(c.centroid());
-		return  new Kmeans(so.getk(),centroids).getCentroids();
+		return  new Kmeans(so.getk(),centroids,is.getCounts()).getCentroids();
 	}
 
 	public void run() {
@@ -143,7 +143,7 @@ public class RPHashStream implements Clusterer, Runnable {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashStream rphit = new RPHashStream(gen.data(), k);
-
+				//StreamingKmeans rphit = new StreamingKmeans(gen.data(), k);
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
