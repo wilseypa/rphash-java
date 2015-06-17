@@ -63,7 +63,6 @@ public class RPHashStream implements Clusterer, Runnable {
 			is.add(c);
 
 		}
-		System.out.println(is.getCounts().toString());
 		return so;
 	}
 
@@ -98,7 +97,10 @@ public class RPHashStream implements Clusterer, Runnable {
 		this.so = so;
 		if (centroids == null)
 			run();
-		return new Kmeans(so.getk(), centroids).getCentroids();
+		centroids = new ArrayList<float[]>();
+		for (Centroid c : is.getTop())
+			centroids.add(c.centroid());
+		return new Kmeans(so.getk(), centroids,is.getCounts()).getCentroids();
 	}
 
 	@Override
@@ -124,7 +126,7 @@ public class RPHashStream implements Clusterer, Runnable {
 		int k = 10;
 		int d = 1000;
 		int n = 20000;
-		float var = .3f;
+		float var = 2.3f;
 		for (float f = var; f < 4.3; f += .2f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);

@@ -85,7 +85,7 @@ public class Centroid {
 
 	public void addID(long h) {
 		ids.add(h);
-		if(id==0)id = h;
+		id = h;
 		
 	}
 

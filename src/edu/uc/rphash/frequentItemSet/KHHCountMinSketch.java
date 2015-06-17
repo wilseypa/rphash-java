@@ -21,12 +21,12 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	
 	PriorityQueue<E> p;
 	int k;
-	int origk;
-	HashMap<Integer, E> items;
-	HashMap<Integer,Long> countlist;
+	//int origk;
+	HashMap<Long, E> items;
+	HashMap<Long,Long> countlist;
 
 	public KHHCountMinSketch(int k) {
-		this.origk = k;
+		//this.origk = k;
 		this.k = (int) (k * Math.log(k));
 
 		double epsOfTotalCount = .00001;
@@ -37,8 +37,8 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		Comparator<E> cmp = new Comparator<E>() {
 			@Override
 			public int compare(E n1, E n2) {
-				long cn1 = countlist.get(n1.hashCode());//count(n1.hashCode());
-				long cn2 = countlist.get(n2.hashCode());////count(n2.hashCode());
+				long cn1 = countlist.get((long)n1.hashCode());//count(n1.hashCode());
+				long cn2 = countlist.get((long)n2.hashCode());////count(n2.hashCode());
 				if (cn1 > cn2)
 					return +1;
 				else if (cn1 < cn2)
@@ -72,14 +72,14 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		this.topcent = new ArrayList<>();
 		this.counts = new ArrayList<>();
 		
-		while (p.size() > 0) {
+		while (!p.isEmpty()) {
 			E tmp = p.remove();
 			topcent.add(tmp);
-			counts.add(countlist.get(tmp.hashCode()));//count(tmp.hashCode()));
+			counts.add(countlist.get((long)tmp.hashCode()));//count(tmp.hashCode()));
 		}
 		
-		topcent = topcent.subList(k - origk, k);
-		counts = counts.subList(k - origk, k);
+//		topcent = topcent.subList(k - origk, k);
+//		counts = counts.subList(k - origk, k);
 		return topcent;
 	}
 
@@ -100,24 +100,48 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 
 	@Override
 	public boolean add(E e) {
-		if (!items.containsKey(e.hashCode())) {
-			long count = addLong(e.hashCode(), 1);
-			countlist.put(e.hashCode(), count);
-			p.add(e);
-			items.put(e.hashCode(), e);
-		} else // remove the key and put it back
-		{
-			p.remove(e);
-			if (e instanceof Centroid) {
-				((Centroid) e).updateVec(((Centroid) e).centroid());
-				((Centroid) e).addID(((Centroid) e).id);
-			}
-			long count = addLong(e.hashCode(), 1);
-			items.put(e.hashCode(), e);
-			countlist.put(e.hashCode(), count);
+		long count = addLong(e.hashCode(), 1);
+		if(e instanceof Centroid){
+			Centroid c = (Centroid) e;
+			E probed =  items.remove(c.id);
+			for(Long h : c.ids){
+				if(probed!=null){
+					break;}
+				probed = items.remove(h);
+				}
 			
-			p.add(e);
+			if(probed==null){
+				countlist.put( c.id, count);
+				p.add(e);
+				items.put((long) c.id, e);
+			} else // remove the key and put it back
+			{
+				
+				p.remove(probed);
+				//((Centroid)probed).updateVec(c.centroid());
+				//((Centroid)probed).ids.addAll(c.ids);
+				items.put(((Centroid)probed).id,  probed);
+				countlist.put( ((Centroid)probed).id, count);
+				p.add( probed);
+			}	
+		}else
+		{
+			if (!items.containsKey((long)e.hashCode()))
+			{
+				countlist.put((long)e.hashCode(), count);
+				p.add(e);
+				items.put((long)e.hashCode(), e);
+			}else{
+				p.remove(e);
+				items.put((long)e.hashCode(), e);
+				countlist.put((long)e.hashCode(), count);
+				p.add(e);
+			}
+				
+			
 		}
+		
+		
 		if (p.size() > k) {
 			items.remove(p.poll());
 		}
