@@ -31,6 +31,7 @@ public class Centroid {
 	public Centroid(long h, float[] data) {
 		this.vec=data;
 		this.id = h;
+		this.count = 1;
 	}
 
 	private void updateVariance(float[] data) {
@@ -46,7 +47,9 @@ public class Centroid {
 			// M2[i] = M2[i] + delta*(x - vec[i]);
 			// variance[i] = M2[i]/(sumvec[i]-1);
 			// }
+
 		}
+		
 	}
 
 	public float[] centroid() {

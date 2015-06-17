@@ -39,7 +39,7 @@ public class RPHashStream implements Clusterer, Runnable {
 
 		Random r = new Random(so.getRandomSeed());
 		int projections = so.getNumProjections();
-		int k =(int) (so.getk()) * projections;
+		int k =(int) (so.getk()) * projections * 8;
 		long hash[];
 		
 		//initialize our counter
@@ -51,7 +51,7 @@ public class RPHashStream implements Clusterer, Runnable {
 		if(dec==null){
 			Decoder inner = new Leech(variance);
 			dec = new MultiDecoder( so.getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
-//			dec = new Spherical(so.getInnerDecoderMultiplier(),6,3,variance);
+			//dec = new Spherical(64,6,3);
 		}
 		
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
@@ -65,7 +65,7 @@ public class RPHashStream implements Clusterer, Runnable {
 		
 		int blurValue = so.getNumBlur();
 		if (blurValue == 0)
-			blurValue = (int) Math.log(so.getdim() / dec.getDimensionality());
+			blurValue = 1;//(int) Math.log(so.getdim() / dec.getDimensionality());
 
 		while (vecs.hasNext()) {
 			float[] vec = vecs.next();
@@ -78,7 +78,7 @@ public class RPHashStream implements Clusterer, Runnable {
 		
 //		for (Long l : is.getCounts())
 //		System.out.printf(" %d,", l);
-//	System.out.printf("\n,");
+//		System.out.printf("\n,");
 		return so;
 	}
 
@@ -90,23 +90,23 @@ public class RPHashStream implements Clusterer, Runnable {
 		variance = StatTests.varianceSample(data, .01f);
 		this.average = StatTests.averageCol(data);
 		so = new SimpleArrayReader(data, k);
-		so.setNumProjections(8);
-		so.setNumBlur(2);
-		so.setInnerDecoderMultiplier(1);
-
-	}
-	float[] average;
-	public RPHashStream(List<float[]> data, int k, int times, int rseed) {
-		variance = StatTests.varianceSample(data, .01f);
-		this.average = StatTests.averageCol(data);
-		so = new SimpleArrayReader(data, k);
-		//best sphere is 8,2,32
-		//best leech is  8,2,1
-		so.setNumProjections(8);
+		so.setNumProjections(1);
 		so.setNumBlur(1);
 		so.setInnerDecoderMultiplier(1);
 
 	}
+	float[] average;
+//	public RPHashStream(List<float[]> data, int k, int times, int rseed) {
+//		variance = StatTests.varianceSample(data, .01f);
+//		this.average = StatTests.averageCol(data);
+//		so = new SimpleArrayReader(data, k);
+//		//best sphere is 8,2,32
+//		//best leech is  8,2,1
+//		so.setNumProjections(4);
+//		so.setNumBlur(1);
+//		so.setInnerDecoderMultiplier(2);
+//
+//	}
 
 	public RPHashStream(RPHashObject so) {
 		this.so = so;
@@ -138,7 +138,7 @@ public class RPHashStream implements Clusterer, Runnable {
 		int k = 10;
 		int d = 1000;
 		int n = 20000;
-		float var = 0f;
+		float var = 2.3f;
 		for (float f = var; f < 4.1; f += .2f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);

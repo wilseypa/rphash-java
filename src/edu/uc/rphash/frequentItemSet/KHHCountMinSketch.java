@@ -67,16 +67,16 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		initTablesWith(depth, width, seed);
 	}
 	
-	public KHHCountMinSketch(double epsOfTotalCount, double confidence, int seed,
-			int k) {
-		this.origk = k;
-		this.k = (int) (k*Math.log(k));
-		p = new PriorityQueue<Tuple>();
-		items = new HashMap<>();
-		this.width = (int) Math.ceil(2 / epsOfTotalCount);
-		this.depth = (int) Math.ceil(-Math.log(1 - confidence) / Math.log(2));
-		initTablesWith(depth, width, seed);
-	}
+//	public KHHCountMinSketch(double epsOfTotalCount, double confidence, int seed,
+//			int k) {
+//		this.origk = k;
+//		this.k = (int) (k*Math.log(k));
+//		p = new PriorityQueue<Tuple>();
+//		items = new HashMap<>();
+//		this.width = (int) Math.ceil(2 / epsOfTotalCount);
+//		this.depth = (int) Math.ceil(-Math.log(1 - confidence) / Math.log(2));
+//		initTablesWith(depth, width, seed);
+//	}
 
 	private void initTablesWith(int depth, int width, int seed) {
 		this.table = new long[depth][width];
@@ -127,7 +127,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		if (t != null) {// update current in list item
 			t.count++;
 			if (e instanceof Centroid)
-				((Centroid) t.item).updateVec(((Centroid) t.item).centroid());
+				((Centroid) t.item).updateVec(((Centroid) e).centroid());
 		} else {
 			Tuple newt = new Tuple(e, count);
 			if (!pqfull) {
