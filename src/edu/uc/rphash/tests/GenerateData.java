@@ -23,6 +23,7 @@ public class GenerateData
 	float scaler;
 	boolean shuffle;
 	float sparseness;
+	private boolean noised = true;
 	
 	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension){
 		r = new Random();
@@ -248,6 +249,16 @@ public class GenerateData
 						dat[k] = medoid[k]+(float)r.nextGaussian()*variances[k];
 				}
 				this.data.add(dat);
+//				if(noised)
+//				{
+//					for(int k=0;k<dimension;k++)
+//					{
+//						if(r.nextInt()%(int)(1.0f/sparseness)==0)
+//							dat[k] = r.nextFloat()*2.0f -1.0f;;
+//					}
+//					this.data.add(dat);
+//					j++;
+//				}
 			}
 		}
 

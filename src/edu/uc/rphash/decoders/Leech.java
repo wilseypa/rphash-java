@@ -216,48 +216,9 @@ public class Leech implements Decoder {
 	public float scaler;
 
 	public Leech(float scaler) {
-		this.scaler = scaler;
-
-		APT = (float) (this.APT * scaler);
-		BPT = (float) (this.BPT * scaler);
-		CPT = (float) (this.CPT * scaler);
-		DPT = (float) (this.DPT * scaler);
-		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
-				{ APT, BPT } };
-		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
-				{ DPT, CPT } };
-		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
-				{ BPT, BPT } };
-		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
-				{ APT, CPT } };
-		this.evenAPts = evenAPts;
-		this.oddAPts = oddAPts;
-		this.evenBPts = evenBPts;
-		this.oddBPts = oddBPts;
-		radius = DPT + CPT;
+		this.setVariance(scaler);
 	}
 	
-	public void setScaler(float scaler){
-		this.scaler = scaler;
-		APT = (float) (this.APT * scaler);
-		BPT = (float) (this.BPT * scaler);
-		CPT = (float) (this.CPT * scaler);
-		DPT = (float) (this.DPT * scaler);
-		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
-				{ APT, BPT } };
-		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
-				{ DPT, CPT } };
-		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
-				{ BPT, BPT } };
-		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
-				{ APT, CPT } };
-		this.evenAPts = evenAPts;
-		this.oddAPts = oddAPts;
-		this.evenBPts = evenBPts;
-		this.oddBPts = oddBPts;
-		radius = DPT + CPT;
-		
-	}
 
 	/*
 	 * WARNING: not true euclidean distance compute the distance between two 24
@@ -1099,6 +1060,7 @@ public class Leech implements Decoder {
 		this.oddAPts = oddAPts;
 		this.evenBPts = evenBPts;
 		this.oddBPts = oddBPts;
+		this.radius = DPT+CPT;
 		
 	}
 }

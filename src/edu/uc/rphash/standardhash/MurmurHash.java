@@ -25,7 +25,7 @@ public class MurmurHash implements HashAlgorithm {
 				data[ct++] = (byte)(d >>> 8 );
 				data[ct++] = (byte)(d       );
 			}
-		
+			
 		
 		
 		

@@ -8,6 +8,10 @@ import java.util.Random;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
+import edu.uc.rphash.decoders.Leech;
+import edu.uc.rphash.decoders.MultiDecoder;
+import edu.uc.rphash.decoders.Spherical;
+import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
 //import edu.uc.rphash.frequentItemSet.KHHCountMinSketch.Tuple;
 import edu.uc.rphash.lsh.LSH;
@@ -15,6 +19,7 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
+import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
@@ -22,7 +27,7 @@ import edu.uc.rphash.tests.TestUtil;
 
 public class RPHashStream implements Clusterer, Runnable {
 	float variance;
-	KHHCountMinSketch<Centroid> is;
+	KHHCentroidCounter is;
 
 	public RPHashObject processStream() {
 
@@ -37,7 +42,7 @@ public class RPHashStream implements Clusterer, Runnable {
 		long hash[];
 
 		// initialize our counter
-		is = new KHHCountMinSketch<Centroid>(k);
+		is = new KHHCentroidCounter(k);
 
 		// create LSH Device
 		LSH[] lshfuncs = new LSH[projections];
@@ -55,14 +60,13 @@ public class RPHashStream implements Clusterer, Runnable {
 			float[] vec = vecs.next();
 			Centroid c = new Centroid(vec);
 			for (int i = 0; i < projections; i++) {
-				hash = lshfuncs[i].lshHashRadius(vec, so.getNumBlur());
-				for (long h : hash) {
-					c.addID(h);
-				}
+				hash = lshfuncs[i].lshHashRadiusNo2Hash(vec, so.getNumBlur());
+				for (long h : hash) c.addID(h);
 			}
 			is.add(c);
-
 		}
+		
+		System.out.println(is.getCounts().toString());
 		return so;
 	}
 
@@ -72,22 +76,11 @@ public class RPHashStream implements Clusterer, Runnable {
 	public RPHashStream(List<float[]> data, int k) {
 		variance = StatTests.varianceSample(data, .01f);
 		so = new SimpleArrayReader(data, k);
-		// so.setDecoderType(new Spherical(64,5,3));
+//		so.setDecoderType(new Spherical(32,3,4));
+//		so.setDecoderType(new Leech(variance));
 		so.getDecoderType().setVariance(variance);
 	}
 
-	// float[] average;
-	// public RPHashStream(List<float[]> data, int k, int times, int rseed) {
-	// variance = StatTests.varianceSample(data, .01f);
-	// this.average = StatTests.averageCol(data);
-	// so = new SimpleArrayReader(data, k);
-	// //best sphere is 8,2,64
-	// //best leech is 8,2,1
-	// so.setNumProjections(1);
-	// so.setNumBlur(1);
-	// so.setInnerDecoderMultiplier(1);
-	//
-	// }
 
 	public RPHashStream(RPHashObject so) {
 		this.so = so;
@@ -108,9 +101,9 @@ public class RPHashStream implements Clusterer, Runnable {
 		if (centroids == null)
 			run();
 		centroids = new ArrayList<float[]>();
-		for (Centroid c : is.getTop())
-			centroids.add(c.centroid());
-		return new Kmeans(so.getk(), centroids, is.getCounts()).getCentroids();
+		for (int i = 0;i<is.getTop().size();i++)
+			centroids.add(is.getTop().get(i).centroid());
+		return new Kmeans(so.getk(), centroids,is.getCounts()).getCentroids();
 	}
 
 	public void run() {
@@ -126,7 +119,7 @@ public class RPHashStream implements Clusterer, Runnable {
 		int k = 10;
 		int d = 1000;
 		int n = 20000;
-		float var = 2.3f;
+		float var = 1.1f;
 		for (float f = var; f < 4.3; f += .2f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);

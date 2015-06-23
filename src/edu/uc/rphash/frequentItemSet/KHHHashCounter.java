@@ -75,27 +75,26 @@ public class KHHHashCounter {
 
 	public List<Centroid> getTop() {
 		if (this.topcent != null)
-			return this.topcent.subList(k-origk, k);
+			return topcent;//this.topcent.subList(k-origk, k);
 		
 		this.topcent = new ArrayList<>();
 		this.counts = new ArrayList<>();
 
 		while (p.size() > 0) {
 			Long tmp = p.remove();
-			System.out.println(count(tmp.hashCode()));
 			this.topcent.add(items.get(tmp));
 			this.counts.add((long) count(tmp.hashCode()));
 		}
 
-		return topcent.subList(k-origk, k);
+		return topcent;//topcent.subList(k-origk, k);
 	}
 
 
 	public List<Long> getCounts() {
 		if (this.counts != null)
-			return this.counts.subList(k-origk, k);
+			return this.counts;//.subList(k-origk, k);
 		getTop();
-		return this.counts.subList(k-origk, k);
+		return counts;//counts.subList(k-origk, k);
 	}
 
 

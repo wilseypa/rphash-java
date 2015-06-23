@@ -69,15 +69,61 @@ public class LSH
 		 for(int j =1;j<times;j++)
 		 {
 	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
-			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius);
+			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius/(float)j);
 			 ret[j] = hal.hash(dec.decode(rtmp));
-//			 if(dec.getDistance()<mindist){
-//				 minret = hal.hash(dec.decode(rtmp));
-//				 mindist = dec.getDistance();
-//			 }
+			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius*(float)j);
+			 ret[j] = hal.hash(dec.decode(rtmp));
+
 	     }
 //		 distance = mindist;
 		 return ret; 
+		}
+	
+	public long[] lshHashRadiusNo2Hash(float[] r,int times){
+
+	     float[] pr_r = p[0].project(r);
+	     
+	     long[] nonoise = dec.decode(pr_r);
+	     long[] ret = new long[times*nonoise.length];
+	     for(int k =0;k<nonoise.length;k++)ret[k]=nonoise[k];
+	     
+	     //long minret = ret;
+	     //float mindist = dec.getDistance();
+	     float[] rtmp = new float[pr_r.length];
+		 for(int j =1;j<times;j++)
+		 {
+	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
+			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius);
+			 nonoise = dec.decode(rtmp);
+			 for(int k =0;k<nonoise.length;k++)ret[j*nonoise.length+k]=nonoise[k];
+	     }
+//		 distance = mindist;
+		 return ret; 
+		}
+	
+	public long lshMinHashRadius(float[] r,float radius,int times){
+
+	     float[] pr_r = p[0].project(r);
+	     long ret = hal.hash(dec.decode(pr_r));
+	     long minret = ret;
+	     float mindist = dec.getDistance();
+	     float[] rtmp = new float[pr_r.length];
+		 for(int j =1;j<times;j++)
+		 {
+	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
+			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius);
+			 ret = hal.hash(dec.decode(rtmp));
+			 if(dec.getDistance()<mindist){
+				 minret = hal.hash(dec.decode(rtmp));
+				 mindist = dec.getDistance();
+			 }
+	     }
+		 return ret; 
+		}
+	
+	public long lshMinHashRadius(float[] r,int times){
+
+		 return lshMinHashRadius(r,radius,times); 
 		}
 
 //	public long[] lshHashRadius(float[] r,float radius,int times){

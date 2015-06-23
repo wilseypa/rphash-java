@@ -29,6 +29,7 @@ public class Centroid {
 	public Centroid(float[] data) {
 		this.vec=data;
 		this.ids = new HashSet<Long>();
+		this.count = 1;
 	}
 	
 	public Centroid(float[] data,long id) {
@@ -36,6 +37,7 @@ public class Centroid {
 		this.ids = new HashSet<Long>();
 		ids.add(id);
 		this.id = id;
+		this.count = 1;
 	}
 	
 
@@ -71,10 +73,10 @@ public class Centroid {
 		return count;
 	}
 
-	@Override
-	public int hashCode() {
-		return (int) id;
-	}
+//	@Override
+//	public int hashCode() {
+//		return (int) id;
+//	}
 
 //	@Override
 //	public boolean equals(Object obj) {
@@ -84,9 +86,8 @@ public class Centroid {
 //	}
 
 	public void addID(long h) {
-		ids.add(h);
-		id = h;
-		
+		if(ids.size()==0)id = h;
+		ids.add(h);		
 	}
 
 }

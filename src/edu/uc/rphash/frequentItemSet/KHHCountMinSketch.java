@@ -25,15 +25,16 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 	HashMap<Long, E> items;
 	HashMap<Long,Long> countlist;
 
-	public KHHCountMinSketch(int k) {
+	public KHHCountMinSketch(int m) {
 		//this.origk = k;
-		this.k = (int) (k * Math.log(k));
-
+		
+		this.k = (int) (m * Math.log(m));
 		double epsOfTotalCount = .00001;
 		double confidence = .99;
 		int seed = (int) System.currentTimeMillis();
 		
 		countlist = new HashMap<>();
+		
 		Comparator<E> cmp = new Comparator<E>() {
 			@Override
 			public int compare(E n1, E n2) {
@@ -62,37 +63,6 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		}
 	}
 
-	List<E> topcent = null;
-	List<Long> counts = null;
-	@Override
-	public List<E> getTop() {
-		if (this.topcent != null)
-			return this.topcent;
-		
-		this.topcent = new ArrayList<>();
-		this.counts = new ArrayList<>();
-		
-		while (!p.isEmpty()) {
-			E tmp = p.remove();
-			topcent.add(tmp);
-			counts.add(countlist.get((long)tmp.hashCode()));//count(tmp.hashCode()));
-		}
-		
-//		topcent = topcent.subList(k - origk, k);
-//		counts = counts.subList(k - origk, k);
-		return topcent;
-	}
-
-	@Override
-	public List<Long> getCounts() {
-		if (this.counts != null)
-			return counts;
-		
-		getTop();
-		
-		return counts;
-	}
-
 	@Override
 	public Object getBaseClass() {
 		return this;
@@ -104,12 +74,11 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		if(e instanceof Centroid){
 			Centroid c = (Centroid) e;
 			E probed =  items.remove(c.id);
-			for(Long h : c.ids){
-				if(probed!=null){
-					break;}
-				probed = items.remove(h);
-				}
-			
+//			for(Long h : c.ids){
+//				if(probed!=null){
+//					break;}
+//				probed = items.remove(h);
+//				}
 			if(probed==null){
 				countlist.put( c.id, count);
 				p.add(e);
@@ -142,7 +111,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		}
 		
 		
-		if (p.size() > k) {
+		if (p.size() > this.k) {
 			items.remove(p.poll());
 		}
 		return false;
@@ -155,14 +124,14 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		return ((int) hash) % width;
 	}
 
-	private long count(long item) {
-		int min = (int) table[0][hash(item, 0)];
-		for (int i = 1; i < depth; ++i) {
-			if (table[i][hash(item, i)] < min)
-				min = (int) table[i][hash(item, i)];
-		}
-		return min;
-	}
+//	private long count(long item) {
+//		int min = (int) table[0][hash(item, 0)];
+//		for (int i = 1; i < depth; ++i) {
+//			if (table[i][hash(item, i)] < min)
+//				min = (int) table[i][hash(item, i)];
+//		}
+//		return min;
+//	}
 
 	private long addLong(long item, long count) {
 		table[0][hash(item, 0)] += count;
@@ -174,6 +143,35 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		}
 		size += count;
 		return min;
+	}
+	
+	List<E> topcent = null;
+	List<Long> counts = null;
+	@Override
+	public List<E> getTop() {
+		if (this.topcent != null)
+			return this.topcent;
+		
+		this.topcent = new ArrayList<>();
+		this.counts = new ArrayList<>();
+
+		while (!p.isEmpty()) {
+			E tmp = p.poll();
+			topcent.add(tmp);
+			counts.add(countlist.get((long)tmp.hashCode()));//count(tmp.hashCode()));
+		}
+		
+//		topcent = topcent.subList(k - origk, k);
+//		counts = counts.subList(k - origk, k);
+		return topcent;
+	}
+
+	@Override
+	public List<Long> getCounts() {
+		if (this.counts != null)
+			return counts;
+		getTop();
+		return counts;
 	}
 	
 	public static void main(String[] t) {

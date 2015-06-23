@@ -25,8 +25,9 @@ public class MultiDecoder implements Decoder {
 	@Override
 	public long[] decode(float[] f) 
 	{
-		
-		if(innerDec.getDimensionality() == f.length)return innerDec.decode(f);//no looping needed
+		if(innerDec.getDimensionality() == f.length){
+			return innerDec.decode(f);//no looping needed
+		}
 		float[] innerpartition = new float[innerDec.getDimensionality()];
 		int numRounds = (int) Math.ceil((double)dimension/(double)innerDec.getDimensionality());
 		System.arraycopy(f, 0, innerpartition, 0, Math.min(f.length, innerpartition.length));
@@ -41,7 +42,6 @@ public class MultiDecoder implements Decoder {
 		{
 			System.arraycopy(f, i*innerDec.getDimensionality(), innerpartition, 0, Math.min(f.length-i*innerDec.getDimensionality(), innerpartition.length));
 			tmp = innerDec.decode(innerpartition);
-			
 			this.distance+=innerDec.getDistance();
 			System.arraycopy(tmp, 0, ret, i*retLength, retLength);
 		}
@@ -50,7 +50,7 @@ public class MultiDecoder implements Decoder {
 
 	@Override
 	public float getErrorRadius() {
-		return innerDec.getErrorRadius()*rounds;
+		return innerDec.getErrorRadius();
 	}
 	@Override
 	public float getDistance() {
@@ -59,7 +59,6 @@ public class MultiDecoder implements Decoder {
 	@Override
 	public void setVariance(Float parameterObject) {
 		innerDec.setVariance(parameterObject);
-		
 	}
 
 }

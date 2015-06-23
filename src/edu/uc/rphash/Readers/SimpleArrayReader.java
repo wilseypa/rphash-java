@@ -28,12 +28,12 @@ public class SimpleArrayReader implements RPHashObject {
 	Decoder dec;
 	 
 	 
-	 final static int DEFAULT_NUM_PROJECTIONS = 8;
-	 final static int DEFAULT_NUM_BLUR = 2;
+	 final static int DEFAULT_NUM_PROJECTIONS = 2;
+	 final static int DEFAULT_NUM_BLUR = 1;
 	 final static int DEFAULT_NUM_RANDOM_SEED = 0;
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	 final static Decoder DEFAULT_INNER_DECODER = new Leech(); //Spherical(64,5,2);
+	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(32,3,1);
 
 
 	public void setRandomSeed(long randomSeed) {
@@ -54,7 +54,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
-		this.dec = new MultiDecoder(this.decoderMultiplier,DEFAULT_INNER_DECODER);
+		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
 		this.numProjections = DEFAULT_NUM_PROJECTIONS;
 		this.numBlur = DEFAULT_NUM_BLUR;
 		
@@ -74,7 +74,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
-		this.dec = new MultiDecoder(this.decoderMultiplier,DEFAULT_INNER_DECODER);
+		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
 		this.numProjections = DEFAULT_NUM_PROJECTIONS;
 		this.numBlur = blur;
 		
@@ -94,7 +94,7 @@ public class SimpleArrayReader implements RPHashObject {
 
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
-		this.dec = new MultiDecoder(this.decoderMultiplier,DEFAULT_INNER_DECODER);
+		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
 		this.numProjections = DEFAULT_NUM_PROJECTIONS;
 		this.numBlur = blur;
 		this.decoderMultiplier = decoderMultiplier;
@@ -126,7 +126,7 @@ public class SimpleArrayReader implements RPHashObject {
 			int decoderMultiplier, int numProjections) {
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
-		this.dec = new MultiDecoder(this.decoderMultiplier,DEFAULT_INNER_DECODER);
+		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
 		this.numProjections = numProjections;
 		this.numBlur = blur;
 		this.decoderMultiplier = decoderMultiplier;

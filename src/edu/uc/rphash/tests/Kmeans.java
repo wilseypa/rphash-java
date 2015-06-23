@@ -63,7 +63,6 @@ public class Kmeans  implements Clusterer{
 		for(int i = 0 ; i<d;i++)
 			centroid[i] = 0.0f;
 
-		float scalr = 1.0f/(float)vectors.size();
 		Long w_total = 0L;
 		for(Integer v : vectors)
 		{

@@ -4,15 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.tests.TestUtil;
 
+/** Spherical LSH Decoder based on SLSH (lgpl)
+ * @author lee
+ *
+ */
 public class Spherical implements Decoder {
 	int HashBits = 64;
 	List<List<float[]>> vAll; // vAll[i][j] is the vector $A_i \tilde v_j$ from
 				// the article.
 	int hbits; // Ceil(Log2(2*d)).
 	int d; // the dimension of the feature space.
-	int k; // number of elementary hash functions (h) to be concataneted to
+	int k; // number of elementary hash functions (h) to be concatenated to
 			// obtain a reliable enough hash function (g). LSH queries becomes
 			// more selective with increasing k, due to the reduced the
 			// probability of collision.
@@ -59,13 +64,7 @@ public class Spherical implements Decoder {
 		return d;
 	}
 
-	public static final byte[] intToByteArray(int value) {
-	    return new byte[] {
-	            (byte)(value >>> 24),
-	            (byte)(value >>> 16),
-	            (byte)(value >>> 8),
-	            (byte)value};
-	}
+
 	@Override
 	public long[] decode(float[] f) {
 //		byte[] lg = new byte[this.l * 8];
@@ -222,17 +221,19 @@ public class Spherical implements Decoder {
 				}
 				
 				distavg+=TestUtil.distance(p1,p2);
+				MurmurHash mh = new MurmurHash(Long.MAX_VALUE);
 				long[] hp1 = sp.Hash(TestUtil.normalize(p1));
 				long[] hp2 = sp.Hash(TestUtil.normalize(p2));
 				boolean test = false;
-				for(int k = 0; k< hp1.length;k++)
-				{
-					if(hp1[k]==hp2[k]){
-						test=true;
-						
-					}
-				}
-				if(test)ct++;
+//				for(int k = 0; k< hp1.length;k++)
+//				{
+//					if(hp1[k]==hp2[k]){
+//						test=true;
+//						
+//					}
+//				}
+//				if(test)ct++;
+				if(mh.hash(hp1)==mh.hash(hp2))ct++;
 			}
 			System.out.println(distavg/10000f+"\t"+(float)ct/10000f);
 		}

@@ -114,20 +114,20 @@ public class RPHash {
 					break;
 				case "multie8":
 					o.setDecoderType(new MultiDecoder(
-							o.getInnerDecoderMultiplier(), new E8(variance)));
+							o.getInnerDecoderMultiplier()*8, new E8(variance)));
 					break;
 				case "leech":
 					o.setDecoderType(new Leech(variance));
 					break;
 				case "multileech":
 					o.setDecoderType(new MultiDecoder(
-							o.getInnerDecoderMultiplier(), new Leech(variance)));
+							o.getInnerDecoderMultiplier()*24, new Leech(variance)));
 					break;
 				case "pstable":
 					o.setDecoderType(new PStableDistribution(variance));
 					break;
 				case "sphere": {
-					o.setDecoderType(new Spherical(64,6,4));
+					o.setDecoderType(new Spherical(32,3,4));
 					break;
 				}
 				default: {
