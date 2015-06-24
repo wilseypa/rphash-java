@@ -51,11 +51,9 @@ public class LSH
 		return distance;
 	}
 	
-//	public long lshHash(float[] r,float[] perm){	 
-//	  float[] permvec = new float[r.length];	
-//	  for(int i =0;i<r.length;i++)permvec[i] = perm[i]+r[i];
-//	  return lshHash(permvec) ;
-//	}
+	public void updateDecoderVariance(float variance){
+		dec.setVariance(variance);
+	}
 
 	
 	public long[] lshHashRadius(float[] r,float radius,int times){

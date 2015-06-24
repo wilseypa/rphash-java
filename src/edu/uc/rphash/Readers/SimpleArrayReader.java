@@ -49,6 +49,23 @@ public class SimpleArrayReader implements RPHashObject {
 	List<float[]> centroids;
 	List<Long> topIDs;
 
+	
+	public SimpleArrayReader(int dimension, int k) {
+		this.dim = dimension;
+		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.hashmod = DEFAULT_HASH_MODULUS;
+		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
+		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
+		this.numProjections = DEFAULT_NUM_PROJECTIONS;
+		this.numBlur = DEFAULT_NUM_BLUR;
+		this.k = k;
+		this.n = 0;
+		this.data = null;
+		this.centroids = new ArrayList<float[]>();
+		this.topIDs = new ArrayList<Long>();
+	}
+	
+	
 	public SimpleArrayReader(List<float[]> X, int k) {
 
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
@@ -60,13 +77,19 @@ public class SimpleArrayReader implements RPHashObject {
 		
 		
 		data = X;
-		this.n = X.size();
-		this.dim = X.get(0).length;
+		if(X!=null){
+			this.n = X.size();
+			this.dim = X.get(0).length;
+			}
+		else{
+			this.n = 0;
+			this.dim = 0;
+		}
 		this.k = k;
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
-		for (int i = 0; i < k; i++)
-			topIDs.add((long) 0);
+//		for (int i = 0; i < k; i++)
+//			topIDs.add((long) 0);
 	}
 
 	public SimpleArrayReader(List<float[]> X, int k, int blur) {

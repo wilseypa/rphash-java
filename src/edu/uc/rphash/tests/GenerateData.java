@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class GenerateData 
+public class GenerateData implements ClusterGenerator
 {
 	RandomDistributionFnc genfnc;
 	int numClusters;
@@ -219,6 +219,7 @@ public class GenerateData
 		}
 	}
 	
+	
 	public void generateMem()
 	{
 		this.data = new ArrayList<float[]>();//new float[numClusters*numVectorsPerCluster][dimension];
@@ -249,16 +250,6 @@ public class GenerateData
 						dat[k] = medoid[k]+(float)r.nextGaussian()*variances[k];
 				}
 				this.data.add(dat);
-//				if(noised)
-//				{
-//					for(int k=0;k<dimension;k++)
-//					{
-//						if(r.nextInt()%(int)(1.0f/sparseness)==0)
-//							dat[k] = r.nextFloat()*2.0f -1.0f;;
-//					}
-//					this.data.add(dat);
-//					j++;
-//				}
 			}
 		}
 
@@ -354,6 +345,26 @@ public class GenerateData
 		if(medoids==null)
 			generateMem();
 		return medoids;
+	}
+
+
+	@Override
+	public List<float[]> getMedoids() {
+		return medoids;
+	}
+
+
+	@Override
+	public List<float[]> getData() {
+
+		return data;
+	}
+
+
+	@Override
+	public List<Integer> getLabels() {
+		// TODO Auto-generated method stub
+		return reps;
 	}
 	
 }

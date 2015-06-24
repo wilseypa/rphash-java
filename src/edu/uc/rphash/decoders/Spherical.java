@@ -187,6 +187,7 @@ public class Spherical implements Decoder {
 	long[] Hash(float[] p) {
 		int ri = 0;
 		long h;
+		//if(variance!=1f)p = scale(p,variance);
 		long[] g = new long[this.l];
 		for (int i = 0; i < this.l; i++) {
 			g[i] = 0;
@@ -239,9 +240,10 @@ public class Spherical implements Decoder {
 		}
 	}
 
+	float variance = 1f;
 	@Override
 	public void setVariance(Float parameterObject) {
-		//System.out.println("WARNING: variance is not implemented for spherical normalized data");		
+		variance = parameterObject;
 	}
 
 }

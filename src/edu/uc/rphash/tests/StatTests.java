@@ -4,7 +4,14 @@ import java.util.List;
 import java.util.Random;
 
 public class StatTests {
-	
+	Random r;
+	double sampRatio;
+	public StatTests(double sampRatio) {
+		r = new Random();
+		this.sampRatio = sampRatio;
+	}
+
+
 	public static float PR(List<float[]> estCentroids, GenerateData gen){
 		int count = 0 ;
 		List<float[]> data = gen.data();
@@ -16,15 +23,43 @@ public class StatTests {
 	}
 	
 	
-	public static double SSE(List<float[]> estCentroids, GenerateData gen){
+	public static double WCSSD(List<float[]> estCentroids, ClusterGenerator gen){
 		double count = 0.0 ;
-		List<float[]> data = gen.data();
+		List<float[]> data = gen.getData();
 		for(int i = 0; i< data.size();i++)
 		{
 			count+=TestUtil.distance(data.get(i),estCentroids.get(TestUtil.findNearestDistance(data.get(i), estCentroids))) ;
 		}
 		return count;
 	}
+
+	public static double SSE(List<float[]> estCentroids, ClusterGenerator gen){
+		double count = 0.0 ;
+		List<float[]> data = gen.getMedoids();
+		for(int i = 0; i< data.size();i++)
+		{
+			count+=TestUtil.distance(data.get(i),estCentroids.get(TestUtil.findNearestDistance(data.get(i), estCentroids))) ;
+		}
+		return count;
+	}
+	
+	private float n = 0;
+	private float mean = 0;
+	private float M2 = 0;
+	public float updateVarianceSample(float[] row){
+		
+		if(r.nextFloat()>sampRatio)return M2/(n-1f);
+		
+		for(float x : row){
+			n++;
+			float delta = x - mean;
+			mean = mean + delta/n;
+			M2 = M2 + delta*(x-mean);
+		}	
+		if(n<2)return 0;
+		return  M2/(n-1f);
+	}
+	
 	
 	
 	public static float varianceSample(List<float[]> data,float sampRatio){
@@ -67,7 +102,6 @@ public class StatTests {
 		if(n<2)return 0;
 		
 		return  M2/(n-1f);
-		
 	}
 	
 	public static float averageAll(List<float[]> data){

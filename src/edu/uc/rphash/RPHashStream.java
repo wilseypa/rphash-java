@@ -25,27 +25,49 @@ import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.TestUtil;
 
-public class RPHashStream implements Clusterer, Runnable {
-	float variance;
-	KHHCentroidCounter is;
+public class RPHashStream implements StreamClusterer {
+	private float variance;
+	public KHHCentroidCounter is;
+	private LSH[] lshfuncs;
+	private StatTests vartracker;
+	private List<float[]> centroids = null;
+	private RPHashObject so;
 
-	public RPHashObject processStream() {
+	@Override
+	public synchronized int addVector(float[] vec) {
+		long hash[];
+		Centroid c = new Centroid(vec);
+		
+		
+		float tmpvar = vartracker.updateVarianceSample(vec);
+		if(variance!=tmpvar){
+			for (LSH lshfunc : lshfuncs) 
+				lshfunc.updateDecoderVariance(tmpvar);
+			variance= tmpvar;
+		}
+		
+		for (LSH lshfunc : lshfuncs) 
+		{
+			hash = lshfunc.lshHashRadiusNo2Hash(vec, so.getNumBlur());
+			for (long h : hash)
+				c.addID(h);
+		}
+		is.add(c);
+		return (int) is.count;
+	}
 
-		// add to frequent itemset the hashed Decoded randomly projected vector
-		Iterator<float[]> vecs = so.getVectorIterator();
-		if (!vecs.hasNext())
-			return so;
+	public void init() {
 
 		Random r = new Random(so.getRandomSeed());
+		this.vartracker = new StatTests(.01);
 		int projections = so.getNumProjections();
 		int k = (int) (so.getk() * projections);
-		long hash[];
 
 		// initialize our counter
 		is = new KHHCentroidCounter(k);
 
 		// create LSH Device
-		LSH[] lshfuncs = new LSH[projections];
+		lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 
@@ -55,59 +77,72 @@ public class RPHashStream implements Clusterer, Runnable {
 					dec.getDimensionality(), r.nextLong());
 			lshfuncs[i] = new LSH(dec, p, hal);
 		}
-
-		while (vecs.hasNext()) {
-			float[] vec = vecs.next();
-			Centroid c = new Centroid(vec);
-			for (int i = 0; i < projections; i++) {
-				hash = lshfuncs[i].lshHashRadiusNo2Hash(vec, so.getNumBlur());
-				for (long h : hash) c.addID(h);
-			}
-			is.add(c);
-		}
-		
-		System.out.println(is.getCounts().toString());
-		return so;
 	}
-
-	private List<float[]> centroids = null;
-	private RPHashObject so;
 
 	public RPHashStream(List<float[]> data, int k) {
+
 		variance = StatTests.varianceSample(data, .01f);
 		so = new SimpleArrayReader(data, k);
-//		so.setDecoderType(new Spherical(32,3,4));
-//		so.setDecoderType(new Leech(variance));
-		so.getDecoderType().setVariance(variance);
+		init();
+		// so.setDecoderType(new Spherical(32,3,4));
+		// so.setDecoderType(new Leech(variance));
+		// so.getDecoderType().setVariance(variance);
 	}
-
 
 	public RPHashStream(RPHashObject so) {
 		this.so = so;
+		init();
 	}
 
 	public List<float[]> getCentroids(RPHashObject so) {
 		this.so = so;
+		init();
 		if (centroids == null)
 			run();
 		centroids = new ArrayList<float[]>();
 		for (Centroid c : is.getTop())
 			centroids.add(c.centroid());
-		return new Kmeans(so.getk(), centroids,is.getCounts()).getCentroids();
+		return new Kmeans(so.getk(), centroids, is.getCounts()).getCentroids();
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
-		if (centroids == null)
+	public List<float[]> getCentroids() 
+	{
+		if (centroids == null){
 			run();
-		centroids = new ArrayList<float[]>();
-		for (int i = 0;i<is.getTop().size();i++)
+			centroids = new ArrayList<float[]>();
+			for (int i = 0; i < is.getTop().size(); i++)
+				centroids.add(is.getTop().get(i).centroid());
+			centroids = new Kmeans(so.getk(), centroids, is.getCounts()).getCentroids();
+		}
+		return centroids;
+	}
+	
+	ArrayList<Long> counts;
+	public List<float[]> getCentroidsOnline() 
+	{
+		
+		if(centroids == null ){
+			centroids = new ArrayList<float[]>();
+			counts = new ArrayList<Long>();
+		}
+		
+		for (int i = 0; i < is.getTop().size(); i++)
+		{
 			centroids.add(is.getTop().get(i).centroid());
-		return new Kmeans(so.getk(), centroids,is.getCounts()).getCentroids();
+		}
+		//TODO reincorporate counts
+		centroids = new Kmeans(so.getk(), centroids).getCentroids();
+		
+		return centroids;
 	}
 
 	public void run() {
-		so = processStream();
+		// add to frequent itemset the hashed Decoded randomly projected vector
+		Iterator<float[]> vecs = so.getVectorIterator();
+		while (vecs.hasNext()) {
+			addVector(vecs.next());
+		}
 	}
 
 	public List<Long> getTopIdSizes() {
@@ -117,8 +152,8 @@ public class RPHashStream implements Clusterer, Runnable {
 	public static void main(String[] args) {
 
 		int k = 10;
-		int d = 1000;
-		int n = 20000;
+		int d = 100;
+		int n = 10000;
 		float var = 1.1f;
 		for (float f = var; f < 4.3; f += .2f) {
 			for (int i = 0; i < 1; i++) {
@@ -131,8 +166,8 @@ public class RPHashStream implements Clusterer, Runnable {
 				List<float[]> aligned = TestUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
 				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
-						+ StatTests.SSE(gen.medoids(), gen) + ":"
-						+ StatTests.SSE(aligned, gen) + ":" + duration
+						+ StatTests.WCSSD(gen.medoids(), gen) + ":"
+						+ StatTests.WCSSD(aligned, gen) + ":" + duration
 						/ 1000000000f);
 				System.gc();
 			}

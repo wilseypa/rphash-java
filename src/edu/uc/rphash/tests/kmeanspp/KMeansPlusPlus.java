@@ -603,7 +603,7 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 		List<float[]> aligned = TestUtil.alignCentroids(
 				kk.getCentroids(), gen.medoids());
 		
-		System.out.println( StatTests.PR(aligned, gen) + ":"+StatTests.SSE(aligned, gen));
+		System.out.println( StatTests.PR(aligned, gen) + ":"+StatTests.WCSSD(aligned, gen));
 		System.gc();
 
 	}

@@ -7,6 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uc.rphash.Clusterer;
+import edu.uc.rphash.StreamClusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 
@@ -35,7 +36,7 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
  * @author Keith Stevens
  */
 
-public class StreamingKmeans implements Clusterer {
+public class StreamingKmeans implements StreamClusterer{
 
 	public class CentroidCluster {
 
@@ -297,6 +298,7 @@ public class StreamingKmeans implements Clusterer {
 	 */
 	private final float facilityThreshold;
 
+	@Override
 	public synchronized int addVector(float[] value) {
 		// Get the id of the new data point.
 		int id = idCounter.getAndAdd(1);

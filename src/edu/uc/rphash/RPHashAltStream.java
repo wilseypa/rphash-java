@@ -98,7 +98,7 @@ public class RPHashAltStream implements Clusterer, Runnable {
 				long duration = (System.nanoTime() - startTime);
 				List<float[]> aligned = TestUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
-				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"+StatTests.SSE(aligned, gen)+":"
+				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"+StatTests.WCSSD(aligned, gen)+":"
 						+ duration / 1000000000f);
 				System.gc();
 			}

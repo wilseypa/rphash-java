@@ -83,7 +83,8 @@ public class Kmeans  implements Clusterer{
 	
 	void updateMeans(List<float[]> data )
 	{
-		for(int i = 0; i< k;i++)means.set(i,computerCentroid(clusters.get(i),data));
+		for(int i = 0; i< k;i++)
+			means.set(i,computerCentroid(clusters.get(i),data));
 	}
 	
 	int assignClusters(List<float[]> data)
@@ -105,7 +106,7 @@ public class Kmeans  implements Clusterer{
 	}
 	
 	public void run(){
-		StatTests.varianceAll(data);
+		//StatTests.varianceAll(data);
 		int maxiters = 10000;
 		int swaps = 3;
 		List<float[]> fulldata = data;

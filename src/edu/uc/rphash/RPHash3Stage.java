@@ -218,7 +218,7 @@ public class RPHash3Stage implements Clusterer {
 				List<float[]> aligned = TestUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
 				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
-						+ StatTests.SSE(aligned, gen) + ":" + duration
+						+ StatTests.WCSSD(aligned, gen) + ":" + duration
 						/ 1000000000f);
 				System.gc();
 			}
