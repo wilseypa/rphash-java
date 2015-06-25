@@ -21,8 +21,10 @@ import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.GenerateData;
+import edu.uc.rphash.tests.GenerateStreamData;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.StreamingKmeans;
 import edu.uc.rphash.tests.TestUtil;
 
 public class RPHashStream implements StreamClusterer {
@@ -111,8 +113,8 @@ public class RPHashStream implements StreamClusterer {
 		if (centroids == null){
 			run();
 			centroids = new ArrayList<float[]>();
-			for (int i = 0; i < is.getTop().size(); i++)
-				centroids.add(is.getTop().get(i).centroid());
+			for (Centroid cent : is.getTop())
+				centroids.add(cent.centroid());
 			centroids = new Kmeans(so.getk(), centroids, is.getCounts()).getCentroids();
 		}
 		return centroids;
@@ -127,11 +129,12 @@ public class RPHashStream implements StreamClusterer {
 			counts = new ArrayList<Long>();
 		}
 		
-		for (int i = 0; i < is.getTop().size(); i++)
+		//if(is.getTop().size()<1)return centroids;
+		//TODO read weights
+		for (Centroid cent:is.getTop())
 		{
-			centroids.add(is.getTop().get(i).centroid());
+			centroids.add(cent.centroid());
 		}
-		//TODO reincorporate counts
 		centroids = new Kmeans(so.getk(), centroids).getCentroids();
 		
 		return centroids;
@@ -152,14 +155,14 @@ public class RPHashStream implements StreamClusterer {
 	public static void main(String[] args) {
 
 		int k = 10;
-		int d = 100;
+		int d = 5000;
 		int n = 10000;
-		float var = 1.1f;
-		for (float f = var; f < 4.3; f += .2f) {
+		float var = 1f;
+		for (float f = var; f < 3; f += .2f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				// StreamingKmeans rphit = new StreamingKmeans(gen.data(), k);
-				RPHashStream rphit = new RPHashStream(gen.data(), k);
+				RPHashStream rphit = new RPHashStream(gen.getData(), k);
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
@@ -170,6 +173,22 @@ public class RPHashStream implements StreamClusterer {
 						+ StatTests.WCSSD(aligned, gen) + ":" + duration
 						/ 1000000000f);
 				System.gc();
+			}
+		}
+		
+
+
+		GenerateStreamData gen = new GenerateStreamData(k, d, 1.1f);
+		RPHashStream rphit = new RPHashStream(gen.getData(), k);
+		//RPHashStream rphit = new RPHashStream(new SimpleArrayReader(d, k));
+		for (int i = 0; i < 10000000; i++) {
+			rphit.addVector(gen.generateNext());
+			if (i % 10000 == 10000-1) {
+				Runtime rt = Runtime.getRuntime();
+				List<float[]> cents = rphit.getCentroidsOnline();
+				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+				System.out.println(i + ":" + usedkB + ":"
+						+ StatTests.SSE(cents, gen));
 			}
 		}
 	}

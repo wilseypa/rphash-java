@@ -65,7 +65,6 @@ public class KHHCentroidCounter {
 
 	public boolean add(Centroid c) {
 		long count = addLong(c.id, 1);
-		System.out.println(count);
 		Centroid probed =  items.remove(c.id);
 			for(Long h : c.ids){
 				if(probed!=null){
@@ -130,8 +129,8 @@ public class KHHCentroidCounter {
 	List<Centroid> topcent = null;
 	List<Long> counts = null;
 	public List<Centroid> getTop() {
-		if (this.topcent != null)
-			return this.topcent;
+//		if (this.topcent != null)
+//			return this.topcent;
 		
 		this.topcent = new ArrayList<>();
 		this.counts = new ArrayList<>();

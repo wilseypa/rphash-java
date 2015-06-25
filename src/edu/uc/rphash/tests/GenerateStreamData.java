@@ -220,25 +220,6 @@ public class GenerateStreamData implements ClusterGenerator {
 	// }
 	// }
 
-	public static void main(String[] args) throws InterruptedException {
-
-		int k = 10;
-		int d = 100;
-
-		GenerateStreamData gen = new GenerateStreamData(k, d, 1.1f);
-		// StreamingKmeans rphit = new StreamingKmeans(gen.data(), k);
-		RPHashStream rphit = new RPHashStream(new SimpleArrayReader(d, k));
-		for (int i = 0; i < 10000000; i++) {
-			rphit.addVector(gen.generateNext());
-			if (i % 10000 == 1) {
-				Runtime rt = Runtime.getRuntime();
-				List<float[]> cents = rphit.getCentroidsOnline();
-				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
-				System.out.println(i + ":" + usedkB + ":"
-						+ StatTests.SSE(cents, gen));
-			}
-		}
-	}
 
 	public long getSize() {
 		return size;

@@ -400,4 +400,12 @@ public class StreamingKmeans implements StreamClusterer{
 		return facilities.size();
 	}
 
+	public List<float[]> getCentroidsOnline() {
+		List<float[]> ret = new ArrayList<>();
+		for (CentroidCluster c1 : getClusters())
+			ret.add(c1.centroid());
+		return new Kmeans(numClusters,ret).getCentroids();
+
+	}
+
 }
