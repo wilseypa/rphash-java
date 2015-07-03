@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -24,10 +25,11 @@ import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
 
 public class RPHash {
 
-	static String[] rphashes = { "simple", "streaming", "3stage", "multiProj", "consensus",
-			"redux", "kmeans", "pkmeans","kmeansplusplus","streamingkmeans" };
+	static String[] rphashes = { "simple", "streaming", "3stage", "multiProj",
+			"consensus", "redux", "kmeans", "pkmeans", "kmeansplusplus",
+			"streamingkmeans" };
 	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
-			"NumBlur", "RandomSeed", "Hashmod", "DecoderType" };
+			"NumBlur", "RandomSeed", "Hashmod", "DecoderType", "streamduration" };
 	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
 			"PStable", "Sphere" };
 
@@ -60,23 +62,65 @@ public class RPHash {
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
 		List<Clusterer> runs = runConfigs(truncatedArgs, taggedArgs, data);
+
+		if (taggedArgs.containsKey("streamduration"))
+			runstream(runs, outputFile,
+					Integer.parseInt(taggedArgs.get("streamduration")), data);
+		// run remaining
 		runner(runs, outputFile);
 	}
 
 	public static void runner(List<Clusterer> runitems, String outputFile) {
 		for (Clusterer clu : runitems) {
-			
 			String[] ClusterHashName = clu.getClass().getName().split("\\.");
 			String[] DecoderHashName = clu.getParam().toString().split("\\.");
-			System.out.print(ClusterHashName[ClusterHashName.length-1] + "{"
-					+ DecoderHashName[DecoderHashName.length-1] + "} processing time : ");
+			System.out.print(ClusterHashName[ClusterHashName.length - 1] + "{"
+					+ DecoderHashName[DecoderHashName.length - 1]
+					+ "} processing time : ");
 			long startTime = System.nanoTime();
 			clu.getCentroids();
 			System.out.println((System.nanoTime() - startTime) / 1000000000f);
 			TestUtil.writeFile(new File(outputFile + "."
-					+ ClusterHashName[ClusterHashName.length-1]), clu.getCentroids());
+					+ ClusterHashName[ClusterHashName.length - 1]),
+					clu.getCentroids());
 		}
+	}
 
+	public static void runstream(List<Clusterer> runitems, String outputFile,
+			Integer streamDuration, List<float[]> data) {
+		Iterator<Clusterer> cluit = runitems.iterator();
+		while (cluit.hasNext()) {
+			Clusterer clu = cluit.next();
+			if (clu instanceof StreamClusterer) {
+
+				String[] ClusterHashName = clu.getClass().getName()
+						.split("\\.");
+				String[] DecoderHashName = clu.getParam().toString()
+						.split("\\.");
+				System.out.print("Streaming -- "
+						+ ClusterHashName[ClusterHashName.length - 1] + "{"
+						+ DecoderHashName[DecoderHashName.length - 1]
+						+ ",stream_duration" + streamDuration
+						+ "} \n cpu time \t wcsse \n");
+				long startTime = System.nanoTime();
+				for (int i = 0; i < data.size(); i++) {
+					((StreamClusterer) clu).addVector(data.get(i));
+					if (i % streamDuration == 0) {
+						List<float[]> cents = ((StreamClusterer) clu)
+								.getCentroidsOnline();
+						System.out.println((System.nanoTime() - startTime)
+								/ 1000000000f + "\t"
+								+ StatTests.WCSSE(cents, data));
+						TestUtil.writeFile(new File(outputFile + "_round" + i
+								+ "."
+								+ ClusterHashName[ClusterHashName.length - 1]),
+								clu.getCentroids());
+						startTime = System.nanoTime();
+					}
+				}
+				cluit.remove();
+			}
+		}
 	}
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
@@ -106,74 +150,74 @@ public class RPHash {
 
 		if (taggedArgs.containsKey("decodertype")) {
 			switch (taggedArgs.get("decodertype").toLowerCase()) {
-				case "dn":
-					o.setDecoderType(new Dn(o.getInnerDecoderMultiplier()));
-					break;
-				case "e8":
-					o.setDecoderType(new E8(variance));
-					break;
-				case "multie8":
-					o.setDecoderType(new MultiDecoder(
-							o.getInnerDecoderMultiplier()*8, new E8(variance)));
-					break;
-				case "leech":
-					o.setDecoderType(new Leech(variance));
-					break;
-				case "multileech":
-					o.setDecoderType(new MultiDecoder(
-							o.getInnerDecoderMultiplier()*24, new Leech(variance)));
-					break;
-				case "pstable":
-					o.setDecoderType(new PStableDistribution(variance));
-					break;
-				case "sphere": {
-					o.setDecoderType(new Spherical(32,3,4));
-					break;
-				}
-				default: {
-					System.out.println(taggedArgs.get("decodertype")
-							+ " decoder does not exist");
-					o.setDecoderType(null);
-				}
+			case "dn":
+				o.setDecoderType(new Dn(o.getInnerDecoderMultiplier()));
+				break;
+			case "e8":
+				o.setDecoderType(new E8(variance));
+				break;
+			case "multie8":
+				o.setDecoderType(new MultiDecoder(
+						o.getInnerDecoderMultiplier() * 8, new E8(variance)));
+				break;
+			case "leech":
+				o.setDecoderType(new Leech(variance));
+				break;
+			case "multileech":
+				o.setDecoderType(new MultiDecoder(
+						o.getInnerDecoderMultiplier() * 24, new Leech(variance)));
+				break;
+			case "pstable":
+				o.setDecoderType(new PStableDistribution(variance));
+				break;
+			case "sphere": {
+				o.setDecoderType(new Spherical(32, 3, 4));
+				break;
+			}
+			default: {
+				System.out.println(taggedArgs.get("decodertype")
+						+ " decoder does not exist");
+				o.setDecoderType(null);
+			}
 			}
 		}
 
 		while (i < untaggedArgs.size()) {
 			switch (untaggedArgs.get(i).toLowerCase()) {
-				case "simple":
-					runitems.add(new RPHashSimple(o));
-					break;
-				case "streaming":
-					runitems.add(new RPHashStream(o));
-					break;
-				case "3stage":
-					runitems.add(new RPHash3Stage(o));
-					break;
-				case "concensus":
-					runitems.add(new RPHashConsensusRP(o));
-					break;
-				case "multiproj":
-					runitems.add(new RPHashMultiProj(o));
-					break;
-				case "redux":
-					runitems.add(new RPHashIterativeRedux(o));
-					break;
-				case "kmeans":
-					runitems.add(new Kmeans(k, data));
-					break;
-				case "pkmeans":
-					runitems.add(new Kmeans(k, data, o.getNumProjections()));
-					break;
-				case "kmeansplusplus":
-					runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
-					break;
-				case "streamingkmeans":
-					runitems.add(new StreamingKmeans(data, k));
-					break;
-				default:
-					System.out.println(untaggedArgs.get(i) + " does not exist");
-					break;
-				}
+			case "simple":
+				runitems.add(new RPHashSimple(o));
+				break;
+			case "streaming":
+				runitems.add(new RPHashStream(o));
+				break;
+			case "3stage":
+				runitems.add(new RPHash3Stage(o));
+				break;
+			case "concensus":
+				runitems.add(new RPHashConsensusRP(o));
+				break;
+			case "multiproj":
+				runitems.add(new RPHashMultiProj(o));
+				break;
+			case "redux":
+				runitems.add(new RPHashIterativeRedux(o));
+				break;
+			case "kmeans":
+				runitems.add(new Kmeans(k, data));
+				break;
+			case "pkmeans":
+				runitems.add(new Kmeans(k, data, o.getNumProjections()));
+				break;
+			case "kmeansplusplus":
+				runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
+				break;
+			case "streamingkmeans":
+				runitems.add(new StreamingKmeans(data, k));
+				break;
+			default:
+				System.out.println(untaggedArgs.get(i) + " does not exist");
+				break;
+			}
 			i++;
 		}
 

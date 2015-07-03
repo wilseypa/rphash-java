@@ -10,6 +10,7 @@ import java.util.PriorityQueue;
 import java.util.Random;
 
 import edu.uc.rphash.Centroid;
+import edu.uc.rphash.tests.TestUtil;
 
 public class KHHCentroidCounter {
 	public static final long PRIME_MODULUS = (1L << 31) - 1;
@@ -31,7 +32,7 @@ public class KHHCentroidCounter {
 		double epsOfTotalCount = .00001;
 		double confidence = .99;
 		int seed = (int) System.currentTimeMillis();
-		
+		count = 0;
 		countlist = new HashMap<>();
 		
 		Comparator<Centroid> cmp = new Comparator<Centroid>() {
@@ -64,6 +65,7 @@ public class KHHCentroidCounter {
 
 
 	public boolean add(Centroid c) {
+		this.count++;
 		long count = addLong(c.id, 1);
 		Centroid probed =  items.remove(c.id);
 			for(Long h : c.ids){
@@ -93,6 +95,8 @@ public class KHHCentroidCounter {
 			items.remove(removed.id);
 			countlist.remove(removed.id);
 		}
+		
+		
 		return false;
 	}
 
@@ -113,7 +117,7 @@ public class KHHCentroidCounter {
 			if (table[i][hash(item, i)] < min)
 				min = (int) table[i][hash(item, i)];
 		}
-		this.count += count;
+		
 		return min;
 	}
 	
@@ -129,7 +133,7 @@ public class KHHCentroidCounter {
 	List<Centroid> topcent = null;
 	List<Long> counts = null;
 	public List<Centroid> getTop() {
-//		if (this.topcent != null)
+		if (this.topcent != null)return topcent;
 //			return this.topcent;
 		
 		this.topcent = new ArrayList<>();

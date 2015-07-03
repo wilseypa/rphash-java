@@ -81,6 +81,9 @@ public class LSH
 
 	     float[] pr_r = p[0].project(r);
 	     
+//			TestUtil.prettyPrint(pr_r);
+//			System.out.println(dec.decode(pr_r));
+	     
 	     long[] nonoise = dec.decode(pr_r);
 	     long[] ret = new long[times*nonoise.length];
 	     for(int k =0;k<nonoise.length;k++)ret[k]=nonoise[k];

@@ -12,20 +12,19 @@ public class StatTests {
 	}
 
 
-	public static float PR(List<float[]> estCentroids, GenerateData gen){
+	public static float PR(List<float[]> estCentroids, ClusterGenerator gen){
 		int count = 0 ;
-		List<float[]> data = gen.data();
+		List<float[]> data = gen.getData();
 		for(int i = 0; i< data.size();i++)
 		{
-			if(TestUtil.findNearestDistance(data.get(i), estCentroids)==gen.getClusterID(i))count++;
+			if(TestUtil.findNearestDistance(data.get(i), estCentroids)==gen.getLabels().get(i))count++;
 		}
 		return (float)count/(float)data.size();
 	}
 	
 	
-	public static double WCSSD(List<float[]> estCentroids, ClusterGenerator gen){
+	public static double WCSSE(List<float[]> estCentroids, List<float[]> data){
 		double count = 0.0 ;
-		List<float[]> data = gen.getData();
 		for(int i = 0; i< data.size();i++)
 		{
 			count+=TestUtil.distance(data.get(i),estCentroids.get(TestUtil.findNearestDistance(data.get(i), estCentroids))) ;

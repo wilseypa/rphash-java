@@ -12,10 +12,11 @@ import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PStableDistribution;
 import edu.uc.rphash.decoders.Spherical;
+import edu.uc.rphash.tests.ClusterGenerator;
 
 public class SimpleArrayReader implements RPHashObject {
 
-	public List<float[]> data;
+	public Iterator<float[]> data;
 	// List<List<Float>> Xlist;
 	final int n;
 	final int dim;
@@ -29,7 +30,7 @@ public class SimpleArrayReader implements RPHashObject {
 	 
 	 
 	 final static int DEFAULT_NUM_PROJECTIONS = 2;
-	 final static int DEFAULT_NUM_BLUR = 1;
+	 final static int DEFAULT_NUM_BLUR = 2;
 	 final static int DEFAULT_NUM_RANDOM_SEED = 0;
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
@@ -50,8 +51,8 @@ public class SimpleArrayReader implements RPHashObject {
 	List<Long> topIDs;
 
 	
-	public SimpleArrayReader(int dimension, int k) {
-		this.dim = dimension;
+	public SimpleArrayReader(int k, ClusterGenerator gen) {
+		this.dim = gen.getDimension();
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
@@ -63,7 +64,9 @@ public class SimpleArrayReader implements RPHashObject {
 		this.data = null;
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
+		this.data = gen.getIterator();
 	}
+	
 	
 	
 	public SimpleArrayReader(List<float[]> X, int k) {
@@ -76,15 +79,14 @@ public class SimpleArrayReader implements RPHashObject {
 		this.numBlur = DEFAULT_NUM_BLUR;
 		
 		
-		data = X;
-		if(X!=null){
-			this.n = X.size();
+		data = X.iterator();
+		this.n = X.size();
+		if(X.size()>1)
 			this.dim = X.get(0).length;
-			}
-		else{
-			this.n = 0;
+		else 
 			this.dim = 0;
-		}
+	
+
 		this.k = k;
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
@@ -102,7 +104,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.numBlur = blur;
 		
 		
-		data = X;
+		data = X.iterator();
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
@@ -123,7 +125,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.decoderMultiplier = decoderMultiplier;
 		
 		
-		data = X;
+		data = X.iterator();
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
@@ -155,7 +157,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.decoderMultiplier = decoderMultiplier;
 		
 		
-		data = X;
+		data = X.iterator();
 		this.n = X.size();
 		this.dim = X.get(0).length;
 		this.k = k;
@@ -166,7 +168,7 @@ public class SimpleArrayReader implements RPHashObject {
 	}
 
 	public Iterator<float[]> getVectorIterator() {
-		return data.iterator();
+		return data;
 	}
 
 	@Override

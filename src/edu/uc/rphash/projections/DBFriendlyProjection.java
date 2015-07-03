@@ -90,6 +90,7 @@ public class DBFriendlyProjection implements Projector {
 		  float[] r = new float[t];
 		  float sum;
 		  float scale = (float)Math.sqrt(3.0f/((float)t));
+		  
 		  for(i=0;i<t;i++)
 		  {
 		      sum = 0.0f;
@@ -101,6 +102,7 @@ public class DBFriendlyProjection implements Projector {
 		      {
 		          sum-=v[j]*scale;
 		      }
+		      
 		      r[i] = sum;
 		  }
 //		  WiP

@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -261,9 +262,7 @@ public class GenerateData implements ClusterGenerator
 	}
 	
 	public int getClusterID(int vecIdx){
-		if(shuffle)
 		return reps.get(vecIdx);
-		else return vecIdx;
 	}
 	
 	public void writeToFile(File f){
@@ -365,6 +364,20 @@ public class GenerateData implements ClusterGenerator
 	public List<Integer> getLabels() {
 		// TODO Auto-generated method stub
 		return reps;
+	}
+
+
+	@Override
+	public int getDimension() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	@Override
+	public Iterator<float[]> getIterator() {
+		// TODO Auto-generated method stub
+		return data.iterator();
 	}
 	
 }

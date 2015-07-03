@@ -20,6 +20,7 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.standardhash.NoHash;
+import edu.uc.rphash.tests.ClusterGenerator;
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.GenerateStreamData;
 import edu.uc.rphash.tests.Kmeans;
@@ -39,7 +40,6 @@ public class RPHashStream implements StreamClusterer {
 	public synchronized int addVector(float[] vec) {
 		long hash[];
 		Centroid c = new Centroid(vec);
-		
 		
 		float tmpvar = vartracker.updateVarianceSample(vec);
 		if(variance!=tmpvar){
@@ -79,6 +79,15 @@ public class RPHashStream implements StreamClusterer {
 					dec.getDimensionality(), r.nextLong());
 			lshfuncs[i] = new LSH(dec, p, hal);
 		}
+	}
+	
+	public RPHashStream(int k, ClusterGenerator c) {
+
+		so = new SimpleArrayReader(k,c);
+		init();
+		// so.setDecoderType(new Spherical(32,3,4));
+		// so.setDecoderType(new Leech(variance));
+		// so.getDecoderType().setVariance(variance);
 	}
 
 	public RPHashStream(List<float[]> data, int k) {
@@ -129,14 +138,15 @@ public class RPHashStream implements StreamClusterer {
 			counts = new ArrayList<Long>();
 		}
 		
-		//if(is.getTop().size()<1)return centroids;
-		//TODO read weights
-		for (Centroid cent:is.getTop())
-		{
-			centroids.add(cent.centroid());
+		for (int i = 0 ;i<is.getTop().size();i++){
+			centroids.add(is.getTop().get(i).centroid());
+			counts.add(is.getCounts().get(i));
 		}
-		centroids = new Kmeans(so.getk(), centroids).getCentroids();
-		
+
+		centroids = new Kmeans(so.getk(), centroids,counts).getCentroids();
+		long count = 1l;//(long)((float)is.count/(float)so.getk());
+		counts = new ArrayList<Long>();
+		for(int i = 0;i<so.getk();i++)counts.add(count);
 		return centroids;
 	}
 
@@ -152,12 +162,12 @@ public class RPHashStream implements StreamClusterer {
 		return is.getCounts();
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception{
 
 		int k = 10;
-		int d = 5000;
+		int d = 10000;
 		int n = 10000;
-		float var = 1f;
+		float var = .75f;
 		for (float f = var; f < 3; f += .2f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
@@ -169,26 +179,36 @@ public class RPHashStream implements StreamClusterer {
 				List<float[]> aligned = TestUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
 				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
-						+ StatTests.WCSSD(gen.medoids(), gen) + ":"
-						+ StatTests.WCSSD(aligned, gen) + ":" + duration
+						+ StatTests.WCSSE(gen.medoids(), gen.getData()) + ":"
+						+ StatTests.WCSSE(aligned, gen.getData()) + ":" + duration
 						/ 1000000000f);
 				System.gc();
 			}
 		}
 		
 
-
-		GenerateStreamData gen = new GenerateStreamData(k, d, 1.1f);
-		RPHashStream rphit = new RPHashStream(gen.getData(), k);
-		//RPHashStream rphit = new RPHashStream(new SimpleArrayReader(d, k));
-		for (int i = 0; i < 10000000; i++) {
+		Runtime rt = Runtime.getRuntime();
+		GenerateStreamData gen = new GenerateStreamData(k, d, var);
+		gen.generateNext();
+		StreamClusterer rphit = new /*StreamingKmeans(k,gen);*/RPHashStream(k,gen);
+		long timestart = System.currentTimeMillis();
+		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tPR\tCentSSE\n");
+		for (int i = 0; i < 1000000; i++) {
 			rphit.addVector(gen.generateNext());
-			if (i % 10000 == 10000-1) {
-				Runtime rt = Runtime.getRuntime();
+			if (i % 10000 == 10000-1) 
+			{
 				List<float[]> cents = rphit.getCentroidsOnline();
 				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
-				System.out.println(i + ":" + usedkB + ":"
-						+ StatTests.SSE(cents, gen));
+				List<float[]> aligned = TestUtil.alignCentroids(
+				cents, gen.getMedoids());
+				double pr = StatTests.PR(aligned, gen);
+				double intercluster = StatTests.WCSSE(aligned, gen.getData());
+				double ssecent = StatTests.SSE(aligned, gen);
+				rt.gc();
+				Thread.sleep(10);
+				rt.gc();
+				System.out.printf("%d\t%d\t%.3f\t%.0f\t%.3f\t%.3f\n",i,usedkB, (System.currentTimeMillis()-timestart)/1000f,intercluster,pr,ssecent);
+				timestart = System.currentTimeMillis();
 			}
 		}
 	}

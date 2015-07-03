@@ -28,23 +28,22 @@ public class RPHashAltStream implements Clusterer, Runnable {
 		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
-		r=new Random();
+		r = new Random();
 
-		int k =so.getk();// (int) (so.getk()) * projections;
+		int k = so.getk();// (int) (so.getk()) * projections;
 
-		//initialize our counter
+		// initialize our counter
 		is = new KHHCountMinSketch<>(k);
 
 		while (vecs.hasNext()) {
 			float[] vec = vecs.next();
 			Centroid c = new Centroid(vec);
 			is.add(c);
-			
+
 		}
-		
+
 		return so;
 	}
-
 
 	private List<float[]> centroids = null;
 	private RPHashObject so;
@@ -65,7 +64,7 @@ public class RPHashAltStream implements Clusterer, Runnable {
 
 	public List<float[]> getCentroids(RPHashObject so) {
 		this.so = so;
-		return  getCentroids();
+		return getCentroids();
 	}
 
 	@Override
@@ -73,14 +72,15 @@ public class RPHashAltStream implements Clusterer, Runnable {
 
 		if (centroids == null)
 			run();
-		return  centroids;
+		return centroids;
 	}
 
 	public void run() {
 		so = processStream();
 		centroids = new ArrayList<float[]>();
-		for(Centroid c : is.getTop())centroids.add(c.centroid());
-		centroids = new Kmeans(so.getk(),centroids).getCentroids();
+		for (Centroid c : is.getTop())
+			centroids.add(c.centroid());
+		centroids = new Kmeans(so.getk(), centroids).getCentroids();
 	}
 
 	public static void main(String[] args) {
@@ -98,7 +98,8 @@ public class RPHashAltStream implements Clusterer, Runnable {
 				long duration = (System.nanoTime() - startTime);
 				List<float[]> aligned = TestUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
-				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"+StatTests.WCSSD(aligned, gen)+":"
+				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
+						+ StatTests.WCSSE(aligned, gen.getData()) + ":"
 						+ duration / 1000000000f);
 				System.gc();
 			}

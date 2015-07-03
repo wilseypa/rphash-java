@@ -37,11 +37,11 @@ public class GenerateStreamData implements ClusterGenerator {
 		this.numClusters = numClusters;
 		this.dimension = dimension;
 		this.shuffle = true;
-		this.medoids = null;
-		this.data = null;
-		this.reps = null;
+		this.medoids = new ArrayList<float[]>();
+		this.data = new ArrayList<float[]>();
+		this.reps = new ArrayList<Integer>();
 		this.scaler = 1f / (variance * (float) Math.sqrt(dimension));// normalize
-																		// dimension
+		this.variances = new ArrayList<float[]>();															// dimension
 		this.sparseness = 1.0f;
 		this.generateMedoids();
 		this.save = save;
@@ -53,7 +53,7 @@ public class GenerateStreamData implements ClusterGenerator {
 		this.dimension = dimension;
 		this.shuffle = true;
 		this.medoids = new ArrayList<float[]>();
-		;
+		
 		this.data = new ArrayList<float[]>();
 		this.reps = new ArrayList<Integer>();
 		this.variances = new ArrayList<float[]>();
@@ -242,6 +242,29 @@ public class GenerateStreamData implements ClusterGenerator {
 	@Override
 	public List<Integer> getLabels() {
 		return reps;
+	}
+
+	@Override
+	public int getDimension() {
+		return dimension;
+	}
+
+	@Override
+	public Iterator<float[]> getIterator() {
+		return new Iterator<float[]>(){
+
+			@Override
+			public boolean hasNext() {
+				return true;
+			}
+
+			@Override
+			public float[] next() {
+				return generateNext();
+			}
+			
+		};
+
 	}
 
 }
