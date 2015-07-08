@@ -10,6 +10,7 @@ import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.StreamClusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
+import edu.uc.rphash.Readers.StreamObject;
 
 /**
  * An implementation of a simple, highly accurate streaming K Means algorithm.
@@ -222,6 +223,35 @@ public class StreamingKmeans implements StreamClusterer{
 			this.gamma = Math.max(4 * alpha * alpha * alpha * cofl * cofl + 2
 					* alpha * alpha * cofl, beta * kofl + 1);
 			this.logNumPoints = (float) (Math.log(numPoints) / Math.log(2));
+
+			// Precompute the thresholds, which are constants as well.
+			costThreshold = gamma;
+			facilityThreshold = (1 + logNumPoints) * numClusters;
+
+			LCost = 1;
+			facilityCost = LCost / (numClusters * (1 + logNumPoints));
+			totalCost = 0;
+		}
+
+		public StreamingKmeans(StreamObject streamObject) {
+			
+			centroids = null;
+			// Create initial data structures.
+			facilities = new CopyOnWriteArrayList<CentroidCluster>();
+			idCounter = new AtomicInteger(1);
+			firstKPoints = new ArrayList<float[]>(streamObject.getk());
+
+			this.alpha = DEFAULT_ALPHA;
+			this.cofl = DEFAULT_COFL;
+			this.kofl = DEFAULT_KOFL;
+
+			// Save the constants.
+			this.numClusters = streamObject.getk();
+
+			this.beta = 2 * alpha * alpha * cofl + 2 * alpha;
+			this.gamma = Math.max(4 * alpha * alpha * alpha * cofl * cofl + 2
+					* alpha * alpha * cofl, beta * kofl + 1);
+			this.logNumPoints = 24;
 
 			// Precompute the thresholds, which are constants as well.
 			costThreshold = gamma;

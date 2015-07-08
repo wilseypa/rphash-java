@@ -1,6 +1,7 @@
 package edu.uc.rphash;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
+import edu.uc.rphash.Readers.StreamObject;
 import edu.uc.rphash.decoders.Dn;
 import edu.uc.rphash.decoders.E8;
 import edu.uc.rphash.decoders.Leech;
@@ -33,7 +35,7 @@ public class RPHash {
 	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
 			"PStable", "Sphere" };
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws NumberFormatException, IOException {
 
 		if (args.length < 3) {
 			System.out.print("Usage: rphash InputFile k OutputFile [");
@@ -51,22 +53,28 @@ public class RPHash {
 			System.exit(0);
 		}
 
-		List<float[]> data = TestUtil.readFile(new File(args[0]));
+		List<float[]> data = null;
+		
 		int k = Integer.parseInt(args[1]);
 		String outputFile = args[2];
 		if (args.length == 3) {
+			data = TestUtil.readFile(new File(args[0]));
 			RPHashSimple clusterer = new RPHashSimple(data, k);
 			TestUtil.writeFile(new File(outputFile + "."
 					+ clusterer.getClass().getName()), clusterer.getCentroids());
 		}
+		
+		
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
-		List<Clusterer> runs = runConfigs(truncatedArgs, taggedArgs, data);
-
-		if (taggedArgs.containsKey("streamduration"))
-			runstream(runs, outputFile,
-					Integer.parseInt(taggedArgs.get("streamduration")), data);
-		// run remaining
+		List<Clusterer> runs = runConfigs(truncatedArgs, taggedArgs, data, new File(args[0]));
+		
+		if (taggedArgs.containsKey("streamduration")){
+			runstream(runs, outputFile,Integer.parseInt(taggedArgs.get("streamduration")), new File(args[0]),k);
+		}
+		
+		// run remaining, read file into ram
+		 data = TestUtil.readFile(new File(args[0]));
 		runner(runs, outputFile);
 	}
 
@@ -87,12 +95,13 @@ public class RPHash {
 	}
 
 	public static void runstream(List<Clusterer> runitems, String outputFile,
-			Integer streamDuration, List<float[]> data) {
+			Integer streamDuration, File f,int k) throws IOException {
+
+		StreamObject streamer = new StreamObject(f,k);
 		Iterator<Clusterer> cluit = runitems.iterator();
 		while (cluit.hasNext()) {
 			Clusterer clu = cluit.next();
 			if (clu instanceof StreamClusterer) {
-
 				String[] ClusterHashName = clu.getClass().getName()
 						.split("\\.");
 				String[] DecoderHashName = clu.getParam().toString()
@@ -100,41 +109,46 @@ public class RPHash {
 				System.out.print("Streaming -- "
 						+ ClusterHashName[ClusterHashName.length - 1] + "{"
 						+ DecoderHashName[DecoderHashName.length - 1]
-						+ ",stream_duration" + streamDuration
+						+ ",stream_duration:" + streamDuration
 						+ "} \n cpu time \t wcsse \n");
 				long startTime = System.nanoTime();
-				for (int i = 0; i < data.size(); i++) {
-					((StreamClusterer) clu).addVector(data.get(i));
+				
+				int i = 0;
+				while(streamer.hasNext()) {
+					i++;
+					((StreamClusterer) clu).addVector(streamer.next());
 					if (i % streamDuration == 0) {
 						List<float[]> cents = ((StreamClusterer) clu)
 								.getCentroidsOnline();
+						
 						System.out.println((System.nanoTime() - startTime)
 								/ 1000000000f + "\t"
-								+ StatTests.WCSSE(cents, data));
+								+ StatTests.WCSSE(cents, f));
 						TestUtil.writeFile(new File(outputFile + "_round" + i
 								+ "."
 								+ ClusterHashName[ClusterHashName.length - 1]),
-								clu.getCentroids());
+								cents);
 						startTime = System.nanoTime();
 					}
 				}
+				streamer.reset();
 				cluit.remove();
 			}
 		}
 	}
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
-			Map<String, String> taggedArgs, List<float[]> data) {
+			Map<String, String> taggedArgs, List<float[]> data, File f) throws IOException {
 		List<Clusterer> runitems = new ArrayList<>();
 		int i = 3;
 
 		// List<float[]> data = TestUtil.readFile(new
 		// File(untaggedArgs.get(0)));
-		float variance = StatTests.varianceSample(data, .01f);
+		//float variance = StatTests.varianceSample(data, .01f);
 
 		int k = Integer.parseInt(untaggedArgs.get(1));
-		RPHashObject o = new SimpleArrayReader(data, k);
-
+		RPHashObject o = new SimpleArrayReader(data,k);
+		
 		if (taggedArgs.containsKey("numprojections"))
 			o.setNumProjections(Integer.parseInt(taggedArgs
 					.get("numprojections")));
@@ -154,21 +168,21 @@ public class RPHash {
 				o.setDecoderType(new Dn(o.getInnerDecoderMultiplier()));
 				break;
 			case "e8":
-				o.setDecoderType(new E8(variance));
+				o.setDecoderType(new E8(1f));
 				break;
 			case "multie8":
 				o.setDecoderType(new MultiDecoder(
-						o.getInnerDecoderMultiplier() * 8, new E8(variance)));
+						o.getInnerDecoderMultiplier() * 8, new E8(1f)));
 				break;
 			case "leech":
-				o.setDecoderType(new Leech(variance));
+				o.setDecoderType(new Leech(1f));
 				break;
 			case "multileech":
 				o.setDecoderType(new MultiDecoder(
-						o.getInnerDecoderMultiplier() * 24, new Leech(variance)));
+						o.getInnerDecoderMultiplier() * 24, new Leech(1f)));
 				break;
 			case "pstable":
-				o.setDecoderType(new PStableDistribution(variance));
+				o.setDecoderType(new PStableDistribution(1f));
 				break;
 			case "sphere": {
 				o.setDecoderType(new Spherical(32, 3, 4));
@@ -181,14 +195,17 @@ public class RPHash {
 			}
 			}
 		}
-
+		
+		
+		//TODO STREAM OBJECT IS PARSING SOMETHING GIGANTIC FOR DIMENSIONS!
+		
 		while (i < untaggedArgs.size()) {
 			switch (untaggedArgs.get(i).toLowerCase()) {
 			case "simple":
 				runitems.add(new RPHashSimple(o));
 				break;
 			case "streaming":
-				runitems.add(new RPHashStream(o));
+				runitems.add(new RPHashStream(new StreamObject(f,k)));
 				break;
 			case "3stage":
 				runitems.add(new RPHash3Stage(o));
@@ -212,7 +229,7 @@ public class RPHash {
 				runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
 				break;
 			case "streamingkmeans":
-				runitems.add(new StreamingKmeans(data, k));
+				runitems.add(new StreamingKmeans(new StreamObject(f,k)));
 				break;
 			default:
 				System.out.println(untaggedArgs.get(i) + " does not exist");
@@ -220,7 +237,7 @@ public class RPHash {
 			}
 			i++;
 		}
-
+		
 		return runitems;
 
 	}

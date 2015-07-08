@@ -8,6 +8,7 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 /**
@@ -25,6 +26,7 @@ import java.util.Random;
  */
 public class MLE2 implements Clusterer {
 
+	
 
 	/**
 	 * @param args
@@ -39,7 +41,7 @@ public class MLE2 implements Clusterer {
 		}System.out.println();
 		
 		
-		MLE2 mlobj = new MLE2(F,4,.00001f);
+		MLE2 mlobj = new MLE2(Arrays.asList(F),4,.00001f);
 
 		printmat(normalize(F));
 		printmat(mlobj.wt);printmat(mlobj.td);
@@ -54,13 +56,13 @@ public class MLE2 implements Clusterer {
 
 	public float[][] td;
 	public float[][] wt;
-	float[][] counts;
+	List<float [] >data;
 	
-	public MLE2(float[][] counts, int T,float epsilon)
+	public MLE2(List<float[]> counts, int T,float epsilon)
 	{
-		this.counts = counts;
-		W=counts.length;
-		D = counts[0].length;
+		this.data = counts;
+		W=counts.size();
+		D = counts.get(0).length;
 		this.T = T;
 		mle(epsilon);
 	}
@@ -68,12 +70,12 @@ public class MLE2 implements Clusterer {
 	// use if you want wt initialized to some specific value
 	public void mle( float epsilon)
 	{
-		float tot = sum(counts);
+		float tot = sum(data);
 		td = normalize(ones(T,D));
 		wt = normalize(rand(W,T));
 		
 		
-		float[] E = sum1D(logDotProduct(counts,multiply(wt,td)));
+		float[] E = sum1D(logDotProduct(data,multiply(wt,td)));
 		float F = sum(E)/tot;
 		float F_new ;
 		float rel_ch;
@@ -83,11 +85,11 @@ public class MLE2 implements Clusterer {
 		{
 			// Expectation Step
 			// td = norm(td .* ( wt' * ( counts ./ (wt * td) ) ));
-			td = normalize(dotProduct(td,(multiply(transpose(wt),dotDivide(counts,multiply(wt,td))))));
+			td = normalize(dotProduct(td,(multiply(transpose(wt),dotDivide(data,multiply(wt,td))))));
 			
 			//maximization step
 			//wt = normalize( wt .* ( ( counts ./ ( wt * td + eps ) ) * td' ))
-			wt = normalize(dotProduct(wt,multiply(dotDivide(counts,multiply(wt,td)),transpose(td))));
+			wt = normalize(dotProduct(wt,multiply(dotDivide(data,multiply(wt,td)),transpose(td))));
 			
 			//calculate log-likelihood
 		/* 
@@ -96,7 +98,7 @@ public class MLE2 implements Clusterer {
 		 *   /__	     /__     n(d,w) log P(d,w)
 		 *  d c D   w c W
 		*/
-			E = sum1D(logDotProduct(counts,multiply(wt,td)));
+			E = sum1D(logDotProduct(data,multiply(wt,td)));
 			F_new = sum(E)/tot;
 			
 			//calculate iteration's relative change to determine convergence
@@ -126,12 +128,12 @@ public class MLE2 implements Clusterer {
 	//testing status - works
 	//gets the pairwise division of two matrices
 	//no dimension checking
-	private static float[][] dotDivide(float[][] mat1, float[][] mat2)
+	private static float[][] dotDivide(List<float[]> mat1, float[][] mat2)
 	{
-		float[][] rtrn = new float [mat1.length ][mat1[0].length];
+		float[][] rtrn = new float [mat1.size() ][mat1.get(0).length];
 		
-		for(int i = 0;i<mat1.length;i++){
-			for(int j = 0;j<mat1[0].length;j++)rtrn[i][j] = mat1[i][j]/(mat2[i][j]+Float.MIN_VALUE);
+		for(int i = 0;i<mat1.size();i++){
+			for(int j = 0;j<mat1.get(0).length;j++)rtrn[i][j] = mat1.get(0)[j]/(mat2[i][j]+Float.MIN_VALUE);
 		}
 		return rtrn;
 	}
@@ -140,13 +142,13 @@ public class MLE2 implements Clusterer {
 	//testing status - works
 	//find the pairwise product of mat1 and log(mat2)
 	//no dimension checking
-	private static float[][] logDotProduct(float[][] mat1, float[][] mat2)
+	private static float[][] logDotProduct(List<float[]> mat1, float[][] mat2)
 	{
-		float[][] rtrn = new float [mat1.length ][mat1[0].length];
+		float[][] rtrn = new float [mat1.size() ][mat1.get(0).length];
 		
-		for(int i = 0;i<mat1.length;i++){
-			for(int j = 0;j<mat1[0].length;j++)
-				rtrn[i][j] = mat1[i][j]*(float)Math.log(mat2[i][j] + Float.MIN_VALUE);
+		for(int i = 0;i<mat1.size();i++){
+			for(int j = 0;j<mat1.get(0).length;j++)
+				rtrn[i][j] = mat1.get(i)[j]*(float)Math.log(mat2[i][j] + Float.MIN_VALUE);
 		}
 		return rtrn;
 	}
@@ -181,7 +183,7 @@ public class MLE2 implements Clusterer {
 	
 	//testing status - works
 	//give the sum of all the elements of a matrix
-	public static float sum(float[][] A)
+	public static float sum(List<float[]> A)
 	{
 		float sum =0;
 		for(float[] ff:A){
@@ -295,7 +297,7 @@ public class MLE2 implements Clusterer {
 
 	@Override
 	public RPHashObject getParam() {
-		return new SimpleArrayReader(null, 0);
+		return new SimpleArrayReader(this.data, T);
 	}
 
 }

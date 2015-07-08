@@ -59,6 +59,9 @@ public class LSH
 	public long[] lshHashRadius(float[] r,float radius,int times){
 
 	     float[] pr_r = p[0].project(r);
+	     
+	     int[] b = new int[pr_r.length/3];
+	     
 	     long[] ret = new long[times];
 	     ret[0] = hal.hash(dec.decode(pr_r));
 	     //long minret = ret;
@@ -67,11 +70,13 @@ public class LSH
 		 for(int j =1;j<times;j++)
 		 {
 	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
-			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius/(float)j);
+	    	 for(int k =0;k<pr_r.length/3;k++)b[k] = rand.nextInt(pr_r.length);
+	    	 int k =0;
+			 for(;k<pr_r.length/6;k++)
+				 rtmp[b[k]]= rtmp[b[k]] + (radius/(float)j);
+			 for(;k<pr_r.length/3;k++)
+				 rtmp[b[k]]= rtmp[b[k]] - (radius/(float)j);
 			 ret[j] = hal.hash(dec.decode(rtmp));
-			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius*(float)j);
-			 ret[j] = hal.hash(dec.decode(rtmp));
-
 	     }
 //		 distance = mindist;
 		 return ret; 

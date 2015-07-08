@@ -1,7 +1,11 @@
 package edu.uc.rphash.tests;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
+
+import edu.uc.rphash.Readers.StreamObject;
 
 public class StatTests {
 	Random r;
@@ -28,6 +32,17 @@ public class StatTests {
 		for(int i = 0; i< data.size();i++)
 		{
 			count+=TestUtil.distance(data.get(i),estCentroids.get(TestUtil.findNearestDistance(data.get(i), estCentroids))) ;
+		}
+		return count;
+	}
+	
+	public static double WCSSE(List<float[]> estCentroids, File f) throws IOException{
+		double count = 0.0 ;
+		StreamObject data = new StreamObject(f,0);
+		while(data.hasNext())
+		{
+			float[] next = data.next();
+			count+=TestUtil.distance(next,estCentroids.get(TestUtil.findNearestDistance(next, estCentroids))) ;
 		}
 		return count;
 	}

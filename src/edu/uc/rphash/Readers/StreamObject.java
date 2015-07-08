@@ -1,10 +1,15 @@
 package edu.uc.rphash.Readers;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -19,6 +24,8 @@ import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.Spherical;
+import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.TestUtil;
 
 public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public List<float[]> data;
@@ -32,17 +39,23 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	InputStream elements;
 	int k;
-	int n;
 	int dim;
 	int randomseed;
-	int hashmod;
+	long hashmod;
 	List<float[]> centroids;
 	List<Long> topIDs;
 	int multiDim;
 	Decoder dec;
 
 	ExecutorService executor;
-	final PipedInputStream inputStream;
+	BufferedReader inputStream;
+
+	final static int DEFAULT_NUM_PROJECTIONS = 2;
+	final static int DEFAULT_NUM_BLUR = 2;
+	final static int DEFAULT_NUM_RANDOM_SEED = 0;
+	final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
+	final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
+	final static Decoder DEFAULT_INNER_DECODER = new Spherical(32, 3, 1);
 
 	// input format
 	// per line
@@ -51,36 +64,72 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	// --num of data( == n)
 	// --num dimensions
 	// --input random seed;
-	public StreamObject(PipedOutputStream istream, int k, int dim,
-			 ExecutorService executor)
-			throws IOException {
+	public StreamObject(PipedInputStream istream, int k, int dim,
+			ExecutorService executor) throws IOException {
 
-		inputStream = new PipedInputStream(istream);
+		//inputStream = new DataInputStream(istream);
 		this.executor = executor;
 
-		this.k = k;
 		this.dim = dim;
-		this.decoderMultiplier = 3;
-		//Decoder inner = new Leech();
-		//this.dec = new MultiDecoder(decoderMultiplier, inner);
-		this.numProjections = 3;
-		this.hashmod = Integer.MAX_VALUE;
-		this.randomseed = 0;
-		this.numBlur = 1;
-
+		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.hashmod = DEFAULT_HASH_MODULUS;
+		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
+		this.dec = new MultiDecoder(this.decoderMultiplier
+				* DEFAULT_INNER_DECODER.getDimensionality(),
+				DEFAULT_INNER_DECODER);
+		this.numProjections = DEFAULT_NUM_PROJECTIONS;
+		this.numBlur = DEFAULT_NUM_BLUR;
+		this.k = k;
+		this.data = null;
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
-		dec = new Spherical(64, 6, 4);
-		//dec = new MultiDecoder( getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
-
-
+		// dec = new MultiDecoder(
+		// getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
 	}
 
+	boolean filereader = false;
+	File f;
+
+	public StreamObject(File f, int k) throws IOException {
+		filereader = true;
+		this.f = f;
+		//inputStream = new DataInputStream(new FileInputStream(f));
+		inputStream = new BufferedReader(new FileReader(f));
+		// read the n and m dimension header
+
+		int d = Integer.parseInt(inputStream.readLine());
+		dim = Integer.parseInt(inputStream.readLine());
+		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.hashmod = DEFAULT_HASH_MODULUS;
+		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
+		this.dec = new MultiDecoder(this.decoderMultiplier
+				* DEFAULT_INNER_DECODER.getDimensionality(),
+				DEFAULT_INNER_DECODER);
+		this.numProjections = DEFAULT_NUM_PROJECTIONS;
+		this.numBlur = DEFAULT_NUM_BLUR;
+		this.k = k;
+		this.data = null;
+		this.centroids = new ArrayList<float[]>();
+		this.topIDs = new ArrayList<Long>();
+		// dec = new MultiDecoder(
+		// getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
+	}
 
 	@Override
 	public void reset() {
 
 		this.centroids = null;
+		try {
+			if (filereader) {
+				inputStream.close();
+				inputStream = new BufferedReader(new FileReader(f));//new DataInputStream(new FileInputStream(f));
+				// read the n and m dimension header
+				int d = Integer.parseInt(inputStream.readLine());
+				dim = Integer.parseInt(inputStream.readLine());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -198,51 +247,68 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	}
 
-	
 	@Override
 	public boolean hasNext() {
-		return true;
+			try {
+				return inputStream.ready();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return false;
 	}
 
 	@Override
 	public float[] next() {
-		final DataInputStream d = new DataInputStream(inputStream);
-		float[] readFloat;
-		// Read data with timeout
-		Callable<float[]> readTask = new Callable<float[]>() {
-			@Override
-			public float[] call() {
-				float[] vec = new float[dim];
-				try {
-					for (int i = 0; i < dim; i++) {
-						vec[i] = d.readFloat();
-					}
-					return vec;
-				} catch (IOException e) {
-					return null;
-				}
+		float[] readFloat = new float[dim];
+		for (int i = 0; i < dim; i++) {
+			try {
+				readFloat[i] = Float.parseFloat(inputStream.readLine());
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		};
-
-		Future<float[]> future = executor.submit(readTask);
-		try {
-			readFloat = future.get(5000, TimeUnit.MILLISECONDS);
-			if (readFloat != null) {
-				return readFloat;
-			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TimeoutException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
+		return readFloat;
+		// // Read data with timeout
+		// Callable<float[]> readTask = new Callable<float[]>() {
+		// @Override
+		// public float[] call() {
+		// float[] vec = new float[dim];
+		// try {
+		// for (int i = 0; i < dim; i++) {
+		// vec[i] = inputStream.readFloat();
+		// if(filereader)inputStream.readChar();
+		// }
+		// return vec;
+		// } catch (IOException e) {
+		// return null;
+		// }
+		// }
+		// };
 
-		return null;
+		// Future<float[]> future = executor.submit(readTask);
+		// try {
+		// readFloat = future.get(5000, TimeUnit.MILLISECONDS);
+		// if (readFloat != null) {
+		// return readFloat;
+		// }
+		// } catch (InterruptedException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// } catch (ExecutionException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// } catch (TimeoutException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		//
+		// return null;
 	}
 
+	@Override
+	public void setVariance(List<float[]> data) {
+		dec.setVariance(StatTests.varianceSample(data, .01f));
+
+	}
 
 }

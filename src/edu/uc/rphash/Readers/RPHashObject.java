@@ -34,6 +34,7 @@ public interface RPHashObject {
 	void setDecoderType(Decoder dec);
 	Decoder getDecoderType();
 	String toString();
+	void setVariance(List<float[]> data);
 
 
 }

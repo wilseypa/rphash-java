@@ -67,18 +67,20 @@ public class RPHashStream implements StreamClusterer {
 
 		// initialize our counter
 		is = new KHHCentroidCounter(k);
-
+		
 		// create LSH Device
 		lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
-
+		System.out.println(so.getdim());
 		// create projection matrices add to LSH Device
 		for (int i = 0; i < projections; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
+			
 			lshfuncs[i] = new LSH(dec, p, hal);
 		}
+		
 	}
 	
 	public RPHashStream(int k, ClusterGenerator c) {
@@ -144,7 +146,7 @@ public class RPHashStream implements StreamClusterer {
 		}
 
 		centroids = new Kmeans(so.getk(), centroids,counts).getCentroids();
-		long count = 1l;//(long)((float)is.count/(float)so.getk());
+		long count = (long)((float)is.count/(float)so.getk());
 		counts = new ArrayList<Long>();
 		for(int i = 0;i<so.getk();i++)counts.add(count);
 		return centroids;
