@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.Reader;
@@ -88,15 +89,12 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	}
 
 	boolean filereader = false;
-	File f;
 
-	public StreamObject(File f, int k) throws IOException {
+	public StreamObject(BufferedReader f, int k) throws IOException {
 		filereader = true;
-		this.f = f;
 		//inputStream = new DataInputStream(new FileInputStream(f));
-		inputStream = new BufferedReader(new FileReader(f));
+		inputStream = f;
 		// read the n and m dimension header
-
 		int d = Integer.parseInt(inputStream.readLine());
 		dim = Integer.parseInt(inputStream.readLine());
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
@@ -121,8 +119,8 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.centroids = null;
 		try {
 			if (filereader) {
-				inputStream.close();
-				inputStream = new BufferedReader(new FileReader(f));//new DataInputStream(new FileInputStream(f));
+				
+				
 				// read the n and m dimension header
 				int d = Integer.parseInt(inputStream.readLine());
 				dim = Integer.parseInt(inputStream.readLine());

@@ -3,9 +3,11 @@ package edu.uc.rphash.tests;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -317,11 +319,11 @@ public class TestUtil {
 	 * @param input
 	 * @return
 	 */
-	public static List<float[]> readFile(File input){
-		BufferedReader in = null;
+	public static List<float[]> readFile(BufferedReader in){
+
 		List<float[]> M = null;
 		try {
-			in = new BufferedReader(new FileReader(input));
+
 			int m = Integer.parseInt(in.readLine());
 			int n = Integer.parseInt(in.readLine());
 			M = new ArrayList<float[]>(m);

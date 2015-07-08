@@ -1,13 +1,18 @@
 package edu.uc.rphash;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -35,7 +40,8 @@ public class RPHash {
 	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
 			"PStable", "Sphere" };
 
-	public static void main(String[] args) throws NumberFormatException, IOException {
+	public static void main(String[] args) throws NumberFormatException,
+			IOException, InterruptedException {
 
 		if (args.length < 3) {
 			System.out.print("Usage: rphash InputFile k OutputFile [");
@@ -54,27 +60,34 @@ public class RPHash {
 		}
 
 		List<float[]> data = null;
-		
+
 		int k = Integer.parseInt(args[1]);
 		String outputFile = args[2];
+		
+		BufferedReader f = new BufferedReader(new InputStreamReader (new FileInputStream(args[0])));
+		if(args[0].endsWith("gz")){
+			f = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(args[0]))));
+		}
+		
 		if (args.length == 3) {
-			data = TestUtil.readFile(new File(args[0]));
+			data = TestUtil.readFile(f);
 			RPHashSimple clusterer = new RPHashSimple(data, k);
 			TestUtil.writeFile(new File(outputFile + "."
 					+ clusterer.getClass().getName()), clusterer.getCentroids());
 		}
-		
-		
+
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
-		List<Clusterer> runs = runConfigs(truncatedArgs, taggedArgs, data, new File(args[0]));
-		
-		if (taggedArgs.containsKey("streamduration")){
-			runstream(runs, outputFile,Integer.parseInt(taggedArgs.get("streamduration")), new File(args[0]),k);
+		List<Clusterer> runs = runConfigs(truncatedArgs,taggedArgs,data,f);
+
+		if (taggedArgs.containsKey("streamduration")) {
+			System.out.println(taggedArgs.toString());
+			runstream(runs, outputFile,
+					Integer.parseInt(taggedArgs.get("streamduration")),k);
 		}
-		
+
 		// run remaining, read file into ram
-		 data = TestUtil.readFile(new File(args[0]));
+		data = TestUtil.readFile(f);
 		runner(runs, outputFile);
 	}
 
@@ -93,14 +106,34 @@ public class RPHash {
 					clu.getCentroids());
 		}
 	}
+	
+	public static long computeAverageReadTime(
+			Integer streamDuration, BufferedReader f, int testsize) throws IOException{
+		StreamObject streamer = new StreamObject(f, 0);
+		int i = 0;
+
+		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]> ();
+		long startTime = System.nanoTime();
+		while (streamer.hasNext() && i<testsize) {
+			i++;
+			float[] nxt = streamer.next();
+			vecsInThisRound.add(nxt);
+		}
+		streamer.reset();
+		return (System.nanoTime()-startTime);
+	}
 
 	public static void runstream(List<Clusterer> runitems, String outputFile,
-			Integer streamDuration, File f,int k) throws IOException {
-
-		StreamObject streamer = new StreamObject(f,k);
+			Integer streamDuration,  int k) throws IOException, InterruptedException {
+		
 		Iterator<Clusterer> cluit = runitems.iterator();
+								// needs work, just use for both to be more accurate
+		long avgtimeToRead = 0;//computeAverageReadTime(streamDuration,f,streamDuration);
+		Runtime rt = Runtime.getRuntime();
+		
 		while (cluit.hasNext()) {
 			Clusterer clu = cluit.next();
+			StreamObject streamer = (StreamObject) clu.getParam();
 			if (clu instanceof StreamClusterer) {
 				String[] ClusterHashName = clu.getClass().getName()
 						.split("\\.");
@@ -110,25 +143,43 @@ public class RPHash {
 						+ ClusterHashName[ClusterHashName.length - 1] + "{"
 						+ DecoderHashName[DecoderHashName.length - 1]
 						+ ",stream_duration:" + streamDuration
-						+ "} \n cpu time \t wcsse \n");
-				long startTime = System.nanoTime();
+						+ "} \n cpu time \t wcsse \t\t\t mem(kb)\n");
 				
+				long startTime = System.nanoTime()+avgtimeToRead;
 				int i = 0;
-				while(streamer.hasNext()) {
+				ArrayList<float[]> vecsInThisRound = new ArrayList<float[]> ();
+				
+				while (streamer.hasNext()) {
+					
 					i++;
-					((StreamClusterer) clu).addVector(streamer.next());
+					float[] nxt = streamer.next();
+					vecsInThisRound.add(nxt);
+					((StreamClusterer) clu).addVector(nxt);
+					
 					if (i % streamDuration == 0) {
 						List<float[]> cents = ((StreamClusterer) clu)
 								.getCentroidsOnline();
+
+						long time = System.nanoTime() - startTime;
+						double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
+						vecsInThisRound = new ArrayList<float[]> ();
 						
-						System.out.println((System.nanoTime() - startTime)
-								/ 1000000000f + "\t"
-								+ StatTests.WCSSE(cents, f));
+						rt.gc();
+						Thread.sleep(100);
+						rt.gc();
+						
+						long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+						
+						System.out.println(time/ 1000000000f + "\t"
+								+ wcsse +"\t"+
+								usedkB );
+						
 						TestUtil.writeFile(new File(outputFile + "_round" + i
 								+ "."
 								+ ClusterHashName[ClusterHashName.length - 1]),
 								cents);
-						startTime = System.nanoTime();
+						startTime = System.nanoTime()+avgtimeToRead;
+						
 					}
 				}
 				streamer.reset();
@@ -138,17 +189,18 @@ public class RPHash {
 	}
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
-			Map<String, String> taggedArgs, List<float[]> data, File f) throws IOException {
+			Map<String, String> taggedArgs, List<float[]> data, BufferedReader f)
+			throws IOException {
 		List<Clusterer> runitems = new ArrayList<>();
 		int i = 3;
-
 		// List<float[]> data = TestUtil.readFile(new
 		// File(untaggedArgs.get(0)));
-		//float variance = StatTests.varianceSample(data, .01f);
+		// float variance = StatTests.varianceSample(data, .01f);
 
 		int k = Integer.parseInt(untaggedArgs.get(1));
-		RPHashObject o = new SimpleArrayReader(data,k);
-		
+		RPHashObject o = new SimpleArrayReader(data, k);
+		StreamObject so = new StreamObject(f, k);
+
 		if (taggedArgs.containsKey("numprojections"))
 			o.setNumProjections(Integer.parseInt(taggedArgs
 					.get("numprojections")));
@@ -195,17 +247,16 @@ public class RPHash {
 			}
 			}
 		}
-		
-		
-		//TODO STREAM OBJECT IS PARSING SOMETHING GIGANTIC FOR DIMENSIONS!
-		
+
+
+
 		while (i < untaggedArgs.size()) {
 			switch (untaggedArgs.get(i).toLowerCase()) {
 			case "simple":
 				runitems.add(new RPHashSimple(o));
 				break;
 			case "streaming":
-				runitems.add(new RPHashStream(new StreamObject(f,k)));
+				runitems.add(new RPHashStream(so));
 				break;
 			case "3stage":
 				runitems.add(new RPHash3Stage(o));
@@ -229,7 +280,7 @@ public class RPHash {
 				runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
 				break;
 			case "streamingkmeans":
-				runitems.add(new StreamingKmeans(new StreamObject(f,k)));
+				runitems.add(new StreamingKmeans(so));
 				break;
 			default:
 				System.out.println(untaggedArgs.get(i) + " does not exist");
@@ -237,7 +288,6 @@ public class RPHash {
 			}
 			i++;
 		}
-		
 		return runitems;
 
 	}

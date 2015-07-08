@@ -1,5 +1,6 @@
 package edu.uc.rphash.tests;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -36,7 +37,7 @@ public class StatTests {
 		return count;
 	}
 	
-	public static double WCSSE(List<float[]> estCentroids, File f) throws IOException{
+	public static double WCSSE(List<float[]> estCentroids, BufferedReader f) throws IOException{
 		double count = 0.0 ;
 		StreamObject data = new StreamObject(f,0);
 		while(data.hasNext())

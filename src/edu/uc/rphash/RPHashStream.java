@@ -1,6 +1,7 @@
 package edu.uc.rphash;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -72,7 +73,6 @@ public class RPHashStream implements StreamClusterer {
 		lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
-		System.out.println(so.getdim());
 		// create projection matrices add to LSH Device
 		for (int i = 0; i < projections; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
@@ -146,7 +146,7 @@ public class RPHashStream implements StreamClusterer {
 		}
 
 		centroids = new Kmeans(so.getk(), centroids,counts).getCentroids();
-		long count = (long)((float)is.count/(float)so.getk());
+		long count = Collections.max(counts);
 		counts = new ArrayList<Long>();
 		for(int i = 0;i<so.getk();i++)counts.add(count);
 		return centroids;
@@ -200,15 +200,16 @@ public class RPHashStream implements StreamClusterer {
 			if (i % 10000 == 10000-1) 
 			{
 				List<float[]> cents = rphit.getCentroidsOnline();
+				rt.gc();
+				Thread.sleep(10);
+				rt.gc();
 				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 				List<float[]> aligned = TestUtil.alignCentroids(
 				cents, gen.getMedoids());
 				double pr = StatTests.PR(aligned, gen);
 				double intercluster = StatTests.WCSSE(aligned, gen.getData());
 				double ssecent = StatTests.SSE(aligned, gen);
-				rt.gc();
-				Thread.sleep(10);
-				rt.gc();
+
 				System.out.printf("%d\t%d\t%.3f\t%.0f\t%.3f\t%.3f\n",i,usedkB, (System.currentTimeMillis()-timestart)/1000f,intercluster,pr,ssecent);
 				timestart = System.currentTimeMillis();
 			}
