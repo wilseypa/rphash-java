@@ -201,49 +201,78 @@ public class RPHash {
 		RPHashObject o = new SimpleArrayReader(data, k);
 		StreamObject so = new StreamObject(f, k);
 
-		if (taggedArgs.containsKey("numprojections"))
+		if (taggedArgs.containsKey("numprojections")){
+			so.setNumProjections(Integer.parseInt(taggedArgs
+					.get("numprojections")));
 			o.setNumProjections(Integer.parseInt(taggedArgs
 					.get("numprojections")));
-		if (taggedArgs.containsKey("innerdecodermultiplier"))
+		}
+		if (taggedArgs.containsKey("innerdecodermultiplier")){
 			o.setInnerDecoderMultiplier(Integer.parseInt(taggedArgs
 					.get("innerdecodermultiplier")));
-		if (taggedArgs.containsKey("numblur"))
+			so.setInnerDecoderMultiplier(Integer.parseInt(taggedArgs
+					.get("innerdecodermultiplier")));
+		}
+		if (taggedArgs.containsKey("numblur")){
 			o.setNumBlur(Integer.parseInt(taggedArgs.get("numblur")));
-		if (taggedArgs.containsKey("randomseed"))
+			so.setNumBlur(Integer.parseInt(taggedArgs.get("numblur")));
+		}
+		if (taggedArgs.containsKey("randomseed")){
 			o.setRandomSeed(Long.parseLong(taggedArgs.get("randomseed")));
-		if (taggedArgs.containsKey("hashmod"))
+			so.setRandomSeed(Long.parseLong(taggedArgs.get("randomseed")));
+		}
+		if (taggedArgs.containsKey("hashmod")){
 			o.setHashMod(Long.parseLong(taggedArgs.get("hashmod")));
+			so.setHashMod(Long.parseLong(taggedArgs.get("hashmod")));
+		}
+			
 
 		if (taggedArgs.containsKey("decodertype")) {
 			switch (taggedArgs.get("decodertype").toLowerCase()) {
-			case "dn":
+			case "dn":{
 				o.setDecoderType(new Dn(o.getInnerDecoderMultiplier()));
+				so.setDecoderType(new Dn(o.getInnerDecoderMultiplier()));
 				break;
-			case "e8":
+			}
+			case "e8":{
 				o.setDecoderType(new E8(1f));
+				so.setDecoderType(new E8(1f));
 				break;
-			case "multie8":
+			}
+			case "multie8":{
 				o.setDecoderType(new MultiDecoder(
 						o.getInnerDecoderMultiplier() * 8, new E8(1f)));
+				so.setDecoderType(new MultiDecoder(
+						so.getInnerDecoderMultiplier() * 8, new E8(1f)));
 				break;
-			case "leech":
+			}
+			case "leech":{
 				o.setDecoderType(new Leech(1f));
+				so.setDecoderType(new Leech(1f));
 				break;
-			case "multileech":
+			}
+			case "multileech":{
 				o.setDecoderType(new MultiDecoder(
 						o.getInnerDecoderMultiplier() * 24, new Leech(1f)));
+				so.setDecoderType(new MultiDecoder(
+						so.getInnerDecoderMultiplier() * 24, new Leech(1f)));
 				break;
-			case "pstable":
+			}
+			case "pstable":{
 				o.setDecoderType(new PStableDistribution(1f));
+				so.setDecoderType(new PStableDistribution(1f));
 				break;
+			}
 			case "sphere": {
 				o.setDecoderType(new Spherical(32, 3, 4));
+				so.setDecoderType(new Spherical(32, 3, 4));
 				break;
 			}
 			default: {
 				System.out.println(taggedArgs.get("decodertype")
 						+ " decoder does not exist");
 				o.setDecoderType(null);
+				so.setDecoderType(null);
 			}
 			}
 		}

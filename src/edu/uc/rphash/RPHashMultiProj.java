@@ -188,9 +188,11 @@ public class RPHashMultiProj implements Clusterer {
 
 	public static void main(String[] args) {
 
+		
 		int k = 10;
 		int d = 1000;
 		int n = 20000;
+
 
 		float var = 1.5f;
 		for (float f = var; f < 4.1; f += .2f) {

@@ -56,7 +56,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	final static int DEFAULT_NUM_RANDOM_SEED = 0;
 	final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	final static Decoder DEFAULT_INNER_DECODER = new Spherical(32, 3, 1);
+	final static Decoder DEFAULT_INNER_DECODER = new Leech();//Spherical(32, 3, 1);
 
 	// input format
 	// per line

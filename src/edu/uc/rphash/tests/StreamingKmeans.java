@@ -232,9 +232,10 @@ public class StreamingKmeans implements StreamClusterer{
 			facilityCost = LCost / (numClusters * (1 + logNumPoints));
 			totalCost = 0;
 		}
-
+		
+		private RPHashObject so;
 		public StreamingKmeans(StreamObject streamObject) {
-			
+			this.so = streamObject;
 			centroids = null;
 			// Create initial data structures.
 			facilities = new CopyOnWriteArrayList<CentroidCluster>();
@@ -287,8 +288,8 @@ public class StreamingKmeans implements StreamClusterer{
 
 		@Override
 		public RPHashObject getParam() {
-			// TODO Auto-generated method stub
-			return new SimpleArrayReader(data, numClusters);
+
+			return so;
 		}
 
 		/**
