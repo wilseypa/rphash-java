@@ -264,8 +264,8 @@ public class RPHash {
 				break;
 			}
 			case "sphere": {
-				o.setDecoderType(new Spherical(32, 3, 4));
-				so.setDecoderType(new Spherical(32, 3, 4));
+				o.setDecoderType(new Spherical(so.getInnerDecoderMultiplier(), 2, 3));
+				so.setDecoderType(new Spherical(so.getInnerDecoderMultiplier(), 2, 3));
 				break;
 			}
 			default: {
