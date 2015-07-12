@@ -13,7 +13,7 @@ funcPurity <- function(clusterLabels, groundTruthLabels) {
 }
 
 gt <- read.csv('GTLabels.csv')
-rp <- read.csv('RPHash.csv')
+rp <- read.csv('RPHashLabels.csv')
 data <- read.csv('dataset.csv')
 data.features <- data
 data.features$Class <- NULL
@@ -22,6 +22,7 @@ ARI <- vector()
 purity <- vector()
 dunnIndex <- vector()
 silWidth <- vector()
+wcss <- vector()
 VI <- vector()
 
 p <- 1
@@ -38,5 +39,6 @@ for(i in 1:h){
   sil <- silhouette(rp[,i], d)
   silWidth[i] <- summary(sil)$si.summary['Mean']
   validations <- cluster.stats(d, rp[,i], alt.clustering = gt[,i])
+  wcss[i] <- validations$within.cluster.ss
   VI[i] <- validations$vi
 }
