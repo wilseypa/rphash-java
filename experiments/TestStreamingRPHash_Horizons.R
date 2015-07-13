@@ -2,7 +2,6 @@
 
 library(clValid)
 library(mclust)
-library(caret)
 library(fpc)
 
 h <- readline("Enter the number of horizons: ")
@@ -42,3 +41,17 @@ for(i in 1:h){
   wcss[i] <- validations$within.cluster.ss
   VI[i] <- validations$vi
 }
+sink(file = "out.txt")
+print("ARI")
+print(t(t(ARI)))
+print("Purity")
+print(t(t(purity)))
+print("Dunn Index")
+print(t(t(dunnIndex)))
+print("Silhouette Width")
+print(t(t(silWidth)))
+print("WCSSE")
+print(t(t(wcss)))
+print("VI")
+print(t(t(VI)))
+sink()
