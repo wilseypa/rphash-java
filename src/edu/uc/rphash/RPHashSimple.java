@@ -83,7 +83,7 @@ public class RPHashSimple implements Clusterer {
 			centroids.add(new Centroid(so.getdim(), id));
 
 		while (vecs.hasNext()) {
-			hash = lshfunc.lshHashRadius(vec,blurValue);
+			hash = lshfunc.lshHashRadiusNo2Hash(vec,blurValue);
 			for (Centroid cent : centroids){
 				for(long h:hash){
 					if(cent.ids.contains(h)){

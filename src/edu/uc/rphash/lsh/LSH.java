@@ -1,6 +1,8 @@
 package edu.uc.rphash.lsh;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import edu.uc.rphash.decoders.Decoder;
@@ -56,52 +58,66 @@ public class LSH
 	}
 
 	
-	public long[] lshHashRadius(float[] r,float radius,int times){
-
-	     float[] pr_r = p[0].project(r);
-	     
-	     int[] b = new int[pr_r.length/3];
-	     
-	     long[] ret = new long[times];
-	     ret[0] = hal.hash(dec.decode(pr_r));
-	     //long minret = ret;
-	     //float mindist = dec.getDistance();
-	     float[] rtmp = new float[pr_r.length];
+//	public long[] lshHashRadius(float[] r,float radius,int times){
+//
+//
+//	     float[] pr_r = p[0].project(r);
+//	     
+//	     int[] b = new int[pr_r.length/3];
+//	     
+//	     long[] ret = new long[times];
+//	     ret[0] = hal.hash(dec.decode(pr_r));
+//	     //long minret = ret;
+//	     //float mindist = dec.getDistance();
+//	     float[] rtmp = new float[pr_r.length];
+//		 for(int j =1;j<times;j++)
+//		 {
+//	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
+//	    	 for(int k =0;k<pr_r.length/3;k++)b[k] = rand.nextInt(pr_r.length);
+//	    	 int k =0;
+//			 for(;k<pr_r.length/6;k++)
+//				 rtmp[b[k]]= rtmp[b[k]] + (radius/(float)j);
+//			 for(;k<pr_r.length/3;k++)
+//				 rtmp[b[k]]= rtmp[b[k]] - (radius/(float)j);
+//			 ret[j] = hal.hash(dec.decode(rtmp));
+//	     }
+////		 distance = mindist;
+//		 return ret; 
+//		}
+	
+	List<float[]>noise =  null;
+	
+	private void genNoiseTable(int len,int times)
+	{
+		this.noise = new ArrayList<float[]>();
 		 for(int j =1;j<times;j++)
 		 {
-	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
-	    	 for(int k =0;k<pr_r.length/3;k++)b[k] = rand.nextInt(pr_r.length);
-	    	 int k =0;
-			 for(;k<pr_r.length/6;k++)
-				 rtmp[b[k]]= rtmp[b[k]] + (radius/(float)j);
-			 for(;k<pr_r.length/3;k++)
-				 rtmp[b[k]]= rtmp[b[k]] - (radius/(float)j);
-			 ret[j] = hal.hash(dec.decode(rtmp));
-	     }
-//		 distance = mindist;
-		 return ret; 
-		}
+			 float[] tmp = new float[len];
+			 for(int k =0;k<len;k++)tmp[k]=(float)rand.nextGaussian()*(radius);
+			 noise.add(tmp);
+		 }
+	}
+	
 	
 	public long[] lshHashRadiusNo2Hash(float[] r,int times){
-
+		 if(this.noise==null)genNoiseTable(r.length,times);
 	     float[] pr_r = p[0].project(r);
-	     
-//			TestUtil.prettyPrint(pr_r);
-//			System.out.println(dec.decode(pr_r));
-	     
 	     long[] nonoise = dec.decode(pr_r);
 	     long[] ret = new long[times*nonoise.length];
-	     for(int k =0;k<nonoise.length;k++)ret[k]=nonoise[k];
-	     
-	     //long minret = ret;
-	     //float mindist = dec.getDistance();
+
+	     System.arraycopy(nonoise, 0, ret, 0, nonoise.length);
+
+	     //add some blurring probes in addition to the unnoised decoding
 	     float[] rtmp = new float[pr_r.length];
+	     float[] tmp;
 		 for(int j =1;j<times;j++)
 		 {
 	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
-			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+ (float)rand.nextGaussian()*(radius);
+	    	 tmp = noise.get(j-1);
+			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+tmp[k]; 
+			 
 			 nonoise = dec.decode(rtmp);
-			 for(int k =0;k<nonoise.length;k++)ret[j*nonoise.length+k]=nonoise[k];
+			 System.arraycopy(nonoise, 0, ret, j*nonoise.length, nonoise.length);
 	     }
 //		 distance = mindist;
 		 return ret; 
@@ -154,8 +170,8 @@ public class LSH
 //		 return ret; 
 //		}
 
-	public long[] lshHashRadius(float[] r,int times)
-	{
-		  return lshHashRadius(r,radius,times) ;
-	}
+//	public long[] lshHashRadius(float[] r,int times)
+//	{
+//		  return lshHashRadius(r,radius,times) ;
+//	}
 }

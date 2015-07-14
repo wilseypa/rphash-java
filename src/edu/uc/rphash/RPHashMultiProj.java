@@ -119,7 +119,7 @@ public class RPHashMultiProj implements Clusterer {
 			// iterate over the multiple projections
 			for (LSH lshfunc : lshfuncs) {
 				// could do a big parallel projection here
-				hash = lshfunc.lshHashRadius(vec, blurValue);
+				hash = lshfunc.lshHashRadiusNo2Hash(vec, blurValue);
 				// iterate over the blurred vectors
 				for (Centroid cent : centroids) {
 					for (long hh : hash) {

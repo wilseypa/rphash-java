@@ -2,10 +2,9 @@ package edu.uc.rphash;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
+//import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+//import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,13 +63,15 @@ public class RPHash {
 		int k = Integer.parseInt(args[1]);
 		String outputFile = args[2];
 		
-		BufferedReader f = new BufferedReader(new InputStreamReader (new FileInputStream(args[0])));
-		if(args[0].endsWith("gz")){
-			f = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(args[0]))));
-		}
+		String filename = args[0];
+//		BufferedReader f = new BufferedReader(new InputStreamReader (new FileInputStream(args[0])));
+//		if(args[0].endsWith("gz")){
+//			
+//			f = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(args[0]))));
+//		}
 		
 		if (args.length == 3) {
-			data = TestUtil.readFile(f);
+			data = TestUtil.readFile(filename);
 			RPHashSimple clusterer = new RPHashSimple(data, k);
 			TestUtil.writeFile(new File(outputFile + "."
 					+ clusterer.getClass().getName()), clusterer.getCentroids());
@@ -78,7 +79,7 @@ public class RPHash {
 
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
-		List<Clusterer> runs = runConfigs(truncatedArgs,taggedArgs,data,f);
+		List<Clusterer> runs = runConfigs(truncatedArgs,taggedArgs,data,filename);
 
 		if (taggedArgs.containsKey("streamduration")) {
 			System.out.println(taggedArgs.toString());
@@ -87,7 +88,7 @@ public class RPHash {
 		}
 
 		// run remaining, read file into ram
-		data = TestUtil.readFile(f);
+		data = TestUtil.readFile(filename);
 		runner(runs, outputFile);
 	}
 
@@ -108,7 +109,7 @@ public class RPHash {
 	}
 	
 	public static long computeAverageReadTime(
-			Integer streamDuration, BufferedReader f, int testsize) throws IOException{
+			Integer streamDuration, String f, int testsize) throws IOException{
 		StreamObject streamer = new StreamObject(f, 0);
 		int i = 0;
 
@@ -189,8 +190,10 @@ public class RPHash {
 	}
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
-			Map<String, String> taggedArgs, List<float[]> data, BufferedReader f)
+			Map<String, String> taggedArgs, List<float[]> data, String f)
 			throws IOException {
+		
+		
 		List<Clusterer> runitems = new ArrayList<>();
 		int i = 3;
 		// List<float[]> data = TestUtil.readFile(new

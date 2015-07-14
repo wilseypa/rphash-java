@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.zip.GZIPInputStream;
 
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
@@ -38,6 +39,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	int numBlur;
 
+	String f;
 	InputStream elements;
 	int k;
 	int dim;
@@ -56,7 +58,8 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	final static int DEFAULT_NUM_RANDOM_SEED = 0;
 	final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	final static Decoder DEFAULT_INNER_DECODER = new Leech();//Spherical(32, 3, 1);
+	final static Decoder DEFAULT_INNER_DECODER = new Leech();// Spherical(32, 3,
+																// 1);
 
 	// input format
 	// per line
@@ -68,7 +71,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public StreamObject(PipedInputStream istream, int k, int dim,
 			ExecutorService executor) throws IOException {
 
-		//inputStream = new DataInputStream(istream);
+		// inputStream = new DataInputStream(istream);
 		this.executor = executor;
 
 		this.dim = dim;
@@ -90,10 +93,16 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	boolean filereader = false;
 
-	public StreamObject(BufferedReader f, int k) throws IOException {
+	public StreamObject(String f, int k) throws IOException {
+		this.f = f;
+		
 		filereader = true;
-		//inputStream = new DataInputStream(new FileInputStream(f));
-		inputStream = f;
+		if (this.f.endsWith("gz"))
+			inputStream = new BufferedReader(new InputStreamReader(
+					new GZIPInputStream(new FileInputStream(this.f))));
+		else
+			inputStream = new BufferedReader(new InputStreamReader(
+					new FileInputStream(this.f)));
 		// read the n and m dimension header
 		int d = Integer.parseInt(inputStream.readLine());
 		dim = Integer.parseInt(inputStream.readLine());
@@ -119,8 +128,13 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.centroids = null;
 		try {
 			if (filereader) {
-				
-				
+				inputStream.close();
+				if (f.endsWith("gz"))
+					inputStream = new BufferedReader(new InputStreamReader(
+							new GZIPInputStream(new FileInputStream(f))));
+				else
+					inputStream = new BufferedReader(new InputStreamReader(
+							new FileInputStream(f)));
 				// read the n and m dimension header
 				int d = Integer.parseInt(inputStream.readLine());
 				dim = Integer.parseInt(inputStream.readLine());
@@ -247,12 +261,12 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	@Override
 	public boolean hasNext() {
-			try {
-				return inputStream.ready();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			return false;
+		try {
+			return inputStream.ready();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	@Override

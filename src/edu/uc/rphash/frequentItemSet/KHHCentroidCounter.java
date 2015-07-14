@@ -16,7 +16,7 @@ public class KHHCentroidCounter {
 	public static final long PRIME_MODULUS = (1L << 31) - 1;
 	private int depth;
 	private int width;
-	private long[][] table;
+	private byte[][] table;
 	private long[] hashA;
 	public long count;
 	
@@ -55,7 +55,7 @@ public class KHHCentroidCounter {
 	}
 
 	private void initTablesWith(int depth, int width, int seed) {
-		this.table = new long[depth][width];
+		this.table = new byte[depth][width];
 		this.hashA = new long[depth];
 		Random r = new Random(seed);
 		for (int i = 0; i < depth; ++i) {
