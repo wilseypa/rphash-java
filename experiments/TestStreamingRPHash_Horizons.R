@@ -2,7 +2,6 @@
 
 library(clValid)
 library(mclust)
-library(caret)
 library(fpc)
 
 h <- readline("Enter the number of horizons: ")
@@ -13,7 +12,7 @@ funcPurity <- function(clusterLabels, groundTruthLabels) {
 }
 
 gt <- read.csv('GTLabels.csv')
-rp <- read.csv('RPHash.csv')
+rp <- read.csv('RPHashLabels.csv')
 data <- read.csv('dataset.csv')
 data.features <- data
 data.features$Class <- NULL
@@ -22,6 +21,7 @@ ARI <- vector()
 purity <- vector()
 dunnIndex <- vector()
 silWidth <- vector()
+wcss <- vector()
 VI <- vector()
 
 p <- 1
@@ -38,5 +38,20 @@ for(i in 1:h){
   sil <- silhouette(rp[,i], d)
   silWidth[i] <- summary(sil)$si.summary['Mean']
   validations <- cluster.stats(d, rp[,i], alt.clustering = gt[,i])
+  wcss[i] <- validations$within.cluster.ss
   VI[i] <- validations$vi
 }
+sink(file = "out.txt")
+print("ARI")
+print(t(t(ARI)))
+print("Purity")
+print(t(t(purity)))
+print("Dunn Index")
+print(t(t(dunnIndex)))
+print("Silhouette Width")
+print(t(t(silWidth)))
+print("WCSSE")
+print(t(t(wcss)))
+print("VI")
+print(t(t(VI)))
+sink()
