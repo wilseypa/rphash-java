@@ -137,6 +137,20 @@ public class TestUtil {
 			tmp.add(m);
 		prettyPrint(tmp);
 	}
+	
+	public static void prettyPrint(int[][] mat) {
+		ArrayList<float[]> tmp = new ArrayList<float[]>();
+		
+		for (int[] m : mat){
+			float[] tmptmp = new float[m.length];
+			int i = 0;
+			for(int o: m)
+				tmptmp[i++] = (float )o;
+			tmp.add(tmptmp);
+		}
+		
+		prettyPrint(tmp);
+	}
 
 	/**
 	 * Print a matrix, compress if the output is too big

@@ -48,7 +48,6 @@ public class RPHashStream implements StreamClusterer {
 				lshfunc.updateDecoderVariance(tmpvar);
 			variance= tmpvar;
 		}
-		
 		for (LSH lshfunc : lshfuncs) 
 		{
 			hash = lshfunc.lshHashRadiusNo2Hash(vec, so.getNumBlur());
@@ -77,6 +76,7 @@ public class RPHashStream implements StreamClusterer {
 		for (int i = 0; i < projections; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
+			
 			
 			lshfuncs[i] = new LSH(dec, p, hal);
 		}
@@ -135,10 +135,10 @@ public class RPHashStream implements StreamClusterer {
 	public List<float[]> getCentroidsOnline() 
 	{
 		
-		if(centroids == null ){
+		//if(centroids == null ){
 			centroids = new ArrayList<float[]>();
 			counts = new ArrayList<Long>();
-		}
+		//}
 		
 		for (int i = 0 ;i<is.getTop().size();i++){
 			centroids.add(is.getTop().get(i).centroid());
@@ -146,9 +146,9 @@ public class RPHashStream implements StreamClusterer {
 		}
 
 		centroids = new Kmeans(so.getk(), centroids,counts).getCentroids();
-		long count = Collections.max(counts);
+		int count = (int) ((Collections.max(counts)+Collections.min(counts))/2);
 		counts = new ArrayList<Long>();
-		for(int i = 0;i<so.getk();i++)counts.add(count);
+		for(int i = 0;i<so.getk();i++)counts.add((long) count);
 		return centroids;
 	}
 
@@ -167,8 +167,8 @@ public class RPHashStream implements StreamClusterer {
 	public static void main(String[] args) throws Exception{
 
 		int k = 10;
-		int d = 10000;
-		int n = 10000;
+		int d = 5000;
+		int n = 20000;
 		float var = .75f;
 //		for (float f = var; f < 3; f += .2f) {
 //			for (int i = 0; i < 1; i++) {
@@ -187,31 +187,50 @@ public class RPHashStream implements StreamClusterer {
 //				System.gc();
 //			}
 //		}
-		
 
 		Runtime rt = Runtime.getRuntime();
-		GenerateStreamData gen = new GenerateStreamData(k, d, var);
-		gen.generateNext();
+		GenerateStreamData gen = new GenerateStreamData(k, d, var,25l);
 		StreamClusterer rphit = new /*StreamingKmeans(k,gen);*/RPHashStream(k,gen);
-		long timestart = System.currentTimeMillis();
+		
+		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]> ();
 		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tPR\tCentSSE\n");
+		long gentime = System.nanoTime();
+
+		for (int i = 0; i < 10000; i++) {
+			float[] f = gen.generateNext();
+			vecsInThisRound.add(f);
+			if (i % 10000 == 10000-1) 
+			{
+				gentime = System.nanoTime()-gentime;			
+				vecsInThisRound = new ArrayList<float[]> ();
+			}
+		}
+		
+		long timestart = System.nanoTime();
 		for (int i = 0; i < 1000000; i++) {
-			rphit.addVector(gen.generateNext());
+			float[] f = gen.generateNext();
+			rphit.addVector(f);
+			vecsInThisRound.add(f);
 			if (i % 10000 == 10000-1) 
 			{
 				List<float[]> cents = rphit.getCentroidsOnline();
+				long time = System.nanoTime() - timestart;
+				double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
+				vecsInThisRound = new ArrayList<float[]> ();
 				rt.gc();
 				Thread.sleep(10);
 				rt.gc();
+				
+
 				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 				List<float[]> aligned = TestUtil.alignCentroids(
 				cents, gen.getMedoids());
 				double pr = StatTests.PR(aligned, gen);
-				double intercluster = StatTests.WCSSE(aligned, gen.getData());
+//				double intercluster = StatTests.WCSSE(aligned, gen.getData());
 				double ssecent = StatTests.SSE(aligned, gen);
 
-				System.out.printf("%d\t%d\t%.3f\t%.0f\t%.3f\t%.3f\n",i,usedkB, (System.currentTimeMillis()-timestart)/1000f,intercluster,pr,ssecent);
-				timestart = System.currentTimeMillis();
+				System.out.printf("%d\t%d\t%.3f\t%.0f\t%.3f\t%.3f\n",i,usedkB, (time-gentime)/1000000000f,wcsse,pr,ssecent);
+				timestart = System.nanoTime();
 			}
 		}
 	}

@@ -40,15 +40,9 @@ public class ProjectionTests {
 //			TestUtil.prettyPrint(f1);
 //			TestUtil.prettyPrint(f2);
 //			System.out.print(lsh.lshHash(f1)+":"+lsh.lshHash(f2));
-//			System.out.println("----------------------------------"+sum+"--------------------------------------");
-			
-			
+//			System.out.println("----------------------------------"+sum+"--------------------------------------");	
 		}
-		
 		   System.out.println(multi+":"+sum/sumun+"|"+sumreal/sumunreal);
-		
-		
-		
 	}	
 	public static void main(String[] args){
 	/* for(int i = 0; i<100;i++)*/testRPH(1000,24,4);

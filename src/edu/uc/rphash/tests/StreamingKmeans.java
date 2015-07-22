@@ -252,7 +252,7 @@ public class StreamingKmeans implements StreamClusterer{
 			this.beta = 2 * alpha * alpha * cofl + 2 * alpha;
 			this.gamma = Math.max(4 * alpha * alpha * alpha * cofl * cofl + 2
 					* alpha * alpha * cofl, beta * kofl + 1);
-			this.logNumPoints = 24;
+			this.logNumPoints = 30;
 
 			// Precompute the thresholds, which are constants as well.
 			costThreshold = gamma;
