@@ -84,41 +84,41 @@ public class GenerateMovingStream extends GenerateStreamData {
 	}
 	
 	public static void main(String[] args) {
-		GenerateMovingStream gen = new GenerateMovingStream(1, 3, .1f, .075f);
+		GenerateMovingStream gen = new GenerateMovingStream(1, 3, .15f, .555f);
 		ArrayList<float[]> a = new ArrayList<>();
 
 		print(gen.medoids.get(0));
-		for (int i = 0; i < 2; i++)gen.updateMedoid();
-		for (int i = 0; i < 200; i++) {
-			if(i%10==0)gen.updateMedoid();
+		gen.updateMedoid();
+		for (int i = 0; i < 400; i++) {
+			if(i%100==0)gen.updateMedoid();
 			a.add(gen.generateNext());
 		}
-		for (int i = 0; i < 4; i++)gen.updateMedoid();
+		gen.updateMedoid();
 		print(gen.medoids.get(0));
 		
 		TestUtil.writeFile(new File("/home/lee/Desktop/out1.mat"), a);
 
-		gen = new GenerateMovingStream(1, 3, .1f, .075f);
+		gen = new GenerateMovingStream(1, 3, .2f, 1.25f);
 		a = new ArrayList<>();
 		print(gen.medoids.get(0));
-		for (int i = 0; i < 2; i++)gen.updateMedoid();
-		for (int i = 0; i < 200; i++) {
-			if(i%10==0)gen.updateMedoid();
+		gen.updateMedoid();
+		for (int i = 0; i < 400; i++) {
+			if(i%100==0)gen.updateMedoid();
 			a.add(gen.generateNext());
 		}
-		for (int i = 0; i < 4; i++)gen.updateMedoid();
+		gen.updateMedoid();
 		print(gen.medoids.get(0));
 		TestUtil.writeFile(new File("/home/lee/Desktop/out2.mat"), a);
 
-		gen = new GenerateMovingStream(1, 3, .1f, .075f);
+		gen = new GenerateMovingStream(1, 3, .1f, .25f);
 		a = new ArrayList<>();
 		print(gen.medoids.get(0));
-		for (int i = 0; i < 2; i++)gen.updateMedoid();
-		for (int i = 0; i < 200; i++) {
-			if(i%10==0)gen.updateMedoid();
+		gen.updateMedoid();
+		for (int i = 0; i < 400; i++) {
+			if(i%100==0)gen.updateMedoid();
 			a.add(gen.generateNext());
 		}
-		for (int i = 0; i < 4; i++)gen.updateMedoid();
+		gen.updateMedoid();
 		print(gen.medoids.get(0));
 		TestUtil.writeFile(new File("/home/lee/Desktop/out3.mat"), a);
 
