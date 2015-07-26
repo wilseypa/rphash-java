@@ -33,7 +33,7 @@ public class RPHashStream implements StreamClusterer {
 	private float variance;
 	public KHHCentroidCounter is;
 	private LSH[] lshfuncs;
-	private StatTests vartracker;
+	//private StatTests vartracker;
 	private List<float[]> centroids = null;
 	private RPHashObject so;
 
@@ -42,7 +42,7 @@ public class RPHashStream implements StreamClusterer {
 		long hash[];
 		Centroid c = new Centroid(vec);
 		
-		float tmpvar = vartracker.updateVarianceSample(vec);
+		float tmpvar = 1f;//vartracker.updateVarianceSample(vec);
 		if(variance!=tmpvar){
 			for (LSH lshfunc : lshfuncs) 
 				lshfunc.updateDecoderVariance(tmpvar);
@@ -61,7 +61,7 @@ public class RPHashStream implements StreamClusterer {
 	public void init() {
 
 		Random r = new Random(so.getRandomSeed());
-		this.vartracker = new StatTests(.01);
+		//this.vartracker = new StatTests(.01);
 		int projections = so.getNumProjections();
 		int k = (int) (so.getk() * projections);
 
