@@ -167,26 +167,27 @@ public class RPHashStream implements StreamClusterer {
 	public static void main(String[] args) throws Exception{
 
 		int k = 10;
-		int d = 5000;
+		int d = 100;
 		int n = 20000;
-		float var = .75f;
-//		for (float f = var; f < 3; f += .2f) {
-//			for (int i = 0; i < 1; i++) {
-//				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
-//				// StreamingKmeans rphit = new StreamingKmeans(gen.data(), k);
-//				RPHashStream rphit = new RPHashStream(gen.getData(), k);
-//				long startTime = System.nanoTime();
-//				rphit.getCentroids();
-//				long duration = (System.nanoTime() - startTime);
-//				List<float[]> aligned = TestUtil.alignCentroids(
-//						rphit.getCentroids(), gen.medoids());
-//				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
-//						+ StatTests.WCSSE(gen.medoids(), gen.getData()) + ":"
-//						+ StatTests.WCSSE(aligned, gen.getData()) + ":" + duration
-//						/ 1000000000f);
-//				System.gc();
-//			}
-//		}
+		float var = 1f;
+		for (float f = (float)d; f < 100000f; f*=1.5f) {
+			for (int i = 0; i < 1; i++) {
+				GenerateData gen = new GenerateData(k, n / k, (int)f, var, true, 1f);
+				StreamingKmeans rphit = new StreamingKmeans(gen.data(), k);
+				//RPHashStream rphit = new RPHashStream(gen.getData(), k);
+				long startTime = System.nanoTime();
+				rphit.getCentroids();
+				long duration = (System.nanoTime() - startTime);
+				
+				List<float[]> aligned = TestUtil.alignCentroids(
+						rphit.getCentroids(), gen.medoids());
+				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
+						+ StatTests.WCSSE(gen.medoids(), gen.getData()) + ":"
+						+ StatTests.WCSSE(aligned, gen.getData()) + ":" + duration
+						/ 1000000000f);
+				System.gc();
+			}
+		}
 
 		Runtime rt = Runtime.getRuntime();
 		GenerateStreamData gen = new GenerateStreamData(k, d, var,25l);
