@@ -168,10 +168,6 @@ public class GenerateData implements ClusterGenerator {
 	public GenerateData(int numClusters, int numVectorsPerCluster,
 			int dimension, float variance, boolean shuffle, float sparseness,
 			File f) {
-		
-		System.out.printf("k=%d, n=%d, d=%d, var=%f, sparseness=%f %s > %s",numClusters,numClusters*numVectorsPerCluster,
-				dimension, variance, sparseness, shuffle ? "shuffled" : "", 
-				f.getAbsolutePath());
 		r = new Random();
 		this.numClusters = numClusters;
 		this.numVectorsPerCluster = numVectorsPerCluster;
@@ -430,19 +426,22 @@ public class GenerateData implements ClusterGenerator {
 		int d = 1000;
 		int n = 20000;
 		float var = 1f;
-		float sparesness = 1f;
+		float sparseness = 1f;
 		boolean shuffle = true;
 		
-		if(taggedArgs.containsKey("numDimensions"))d = Integer.parseInt(taggedArgs.get("numDimensions"));
-		if(taggedArgs.containsKey("numClusters"))k = Integer.parseInt(taggedArgs.get("numClusters"));
-		if(taggedArgs.containsKey("numVectors"))n = Integer.parseInt(taggedArgs.get("numVectors"));
+		if(taggedArgs.containsKey("numdimensions"))d = Integer.parseInt(taggedArgs.get("numdimensions"));
+		if(taggedArgs.containsKey("numclusters"))k = Integer.parseInt(taggedArgs.get("numclusters"));
+		if(taggedArgs.containsKey("numvectors"))n = Integer.parseInt(taggedArgs.get("numvectors"));
 		if(taggedArgs.containsKey("variance"))var = Float.parseFloat(taggedArgs.get("variance"));
-		if(taggedArgs.containsKey("sparseness"))sparesness = Float.parseFloat(taggedArgs.get("sparseness"));
+		if(taggedArgs.containsKey("sparseness"))sparseness = Float.parseFloat(taggedArgs.get("sparseness"));
 		if(taggedArgs.containsKey("shuffled"))shuffle = Boolean.parseBoolean(taggedArgs.get("shuffled"));
 		
-
+		System.out.printf("k=%d, n=%d, d=%d, var=%f, sparseness=%f %s > %s",k,n,
+				d, var, sparseness, shuffle ? "shuffled" : "", 
+				outputFile.getAbsolutePath());
+		
 		GenerateData gen = new GenerateData(k, n/k , d, var, shuffle,
-				sparesness,outputFile);
+				sparseness,outputFile);
 		
 
 
