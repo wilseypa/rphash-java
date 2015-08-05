@@ -99,8 +99,15 @@ public class LSH
 	}
 	
 	
+	/** forgo 2ndary hash function
+	 * @param r
+	 * @param times
+	 * @return
+	 */
 	public long[] lshHashRadiusNo2Hash(float[] r,int times){
-		 if(this.noise==null)genNoiseTable(r.length,times);
+		 if(this.noise==null){
+			 genNoiseTable(r.length,times);
+		 }
 	     float[] pr_r = p[0].project(r);
 	     long[] nonoise = dec.decode(pr_r);
 	     long[] ret = new long[times*nonoise.length];
@@ -114,12 +121,12 @@ public class LSH
 		 {
 	    	 System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
 	    	 tmp = noise.get(j-1);
-			 for(int k =0;k<pr_r.length;k++)rtmp[k]= rtmp[k]+tmp[k]; 
-			 
+			 for(int k =0;k<pr_r.length;k++){
+				 rtmp[k]= rtmp[k]+tmp[k]; 
+			 }
 			 nonoise = dec.decode(rtmp);
 			 System.arraycopy(nonoise, 0, ret, j*nonoise.length, nonoise.length);
 	     }
-//		 distance = mindist;
 		 return ret; 
 		}
 	
@@ -147,7 +154,9 @@ public class LSH
 
 		 return lshMinHashRadius(r,radius,times); 
 		}
-
+	
+// Query adaptive (c,r)-NN similar to query adaptive lsh ipdps-
+//TODO finish above
 //	public long[] lshHashRadius(float[] r,float radius,int times){
 //
 //	     float[] pr_r = p[0].project(r);

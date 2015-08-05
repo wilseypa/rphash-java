@@ -23,7 +23,7 @@ public class CrapWow implements HashAlgorithm {
 			s2[ct++] = (byte)(d >>> 32);
 			s2[ct++] = (byte)(d >>> 24);
 			s2[ct++] = (byte)(d >>> 16);
-			s2[ct++] = (byte)(d >>> 8 );
+			s2[ct++] = (byte)(d >>>  8);
 			s2[ct++] = (byte)(d       );
 		}
 		return computeCWowIntHash(s2, 0)%tablesize;

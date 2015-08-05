@@ -31,9 +31,9 @@ import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
 
 public class RPHash {
 
-	static String[] rphashes = { "simple", "streaming", "3stage", "multiProj",
-			"consensus", "redux", "kmeans", "pkmeans", "kmeansplusplus",
-			"streamingkmeans" };
+	static String[] clusteringmethods = { "simple", "streaming", "3stage", "multiProj",
+			"consensus", "redux", 
+			"kmeans", "pkmeans", "kmeansplusplus","streamingkmeans" };
 	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
 			"NumBlur", "RandomSeed", "Hashmod", "DecoderType", "streamduration" };
 	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
@@ -44,7 +44,7 @@ public class RPHash {
 
 		if (args.length < 3) {
 			System.out.print("Usage: rphash InputFile k OutputFile [");
-			for (String s : rphashes)
+			for (String s : clusteringmethods)
 				System.out.print(s + " ,");
 			System.out.print("] [arg=value...]\n \t Optional Args:\n");
 
@@ -83,7 +83,7 @@ public class RPHash {
 
 		if (taggedArgs.containsKey("streamduration")) {
 			System.out.println(taggedArgs.toString());
-			runstream(runs, outputFile,
+			runStream(runs, outputFile,
 					Integer.parseInt(taggedArgs.get("streamduration")),k);
 		}
 
@@ -108,6 +108,13 @@ public class RPHash {
 		}
 	}
 	
+	/**Compute the average time to read a file
+	 * @param streamDuration
+	 * @param f - file name string
+	 * @param testsize
+	 * @return the number of milliseconds it takes on average to read streamduration vectors
+	 * @throws IOException
+	 */
 	public static long computeAverageReadTime(
 			Integer streamDuration, String f, int testsize) throws IOException{
 		StreamObject streamer = new StreamObject(f, 0);
@@ -124,7 +131,7 @@ public class RPHash {
 		return (System.nanoTime()-startTime);
 	}
 
-	public static void runstream(List<Clusterer> runitems, String outputFile,
+	public static void runStream(List<Clusterer> runitems, String outputFile,
 			Integer streamDuration,  int k) throws IOException, InterruptedException {
 		
 		Iterator<Clusterer> cluit = runitems.iterator();
@@ -155,11 +162,11 @@ public class RPHash {
 					i++;
 					float[] nxt = streamer.next();
 					vecsInThisRound.add(nxt);
-					((StreamClusterer) clu).addVector(nxt);
+					((StreamClusterer) clu).addVectorOnlineStep(nxt);
 					
 					if (i % streamDuration == 0) {
 						List<float[]> cents = ((StreamClusterer) clu)
-								.getCentroidsOnline();
+								.getCentroidsOfflineStep();
 
 						long time = System.nanoTime() - startTime;
 						double wcsse = StatTests.WCSSE(cents, vecsInThisRound);

@@ -3,7 +3,6 @@ package edu.uc.rphash;
 import java.util.HashSet;
 
 import edu.uc.rphash.Readers.RPVector;
-import edu.uc.rphash.tests.TestUtil;
 
 public class Centroid {
 	private float[] vec;
@@ -11,48 +10,35 @@ public class Centroid {
 	public HashSet<Long> ids;
 	public long id;
 
-	// public float[] variance;
-	// float[] M2;
-	// float[] sumvec;
-
 	public Centroid(int dim, long id) {
 		this.vec = new float[dim];
 		this.count = 0;
 		this.id = id;
 		this.ids = new HashSet<Long>();
 		ids.add(id);
-		// this.variance = new float[dim];
-		// this.M2 = new float[dim];
-		// this.sumvec = new float[dim];
 	}
 
 	public Centroid(float[] data) {
-		this.vec=data;
+		this.vec = data;
 		this.ids = new HashSet<Long>();
 		this.count = 1;
 	}
-	
-	public Centroid(float[] data,long id) {
-		this.vec=data;
+
+	public Centroid(float[] data, long id) {
+		this.vec = data;
 		this.ids = new HashSet<Long>();
 		ids.add(id);
 		this.id = id;
 		this.count = 1;
 	}
-	
 
-	public void updateVariance(float[] data) {
+	private void updateCentroidVector(float[] data) {
 		float delta;
 		count++;
 		for (int i = 0; i < data.length; i++) {
 			float x = data[i];
 			delta = x - vec[i];
-			// if(sumvec[i]==0 || delta<1.5){
-			// sumvec[i]+=1;
-			vec[i] = vec[i] + delta / count;// sumvec[i];
-			// M2[i] = M2[i] + delta*(x - vec[i]);
-			// variance[i] = M2[i]/(sumvec[i]-1);
-			// }
+			vec[i] = vec[i] + delta / count;
 		}
 	}
 
@@ -61,33 +47,22 @@ public class Centroid {
 	}
 
 	public void updateVec(RPVector rp) {
-		//ids.addAll(rp.id);
-		updateVariance(rp.data);
+		ids.addAll(rp.id);
+		updateCentroidVector(rp.data);
 	}
 
 	public void updateVec(float[] rp) {
-		updateVariance(rp);
+		updateCentroidVector(rp);
 	}
 
 	public long getCount() {
 		return count;
 	}
 
-//	@Override
-//	public int hashCode() {
-//		return (int) id;
-//	}
-
-//	@Override
-//	public boolean equals(Object obj) {
-//		if (obj instanceof Centroid)
-//			return ((Centroid) obj).id == id;
-//		return false;
-//	}
-
 	public void addID(long h) {
-		if(ids.size()==0)id = h;
-		ids.add(h);		
+		if (ids.size() == 0)
+			id = h;
+		ids.add(h);
 	}
 
 }

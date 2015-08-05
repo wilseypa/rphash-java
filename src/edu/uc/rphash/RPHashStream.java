@@ -38,7 +38,7 @@ public class RPHashStream implements StreamClusterer {
 	private RPHashObject so;
 
 	@Override
-	public synchronized int addVector(float[] vec) {
+	public synchronized int addVectorOnlineStep(float[] vec) {
 		long hash[];
 		Centroid c = new Centroid(vec);
 		
@@ -132,7 +132,7 @@ public class RPHashStream implements StreamClusterer {
 	}
 	
 	ArrayList<Long> counts;
-	public List<float[]> getCentroidsOnline() 
+	public List<float[]> getCentroidsOfflineStep() 
 	{
 		
 		//if(centroids == null ){
@@ -156,7 +156,7 @@ public class RPHashStream implements StreamClusterer {
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		Iterator<float[]> vecs = so.getVectorIterator();
 		while (vecs.hasNext()) {
-			addVector(vecs.next());
+			addVectorOnlineStep(vecs.next());
 		}
 	}
 
@@ -210,11 +210,11 @@ public class RPHashStream implements StreamClusterer {
 		long timestart = System.nanoTime();
 		for (int i = 0; i < 1000000; i++) {
 			float[] f = gen.generateNext();
-			rphit.addVector(f);
+			rphit.addVectorOnlineStep(f);
 			vecsInThisRound.add(f);
 			if (i % 10000 == 10000-1) 
 			{
-				List<float[]> cents = rphit.getCentroidsOnline();
+				List<float[]> cents = rphit.getCentroidsOfflineStep();
 				long time = System.nanoTime() - timestart;
 				double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
 				vecsInThisRound = new ArrayList<float[]> ();

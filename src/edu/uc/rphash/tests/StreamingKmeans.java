@@ -264,7 +264,7 @@ public class StreamingKmeans implements StreamClusterer{
 		}
 
 		public void run(){
-			for(float[] x:data)this.addVector(x);
+			for(float[] x:data)this.addVectorOnlineStep(x);
 		}
 		
 		/**
@@ -391,7 +391,7 @@ public class StreamingKmeans implements StreamClusterer{
 		 */
 		private final float facilityThreshold;
 
-		public synchronized int addVector(float[] value) {
+		public synchronized int addVectorOnlineStep(float[] value) {
 			// Get the id of the new data point.
 			int id = idCounter.getAndAdd(1);
 
@@ -494,7 +494,7 @@ public class StreamingKmeans implements StreamClusterer{
 
 	
 	@Override
-	public List<float[]> getCentroidsOnline() {
+	public List<float[]> getCentroidsOfflineStep() {
 		List<float[]> ret = new ArrayList<>();
 		for (CentroidCluster c1 : getClusters()){
 			ret.add(c1.centroid());
