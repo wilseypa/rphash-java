@@ -1,4 +1,27 @@
 from pylab import *
+'''
+Now here is a different option, that is exact and maybe as fast, but requires more memory.
+we can figure out from the recurrence relationship, by unrolling the decay function
+
+f(t) = f(t-1)*(decay)
+f(t-1) = f(t-2)*(decay)
+...
+f(0) = k
+so f(3) = (((k*decay)*decay)*decay)
+which has the simple pattern
+f(b) = (((...(k)*decay)*decay ...) * decay)
+=>
+f(t) = k*decay^t
+
+so we have lots of buckets, that are mostly empty, and a few that have a good number 
+of items in them. We can calculate the exact decay using the above equation for at 
+any time t. If the array of counters was an array of pointers to a list of numbers 
+that represent the time at which a collision occured, we could use the above equation 
+to compute the exact decayed value as the sum of decaying functions.
+Since really old stuff gets exponentially smaller, we can set a threshold 
+on the lists length, pruning things that are really old.
+eg .9^100 = 2.66e-5
+'''
 
 
 def updateDecayCalc(prev,decayrate):
@@ -18,6 +41,7 @@ def decayOnInsert(prev_val,prevt,t,decayrate):
 def checkOrder(fullSeq,sparseSeq,indeces):
     '''
         check the order of the  sequences relative to the correct ordering A, and our approximate ordering B
+        return the correct order/all order ratio
     '''
     sums = 0
     for i in range(len(indeces[0])):
@@ -34,7 +58,10 @@ def checkOrder(fullSeq,sparseSeq,indeces):
     return sums/float(len(indeces[0]))
 
 def plotData(exactSequence,insertPts,approxInsertPts,order,n):
-
+    '''
+        plot the exact decay graph along with the approximate decay data.
+        approximate data only occurs when a vector is added.
+    '''
     colors = ["blue","green","red","orange","gray","purple","brown","yellow","pink","black","tan"]
     for seqit in range(len(exactSequence)):
         plt.plot(range(n),exactSequence[seqit],color=colors[seqit])
@@ -45,6 +72,10 @@ def plotData(exactSequence,insertPts,approxInsertPts,order,n):
 def run(mod,plotdata=False):
     '''
         mod: the stream cluster interval
+        n: number of data points to simulate
+        arrivalrate: the speed at which we should generate hits to a bucket
+        nseq: number of sequences to consider
+        decayrate: the decay rate of a bucket
         Compute the decay rates and randomly add hash hits to the representative buckets
     '''
     n = 100000
@@ -91,6 +122,11 @@ def run(mod,plotdata=False):
 
 
 def runmany():
+    '''
+         update the batch decay range for i in 1:1000
+         plot the results with the batch decay as the x axis, and
+         accuracy as the y axis
+    '''
     #uncomment below to generate a per interval profile of your function
     print "interval accuracy"
     p = []
@@ -101,7 +137,7 @@ def runmany():
     plt.show()
 
 t=10000
- print "we are correct about order: " + str(run(t,True)*100) +"% of the time with interval at: " +str(t)
+print "we are correct about order: " + str(run(t,True)*100) +"% of the time with interval at: " +str(t)
 runmany()
 
 

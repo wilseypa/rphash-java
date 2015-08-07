@@ -1,6 +1,13 @@
 import matplotlib.pyplot as plt
 from numpy import array
 '''
+So we have a sparse array of mostly empty counters, and a few frequent 
+counters for which we want to compute a time decaying population. 
+Currently the idea is to regard the counters as super additive 
+(in regard to when the next batch decay everything process is to take place). 
+This is a pretty decent scheme, but the batch process is computationally
+ prohibitive, and the accuracy isnt great either.
+ 
 the basic idea is to decay every hash bucket of the min-count sketch
 structure. Because this is computationally intensive, and highly redundant
 for majority of empty min-count sketch cells, we instead suggest a
@@ -61,6 +68,11 @@ def checkOrder(A,B,i):
     return int(s==t)
 
 def plotData(approxSequence,exactSequence,order,n):#approxAgeDecay,approxAgeDecayLower,approxAgeDecayUpper,exactDecay,exactLower,exactUpper,order,n):
+    '''
+        plot the approx decay graph, the exact decay graph.
+        and the correct or not graph (0 incorrect, 1 correct), in a 
+        multigraph window.
+    '''
     #draw the graphs as 3 plots in the same figure
     plt.subplot(3, 1, 1)
     for seq in approxSequence:
@@ -75,6 +87,10 @@ def plotData(approxSequence,exactSequence,order,n):#approxAgeDecay,approxAgeDeca
 def run(mod,plotdata=False):
     '''
         mod: the stream cluster interval
+        n: number of data points to simulate
+        arrivalrate: the speed at which we should generate hits to a bucket
+        nseq: number of sequences to consider
+        decayrate: the decay rate of a bucket
         Compute the decay rates and randomly add hash hits to the representative buckets
     '''
     n = 100000
@@ -119,6 +135,11 @@ def run(mod,plotdata=False):
 
 
 def runmany():
+    '''
+         update the batch decay range for i in 1:1000
+         plot the results with the batch decay as the x axis, and
+         accuracy as the y axis
+    '''
     #uncomment below to generate a per interval profile of your function
     print "interval accuracy"
     p = []
