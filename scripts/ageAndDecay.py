@@ -21,16 +21,17 @@ like a pingponging between the exact
 
 from math import exp
 
-def batchDecayCalc(prev,decayrate,mod):
+
+def batchDecayCalc(prev,decayrate,mod,decayArray):
     '''
         this function runs at each cluster interval as a batch 
         computation step, it is very computationally intensive
         use the actual decay function for all data
     '''
-    
-    return  prev * (1.0-decayrate)**mod #prev - decayrate*((mod-lastupdate)/mod)
+    return prev*decayArray[0]
+    #return  prev * (1.0-decayrate)**mod #prev - decayrate*((mod-lastupdate)/mod)
 
-def approxAgeCalc(prev,decayrate,mod,i):
+def approxAgeCalc(prev,decayrate,mod,i,decayArray):
     '''
         this command is run when a bucket happens to get hit with a 
         hash collision
@@ -38,7 +39,8 @@ def approxAgeCalc(prev,decayrate,mod,i):
         occur are the end of this sequence.
     '''
     i = i%mod #we are considered with what i is within the range
-    return prev + (1-(1-decayrate*mod)**(i/float(mod))) #*(1.0+decayrate)**((mod-i)/(mod))
+    return prev + (1 * decayArray[i])
+    #return prev + (1-(1-decayrate*mod)**(i/float(mod))) #*(1.0+decayrate)**((mod-i)/(mod))
 #prev+(1+(decayrate*float(mod-i)))#prev*( (decayrate*float(mod-i))) #this should follow inverse exp curve
 
 def updateDecayCalc(prev,decayrate):
@@ -93,9 +95,18 @@ def run(mod,plotdata=False):
         decayrate: the decay rate of a bucket
         Compute the decay rates and randomly add hash hits to the representative buckets
     '''
+
+
+
     n = 100000
     nseq = 4
     decayrate = .90/float(mod)
+
+
+    decayArray=[decayrate  for i in range(mod)]
+    for i in reversed(range(mod-1)) :
+        decayArray[i]=decayArray[i+1]*decayrate 
+
     arrivalrate = .01
     order = []#the order between the decays lists
     from random import random, randrange
@@ -108,24 +119,26 @@ def run(mod,plotdata=False):
         #lastupdateSequence.append([0]*n)
 
     for i in range(1,n):#iterate over the data
-        
+
         for j in range(nseq):#iterate over the number of sequences to consider
             approxSequences[j][i] = approxSequences[j][i-1]#we have to propagate the count forward
             exactSequences[j][i] = updateDecayCalc(exactSequences[j][i-1],decayrate)#,mod)
 
 
-            if i%mod==0:# this is when we are allowed to run our batch decay function
-                approxSequences[j][i] = batchDecayCalc(approxSequences[j][i-1],decayrate,mod)
-                #just check after the batch processes
-                #order.append( checkOrder(approxSequences,exactSequences,i))
+            if i%mod==0:# this is when we are allowed to run our batch decay function              
+                approxSequences[j][i] = batchDecayCalc(approxSequences[j][i-1],decayrate,mod,decayArray)
                 
-
+                
+        
+        
         if random() < arrivalrate:#randomly add some hits to the buckets
             r = randrange(0,nseq)
             #this is the only time we are allowed to run our aging calculation
-            approxSequences[r][i]=approxAgeCalc(approxSequences[r][i-1],decayrate,mod,i)+1
+            approxSequences[r][i]=approxAgeCalc(approxSequences[r][i-1],decayrate,mod,i,decayArray)+1
             exactSequences[r][i]+=1
-        order.append( checkOrder(approxSequences,exactSequences,i))
+        
+        if i%mod==0:order.append( checkOrder(approxSequences,exactSequences,i)) 
+        
 
 
     #store correctness of order after each data point

@@ -167,7 +167,7 @@ public class GenerateData implements ClusterGenerator {
 
 	public GenerateData(int numClusters, int numVectorsPerCluster,
 			int dimension, float variance, boolean shuffle, float sparseness,
-			File f) {
+			File f,File lblFile) {
 		r = new Random();
 		this.numClusters = numClusters;
 		this.numVectorsPerCluster = numVectorsPerCluster;
@@ -183,11 +183,11 @@ public class GenerateData implements ClusterGenerator {
 				return (float) r.nextGaussian();
 			}
 		};
-		generateDisk(f);
+		generateDisk(f,lblFile);
 	}
 
 	public GenerateData(int numClusters, int numVectorsPerCluster,
-			int dimension, File f, RandomDistributionFnc genvariate) {
+			int dimension, File f,File lblFile, RandomDistributionFnc genvariate) {
 		r = new Random();
 		this.numClusters = numClusters;
 		this.numVectorsPerCluster = numVectorsPerCluster;
@@ -196,7 +196,7 @@ public class GenerateData implements ClusterGenerator {
 		this.genfnc = genvariate;
 		this.shuffle = true;
 		this.sparseness = 1.0f;
-		generateDisk(f);
+		generateDisk(f,lblFile);
 	}
 
 	private void permute() {
@@ -306,10 +306,19 @@ public class GenerateData implements ClusterGenerator {
 		}
 	}
 
-	public void generateDisk(File f) {
+	public void generateDisk(File f,File lbl) {
 		try {
 			BufferedWriter bf = new BufferedWriter(new FileWriter(f));
-
+			BufferedWriter bflbl = new BufferedWriter(new FileWriter(lbl));
+			
+			bflbl.write(String.valueOf(numClusters * numVectorsPerCluster));
+			bflbl.write('\n');
+			bflbl.write(String.valueOf(1));
+			bflbl.write('\n');
+			
+			
+			
+			
 			bf.write(String.valueOf(numClusters * numVectorsPerCluster));
 			bf.write('\n');
 			bf.write(String.valueOf(dimension));
@@ -328,9 +337,12 @@ public class GenerateData implements ClusterGenerator {
 			// gen data
 			for (int j = 0; j < numVectorsPerCluster * numClusters; j++) {
 				int clusteridx = r.nextInt(numClusters);
+				bflbl.write(String.valueOf(clusteridx));
+				bflbl.write('\n');
 				for (int k = 0; k < dimension; k++) {
 					if(r.nextFloat()<this.sparseness){
-					bf.write(String.valueOf(medoids[clusteridx][k]
+						
+						bf.write(String.valueOf(medoids[clusteridx][k]
 							* r.nextGaussian() * variances[clusteridx][k]));
 					}
 					else{
@@ -340,8 +352,11 @@ public class GenerateData implements ClusterGenerator {
 				}
 			}
 			bf.flush();
-
 			bf.close();
+			
+			bflbl.flush();
+			bflbl.close();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -419,6 +434,7 @@ public class GenerateData implements ClusterGenerator {
 			System.exit(0);
 		}
 		File outputFile = new File(args[0]);
+		File lblFile = new File(args[0]+"_lbl");
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
 
@@ -441,7 +457,7 @@ public class GenerateData implements ClusterGenerator {
 				outputFile.getAbsolutePath());
 		
 		GenerateData gen = new GenerateData(k, n/k , d, var, shuffle,
-				sparseness,outputFile);
+				sparseness,outputFile,lblFile);
 		
 
 
