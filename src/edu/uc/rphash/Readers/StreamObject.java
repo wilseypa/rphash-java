@@ -1,5 +1,6 @@
 package edu.uc.rphash.Readers;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
@@ -51,8 +52,11 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	Decoder dec;
 
 	ExecutorService executor;
-	BufferedReader inputStream;
+	InputStream inputStream;
+	boolean raw;
 
+	BufferedReader assin;
+	DataInputStream binin;
 
 	// input format
 	// per line
@@ -86,19 +90,35 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	boolean filereader = false;
 
-	public StreamObject(String f, int k) throws IOException {
+	public StreamObject(String f, int k, boolean raw) throws IOException {
 		this.f = f;
-		
+
 		filereader = true;
-		if (this.f.endsWith("gz"))
-			inputStream = new BufferedReader(new InputStreamReader(
-					new GZIPInputStream(new FileInputStream(this.f))));
-		else
-			inputStream = new BufferedReader(new InputStreamReader(
-					new FileInputStream(this.f)));
+		// if (this.f.endsWith("gz"))
+		// inputStream = new BufferedReader(new InputStreamReader(
+		// new GZIPInputStream(new FileInputStream(this.f))));
+		// else
+		// inputStream = new BufferedReader(new InputStreamReader(
+		// new FileInputStream(this.f)));
 		// read the n and m dimension header
-		int d = Integer.parseInt(inputStream.readLine());
-		dim = Integer.parseInt(inputStream.readLine());
+		this.raw = raw;
+
+		if (this.f.endsWith("gz"))
+			inputStream = new GZIPInputStream(new FileInputStream(this.f));
+		else
+			inputStream = new FileInputStream(this.f);
+
+		if (!raw) {
+			assin = new BufferedReader(new InputStreamReader(inputStream));
+			int d = Integer.parseInt(assin.readLine());
+			dim = Integer.parseInt(assin.readLine());
+		} else {
+			binin = new DataInputStream(new BufferedInputStream(inputStream));
+			int d = binin.readInt();
+			dim = binin.readInt();
+
+		}
+
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
@@ -122,15 +142,24 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		try {
 			if (filereader) {
 				inputStream.close();
-				if (f.endsWith("gz"))
-					inputStream = new BufferedReader(new InputStreamReader(
-							new GZIPInputStream(new FileInputStream(f))));
+				if (this.f.endsWith("gz"))
+					inputStream = new GZIPInputStream(new FileInputStream(
+							this.f));
 				else
-					inputStream = new BufferedReader(new InputStreamReader(
-							new FileInputStream(f)));
-				// read the n and m dimension header
-				int d = Integer.parseInt(inputStream.readLine());
-				dim = Integer.parseInt(inputStream.readLine());
+					inputStream = new FileInputStream(this.f);
+
+				if (!raw) {
+					assin = new BufferedReader(new InputStreamReader(
+							inputStream));
+					int d = Integer.parseInt(assin.readLine());
+					dim = Integer.parseInt(assin.readLine());
+				} else {
+					binin = new DataInputStream(new BufferedInputStream(
+							inputStream));
+					int d = binin.readInt();
+					dim = binin.readInt();
+
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -255,7 +284,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	@Override
 	public boolean hasNext() {
 		try {
-			return inputStream.ready();
+			return inputStream.available() > 0;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -265,12 +294,17 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	@Override
 	public float[] next() {
 		float[] readFloat = new float[dim];
-		for (int i = 0; i < dim; i++) {
-			try {
-				readFloat[i] = Float.parseFloat(inputStream.readLine());
-			} catch (IOException e) {
-				e.printStackTrace();
+		try {
+
+			if (!raw) {
+				for (int i = 0; i < dim; i++)
+					readFloat[i] = Float.parseFloat(assin.readLine());
+			} else {
+				for (int i = 0; i < dim; i++)
+					readFloat[i] = binin.readFloat();
 			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		return readFloat;
 		// // Read data with timeout

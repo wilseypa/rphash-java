@@ -37,9 +37,9 @@ public class StatTests {
 		return count;
 	}
 	
-	public static double WCSSE(List<float[]> estCentroids, String f) throws IOException{
+	public static double WCSSE(List<float[]> estCentroids, String f,boolean raw) throws IOException{
 		double count = 0.0 ;
-		StreamObject data = new StreamObject(f,0);
+		StreamObject data = new StreamObject(f,0,raw);
 		while(data.hasNext())
 		{
 			float[] next = data.next();

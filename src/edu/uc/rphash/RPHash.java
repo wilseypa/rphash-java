@@ -76,9 +76,18 @@ public class RPHash {
 
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
-		List<Clusterer> runs = runConfigs(truncatedArgs,taggedArgs,data,filename);
+		List<Clusterer> runs;
+		if(taggedArgs.containsKey("raw")){
+			raw = Boolean.getBoolean(taggedArgs.get("raw"));
+			runs = runConfigs(truncatedArgs,taggedArgs,data,filename,true);
+		}
+		else{
+			runs = runConfigs(truncatedArgs,taggedArgs,data,filename,false);
+		}
 
-		if(taggedArgs.containsKey("raw"))raw = Boolean.getBoolean(taggedArgs.get("raw"));
+		
+
+		
 		
 		if (taggedArgs.containsKey("streamduration")) {
 			System.out.println(taggedArgs.toString());
@@ -116,8 +125,8 @@ public class RPHash {
 	 * @throws IOException
 	 */
 	public static long computeAverageReadTime(
-			Integer streamDuration, String f, int testsize) throws IOException{
-		StreamObject streamer = new StreamObject(f, 0);
+			Integer streamDuration, String f, int testsize,boolean raw) throws IOException{
+		StreamObject streamer = new StreamObject(f, 0,raw);
 		int i = 0;
 
 		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]> ();
@@ -197,7 +206,7 @@ public class RPHash {
 	}
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
-			Map<String, String> taggedArgs, List<float[]> data, String f)
+			Map<String, String> taggedArgs, List<float[]> data, String f,boolean raw)
 			throws IOException {
 		
 		
@@ -209,7 +218,7 @@ public class RPHash {
 
 		int k = Integer.parseInt(untaggedArgs.get(1));
 		RPHashObject o = new SimpleArrayReader(data, k);
-		StreamObject so = new StreamObject(f, k);
+		StreamObject so = new StreamObject(f, k,raw);
 
 		if (taggedArgs.containsKey("numprojections")){
 			so.setNumProjections(Integer.parseInt(taggedArgs
