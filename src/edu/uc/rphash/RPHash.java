@@ -35,7 +35,7 @@ public class RPHash {
 			"consensus", "redux", 
 			"kmeans", "pkmeans", "kmeansplusplus","streamingkmeans" };
 	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
-			"NumBlur", "RandomSeed", "Hashmod", "DecoderType", "streamduration" };
+			"NumBlur", "RandomSeed", "Hashmod", "DecoderType", "streamduration" , "raw"};
 	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
 			"PStable", "Sphere" };
 
@@ -64,35 +64,35 @@ public class RPHash {
 		String outputFile = args[2];
 		
 		String filename = args[0];
-//		BufferedReader f = new BufferedReader(new InputStreamReader (new FileInputStream(args[0])));
-//		if(args[0].endsWith("gz")){
-//			
-//			f = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(args[0]))));
-//		}
+
+		boolean raw = false;
 		
 		if (args.length == 3) {
-			data = TestUtil.readFile(filename);
+			data = TestUtil.readFile(filename,raw);
 			RPHashSimple clusterer = new RPHashSimple(data, k);
 			TestUtil.writeFile(new File(outputFile + "."
-					+ clusterer.getClass().getName()), clusterer.getCentroids());
+					+ clusterer.getClass().getName()), clusterer.getCentroids(),raw);
 		}
 
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
 		List<Clusterer> runs = runConfigs(truncatedArgs,taggedArgs,data,filename);
 
+		if(taggedArgs.containsKey("raw"))raw = Boolean.getBoolean(taggedArgs.get("raw"));
+		
 		if (taggedArgs.containsKey("streamduration")) {
 			System.out.println(taggedArgs.toString());
 			runStream(runs, outputFile,
-					Integer.parseInt(taggedArgs.get("streamduration")),k);
+					Integer.parseInt(taggedArgs.get("streamduration")),k,raw);
 		}
-
+		
+		
 		// run remaining, read file into ram
-		data = TestUtil.readFile(filename);
-		runner(runs, outputFile);
+		data = TestUtil.readFile(filename,raw);
+		runner(runs, outputFile,raw);
 	}
 
-	public static void runner(List<Clusterer> runitems, String outputFile) {
+	public static void runner(List<Clusterer> runitems, String outputFile,boolean raw) {
 		for (Clusterer clu : runitems) {
 			String[] ClusterHashName = clu.getClass().getName().split("\\.");
 			String[] DecoderHashName = clu.getParam().toString().split("\\.");
@@ -104,7 +104,7 @@ public class RPHash {
 			System.out.println((System.nanoTime() - startTime) / 1000000000f);
 			TestUtil.writeFile(new File(outputFile + "."
 					+ ClusterHashName[ClusterHashName.length - 1]),
-					clu.getCentroids());
+					clu.getCentroids(),raw);
 		}
 	}
 	
@@ -132,7 +132,7 @@ public class RPHash {
 	}
 
 	public static void runStream(List<Clusterer> runitems, String outputFile,
-			Integer streamDuration,  int k) throws IOException, InterruptedException {
+			Integer streamDuration,  int k,boolean raw) throws IOException, InterruptedException {
 		
 		Iterator<Clusterer> cluit = runitems.iterator();
 								// needs work, just use for both to be more accurate
@@ -185,7 +185,7 @@ public class RPHash {
 						TestUtil.writeFile(new File(outputFile + "_round" + i
 								+ "."
 								+ ClusterHashName[ClusterHashName.length - 1]),
-								cents);
+								cents,raw);
 						startTime = System.nanoTime()+avgtimeToRead;
 						
 					}

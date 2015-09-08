@@ -96,7 +96,7 @@ public class GenerateMovingStream extends GenerateStreamData {
 		gen.updateMedoid();
 		print(gen.medoids.get(0));
 		
-		TestUtil.writeFile(new File("/home/lee/Desktop/out1.mat"), a);
+		TestUtil.writeFile(new File("/home/lee/Desktop/out1.mat"), a,false);
 
 		gen = new GenerateMovingStream(1, 3, .2f, 1.25f);
 		a = new ArrayList<>();
@@ -108,7 +108,7 @@ public class GenerateMovingStream extends GenerateStreamData {
 		}
 		gen.updateMedoid();
 		print(gen.medoids.get(0));
-		TestUtil.writeFile(new File("/home/lee/Desktop/out2.mat"), a);
+		TestUtil.writeFile(new File("/home/lee/Desktop/out2.mat"), a,false);
 
 		gen = new GenerateMovingStream(1, 3, .1f, .25f);
 		a = new ArrayList<>();
@@ -120,7 +120,7 @@ public class GenerateMovingStream extends GenerateStreamData {
 		}
 		gen.updateMedoid();
 		print(gen.medoids.get(0));
-		TestUtil.writeFile(new File("/home/lee/Desktop/out3.mat"), a);
+		TestUtil.writeFile(new File("/home/lee/Desktop/out3.mat"), a,false);
 
 	}
 

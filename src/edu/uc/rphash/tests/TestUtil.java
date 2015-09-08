@@ -1,13 +1,19 @@
 package edu.uc.rphash.tests;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -137,18 +143,18 @@ public class TestUtil {
 			tmp.add(m);
 		prettyPrint(tmp);
 	}
-	
+
 	public static void prettyPrint(int[][] mat) {
 		ArrayList<float[]> tmp = new ArrayList<float[]>();
-		
-		for (int[] m : mat){
+
+		for (int[] m : mat) {
 			float[] tmptmp = new float[m.length];
 			int i = 0;
-			for(int o: m)
-				tmptmp[i++] = (float )o;
+			for (int o : m)
+				tmptmp[i++] = (float) o;
 			tmp.add(tmptmp);
 		}
-		
+
 		prettyPrint(tmp);
 	}
 
@@ -284,26 +290,32 @@ public class TestUtil {
 	 * @param output
 	 *            - file
 	 */
-	public static void writeFile(File output, List<float[]> data) {
-		BufferedWriter out = null;
+	public static void writeFile(File output, List<float[]> data, boolean raw) {
+
 		try {
-			out = new BufferedWriter(new FileWriter(output));
-			out.write(String.valueOf(data.size()) + "\n");
-			out.write(String.valueOf(data.get(0).length) + "\n");
-			for (float[] vector : data) {
-				for (float v : vector)
-					out.write(String.valueOf(v) + "\n");
+			if (!raw) {
+				BufferedWriter out = new BufferedWriter(new FileWriter(output));
+				out.write(String.valueOf(data.size()) + "\n");
+				out.write(String.valueOf(data.get(0).length) + "\n");
+				for (float[] vector : data) {
+					for (float v : vector)
+						out.write(String.valueOf(v) + "\n");
+				}
+				out.close();
+			} else {
+				DataOutputStream out = new DataOutputStream(
+						new BufferedOutputStream(new FileOutputStream(output)));
+				out.writeInt(data.size());
+				out.writeInt(data.get(0).length);
+				for (float[] vector : data) {
+					for (float v : vector)
+						out.writeFloat(v);
+				}
+				out.close();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		if (out != null)
-			try {
-				out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 	}
 
 	public static float max(float[] l) {
@@ -351,29 +363,11 @@ public class TestUtil {
 		return s;
 	}
 
-	/**
-	 * Read a simple matrix format of row[newline] col[newline]
-	 * data_1_1[newline] ...[newline] data_||row||_||col||
-	 * 
-	 * @param input
-	 * @return
-	 * @throws IOException
-	 * @throws FileNotFoundException
-	 */
-	public static List<float[]> readFile(String infile)
+	public static List<float[]> readASCIIFile(BufferedReader in)
 			throws FileNotFoundException, IOException {
 
-		BufferedReader in;
-		if (infile.endsWith("gz"))
-			in = new BufferedReader(new InputStreamReader(new GZIPInputStream(
-					new FileInputStream(infile))));
-		else
-			in = new BufferedReader(new InputStreamReader(new FileInputStream(
-					infile)));
-		
 		List<float[]> M = null;
 		try {
-
 			int m = Integer.parseInt(in.readLine());
 			int n = Integer.parseInt(in.readLine());
 			M = new ArrayList<float[]>(m);
@@ -395,6 +389,68 @@ public class TestUtil {
 		}
 		in.close();
 		return M;
+	}
+
+	public static List<float[]> readRawFile(DataInputStream in)
+			throws FileNotFoundException, IOException {
+
+		List<float[]> M = null;
+		try {
+
+			int m = in.readInt();
+			int n = in.readInt();
+
+			M = new ArrayList<float[]>(m);
+			for (int i = 0; i < m; i++) {
+				float[] vec = new float[n];
+				for (int j = 0; j < n; j++)
+					vec[j] = in.readFloat();
+				M.add(vec);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (in != null) {
+			try {
+				in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		in.close();
+		return M;
+	}
+
+	/**
+	 * Read a simple matrix format of row[newline] col[newline]
+	 * data_1_1[newline] ...[newline] data_||row||_||col||
+	 * 
+	 * @param input
+	 * @return
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	public static List<float[]> readFile(String infile, boolean raw)
+			throws FileNotFoundException, IOException {
+		InputStream freader;
+		if (infile.endsWith("gz"))
+			freader = new GZIPInputStream(new FileInputStream(infile));
+		else
+			freader = new FileInputStream(infile);
+		try {
+			if (!raw) {
+				BufferedReader in = new BufferedReader(new InputStreamReader(
+						freader));
+				return readASCIIFile(in);
+			} else {// this maybe a binary file
+				return readRawFile(new DataInputStream(new BufferedInputStream(
+						freader)));
+
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	/**
