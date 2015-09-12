@@ -72,6 +72,9 @@ purity_km <- vector()
 silWidth_km <- vector()
 wcss_km <- vector()
 
+silWidth_base <- vector()
+wcss_base <- vector()
+
 p <- 1
 q <- 1000
 
@@ -89,10 +92,14 @@ for(i in 1:h){
   silWidth_rp[i] <- summary(sil_rp)$si.summary['Mean']
   sil_km <- silhouette(km[,i], d)
   silWidth_km[i] <- summary(sil_km)$si.summary['Mean']
+  sil_base <- silhouette(gt, d)
+  silWidth_base[i] <- summary(sil_base)$si.summary['Mean']
   validations_rp <- cluster.stats(d, rp[,i], alt.clustering = gt)
   wcss_rp[i] <- validations_rp$within.cluster.ss
   validations_km <- cluster.stats(d, km[,i], alt.clustering = gt)
   wcss_km[i] <- validations_km$within.cluster.ss
+  validations_base <- cluster.stats(d, gt)
+  wcss_base[i] <- validations_base$within.cluster.ss
 }
 
 sink(file = "out.txt", append = TRUE)
@@ -120,6 +127,14 @@ print("Silhouette Width")
 print(t(t(silWidth_km)))
 print("WCSSE")
 print(t(t(wcss_km)))
+
+writeLines('\n')
+print("Baseline values of Silhouette and WCSSE:")
+writeLines('\n')
+print("Silhouette Width")
+print(t(t(silWidth_base)))
+print("WCSSE")
+print(t(t(wcss_base)))
 
 sink()
 ## End Streaming RPHash and Streaming K-Means
