@@ -1,4 +1,5 @@
 from pylab import *
+from pyIOUtils import *
 sparsity = .1
 def roundspecial(X):
     for i in xrange(len(X)):
@@ -6,16 +7,16 @@ def roundspecial(X):
     return X
 
 def genData(n,m,k):
-    cent = []
-    data = []
-    cent = rand(k,m)
-    for i in xrange(n):
-        data.append(randn(m)*.1+cent[i%k])
+    #cent = []
+    #data = []
+    #cent = rand(k,m)
+    #for i in xrange(n):
+    #    data.append(randn(m)*.1+cent[i%k])
     #sparsify
-    for i in xrange(n):
-        r = roundspecial(rand(m))
-        data[i]*=r
-    return array(data)
+    #for i in xrange(n):
+    #    r = roundspecial(rand(m))
+    #    data[i]*=r
+    return array(readMatFile("allmimicsigdata.mat"))#data)
 def euclidean(x,y):
     return sum((x-y)**2)**.5
 
@@ -33,11 +34,15 @@ def countInt(A,B):
     t = cKDTree(B)
     ct = 0;
     for i in xrange(len(A)):
-        if t.query(A[i],5)[1] == i:ct+=1
+        if t.query(A[i],5)[1].tolist().__contains__(i):
+            ct+=1
         #if nn(A[i],B) == i:ct+=1
     return ct
 
 def run(n,m,k,l):
+    n = 38
+    m=256
+    k = 1
     data = genData(n,m,k)
     R = randn(m,l)
     pData = dot(data,R)
@@ -47,10 +52,10 @@ def run(n,m,k,l):
     return countInt(pinvData,data)
 
 print "k=10,l=24,n=5000, avgs=10"
-for i in range(70,100):
-    print str(i+24),
+for i in range(1,256,4):
+    print str(i),
     for j in range(10):
-        print run(5000,i+24,10,24)/5000.,
+        print run(38,256,1,i)/38.,
     print ""
 
 

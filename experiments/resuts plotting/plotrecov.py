@@ -2,15 +2,18 @@ from pylab import *
 from matplotlib import rc
 import seaborn as sns
 def fitAndPlot(x,y,title, degree = 1 , color='r'):
-    rm = polyfit(x,y,degree)
-    rpyp = polyval(rm,x)
-    plot(x, y,color+'o',label=title)
-    ttlAndEqn = title +":y="+str(rm)[1:6]#+" + "+str(rm)[1:6]+"x"
-    degree-=1
-    #while degree>0:
-    #    ttlAndEqn = ttlAndEqn + ""
-    plot(x, rpyp, color+'--',label=ttlAndEqn)
-
+    if degree > 0:    
+        rm = polyfit(x,y,degree)
+        rpyp = polyval(rm,x)
+        plot(x, y,color+'o',label=title)
+        ttlAndEqn = title +":y="+str(rm)[1:6]#+" + "+str(rm)[1:6]+"x"
+        degree-=1
+        #while degree>0:
+        #    ttlAndEqn = ttlAndEqn + ""
+        plot(x, rpyp, color+'--',label=ttlAndEqn)
+    else:
+        sns.residplot(x,y)
+    
 
 
 
@@ -39,10 +42,10 @@ fitfunc = lambda p, x: p[0] + p[1]/(x**p[2]+x**p[3])
 #fitfunc = lambda p, x:  p[2]/x + p[3]/x**2 + p[1]/x**3+ p[0]/x**4
 errfunc = lambda p, x, y, err: (y - fitfunc(p, x)) / err
 
-allpt = array(allpts[:55])
-yerr = array(variance[:55])
-ydata = array(avgs[:55])
-xdata = array(ct[:55])
+allpt = array(allpts)
+yerr = array(variance)
+ydata = array(avgs)
+xdata = array(ct)
 logy = ydata#log10(ydata)
 logx = xdata#log10(xdata)
 yerr = yerr / ydata
@@ -58,10 +61,10 @@ index = pfinal[1]
 #for i in range(60):
 #     print variance(ct[i])
 #    plot([ct[i] for j in range(10)],allpts[i],'gx')
-xlabel("Difference in number of Dimensions (d)",fontsize=16)
+xlabel("Number of Projection Dimension(d)",fontsize=16)
 ylabel("$P(NN((x \cdot R)\cdot \hat{R}^{-1})=x)$",fontsize=16)
 title("Probability of Re-associating a \n Projected Vector",fontsize=16)
-fitAndPlot(array(ct),array(avgs),"avgs",4)
+fitAndPlot(array(ct),array(avgs),"avgs",9)
 #errorbar(xdata, ydata, yerr=(yerr), fmt='g.',label="avg w/ err (10 runs)")
 #grid()
 #legend()
