@@ -9,18 +9,13 @@ import java.util.Random;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.Leech;
-import edu.uc.rphash.decoders.MultiDecoder;
-import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
-import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
 //import edu.uc.rphash.frequentItemSet.KHHCountMinSketch.Tuple;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
-import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.ClusterGenerator;
 import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.GenerateStreamData;
@@ -38,7 +33,7 @@ public class RPHashStream implements StreamClusterer {
 	private RPHashObject so;
 
 	@Override
-	public synchronized int addVectorOnlineStep(float[] vec) {
+	public synchronized long addVectorOnlineStep(float[] vec) {
 		long hash[];
 		Centroid c = new Centroid(vec);
 		
@@ -55,7 +50,7 @@ public class RPHashStream implements StreamClusterer {
 				c.addID(h);
 		}
 		is.add(c);
-		return (int) is.count;
+		return  is.count;
 	}
 
 	public void init() {
@@ -146,6 +141,7 @@ public class RPHashStream implements StreamClusterer {
 		}
 
 		centroids = new Kmeans(so.getk(), centroids,counts).getCentroids();
+		
 		int count = (int) ((Collections.max(counts)+Collections.min(counts))/2);
 		counts = new ArrayList<Long>();
 		for(int i = 0;i<so.getk();i++)counts.add((long) count);

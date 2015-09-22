@@ -391,7 +391,7 @@ public class StreamingKmeans implements StreamClusterer{
 		 */
 		private final float facilityThreshold;
 
-		public synchronized int addVectorOnlineStep(float[] value) {
+		public synchronized long addVectorOnlineStep(float[] value) {
 			// Get the id of the new data point.
 			int id = idCounter.getAndAdd(1);
 
