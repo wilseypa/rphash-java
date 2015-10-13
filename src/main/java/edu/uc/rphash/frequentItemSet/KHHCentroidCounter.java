@@ -24,7 +24,9 @@ public class KHHCentroidCounter {
 	public static final long PRIME_MODULUS = (1L << 31) - 1;
 	private int depth;
 	private int width;
-	private short[][] table;
+	private float[][] tableF;
+	private short[][] tableS;
+	private int[][] decaytable;
 	private long[] hashA;
 	public long count;
 
@@ -32,7 +34,8 @@ public class KHHCentroidCounter {
 	int k;
 	int origk;
 	HashMap<Long, Centroid> frequentItems;
-	HashMap<Long, Long> countlist;
+	HashMap<Long, Float> countlist;
+	Float decayRate;
 
 	public KHHCentroidCounter(int k) {
 		this.origk = k;
@@ -40,14 +43,15 @@ public class KHHCentroidCounter {
 		double epsOfTotalCount = .00001;
 		double confidence = .99;
 		int seed = (int) System.currentTimeMillis();
+		this.decayRate = null;
 		count = 0;
 		countlist = new HashMap<>();
 
 		Comparator<Centroid> cmp = new Comparator<Centroid>() {
 			@Override
 			public int compare(Centroid n1, Centroid n2) {
-				long cn1 = countlist.get(n1.id);// count(n1.id);
-				long cn2 = countlist.get(n2.id);// count(n2.id);
+				float cn1 = countlist.get(n1.id);// count(n1.id);
+				float cn2 = countlist.get(n2.id);// count(n2.id);
 				if (cn1 > cn2)
 					return +1;
 				else if (cn1 < cn2)
@@ -61,9 +65,46 @@ public class KHHCentroidCounter {
 		this.depth = (int) Math.ceil(-Math.log(1 - confidence) / Math.log(2));
 		initTablesWith(depth, width, seed);
 	}
+	
+	
+	public KHHCentroidCounter(int k,float decayRate) {
+		this.origk = k;
+		this.k = (int) (k * Math.log(k)) * 4;
+		this.decayRate = decayRate;
+		double epsOfTotalCount = .00001;
+		double confidence = .99;
+		int seed = (int) System.currentTimeMillis();
+		count = 0;
+		countlist = new HashMap<>();
+
+		Comparator<Centroid> cmp = new Comparator<Centroid>() {
+			@Override
+			public int compare(Centroid n1, Centroid n2) {
+				float cn1 = countlist.get(n1.id);// count(n1.id);
+				float cn2 = countlist.get(n2.id);// count(n2.id);
+				if (cn1 > cn2)
+					return +1;
+				else if (cn1 < cn2)
+					return -1;
+				return 0;
+			}
+		};
+		
+		priorityQueue = new PriorityQueue<Centroid>(cmp);
+		frequentItems = new HashMap<>();
+		this.width = (int) Math.ceil(2 / epsOfTotalCount);
+		this.depth = (int) Math.ceil(-Math.log(1 - confidence) / Math.log(2));
+		initTablesWith(depth, width, seed);
+		
+	}
 
 	private void initTablesWith(int depth, int width, int seed) {
-		this.table = new short[depth][width];
+		if(decayRate!=null){
+			this.tableF = new float[depth][width];
+			this.decaytable = new int[depth][width];
+		}
+		else
+			this.tableS = new short[depth][width];
 		this.hashA = new long[depth];
 		Random r = new Random(seed);
 		for (int i = 0; i < depth; ++i) {
@@ -73,7 +114,7 @@ public class KHHCentroidCounter {
 
 	public void add(Centroid c) {
 		this.count++;
-		long count = addLong(c.id, 1);
+		float count = addLong(c.id, 1);
 		Centroid probed = frequentItems.remove(c.id);
 		//search for blurred and projected versions if
 		//representative id is not in the frequentItems lists
@@ -115,6 +156,10 @@ public class KHHCentroidCounter {
 		hash &= PRIME_MODULUS;
 		return (int) (hash % width);
 	}
+	
+	private float decayOnInsert(float prev_val,int prevt){
+		return 1+(float) (prev_val*Math.pow((1-decayRate),(float)(this.count-prevt)));
+	}
 
 	/**
 	 * add item hashed to a long value to count min sketch table add long comes
@@ -124,29 +169,73 @@ public class KHHCentroidCounter {
 	 * @param count
 	 * @return size of min count bucket
 	 */
-	private long addLong(long item, long count) {
-		table[0][hash(item, 0)] += count;
-		int min = (int) table[0][hash(item, 0)];
-		for (int i = 1; i < depth; ++i) {
-			table[i][hash(item, i)] += count;
-			if (table[i][hash(item, i)] < min)
-				min = (int) table[i][hash(item, i)];
+	private float addLong(long item, long count) {
+		
+		float min;
+		if(decayRate!=null)
+		{
+			int htmp = hash(item, 0);
+			int oldtime = decaytable[0][htmp];
+			tableF[0][htmp] = decayOnInsert(tableF[0][htmp],oldtime);
+			decaytable[0][htmp] = (int) count;
+			
+			min = tableF[0][htmp];
+			
+			for (int i = 1; i < depth; ++i) {
+				htmp = hash(item, i);
+				oldtime = decaytable[i][htmp];
+				tableF[i][htmp] = decayOnInsert(tableF[i][htmp],oldtime);
+				decaytable[i][htmp] = (int) count;
+				if (tableF[i][hash(item, i)] < min)
+					min =  tableF[i][hash(item, i)];
+			}
 		}
-
+		else{
+			tableS[0][hash(item, 0)] += count;
+			min = (int) tableS[0][hash(item, 0)];
+			for (int i = 1; i < depth; ++i) {
+				tableS[i][hash(item, i)] += count;
+				if (tableS[i][hash(item, i)] < min)
+					min = (int) tableS[i][hash(item, i)];
+			}
+			
+		}
 		return min;
 	}
 
-	private long count(long item) {
-		int min = (int) table[0][hash(item, 0)];
-		for (int i = 1; i < depth; ++i) {
-			if (table[i][hash(item, i)] < min)
-				min = (int) table[i][hash(item, i)];
+	
+	
+	
+	private float count(long item) {
+		float min;
+		if(decayRate!=null)
+		{
+			int htmp = hash(item, 0);
+			int oldtime = decaytable[0][htmp];
+			min = decayOnInsert(tableF[0][htmp],oldtime);
+			for (int i = 1; i < depth; ++i) {
+				htmp = hash(item, i);
+				oldtime = decaytable[i][htmp];
+				min = decayOnInsert(tableF[i][htmp],oldtime);
+				if (tableF[i][hash(item, i)] < min)
+					min =  tableF[i][hash(item, i)];
+			}
+			
 		}
+		else{
+			min = (int) tableS[0][hash(item, 0)];
+			for (int i = 1; i < depth; ++i) {
+				if (tableS[i][hash(item, i)] < min)
+					min = (int) tableS[i][hash(item, i)];
+			}
+			
+		}
+		
 		return min;
 	}
 
 	List<Centroid> topcent = null;
-	List<Long> counts = null;
+	List<Float> counts = null;
 
 	public List<Centroid> getTop() {
 		if (this.topcent != null)
@@ -167,7 +256,7 @@ public class KHHCentroidCounter {
 		return topcent;
 	}
 
-	public List<Long> getCounts() {
+	public List<Float> getCounts() {
 		if (this.counts != null)
 			return counts;
 		getTop();

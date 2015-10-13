@@ -14,7 +14,7 @@ public class GenerateStreamData implements ClusterGenerator {
 	public List<float[]> medoids;
 	protected List<float[]> variances;
 	protected List<Integer> reps;
-	protected float scaler;
+	protected float variance_scaler;
 	protected boolean shuffle;
 	protected float sparseness;
 	protected boolean save;
@@ -31,7 +31,7 @@ public class GenerateStreamData implements ClusterGenerator {
 		this.data = new ArrayList<float[]>();
 		this.reps = new ArrayList<Integer>();
 		this.avgvariance = variance;
-		this.scaler = 1f / (variance * (float) Math.sqrt(dimension));// normalize
+		this.variance_scaler = (variance / (float) Math.sqrt(dimension));// normalize
 		this.variances = new ArrayList<float[]>();															// dimension
 		this.sparseness = 1.0f;
 		this.generateMedoids();
@@ -48,7 +48,7 @@ public class GenerateStreamData implements ClusterGenerator {
 		this.data = new ArrayList<float[]>();
 		this.reps = new ArrayList<Integer>();
 		this.variances = new ArrayList<float[]>();
-		this.scaler = 1f / (variance * (float) Math.sqrt(dimension));// normalize
+		this.variance_scaler = (variance / (float) Math.sqrt(dimension));// normalize
 																		// dimension
 		this.sparseness = 1.0f;
 		this.save = false;
@@ -65,7 +65,7 @@ public class GenerateStreamData implements ClusterGenerator {
 		this.data = new ArrayList<float[]>();
 		this.reps = new ArrayList<Integer>();
 		this.variances = new ArrayList<float[]>();
-		this.scaler = 1f / (variance * (float) Math.sqrt(dimension));// normalize
+		this.variance_scaler = (variance / (float) Math.sqrt(dimension));// normalize
 																		// dimension
 		this.sparseness = 1.0f;
 		this.save = false;
@@ -87,7 +87,7 @@ public class GenerateStreamData implements ClusterGenerator {
 			for (int k = 0; k < dimension; k++) {
 				if (r.nextInt() % (int) (1.0f / sparseness) == 0) {
 					medoid[k] = r.nextFloat() * 2.0f - 1.0f;
-					variance[k] = scaler * (r.nextFloat() * 2.0f - 1.0f);
+					variance[k] = variance_scaler * (r.nextFloat());
 				} else {
 					medoid[k] = 0;
 					variance[k] = 0;

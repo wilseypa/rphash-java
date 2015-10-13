@@ -41,7 +41,7 @@ public class GenerateData implements ClusterGenerator {
 		this.medoids = null;
 		this.data = null;
 		this.reps = null;
-		this.scaler = 1.0f / (float) Math.sqrt(dimension);
+		this.scaler = 0.75f / (float) Math.sqrt(dimension);
 		;// (float) Math.sqrt(dimension);// normalize dimension
 		this.sparseness = 1.0f;
 		this.genfnc = new RandomDistributionFnc() {
@@ -62,7 +62,7 @@ public class GenerateData implements ClusterGenerator {
 		this.medoids = null;
 		this.data = null;
 		this.reps = null;
-		this.scaler = 1.0f / (float) Math.sqrt(dimension);
+		this.scaler = .75f / (float) Math.sqrt(dimension);
 		;// (float) Math.sqrt(dimension);// normalize dimension
 		this.shuffle = shuffle;
 		this.sparseness = 1.0f;
@@ -89,7 +89,7 @@ public class GenerateData implements ClusterGenerator {
 		if (variance > 0)
 			this.scaler = variance;// normalize dimension
 		else
-			this.scaler = 1.0f;
+			this.scaler = .750f;
 
 		this.genfnc = new RandomDistributionFnc() {
 			@Override
@@ -114,7 +114,7 @@ public class GenerateData implements ClusterGenerator {
 		if (variance > 0)
 			this.scaler = variance;// normalize dimension
 		else
-			this.scaler = 1.0f;
+			this.scaler = 0.750f;
 
 		this.genfnc = new RandomDistributionFnc() {
 			@Override
@@ -141,7 +141,7 @@ public class GenerateData implements ClusterGenerator {
 			this.scaler = variance;// /(float)Math.sqrt(dimension);//normalize
 									// dimension
 		else
-			this.scaler = 1.0f;
+			this.scaler = .750f;
 
 		this.genfnc = new RandomDistributionFnc() {
 			@Override
@@ -160,7 +160,7 @@ public class GenerateData implements ClusterGenerator {
 		this.numVectorsPerCluster = numVectorsPerCluster;
 		this.dimension = dimension;
 		this.genfnc = genvariate;
-		this.scaler = 1.0f;// normalize dimension
+		this.scaler = .75f;// normalize dimension
 		this.medoids = null;
 		this.data = null;
 		this.shuffle = true;
@@ -198,7 +198,7 @@ public class GenerateData implements ClusterGenerator {
 		this.numClusters = numClusters;
 		this.numVectorsPerCluster = numVectorsPerCluster;
 		this.dimension = dimension;
-		this.scaler = 1.0f;// normalize dimension
+		this.scaler = .75f;// normalize dimension
 		this.genfnc = genvariate;
 		this.shuffle = true;
 		this.sparseness = 1.0f;
@@ -488,8 +488,7 @@ public class GenerateData implements ClusterGenerator {
 							+ "shuffled=true]");
 			System.exit(0);
 		}
-		File outputFile = new File(args[0]);
-		File lblFile = new File(args[0]+"_lbl");
+
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
 
@@ -509,10 +508,14 @@ public class GenerateData implements ClusterGenerator {
 		if(taggedArgs.containsKey("shuffled"))shuffle = Boolean.parseBoolean(taggedArgs.get("shuffled"));
 		if(taggedArgs.containsKey("raw"))raw = Boolean.parseBoolean(taggedArgs.get("raw"));
 		
+		File outputFile = new File(args[0]+"_"+k+"x"+d+"x"+n+".mat");
+		File lblFile = new File(args[0]+"_"+k+"x"+d+"x"+n+".lbl");
+
 		System.out.printf("k=%d, n=%d, d=%d, var=%f, sparseness=%f %s > %s",k,n,
 				d, var, sparseness, shuffle ? "shuffled" : "", 
 				outputFile.getAbsolutePath()+"\n");
 
+		
 		GenerateData gen = new GenerateData(k, n/k , d, var, shuffle,
 				sparseness,outputFile,lblFile,raw);
 

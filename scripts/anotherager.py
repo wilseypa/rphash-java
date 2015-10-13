@@ -81,19 +81,20 @@ def run(mod,plotdata=False):
     n = 100000
     nseq = 4
     decayrate = .999/float(mod)
+    print decayrate
     arrivalrate = .001
     order = []#the order between the decays lists
     from random import random, randrange
     exactSequences = []
     
     approxInsertPts = []
-    insertPts = []
+    insertPts = {}
 
     
     for i in range(nseq):#generate our sequence arrays
         exactSequences.append([0.0]*n)
         approxInsertPts.append([0.0])
-        insertPts.append([0])
+        insertPts[i] = [0]
 
     for i in range(1,n):#iterate over the data
         for j in range(nseq):#iterate over the number of sequences to consider
@@ -102,17 +103,22 @@ def run(mod,plotdata=False):
         if random() < arrivalrate:#randomly add some hits to the buckets
             r = randrange(0,nseq)
             exactSequences[r][i]+=1
+
             #this is the only time we are allowed to run our aging calculation
             #upon insert lets update our order
+
+            '''
             #update all mode 
             for jj in range(nseq):
                 approxInsertPts[jj].append(decayOnInsert(approxInsertPts[jj][-1],insertPts[jj][-1],i,decayrate))
                 insertPts[jj].append(i)
+            '''
 
-            #update only new
-                       
-            #approxInsertPts[r].append(decayOnInsert(approxInsertPts[r][-1],insertPts[r][-1],i,decayrate))
-            #insertPts[r].append(i)
+            #'''
+            #update only new        
+            approxInsertPts[r].append(decayOnInsert(approxInsertPts[r][-1],insertPts[r][-1],i,decayrate))
+            insertPts[r].append(i)
+            #'''
             approxInsertPts[r][-1]+=1
 
     #store correctness of order after each data point

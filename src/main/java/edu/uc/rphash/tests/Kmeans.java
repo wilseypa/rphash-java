@@ -23,18 +23,18 @@ public class Kmeans  implements Clusterer{
 	
 	List<float[]> means; 
 	List<List<Integer>> clusters;
-	List<Long> weights;
+	List<Float> weights;
 	public Kmeans(int k, List<float[]> data)
 	{
 		this.k = k;
 		this.data = data;
 		this.projdim = 0;
 		this.clusters = null;
-		this.weights = new ArrayList<Long>(data.size());
-		for(int i = 0;i<data.size();i++)weights.add(1L);
+		this.weights = new ArrayList<Float>(data.size());
+		for(int i = 0;i<data.size();i++)weights.add(1f);
 	} 
 	
-	public Kmeans(int k, List<float[]> data,List<Long> weights)
+	public Kmeans(int k, List<float[]> data,List<Float> weights)
 	{
 		this.k = k;
 		this.data = data;
@@ -51,8 +51,8 @@ public class Kmeans  implements Clusterer{
 		this.data = data;
 		this.projdim = projdim;
 		this.clusters = null;
-		this.weights = new ArrayList<Long>(data.size());
-		for(int i = 0;i<data.size();i++)weights.add(1L);
+		this.weights = new ArrayList<Float>(data.size());
+		for(int i = 0;i<data.size();i++)weights.add(1f);
 	} 
 	
 	
@@ -63,7 +63,7 @@ public class Kmeans  implements Clusterer{
 		for(int i = 0 ; i<d;i++)
 			centroid[i] = 0.0f;
 
-		Long w_total = 0L;
+		float w_total = 0L;
 		for(Integer v : vectors)
 		{
 			w_total+=weights.get(v);

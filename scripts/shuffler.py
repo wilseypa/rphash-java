@@ -3,7 +3,6 @@
     and puts them in a randomly shuffled order into a matrix file as
     and stores the original labeling map.
 '''
-
 import sys
 import random 
 

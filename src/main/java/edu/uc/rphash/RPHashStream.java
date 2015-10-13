@@ -61,7 +61,9 @@ public class RPHashStream implements StreamClusterer {
 		int k = (int) (so.getk() * projections);
 
 		// initialize our counter
-		is = new KHHCentroidCounter(k);
+		float decayrate = .999f/10000f;//bottom number is window size
+		
+		is = new KHHCentroidCounter(k,decayrate);
 		
 		// create LSH Device
 		lshfuncs = new LSH[projections];
@@ -82,9 +84,6 @@ public class RPHashStream implements StreamClusterer {
 
 		so = new SimpleArrayReader(k,c);
 		init();
-		// so.setDecoderType(new Spherical(32,3,4));
-		// so.setDecoderType(new Leech(variance));
-		// so.getDecoderType().setVariance(variance);
 	}
 
 	public RPHashStream(List<float[]> data, int k) {
@@ -92,9 +91,6 @@ public class RPHashStream implements StreamClusterer {
 		variance = StatTests.varianceSample(data, .01f);
 		so = new SimpleArrayReader(data, k);
 		init();
-		// so.setDecoderType(new Spherical(32,3,4));
-		// so.setDecoderType(new Leech(variance));
-		// so.getDecoderType().setVariance(variance);
 	}
 
 	public RPHashStream(RPHashObject so) {
@@ -126,13 +122,13 @@ public class RPHashStream implements StreamClusterer {
 		return centroids;
 	}
 	
-	ArrayList<Long> counts;
+	ArrayList<Float> counts;
 	public List<float[]> getCentroidsOfflineStep() 
 	{
 		
 		//if(centroids == null ){
 			centroids = new ArrayList<float[]>();
-			counts = new ArrayList<Long>();
+			counts = new ArrayList<Float>();
 		//}
 		
 		for (int i = 0 ;i<is.getTop().size();i++){
@@ -143,8 +139,8 @@ public class RPHashStream implements StreamClusterer {
 		centroids = new Kmeans(so.getk(), centroids,counts).getCentroids();
 		
 		int count = (int) ((Collections.max(counts)+Collections.min(counts))/2);
-		counts = new ArrayList<Long>();
-		for(int i = 0;i<so.getk();i++)counts.add((long) count);
+		counts = new ArrayList<Float>();
+		for(int i = 0;i<so.getk();i++)counts.add((float) count);
 		return centroids;
 	}
 
@@ -156,7 +152,7 @@ public class RPHashStream implements StreamClusterer {
 		}
 	}
 
-	public List<Long> getTopIdSizes() {
+	public List<Float> getTopIdSizes() {
 		return is.getCounts();
 	}
 
@@ -165,12 +161,12 @@ public class RPHashStream implements StreamClusterer {
 		int k = 10;
 		int d = 100;
 		int n = 20000;
-		float var = 1f;
+		float var = .75f;
 		for (float f = (float)d; f < 100000f; f*=1.5f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, (int)f, var, true, 1f);
-				StreamingKmeans rphit = new StreamingKmeans(gen.data(), k);
-				//RPHashStream rphit = new RPHashStream(gen.getData(), k);
+				//StreamingKmeans rphit = new StreamingKmeans(gen.data(), k);
+				RPHashStream rphit = new RPHashStream(gen.getData(), k);
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);

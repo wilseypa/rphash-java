@@ -1,17 +1,14 @@
 package edu.uc.rphash;
 
-import java.io.BufferedReader;
 import java.io.File;
 //import java.io.FileInputStream;
 import java.io.IOException;
 //import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -33,7 +30,7 @@ public class RPHash {
 
 	static String[] clusteringmethods = { "simple", "streaming", "3stage", "multiProj",
 			"consensus", "redux", 
-			"kmeans", "pkmeans", "kmeansplusplus","streamingkmeans" };
+			"kmeans", "pkmeans", "kmeansplusplus","streamingkmeans"};
 	static String[] ops = { "NumProjections", "InnerDecoderMultiplier",
 			"NumBlur", "RandomSeed", "Hashmod", "DecoderType", "streamduration" , "raw"};
 	static String[] decoders = { "Dn", "E8", "MultiE8", "Leech", "MultiLeech",
