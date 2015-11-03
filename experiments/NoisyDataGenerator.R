@@ -76,7 +76,7 @@ get_myPoints.myDSD_Gaussians <- function(x, n=1,
                          replace=TRUE, 
                          prob=x$p)
   
-  data <- t(as.data.frame(mclapply(clusterOrder, FUN = function(i) MASS::mvrnorm(1, mu=x$mu[i,], Sigma=x$sigma[[i]]), mc.cores = 12)))			
+  data <- t(as.data.frame(mclapply(clusterOrder, FUN = function(i) MASS::mvrnorm(1, mu=x$mu[i,], Sigma=x$sigma[[i]]), mc.cores = 12)))
   rownames(data) <- NULL
 
   ## Replace some points by random noise
@@ -88,7 +88,17 @@ get_myPoints.myDSD_Gaussians <- function(x, n=1,
       data[repl,] <- t(replicate(sum(repl),runif(x$d, 
                                                  min=x$noise_range[,1],
                                                  max=x$noise_range[,2])))
-      clusterOrder[repl] <- sample(x=c(1:x$k), size = sum(repl), replace = TRUE)
+      noisePoints <- data[repl,]
+      distNoiseCentroid <- numeric()    # For each noise point, this vector contains distances from all centoids to the noise point.
+      noisePointLabels <- numeric()    # This vector contains labels of noise points indicating which of the k centroids is the closest to a noise point.
+      
+      for (i in 1:nrow(noisePoints)) {
+        for (j in 1:nrow(x$mu))
+          distNoiseCentroid[j] <- dist(rbind(noisePoints[i,], x$mu[j,]))
+        noisePointLabels[i] <- which.min(distNoiseCentroid)    # Returns the index (label) of the first minimum value in 'distNoiseCentroid'.
+      }
+          
+      clusterOrder[repl] <- noisePointLabels
     }
   }
 
