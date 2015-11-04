@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.tests.TestUtil;
@@ -30,11 +32,11 @@ public class KHHCentroidCounter {
 	private long[] hashA;
 	public long count;
 
-	PriorityQueue<Centroid> priorityQueue;
+	PriorityBlockingQueue<Centroid> priorityQueue;
 	int k;
 	int origk;
-	HashMap<Long, Centroid> frequentItems;
-	HashMap<Long, Float> countlist;
+	ConcurrentHashMap<Long, Centroid> frequentItems;
+	ConcurrentHashMap<Long, Float> countlist;
 	Float decayRate;
 
 	public KHHCentroidCounter(int k) {
@@ -45,7 +47,7 @@ public class KHHCentroidCounter {
 		int seed = (int) System.currentTimeMillis();
 		this.decayRate = null;
 		count = 0;
-		countlist = new HashMap<>();
+		countlist = new ConcurrentHashMap<>();
 
 		Comparator<Centroid> cmp = new Comparator<Centroid>() {
 			@Override
@@ -59,8 +61,8 @@ public class KHHCentroidCounter {
 				return 0;
 			}
 		};
-		priorityQueue = new PriorityQueue<Centroid>(cmp);
-		frequentItems = new HashMap<>();
+		priorityQueue = new PriorityBlockingQueue<Centroid>(this.k+1,cmp);
+		frequentItems = new ConcurrentHashMap<>();
 		this.width = (int) Math.ceil(2 / epsOfTotalCount);
 		this.depth = (int) Math.ceil(-Math.log(1 - confidence) / Math.log(2));
 		initTablesWith(depth, width, seed);
@@ -75,13 +77,16 @@ public class KHHCentroidCounter {
 		double confidence = .99;
 		int seed = (int) System.currentTimeMillis();
 		count = 0;
-		countlist = new HashMap<>();
+		countlist = new ConcurrentHashMap<>();
 
 		Comparator<Centroid> cmp = new Comparator<Centroid>() {
 			@Override
 			public int compare(Centroid n1, Centroid n2) {
+				if(countlist.get(n1.id)==null)return -1;
 				float cn1 = countlist.get(n1.id);// count(n1.id);
+//				if(countlist.get(n2.id)==null)return +1;
 				float cn2 = countlist.get(n2.id);// count(n2.id);
+				
 				if (cn1 > cn2)
 					return +1;
 				else if (cn1 < cn2)
@@ -90,8 +95,8 @@ public class KHHCentroidCounter {
 			}
 		};
 		
-		priorityQueue = new PriorityQueue<Centroid>(cmp);
-		frequentItems = new HashMap<>();
+		priorityQueue = new PriorityBlockingQueue<Centroid>(this.k+1,cmp);
+		frequentItems = new ConcurrentHashMap<>();
 		this.width = (int) Math.ceil(2 / epsOfTotalCount);
 		this.depth = (int) Math.ceil(-Math.log(1 - confidence) / Math.log(2));
 		initTablesWith(depth, width, seed);
@@ -138,7 +143,8 @@ public class KHHCentroidCounter {
 			probed.ids.addAll(c.ids);
 			frequentItems.put(probed.id, probed);
 			// Long oldcount = countlist.remove(probed.id);
-			countlist.put(probed.id, count + 1);
+//			System.out.println(probed.id+","+count);
+			countlist.put(probed.id, count );
 			priorityQueue.add(probed);
 		}
 
@@ -158,7 +164,7 @@ public class KHHCentroidCounter {
 	}
 	
 	private float decayOnInsert(float prev_val,int prevt){
-		return 1+(float) (prev_val*Math.pow((1-decayRate),(float)(this.count-prevt)));
+		return (float) (prev_val*Math.pow((1-decayRate),(float)(this.count-prevt)));
 	}
 
 	/**
@@ -176,27 +182,29 @@ public class KHHCentroidCounter {
 		{
 			int htmp = hash(item, 0);
 			int oldtime = decaytable[0][htmp];
-			tableF[0][htmp] = decayOnInsert(tableF[0][htmp],oldtime);
-			decaytable[0][htmp] = (int) count;
+			tableF[0][htmp] = 1+decayOnInsert(tableF[0][htmp],oldtime);
+			decaytable[0][htmp] = (int) this.count;
 			
 			min = tableF[0][htmp];
 			
 			for (int i = 1; i < depth; ++i) {
 				htmp = hash(item, i);
 				oldtime = decaytable[i][htmp];
-				tableF[i][htmp] = decayOnInsert(tableF[i][htmp],oldtime);
-				decaytable[i][htmp] = (int) count;
-				if (tableF[i][hash(item, i)] < min)
-					min =  tableF[i][hash(item, i)];
+				tableF[i][htmp] = 1+decayOnInsert(tableF[i][htmp],oldtime);
+				decaytable[i][htmp] = (int) this.count;
+				if (tableF[i][htmp] < min)
+					min =  tableF[i][htmp];
 			}
 		}
 		else{
-			tableS[0][hash(item, 0)] += count;
-			min = (int) tableS[0][hash(item, 0)];
+			int htmp = hash(item, 0);
+			tableS[0][htmp] += count;
+			min = (int) tableS[0][htmp];
 			for (int i = 1; i < depth; ++i) {
-				tableS[i][hash(item, i)] += count;
-				if (tableS[i][hash(item, i)] < min)
-					min = (int) tableS[i][hash(item, i)];
+				htmp = hash(item, i);
+				tableS[i][htmp] += count;
+				if (tableS[i][htmp] < min)
+					min = (int) tableS[i][htmp];
 			}
 			
 		}

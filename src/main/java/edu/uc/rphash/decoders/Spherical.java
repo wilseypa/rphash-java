@@ -13,7 +13,7 @@ import edu.uc.rphash.tests.TestUtil;
  */
 public class Spherical implements Decoder {
 	int HashBits = 64;
-	List<List<float[]>> vAll; // vAll[i][j] is the vector $A_i \tilde v_j$ from
+	final List<List<float[]>> vAll; // vAll[i][j] is the vector $A_i \tilde v_j$ from
 				// the article.
 	int hbits; // Ceil(Log2(2*d)).
 	int d; // the dimension of the feature space.
@@ -52,10 +52,10 @@ public class Spherical implements Decoder {
 		// rotated vectors itself!
 		this.vAll = new ArrayList<List<float[]>>(k*l); // random rotation matrices
 		
-		List<List<float[]>> rotationMatrices = this.vAll;
-
+//		List<List<float[]>> rotationMatrices = this.vAll;
+//
 		for (int i = 0; i < k*l; i++) {
-			rotationMatrices.add(i, randomRotation(this.d, r));
+			this.vAll.add(i, randomRotation(this.d, r));
 		}
 	}
 
@@ -100,7 +100,7 @@ public class Spherical implements Decoder {
 
 		for (int i = 0; i < this.d; i++) {
 			float dot = dot(p, vs.get(i));
-
+			//compute orthoplex of -1 and 1 simultaneously
 			float abs = dot >= 0 ? dot : -dot;
 			if (abs < max) {
 				continue;
@@ -154,7 +154,6 @@ public class Spherical implements Decoder {
 
 	List<float[]> randomRotation(int d, Random[] r2) {
 		ArrayList<float[]> R = new ArrayList<>(d);
-
 		for (int i = 0; i < d; i++) {
 			R.add(i, random(d, r2));
 			float[] u = R.get(i);
@@ -171,7 +170,6 @@ public class Spherical implements Decoder {
 			}
 			u = scale(u, 1.0f / norm(u));
 		}
-
 		return R;
 	}
 

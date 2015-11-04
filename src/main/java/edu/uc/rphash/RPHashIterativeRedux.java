@@ -63,7 +63,8 @@ public class RPHashIterativeRedux  implements Clusterer
 		for (int i = 0; i < probes; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
-			lshfuncs[i] = new LSH(dec, p, hal);
+			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),1, new Random(), dec.getErrorRadius()/dec.getDimensionality());
+			lshfuncs[i] = new LSH(dec, p, hal,noise);
 		}
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {

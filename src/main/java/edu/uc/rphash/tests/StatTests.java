@@ -24,6 +24,7 @@ public class StatTests {
 		{
 			if(TestUtil.findNearestDistance(data.get(i), estCentroids)==gen.getLabels().get(i))count++;
 		}
+		System.out.println(data.size());
 		return (float)count/(float)data.size();
 	}
 	
