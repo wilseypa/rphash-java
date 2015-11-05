@@ -27,6 +27,7 @@ import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.GenerateStreamData;
 import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.StreamingKmeans;
 import edu.uc.rphash.tests.TestUtil;
 
 public class RPHashStream implements StreamClusterer {
@@ -43,8 +44,9 @@ public class RPHashStream implements StreamClusterer {
 	public synchronized long addVectorOnlineStep(final float[] vec) {
 
 		if (parallel) {
-			executor.execute(new VectorLevelConcurrency(vec, so, lshfuncs,
-					vartracker, variance, is));
+			VectorLevelConcurrency r = new VectorLevelConcurrency(vec, so, lshfuncs,
+					vartracker, variance, is);
+			executor.execute(r);
 			return is.count;
 		}
 
@@ -215,8 +217,7 @@ public class RPHashStream implements StreamClusterer {
 
 		Runtime rt = Runtime.getRuntime();
 		GenerateStreamData gen = new GenerateStreamData(k, d, var, 25l);
-		RPHashStream rphit = new /* StreamingKmeans(k,gen); */RPHashStream(k,
-				gen);
+		StreamingKmeans rphit = new  StreamingKmeans(k,gen); //RPHashStream(k,	gen);
 
 		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
 		
@@ -233,7 +234,7 @@ public class RPHashStream implements StreamClusterer {
 		gentime = (System.nanoTime() - gentime);
 		System.out.println("Average Vector Generation Time for Interval: "+gentime/ 1000000000f);
 		
-		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tPR\tCentSSE\n");
+		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tCentSSE\n");
 		long timestart = System.nanoTime();
 		for (int i = 0; i < 8000000; i++) {
 			
@@ -269,6 +270,16 @@ public class RPHashStream implements StreamClusterer {
 				vecsInThisRound = new ArrayList<float[]>();
 				System.out.printf("%d\t%d\t%.3f\t%.0f\t%.3f\n", i,
 						usedkB, (time) / 1000000000f, wcsse, ssecent);
+
+//				gentime = System.nanoTime();
+//				for (int b = 0; b < interval; b++) {
+//					f = gen.generateNext();
+//					vecsInThisRound.add(f);
+//					vecsInThisRound = new ArrayList<float[]>();
+//				}
+//				gentime = (System.nanoTime() - gentime);
+//				System.out.println("Average Vector Generation Time for Interval: "+gentime/ 1000000000f);
+//				vecsInThisRound = new ArrayList<float[]>();
 				
 				timestart = System.nanoTime();
 			}
