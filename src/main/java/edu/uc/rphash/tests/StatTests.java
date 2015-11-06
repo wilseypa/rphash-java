@@ -7,13 +7,14 @@ import java.util.List;
 import java.util.Random;
 
 import edu.uc.rphash.Readers.StreamObject;
+import edu.uc.rphash.util.AtomicFloat;
 
 public class StatTests {
 	Random r;
-	double sampRatio;
-	public StatTests(double sampRatio) {
+	AtomicFloat sampRatio;
+	public StatTests(float sampRatio) {
 		r = new Random();
-		this.sampRatio = sampRatio;
+		this.sampRatio = new AtomicFloat(sampRatio);
 	}
 
 
@@ -64,7 +65,7 @@ public class StatTests {
 	private float M2 = 0;
 	public float updateVarianceSample(float[] row){
 		
-		if(r.nextFloat()>sampRatio)return M2/(n-1f);
+		if(r.nextFloat()>sampRatio.floatValue())return M2/(n-1f);
 		
 		for(float x : row){
 			n++;

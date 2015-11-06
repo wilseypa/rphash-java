@@ -51,7 +51,8 @@ public class KHHCentroidCounter {
 
 		Comparator<Centroid> cmp = new Comparator<Centroid>() {
 			@Override
-			public int compare(Centroid n1, Centroid n2) {
+			public int compare(Centroid n1, Centroid n2) 
+			{
 				float cn1 = countlist.get(n1.id);// count(n1.id);
 				float cn2 = countlist.get(n2.id);// count(n2.id);
 				if (cn1 > cn2)
@@ -82,11 +83,8 @@ public class KHHCentroidCounter {
 		Comparator<Centroid> cmp = new Comparator<Centroid>() {
 			@Override
 			public int compare(Centroid n1, Centroid n2) {
-				if(countlist.get(n1.id)==null)return -1;
 				float cn1 = countlist.get(n1.id);// count(n1.id);
-//				if(countlist.get(n2.id)==null)return +1;
 				float cn2 = countlist.get(n2.id);// count(n2.id);
-				
 				if (cn1 > cn2)
 					return +1;
 				else if (cn1 < cn2)
@@ -116,8 +114,8 @@ public class KHHCentroidCounter {
 			hashA[i] = r.nextLong();
 		}
 	}
-
-	public void add(Centroid c) {
+	
+	synchronized  public void add(Centroid c) {
 		this.count++;
 		float count = addLong(c.id, 1);
 		Centroid probed = frequentItems.remove(c.id);

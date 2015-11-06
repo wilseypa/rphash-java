@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class GenerateStreamData implements ClusterGenerator {
 
@@ -100,7 +104,39 @@ public class GenerateStreamData implements ClusterGenerator {
 
 	}
 
+	
+	
+	private class ParallelGen implements Runnable {
+
+	
+		float[] dat;
+		float[] medoid;
+		float[] variance;
+		int end;
+		int start;
+		
+		public ParallelGen(float[] dat,float[] medoid,float[] variance,int start, int end) {
+			this.dat = dat;
+			this.medoid = medoid;
+			this.variance = variance;
+			this.start = start;
+			this.end = end;
+		}
+
+		@Override
+		public void run() {
+			for (int k = start; k < end; k++) {
+				if (r.nextInt() % (int) (1.0f / sparseness) == 0)
+					dat[k] = medoid[k] + (float) r.nextGaussian() * variance[k];
+			}
+		}
+	}
+	
+	public int processors = Runtime.getRuntime().availableProcessors();
+	public ExecutorService executor = Executors.newFixedThreadPool(processors);
+	
 	public float[] generateNext() {
+		
 		int randcluster = (int) ((size++) % numClusters);
 		if (shuffle) {
 			r = new Random();
@@ -110,15 +146,29 @@ public class GenerateStreamData implements ClusterGenerator {
 		float[] variance = variances.get(randcluster);
 		float[] medoid = medoids.get(randcluster);
 		float[] dat = new float[dimension];
+		
+//		int lenDivProcCount = dimension/processors;
+//		
+//		int i=0;
+//		for(;i<processors-1;i++){
+//			ParallelGen r = new ParallelGen(dat,medoid,variance,i*lenDivProcCount, (i+1)*lenDivProcCount);
+//			executor.submit(r);
+//		}
+//		
+//		ParallelGen r = new ParallelGen(dat,medoid,variance,i*lenDivProcCount,dimension);
+//		executor.submit(r);
+
 		for (int k = 0; k < dimension; k++) {
 			if (r.nextInt() % (int) (1.0f / sparseness) == 0)
 				dat[k] = medoid[k] + (float) r.nextGaussian() * variance[k];
 		}
-
+		
+		
 		if (save) {
 			data.add(dat);
 			reps.add(randcluster);
 		}
+		
 		return dat;
 	}
 

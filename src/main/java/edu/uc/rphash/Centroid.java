@@ -1,32 +1,33 @@
 package edu.uc.rphash;
 
 import java.util.HashSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import edu.uc.rphash.Readers.RPVector;
 
 public class Centroid {
 	private float[] vec;
 	private long count;
-	public HashSet<Long> ids;
+	public ConcurrentSkipListSet<Long> ids;
 	public long id;
 
 	public Centroid(int dim, long id) {
 		this.vec = new float[dim];
 		this.count = 0;
 		this.id = id;
-		this.ids = new HashSet<Long>();
+		this.ids = new ConcurrentSkipListSet<Long>();
 		ids.add(id);
 	}
 
 	public Centroid(float[] data) {
 		this.vec = data;
-		this.ids = new HashSet<Long>();
+		this.ids = new ConcurrentSkipListSet<Long>();
 		this.count = 1;
 	}
 
 	public Centroid(float[] data, long id) {
 		this.vec = data;
-		this.ids = new HashSet<Long>();
+		this.ids = new ConcurrentSkipListSet<Long>();
 		ids.add(id);
 		this.id = id;
 		this.count = 1;
