@@ -17,9 +17,8 @@ import edu.uc.rphash.tests.StatTests;
 
 public class SimpleArrayReader implements RPHashObject {
 
-//	public Iterator<float[]> data;
+
 	List<float[]> data;
-//	final int n;
 	Integer dim = null;
 	int numProjections;
 	int decoderMultiplier;
@@ -30,12 +29,12 @@ public class SimpleArrayReader implements RPHashObject {
 	Decoder dec;
 	 
 	 
-	 final static int DEFAULT_NUM_PROJECTIONS = 2;
-	 final static int DEFAULT_NUM_BLUR = 2;
+	 final static int DEFAULT_NUM_PROJECTIONS = 1;
+	 public final static int DEFAULT_NUM_BLUR = 1;
 	 final static int DEFAULT_NUM_RANDOM_SEED = 0;
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(32,3,1);
+	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(32,3,2);
 
 
 	public void setRandomSeed(long randomSeed) {

@@ -108,7 +108,6 @@ public class LSH {
 		float[] noiseVec;
 		for (int j = 1; j < times; j++) {
 			System.arraycopy(pr_r, 0, noisedProjectedVector, 0, pr_r.length);
-
 			noiseVec = noise.get(j - 1);
 			for (int k = 0; k < pr_r.length; k++) {
 				noisedProjectedVector[k] = noisedProjectedVector[k] + noiseVec[k];
