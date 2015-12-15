@@ -46,6 +46,9 @@ public class StreamingKmeans implements StreamClusterer {
 	public boolean parallel = true;
 	public ExecutorService executor;
 	private RPHashObject so;
+	final int processors;
+	List<float[]> data;
+	List<float[]> centroids;
 
 	public class CentroidCluster {
 
@@ -141,9 +144,6 @@ public class StreamingKmeans implements StreamClusterer {
 			return assignments.size();
 		}
 	}
-
-	List<float[]> data;
-	List<float[]> centroids;
 
 	
 	
@@ -269,7 +269,7 @@ public class StreamingKmeans implements StreamClusterer {
 				.synchronizedList(new ArrayList<CentroidCluster>());
 		idCounter = new AtomicInteger(1);
 		firstKPoints = new ArrayList<float[]>(numClusters);
-		int numPoints = 50000;
+		int numPoints = 2500000;
 		this.alpha = DEFAULT_ALPHA;
 		this.cofl = DEFAULT_COFL;
 		this.kofl = DEFAULT_KOFL;
@@ -372,7 +372,7 @@ public class StreamingKmeans implements StreamClusterer {
 	/**
 	 * The default number of clusters.
 	 */
-	public static final int DEFAULT_NUM_POINTS = 50000;
+	public static final int DEFAULT_NUM_POINTS = 2500000;
 
 	/**
 	 * The default alpha value.
@@ -495,8 +495,9 @@ public class StreamingKmeans implements StreamClusterer {
 				// data points to the new cluster.
 				for (CentroidCluster cluster : clusters) {
 					int assignment = addDataPoint(cluster.centroid(), 0);
+					synchronized(facilities){
 					CentroidCluster newCluster = facilities.get(assignment);
-					newCluster.dataPointIds().or(cluster.dataPointIds());
+					newCluster.dataPointIds().or(cluster.dataPointIds());}
 				}
 			}
 			this.id = id;
@@ -505,7 +506,7 @@ public class StreamingKmeans implements StreamClusterer {
 
 	}
 
-	public synchronized long addVectorOnlineStep(float[] value) {
+	public long addVectorOnlineStep(float[] value) {
 
 		if (parallel) {
 			StreamingkmThread r = new StreamingkmThread(value);
@@ -534,8 +535,11 @@ public class StreamingKmeans implements StreamClusterer {
 			// data points to the new cluster.
 			for (CentroidCluster cluster : clusters) {
 				int assignment = addDataPoint(cluster.centroid(), 0);
+				synchronized(facilities){
 				CentroidCluster newCluster = facilities.get(assignment);
+				
 				newCluster.dataPointIds().or(cluster.dataPointIds());
+				}
 			}
 		}
 		return id;
@@ -552,12 +556,13 @@ public class StreamingKmeans implements StreamClusterer {
 	 * @param id
 	 *            The unique identifier for {@code id}
 	 */
-	synchronized private int addDataPoint(float[] value, int id) {
+	 private int addDataPoint(float[] value, int id) {
 		// Find the cluster that is closest to value.
 		float bestCost = Float.MAX_VALUE;
 		int bestClusterId = 0;
 		CentroidCluster bestCluster = null;
 		int i = 0;
+		synchronized(facilities){
 			for (CentroidCluster cluster : facilities) {
 				float cost = cluster.compareWithVector(value);
 				// Reverse the scale so that a high similarity corresponds to a
@@ -571,7 +576,7 @@ public class StreamingKmeans implements StreamClusterer {
 				}
 				++i;
 			}
-
+		}
 			// Determine whether or not a new facility, or cluster, should be
 			// generated for this data point. This based on the total cost of
 			// serving this data point and the cost of creating a new
@@ -581,9 +586,12 @@ public class StreamingKmeans implements StreamClusterer {
 					|| Math.random() < makeFacilityProb;
 
 			if (makeFacility) {
+				
 				CentroidCluster newCluster = new CentroidCluster(value);
 				newCluster.addVector(value, (id > 0) ? id : -1);
+				synchronized(facilities){
 				facilities.add(newCluster);
+				}
 				bestClusterId = facilities.size() - 1;
 			} else {
 				bestCluster.addVector(value, (id > 0) ? id : -1);
@@ -620,41 +628,34 @@ public class StreamingKmeans implements StreamClusterer {
 		for (CentroidCluster c1 : getClusters()) {
 			ret.add(c1.centroid());
 		}
+		 
 		return new Kmeans(numClusters, ret).getCentroids();
 
 	}
-	final int processors;
+
 	public static void main(String[] args) throws Exception {
+		
 		int k = 10;
-		int d = 10000;
+		int d = 5000;
 		float var = 1f;
+		
 		int processors = Runtime.getRuntime().availableProcessors();
 		if(args.length>0) processors = Integer.parseInt(args[0]);
 		
 		Runtime rt = Runtime.getRuntime();
-		GenerateStreamData gen = new GenerateStreamData(k, d, var, 25l);
+		GenerateStreamData gen = new GenerateStreamData(k, d, var, 1133131);
 		StreamingKmeans rphit = new StreamingKmeans(k, gen,processors); 
 		if(processors==1)rphit.parallel = false;
 		
-
 		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
 		int interval = 50000;
-
 		System.out.printf("Running Streaming Kmeans on %d processors, d=%d,k=%d,n=%d,var=%.0f\n",rphit.getProcessors(),d,k,interval,var);
 		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tCentSSE\n");
 		long timestart = System.nanoTime();
-		for (int i = 0; i < 8000000; i++) {
-
-//			float[] f = gen.generateNext();
-			//rphit.addVectorOnlineStep(f);
+		for (int i = 0; i < 2500000; i++) {
 			vecsInThisRound.add(gen.generateNext());
 			if (i % interval == interval - 1) {
 
-//				gen.executor.shutdown();
-//				gen.executor.awaitTermination(2, TimeUnit.MINUTES);
-//				gen.executor = Executors.newFixedThreadPool(gen.processors);
-				
-				
 				timestart = System.nanoTime();
 				for(float[] f: vecsInThisRound)rphit.addVectorOnlineStep(f);
 				

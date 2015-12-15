@@ -48,9 +48,7 @@ public class VectorLevelConcurrency implements Runnable {
 	
 	@Override
 	public void run() {
-
 			computeSequential(vec);
-		
 	}
 
 

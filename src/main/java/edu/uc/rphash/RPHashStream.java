@@ -57,12 +57,12 @@ public class RPHashStream implements StreamClusterer {
 
 		long hash[];
 		Centroid c = new Centroid(vec);
-		float tmpvar = vartracker.updateVarianceSample(vec);
-		if (variance != tmpvar) {
-			for (LSH lshfunc : lshfuncs)
-				lshfunc.updateDecoderVariance(tmpvar);
-			variance = tmpvar;
-		}
+//		float tmpvar = vartracker.updateVarianceSample(vec);
+//		if (variance != tmpvar) {
+//			for (LSH lshfunc : lshfuncs)
+//				lshfunc.updateDecoderVariance(tmpvar);
+//			variance = tmpvar;
+//		}
 		for (LSH lshfunc : lshfuncs) {
 			hash = lshfunc.lshHashRadiusNo2Hash(vec, so.getNumBlur());
 			for (long h : hash)
@@ -80,7 +80,8 @@ public class RPHashStream implements StreamClusterer {
 		int k = (int) (so.getk() * projections);
 
 		// initialize our counter
-		float decayrate = .001f;// bottom number is window size
+		float decayrate = .00f;//1f;// bottom number is window size
+
 		is = new KHHCentroidCounter(k);// , decayrate); //add back for decayed
 										// counter
 
@@ -92,7 +93,7 @@ public class RPHashStream implements StreamClusterer {
 		for (int i = 0; i < projections; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
-			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(), 1,
+			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(), SimpleArrayReader.DEFAULT_NUM_BLUR,
 					r, dec.getErrorRadius() / dec.getDimensionality());
 			lshfuncs[i] = new LSH(dec, p, hal, noise);
 		}
@@ -133,7 +134,6 @@ public class RPHashStream implements StreamClusterer {
 
 	public RPHashStream(int k, GenerateStreamData c, int processors) {
 
-
 		so = new SimpleArrayReader(k, c);
 		if(parallel)this.processors = processors;
 		else this.processors = 1;
@@ -167,24 +167,28 @@ public class RPHashStream implements StreamClusterer {
 		return centroids;
 	}
 
-	ArrayList<Float> counts;
+//	ArrayList<Float> counts;
 
 	public List<float[]> getCentroidsOfflineStep() {
-
 		centroids = new ArrayList<float[]>();
-		counts = new ArrayList<Float>();
-
-		for (int i = 0; i < is.getTop().size(); i++) {
-			centroids.add(is.getTop().get(i).centroid());
-			counts.add(is.getCounts().get(i));
+		
+		List<Centroid> cents = is.getTop();
+		int len = cents.size();
+//		cents = cents.subList(len-so.getk(), len);
+		List<Float> counts = is.getCounts();
+//		counts = counts.subList(len-so.getk(), len);
+		
+		
+		for (int i = 0; i < cents.size(); i++) {
+			centroids.add(cents.get(i).centroid());
 		}
-
-		centroids = new Kmeans(so.getk(), centroids, counts).getCentroids();
-
-		int count = (int) ((Collections.max(counts) + Collections.min(counts)) / 2);
-		counts = new ArrayList<Float>();
-		for (int i = 0; i < so.getk(); i++)
-			counts.add((float) count);
+		
+//		centroids = new Kmeans(so.getk(), centroids, counts).getCentroids();
+//		System.out.println(counts);
+//		int count = (int) ((Collections.max(counts) + Collections.min(counts)) / 2);
+//		counts = new ArrayList<Float>();
+//		for (int i = 0; i < so.getk(); i++)
+//			counts.add((float) count);
 		return centroids;
 	}
 
@@ -209,38 +213,61 @@ public class RPHashStream implements StreamClusterer {
 
 	public static void main(String[] args) throws Exception {
 
-		int k = 10;
-		int d = 10000;
-		float var = 1f;
+		int k = 40;
+		int d = 5000;
+		float var = 5.0f;
 		
 		int processors = Runtime.getRuntime().availableProcessors();
 		if(args.length>0) processors = Integer.parseInt(args[0]);
 		
 
 		Runtime rt = Runtime.getRuntime();
-		GenerateStreamData gen = new GenerateStreamData(k, d, var, 25l);
-		RPHashStream rphit = new RPHashStream(k, gen,processors); // StreamingKmeans(k,
-														// gen);
-		if(processors==1)rphit.parallel = false;
-
+		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
+		GenerateStreamData gen2 = new GenerateStreamData(k, d, var, 171717);
+		GenerateStreamData gen3 = new GenerateStreamData(k, d, var, 131713);
+		
 		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
+		int interval = 10000;
+		
+		RPHashStream rphit = new RPHashStream(k, gen1,processors);
+		if(processors==1)
+			rphit.parallel = false;
+//		StreamClusterer rphit = new StreamingKmeans(k,gen);
 
-		int interval = 50000;
-		System.out.printf("Running Streaming RPHash on %d processors, d=%d,k=%d,n=%d,var=%.0f\n",rphit.getProcessors(),d,k,interval,var);
-		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tCentSSE\n");
+
+//		System.out.printf("Running Streaming RPHash on %d processors, d=%d,k=%d,n=%d,var=%.0f\n",rphit.getProcessors(),d,k,interval,var);
+		
+		Random srcrand = new Random();
+		
+		
+//		System.out.printf("Running Streaming RPHash on %d processors, d=%d,k=%d,n=%d,var=%.0f\n",1,d,k,interval,var);
+//		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tCentSSE\n");
 		long timestart = System.nanoTime();
-		for (int i = 0; i < 8000000; i++) {
-
-//			float[] f = gen.generateNext();
-			//rphit.addVectorOnlineStep(f);
-			vecsInThisRound.add(gen.generateNext());
+		for (int i = 0; i < 2500000; i++) {
+			
+			
+			if(i%2==0)
+			{
+				float[] noi = new float[d];
+				for(int j=0;j<d;j++)noi[j]=(srcrand.nextFloat())*2.0f-1.0f;
+				vecsInThisRound.add(noi);
+			}
+			
+//			if(i%4==0){
+//				if(i%4==0){
+//					vecsInThisRound.add(gen3.generateNext());
+//				}
+//				else{
+//					vecsInThisRound.add(gen2.generateNext());
+//				}
+//			}	
+//			else{
+				vecsInThisRound.add(gen1.generateNext());
+//			}
+			
+			
 			if (i % interval == interval - 1) {
-
-//				gen.executor.shutdown();
-//				gen.executor.awaitTermination(2, TimeUnit.MINUTES);
-//				gen.executor = Executors.newFixedThreadPool(gen.processors);
-				
-				
+								
 				timestart = System.nanoTime();
 				for(float[] f: vecsInThisRound)rphit.addVectorOnlineStep(f);
 				
@@ -258,14 +285,14 @@ public class RPHashStream implements StreamClusterer {
 				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
 				List<float[]> aligned = TestUtil.alignCentroids(cents,
-						gen.getMedoids());
+						gen1.getMedoids());
 				double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
-				double ssecent = StatTests.SSE(aligned, gen);
+				double ssecent = StatTests.SSE(aligned, gen1);
 
 				
 				vecsInThisRound = new ArrayList<float[]>();
 				// recreate vectors at execution time to check average
-
+				System.gc();
 				System.out.printf("%d\t%d\t%.4f\t%.0f\t%.3f\n", i,
 						usedkB, time / 1000000000f, wcsse, ssecent);
 

@@ -66,4 +66,13 @@ public class Centroid {
 		ids.add(h);
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof Centroid){
+			return ((Centroid)obj).id == id;
+		}
+		return false;
+	}
+	
+
 }
