@@ -32,14 +32,10 @@ import edu.uc.rphash.tests.TestUtil;
 
 public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public List<float[]> data;
-	// List<List<Float>> Xlist;
-
 	int numProjections;
 	int decoderMultiplier;
 	long randomSeed;
-
 	int numBlur;
-
 	String f;
 	InputStream elements;
 	int k;
@@ -50,6 +46,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	List<Long> topIDs;
 	int multiDim;
 	Decoder dec;
+	float decayrate=0;
 
 	ExecutorService executor;
 	InputStream inputStream;
@@ -67,8 +64,6 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	// --input random seed;
 	public StreamObject(PipedInputStream istream, int k, int dim,
 			ExecutorService executor) throws IOException {
-
-		// inputStream = new DataInputStream(istream);
 		this.executor = executor;
 
 		this.dim = dim;
@@ -84,8 +79,6 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.data = null;
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
-		// dec = new MultiDecoder(
-		// getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
 	}
 
 	boolean filereader = false;
@@ -116,9 +109,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 			binin = new DataInputStream(new BufferedInputStream(inputStream));
 			int d = binin.readInt();
 			dim = binin.readInt();
-
 		}
-
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
@@ -183,7 +174,6 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	@Override
 	public List<Long> getPreviousTopID() {
-
 		return topIDs;
 	}
 
@@ -225,7 +215,6 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	@Override
 	public void setHashMod(long parseLong) {
 		hashmod = (int) parseLong;
-
 	}
 
 	@Override
@@ -250,7 +239,6 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	@Override
 	public void setDecoderType(Decoder dec) {
 		this.dec = dec;
-
 	}
 
 	@Override
@@ -272,13 +260,11 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	@Override
 	public void setNumBlur(int parseInt) {
 		this.numBlur = parseInt;
-
 	}
 
 	@Override
 	public void setRandomSeed(long parseLong) {
 		randomSeed = parseLong;
-
 	}
 
 	@Override
@@ -307,47 +293,18 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 			e.printStackTrace();
 		}
 		return readFloat;
-		// // Read data with timeout
-		// Callable<float[]> readTask = new Callable<float[]>() {
-		// @Override
-		// public float[] call() {
-		// float[] vec = new float[dim];
-		// try {
-		// for (int i = 0; i < dim; i++) {
-		// vec[i] = inputStream.readFloat();
-		// if(filereader)inputStream.readChar();
-		// }
-		// return vec;
-		// } catch (IOException e) {
-		// return null;
-		// }
-		// }
-		// };
-
-		// Future<float[]> future = executor.submit(readTask);
-		// try {
-		// readFloat = future.get(5000, TimeUnit.MILLISECONDS);
-		// if (readFloat != null) {
-		// return readFloat;
-		// }
-		// } catch (InterruptedException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// } catch (ExecutionException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// } catch (TimeoutException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-		//
-		// return null;
 	}
 
 	@Override
 	public void setVariance(List<float[]> data) {
 		dec.setVariance(StatTests.varianceSample(data, .01f));
-
 	}
 
+	public void setDecayRate(float parseFloat) {
+		this.decayrate = parseFloat;
+	}
+	
+	public float getDecayRate(){
+		return this.decayrate;
+	}
 }

@@ -26,10 +26,17 @@ public class Spherical implements Decoder {
 			// scanned linearly during query.
 	float distance = 0;
 
+	/**
+	 * This class represent a spherical lsh scheme. Vectors are decoded to the nearest vertex of the d dimensional orthoplex
+	 * reresented by a canonical ordered integer.
+	 * @param d - the number of dimension in the orthoplex
+	 * @param k - number of rotations of the fundamental hash functions
+	 * @param L - the number to search, currently ignored in RPHash
+	 */
 	public Spherical(int d, int k, int L) {
 		this.d = d;//number of dimensions
 		this.k = k;//number of elementary hash functions
-		this.l = L;//number of copies to search
+		this.l = 1;//L;//number of copies to search
 		double nvertex = 2.0 * this.d;
 		this.hbits = (int) Math.ceil(Math.log(nvertex) / Math.log(2));
 		int kmax = (int) (HashBits / this.hbits);
@@ -51,9 +58,6 @@ public class Spherical implements Decoder {
 		// list of
 		// rotated vectors itself!
 		this.vAll = new ArrayList<List<float[]>>(k*l); // random rotation matrices
-		
-//		List<List<float[]>> rotationMatrices = this.vAll;
-//
 		for (int i = 0; i < k*l; i++) {
 			this.vAll.add(i, randomRotation(this.d, r));
 		}
@@ -68,7 +72,10 @@ public class Spherical implements Decoder {
 	@Override
 	public long[] decode(float[] f) {
 //		byte[] lg = new byte[this.l * 8];
-		long[] dec = Hash(TestUtil.normalize(f));
+		//doesnt seem to be needed since we are variance scaling in the LSH function
+//		long[] dec = Hash(TestUtil.normalize(f));
+		
+		long[] dec = Hash(f);
 //		int ct = 0;
 //		for (long d:dec) {
 //			lg[ct++] = (byte)(d >>> 56);
@@ -204,7 +211,7 @@ public class Spherical implements Decoder {
 	public static void main(String[] args){
 		Random r = new Random();
 		int d = 64;
-		int K = 6; 
+		int K = 9; 
 		int L = 4;
 		Spherical sp = new Spherical(d,K,L);
 		for(int i = 0; i<100;i++){

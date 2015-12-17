@@ -16,6 +16,11 @@ public class MultiDecoder implements Decoder {
 		this.dimension = dimension;
 		
 	}
+	
+	public Decoder getInnerDecoder(){
+		return innerDec;
+	}
+	
 	@Override
 	public int getDimensionality() {
 
