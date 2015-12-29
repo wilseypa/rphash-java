@@ -4,18 +4,20 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.uc.rphash.decoders.Decoder;
+import edu.uc.rphash.decoders.Leech;
+import edu.uc.rphash.decoders.LeechMulti;
+import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.Spherical;
 
 public interface RPHashObject {
 	 final static int DEFAULT_NUM_PROJECTIONS = 2;
-	 final static int DEFAULT_NUM_BLUR = 2;
+	 public final static int DEFAULT_NUM_BLUR = 1;
 	 final static int DEFAULT_NUM_RANDOM_SEED = 0;
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(32,3,1);
+	 final static Decoder DEFAULT_INNER_DECODER =  new Spherical(64,4,1);
 	 
 	int getk();
-	//int getn();
 	int getdim();
 	long getRandomSeed();
 	long getHashmod();
@@ -42,6 +44,8 @@ public interface RPHashObject {
 	Decoder getDecoderType();
 	String toString();
 	void setVariance(List<float[]> data);
+	void setDecayRate(float parseFloat);
+	float getDecayRate();
 
 
 }

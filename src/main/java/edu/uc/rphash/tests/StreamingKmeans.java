@@ -3,6 +3,7 @@ package edu.uc.rphash.tests;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -508,11 +509,11 @@ public class StreamingKmeans implements StreamClusterer {
 
 	public long addVectorOnlineStep(float[] value) {
 
-		if (parallel) {
-			StreamingkmThread r = new StreamingkmThread(value);
-			executor.execute(r);
-			return r.id;
-		}
+//		if (parallel) {
+//			StreamingkmThread r = new StreamingkmThread(value);
+//			executor.execute(r);
+//			return r.id;
+//		}
 
 		// Get the id of the new data point.
 		int id = idCounter.getAndAdd(1);
@@ -563,7 +564,9 @@ public class StreamingKmeans implements StreamClusterer {
 		CentroidCluster bestCluster = null;
 		int i = 0;
 		synchronized(facilities){
-			for (CentroidCluster cluster : facilities) {
+			Iterator<CentroidCluster> it = facilities.iterator();
+			while (it.hasNext()){
+				CentroidCluster cluster = it.next(); 
 				float cost = cluster.compareWithVector(value);
 				// Reverse the scale so that a high similarity corresponds to a
 				// low cost and a low similarity corresponds to a high cost, but
@@ -625,8 +628,13 @@ public class StreamingKmeans implements StreamClusterer {
 	@Override
 	public List<float[]> getCentroidsOfflineStep() {
 		List<float[]> ret = new ArrayList<>();
-		for (CentroidCluster c1 : getClusters()) {
-			ret.add(c1.centroid());
+		
+		synchronized(facilities){
+			Iterator<CentroidCluster> it = facilities.iterator();
+			while(it.hasNext()){
+				CentroidCluster c1 =it.next();
+				ret.add(c1.centroid());
+		}
 		}
 		 
 		return new Kmeans(numClusters, ret).getCentroids();

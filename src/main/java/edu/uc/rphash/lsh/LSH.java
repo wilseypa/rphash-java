@@ -11,7 +11,7 @@ import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.tests.TestUtil;
 
 public class LSH {
-	Projector[] projectionMatrices;
+	public Projector projectionMatrix;
 	HashAlgorithm standardHashAlgorithm;
 	Decoder lshDecoder;
 	int times;
@@ -22,8 +22,8 @@ public class LSH {
 	List<float[]> noise;
 
 	public LSH(Decoder dec, Projector p, HashAlgorithm hal, List<float[]> noise) {
-		this.projectionMatrices = new Projector[1];
-		this.projectionMatrices[0] = p;
+		this.projectionMatrix = p;//new Projector[1];
+//		this.projectionMatrices[0] = p;
 		this.standardHashAlgorithm = hal;
 		this.lshDecoder = dec;
 		this.times = 1;
@@ -38,7 +38,7 @@ public class LSH {
 	 */
 	public long lshHash(float[] r) {
 
-		return standardHashAlgorithm.hash(lshDecoder.decode(projectionMatrices[0].project(r)));
+		return standardHashAlgorithm.hash(lshDecoder.decode(projectionMatrix.project(r)));
 
 	}
 
@@ -98,31 +98,33 @@ public class LSH {
 	 */
 	public long[] lshHashRadiusNo2Hash(float[] r, int times) {
 
-		float[] pr_r = projectionMatrices[0].project(r);
+		float[] pr_r = projectionMatrix.project(r);
 		long[] nonoise = lshDecoder.decode(pr_r);
 		long[] returnHashes = new long[times * nonoise.length];
-		System.arraycopy(nonoise, 0, returnHashes, 0, nonoise.length);
-
-		// add some blurring probes in addition to the unnoised decoding
-		float[] noisedProjectedVector = new float[pr_r.length];
-		float[] noiseVec;
-		for (int j = 1; j < times; j++) {
-			System.arraycopy(pr_r, 0, noisedProjectedVector, 0, pr_r.length);
-			noiseVec = noise.get(j - 1);
-			for (int k = 0; k < pr_r.length; k++) {
-				noisedProjectedVector[k] = noisedProjectedVector[k] + noiseVec[k];
+		
+//		if(times>1){
+			System.arraycopy(nonoise, 0, returnHashes, 0, nonoise.length);
+			// add some blurring probes in addition to the unnoised decoding
+			float[] noisedProjectedVector = new float[pr_r.length];
+			float[] noiseVec;
+			
+			for (int j = 1; j < times; j++) {
+				System.arraycopy(pr_r, 0, noisedProjectedVector, 0, pr_r.length);
+				noiseVec = noise.get(j - 1);
+				for (int k = 0; k < pr_r.length; k++) {
+					noisedProjectedVector[k] = noisedProjectedVector[k] + noiseVec[k];
+				}
+				nonoise = lshDecoder.decode(noisedProjectedVector);
+				System.arraycopy(nonoise, 0, returnHashes, j * nonoise.length,
+						nonoise.length);
 			}
-
-			nonoise = lshDecoder.decode(noisedProjectedVector);
-			System.arraycopy(nonoise, 0, returnHashes, j * nonoise.length,
-					nonoise.length);
-		}
+//		}
 		return returnHashes;
 	}
 
 	public long lshMinHashRadius(float[] r, float radius, int times) {
 
-		float[] pr_r = projectionMatrices[0].project(r);
+		float[] pr_r = projectionMatrix.project(r);
 		long ret = standardHashAlgorithm.hash(lshDecoder.decode(pr_r));
 		long minret = ret;
 		float mindist = lshDecoder.getDistance();

@@ -77,6 +77,36 @@ public class StatTests {
 		return  M2/(n-1f);
 	}
 	
+
+	private float[] meanv;
+	private float[] M2v;
+	private float[] variance;
+	public float[] updateVarianceSampleVec(float[] row){
+		if(n==0){
+			meanv = new float[row.length];
+			M2v = new float[row.length];
+			variance = new float[row.length];
+			for(int i = 0;i<row.length;i++)variance[i] = 1f;
+			n++;
+		}
+		
+		if( n>10 && r.nextFloat()>sampRatio.floatValue()){
+			return variance;
+		}
+		
+		n++;
+		for(int i = 0;i<row.length;i++){
+			float x =row[i];
+			float delta = x - meanv[i];
+			meanv[i] = meanv[i] + delta/n;
+			M2v[i] = M2v[i] + delta*(x-meanv[i]);
+			variance[i] = M2v[i]/(n-1f);
+		}	
+		
+		
+		return variance;
+	}
+	
 	
 	
 	public static float varianceSample(List<float[]> data,float sampRatio){
@@ -164,14 +194,12 @@ public class StatTests {
 
 			for(int j=0;j<d;j++)
 			{
-				
 				avgs[j]+=(tmp[j]/n);
 			}	
 			
 		}
 		return avgs;
 	}
-
 
 	public static double variance(double[] row) {
 		double n = 0;

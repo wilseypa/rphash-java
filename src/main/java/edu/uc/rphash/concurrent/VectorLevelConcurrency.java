@@ -15,35 +15,36 @@ public class VectorLevelConcurrency implements Runnable {
 	private StatTests vartracker;
 	private RPHashObject so;
 	private LSH[] lshfuncs;
-	private float variance;
 	private KHHCentroidCounter is;
 	
-	public VectorLevelConcurrency(float[] vec,RPHashObject so,LSH[] lshfuncs,StatTests vartracker,float variance,KHHCentroidCounter is) {
+	public VectorLevelConcurrency(float[] vec,RPHashObject so,LSH[] lshfuncs,StatTests vartracker,KHHCentroidCounter is) {
 		this.vec = vec;		
 		this.vartracker = vartracker;
 		this.so = so;
 		this.lshfuncs = lshfuncs;
 		this.is = is;
-		this.variance = variance;
 	}
 
 	private void computeSequential(float[] vec){
 
 		long hash[];
-		Centroid c = new Centroid(vec);
-		float tmpvar = vartracker.updateVarianceSample(vec);
-		if(variance!=tmpvar){
-			for (LSH lshfunc : lshfuncs) 
-				lshfunc.updateDecoderVariance(tmpvar);
-			variance= tmpvar;
-		}
+//		Centroid c = new Centroid(vec);
+//		float tmpvar = vartracker.updateVarianceSample(vec);
+		float[] tmpvar = vartracker.updateVarianceSampleVec(vec);
+		float[] scaledvec = new float[vec.length]; 
+		for(int i = 0;i<vec.length;i++)scaledvec[i] = vec[i]/tmpvar[i];
 		for (LSH lshfunc : lshfuncs) 
 		{
-			hash = lshfunc.lshHashRadiusNo2Hash(vec, so.getNumBlur());
-			for (long h : hash)
-				c.addID(h);
+
+			Centroid c = new Centroid(vec);
+			c.addID(lshfunc.lshHash(scaledvec));
+			is.add(c);
+//			lshfunc.updateDecoderVariance(tmpvar);
+//			hash = lshfunc.lshHashRadiusNo2Hash(scaledvec, so.getNumBlur());
+//			for (long h : hash)
+//				c.addID(h);
 		}
-		is.add(c);
+//		is.add(c);
 	}
 	
 	@Override

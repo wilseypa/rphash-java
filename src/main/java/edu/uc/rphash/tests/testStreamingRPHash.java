@@ -1,0 +1,156 @@
+package edu.uc.rphash.tests;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import edu.uc.rphash.RPHashStream;
+import edu.uc.rphash.StreamClusterer;
+
+public class testStreamingRPHash {
+	public static void readFileData(String[] args) throws Exception {
+
+		int interval = 1000;
+		int k = 10;
+		String filename = "/home/lee/Desktop/Dimension3204/data.mat";
+		int processors = Runtime.getRuntime().availableProcessors();
+		if (args.length > 1)
+			filename = args[0];
+		if (args.length > 2)
+			k = Integer.parseInt(args[1]);
+		if (args.length > 3)
+			processors = Integer.parseInt(args[0]);
+
+		Runtime rt = Runtime.getRuntime();
+		List<float[]> data = TestUtil.readFile(filename, false);
+
+		 RPHashStream rphit = new RPHashStream(data,k);
+		 if(processors==1)
+		 rphit.parallel = false;
+		// System.out.printf("Running Streaming RPHash on %d processors, d=%d,k=%d,n=%d\n",rphit.getProcessors(),d,k,interval);
+//		StreamClusterer rphit = new StreamingKmeans(data, k);
+		// System.out.printf("Running Streaming KMeans on %d processors, d=%d,k=%d\n",1,data.size(),k);
+
+		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\n");
+		long timestart = System.nanoTime();
+
+		timestart = System.nanoTime();
+		rphit.addVectorOnlineStep(data.get(0));
+		for (int i = 1; i < 20000; i++) {
+			rphit.addVectorOnlineStep(data.get(i));
+
+			if (i % interval == 0) {
+				List<float[]> cents = rphit.getCentroidsOfflineStep();
+				long time = System.nanoTime() - timestart;
+
+				rt.gc();
+				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+
+				double wcsse = StatTests.WCSSE(cents, data);
+
+				System.gc();
+				System.out.printf("%d\t%d\t%.4f\t%.0f\n", i, usedkB,
+						time / 1000000000f, wcsse);
+				timestart = System.nanoTime();
+			}
+		}
+
+	}
+
+	public static void generateAndStream() {
+		int k = 30;
+		int d = 10000;
+		float var = 1f;
+
+		Runtime rt = Runtime.getRuntime();
+		int processors = rt.availableProcessors();
+		
+		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
+
+		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
+		int interval = 10000;
+
+		RPHashStream rphit = new RPHashStream(k, gen1, processors);
+		if (processors == 1)
+			rphit.parallel = false;
+		StreamClusterer rphit2 = new StreamingKmeans(k, gen1);
+
+		Random srcrand = new Random();
+
+		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tCentSSE\n");
+		long timestart = System.nanoTime();
+		for (int i = 0; i < 2500000; i++) {
+
+			if (i % 2 == 0) {
+				float[] noi = new float[d];
+				for (int j = 0; j < d; j++)
+					noi[j] = (srcrand.nextFloat()) * 2.0f - 1.0f;
+				vecsInThisRound.add(noi);
+			}
+
+			vecsInThisRound.add(gen1.generateNext());
+
+			if (i % interval == interval - 1) {
+
+				timestart = System.nanoTime();
+				for (float[] f : vecsInThisRound) {
+					rphit.addVectorOnlineStep(f);
+
+				}
+
+
+				List<float[]> cents = rphit.getCentroidsOfflineStep();
+				long time = System.nanoTime() - timestart;
+
+				rt.gc();
+				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+
+				List<float[]> aligned = TestUtil.alignCentroids(cents,
+						gen1.getMedoids());
+				double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
+				double ssecent = StatTests.SSE(aligned, gen1);
+
+				
+				// recreate vectors at execution time to check average
+				System.gc();
+				System.out.printf("%d\t%d\t%.4f\t%.0f\t%.3f\t", i, usedkB,
+						time / 1000000000f, wcsse, ssecent);
+				
+				
+				
+				timestart = System.nanoTime();
+				for (float[] f : vecsInThisRound) {
+					rphit2.addVectorOnlineStep(f);
+				}
+				
+				cents = rphit2.getCentroidsOfflineStep();
+				time = System.nanoTime() - timestart;
+
+				rt.gc();
+				usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+
+				aligned = TestUtil.alignCentroids(cents,
+						gen1.getMedoids());
+				wcsse = StatTests.WCSSE(cents, vecsInThisRound);
+				ssecent = StatTests.SSE(aligned, gen1);
+				
+				System.gc();
+				System.out.printf("%d\t%d\t%.4f\t%.0f\t%.3f\t\n", i, usedkB,
+						time / 1000000000f, wcsse, ssecent);
+				
+				vecsInThisRound = new ArrayList<float[]>();
+				
+				
+				
+				
+
+			}
+		}
+	}
+
+	public static void main(String[] args) throws Exception {
+		readFileData(args);
+		//generateAndStream();
+	}
+
+}
