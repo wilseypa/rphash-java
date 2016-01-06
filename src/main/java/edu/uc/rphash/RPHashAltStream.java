@@ -8,14 +8,10 @@ import java.util.Random;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
-import edu.uc.rphash.frequentItemSet.KHHHashCounter;
-import edu.uc.rphash.lsh.LSH;
-import edu.uc.rphash.projections.DBFriendlyProjection;
-import edu.uc.rphash.projections.Projector;
-import edu.uc.rphash.tests.GenerateData;
-import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 public class RPHashAltStream implements Clusterer, Runnable {
 
@@ -96,7 +92,7 @@ public class RPHashAltStream implements Clusterer, Runnable {
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = TestUtil.alignCentroids(
+				List<float[]> aligned = VectorUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
 				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
 						+ StatTests.WCSSE(aligned, gen.getData()) + ":"

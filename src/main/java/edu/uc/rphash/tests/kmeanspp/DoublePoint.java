@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.util.VectorUtil;
 
 public class DoublePoint implements Clusterable<DoublePoint>, Serializable {
 
@@ -73,7 +73,7 @@ public class DoublePoint implements Clusterable<DoublePoint>, Serializable {
     }
 
     public double distanceFrom(final DoublePoint p) {
-	        return TestUtil.distance(point, p.getPoint());
+	        return VectorUtil.distance(point, p.getPoint());
 	    }
 	    /** {@inheritDoc} */
 	  @Override

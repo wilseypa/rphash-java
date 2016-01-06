@@ -1,15 +1,12 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.tests.clusterers;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
-
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Random;
 
 /**
  * @author lee

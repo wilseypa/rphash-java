@@ -1,19 +1,13 @@
 package edu.uc.rphash.Readers;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.E8;
-import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
-import edu.uc.rphash.decoders.PStableDistribution;
-import edu.uc.rphash.decoders.Spherical;
-import edu.uc.rphash.tests.ClusterGenerator;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.generators.ClusterGenerator;
 
 public class SimpleArrayReader implements RPHashObject {
 
@@ -38,7 +32,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.numBlur = numBlur;
 	}
 
-	public SimpleArrayReader(int k, ClusterGenerator gen) {
+	public SimpleArrayReader(ClusterGenerator gen,int k) {
 		this.dim = gen.getDimension();
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;

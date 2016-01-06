@@ -65,5 +65,9 @@ public class MultiDecoder implements Decoder {
 	public void setVariance(Float parameterObject) {
 		innerDec.setVariance(parameterObject);
 	}
+	@Override
+	public boolean selfScaling() {
+		return false;
+	}
 
 }

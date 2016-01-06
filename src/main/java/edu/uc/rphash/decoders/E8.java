@@ -1,9 +1,8 @@
 package edu.uc.rphash.decoders;
 
-import java.util.HashSet;
 import java.util.Random;
 
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.util.VectorUtil;
 
 public class E8 implements Decoder {
 
@@ -163,11 +162,11 @@ public class E8 implements Decoder {
 	float variance;
 	public E8(float var){
 		int n = 8;
-		yt = new float[8];
-		u = new float[8];
-		v = new float[8];
-		dn1 = new Dn(8);
-		dn2 = new Dn(8);
+		yt = new float[n];
+		u = new float[n];
+		v = new float[n];
+		dn1 = new Dn(n);
+		dn2 = new Dn(n);
 		this.variance = var;
 	}
 	@Override
@@ -224,8 +223,8 @@ public class E8 implements Decoder {
 	public static void main(String[] args) {
 		Random r = new Random();
 		int d = 8;
-		int K = 6;
-		int L = 2;
+//		int K = 6;
+//		int L = 2;
 		E8 sp = new E8(1f);
 		for (int i = 0; i < 100; i++) {
 			int ct = 0;
@@ -239,9 +238,9 @@ public class E8 implements Decoder {
 							* ((float) i / 200f));
 				}
 
-				distavg+=TestUtil.distance(p1,p2);
-				long[] hp1 = sp.decode(TestUtil.normalize(p1));
-				long[] hp2 = sp.decode(TestUtil.normalize(p2));
+				distavg+=VectorUtil.distance(p1,p2);
+				long[] hp1 = sp.decode(VectorUtil.normalize(p1));
+				long[] hp2 = sp.decode(VectorUtil.normalize(p2));
 				boolean test = false;
 				for(int k = 0; k< hp1.length;k++)
 				{
@@ -260,5 +259,9 @@ public class E8 implements Decoder {
 	public void setVariance(Float parameterObject) {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public boolean selfScaling() {
+		return false;
 	}
 }

@@ -9,22 +9,19 @@ import java.util.List;
 import java.util.Random;
 
 import edu.uc.rphash.Readers.RPHashObject;
-import edu.uc.rphash.Readers.RPVector;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
-import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
-import edu.uc.rphash.standardhash.NoHash;
-import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 /**This is the Iterative Redux Version Of RPHash
  * Instead of a constant number of passes over the data as in RPHash
@@ -112,7 +109,7 @@ public class RPHashIterativeRedux  implements Clusterer
 		while(vecs.hasNext())
 		{
 			vec = vecs.next();
-			pq.add(new Tuple(vec,TestUtil.distance(vec,centroid.centroid())));
+			pq.add(new Tuple(vec,VectorUtil.distance(vec,centroid.centroid())));
 		}
 		
 		Collections.sort(pq);
@@ -121,7 +118,7 @@ public class RPHashIterativeRedux  implements Clusterer
 		while(vecs.hasNext())
 		{
 				vec = vecs.next();
-				if(TestUtil.distance(vec,centroid.centroid()) < cutoff){
+				if(VectorUtil.distance(vec,centroid.centroid()) < cutoff){
 					centroid.updateVec(vec);
 					vecs.remove();
 				}
@@ -186,7 +183,7 @@ public class RPHashIterativeRedux  implements Clusterer
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = TestUtil.alignCentroids(
+				List<float[]> aligned = VectorUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
 				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
 						+ StatTests.WCSSE(aligned, gen.getData()) + ":" + duration

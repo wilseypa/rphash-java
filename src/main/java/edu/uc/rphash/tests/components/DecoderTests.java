@@ -1,4 +1,4 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.tests.components;
 
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;

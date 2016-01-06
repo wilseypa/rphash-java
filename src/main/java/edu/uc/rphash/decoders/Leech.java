@@ -1,10 +1,8 @@
 package edu.uc.rphash.decoders;
 
-import java.util.HashSet;
 import java.util.Random;
 
-import edu.uc.rphash.tests.GenerateData;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.util.VectorUtil;
 
 /*Author: Lee Carraher
  #Institution: University of Cincinnati, Computer Science Dept.
@@ -182,7 +180,7 @@ public class Leech implements Decoder {
 
 	}
 
-	private void RotateLattice90() {
+	public void RotateLattice90() {
 		// col1
 		float r1 = 0.70710678f;
 		float r2 = 0.70710678f;
@@ -218,7 +216,6 @@ public class Leech implements Decoder {
 	public Leech(float scaler) {
 		this.setVariance(scaler);
 	}
-	
 
 	/*
 	 * WARNING: not true euclidean distance compute the distance between two 24
@@ -775,31 +772,37 @@ public class Leech implements Decoder {
 
 		long[] retOpt;
 
-			retOpt = new long[1];
-			retOpt[0]=0;
-		    for(int i =0;i<24;i++){
-		    	retOpt[0]+=cw[i];
-		    	retOpt[0]<<=1;
+		retOpt = new long[1];
+		retOpt[0] = 0;
+		for (int i = 0; i < 24; i++) {
+			retOpt[0] += cw[i];
+			retOpt[0] <<= 1;
 
-		    }
-		    for(int i =0;i<12;i++){
-		    	retOpt[0]+=cp[i];
-		    	retOpt[0]<<=1;
-		    }
-		    if(quant!=null)//use remaining 64-36 = 8 bits for a quantization vector
-		    for(int i =0;i<8;i++){
-		    	retOpt[0]^=quant[i];
-		    }
-		    
-//		retOpt[0] = (byte) (cw[0] + (cw[1] << 1) + (cw[2] << 2) + (cw[3] << 3)
-//				+ (cw[4] << 4) + (cw[5] << 5) + (cw[6] << 6) + (cw[7] << 7));
-//		retOpt[1] = (byte) (cw[8] + (cw[9] << 1) + (cw[10] << 2)
-//				+ (cw[11] << 3) + (cw[12] << 4) + (cw[13] << 5) + (cw[14] << 6) + (cw[15] << 7));
-//		retOpt[2] = (byte) (cw[16] + (cw[17] << 1) + (cw[18] << 2)
-//				+ (cw[19] << 3) + (cw[20] << 4) + (cw[21] << 5) + (cw[22] << 6) + (cw[23] << 7));
-//		retOpt[3] = (byte) (cp[0] + (cp[1] << 1) + (cp[2] << 2) + (cp[3] << 3)
-//				+ (cp[4] << 4) + (cp[5] << 5) + (cp[6] << 6) + (cp[7] << 7));
-//		retOpt[4] = (byte) (cp[8] + (cp[9] << 1) + (cp[10] << 2) + (cp[11] << 3));
+		}
+		for (int i = 0; i < 12; i++) {
+			retOpt[0] += cp[i];
+			retOpt[0] <<= 1;
+		}
+		if (quant != null)// use remaining 64-36 = 8 bits for a quantization
+							// vector
+			for (int i = 0; i < 8; i++) {
+				retOpt[0] ^= quant[i];
+			}
+
+		// retOpt[0] = (byte) (cw[0] + (cw[1] << 1) + (cw[2] << 2) + (cw[3] <<
+		// 3)
+		// + (cw[4] << 4) + (cw[5] << 5) + (cw[6] << 6) + (cw[7] << 7));
+		// retOpt[1] = (byte) (cw[8] + (cw[9] << 1) + (cw[10] << 2)
+		// + (cw[11] << 3) + (cw[12] << 4) + (cw[13] << 5) + (cw[14] << 6) +
+		// (cw[15] << 7));
+		// retOpt[2] = (byte) (cw[16] + (cw[17] << 1) + (cw[18] << 2)
+		// + (cw[19] << 3) + (cw[20] << 4) + (cw[21] << 5) + (cw[22] << 6) +
+		// (cw[23] << 7));
+		// retOpt[3] = (byte) (cp[0] + (cp[1] << 1) + (cp[2] << 2) + (cp[3] <<
+		// 3)
+		// + (cp[4] << 4) + (cp[5] << 5) + (cp[6] << 6) + (cp[7] << 7));
+		// retOpt[4] = (byte) (cp[8] + (cp[9] << 1) + (cp[10] << 2) + (cp[11] <<
+		// 3));
 
 		return retOpt;
 	}
@@ -859,7 +862,7 @@ public class Leech implements Decoder {
 	// unsigned char* decode(float r[12][2], float *distance){
 	// unsigned long long decodeLeech(float *r,float *distance)
 	public long[] decode(float[] r) {
-		//r = TestUtil.normalize(r);
+		// r = TestUtil.normalize(r);
 		// #####################QAM Dijks ###################
 		float[][] dijs = new float[12][4];
 		float[][] dijks = new float[12][4];
@@ -982,14 +985,16 @@ public class Leech implements Decoder {
 					p2[k] = (float) (p1[k] + r.nextGaussian()
 							* ((float) i / 100f));
 				}
-				distavg+=TestUtil.distance(p1,p2);
+				distavg += VectorUtil.distance(p1, p2);
 				long[] hp1 = sp.decode(p1);
 				long[] hp2 = sp.decode(p2);
-				if(hp1[0]==hp2[0])ct++;
+				if (hp1[0] == hp2[0])
+					ct++;
 			}
 			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
 		}
 	}
+
 	// public static void main(String[] args)
 	// {
 	// Decoder leech = new LeechDecoder(2f);
@@ -1041,14 +1046,14 @@ public class Leech implements Decoder {
 
 	@Override
 	public void setVariance(Float parameterObject) {
-		if(scaler!=parameterObject.floatValue()){
+		if (scaler != parameterObject.floatValue()) {
 			scaler = parameterObject;
 			radius = (DPT + CPT) * scaler;
 			APT = (float) (this.APT * scaler);
 			BPT = (float) (this.BPT * scaler);
 			CPT = (float) (this.CPT * scaler);
 			DPT = (float) (this.DPT * scaler);
-	
+
 			float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
 					{ APT, BPT } };
 			float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
@@ -1061,7 +1066,12 @@ public class Leech implements Decoder {
 			this.oddAPts = oddAPts;
 			this.evenBPts = evenBPts;
 			this.oddBPts = oddBPts;
-			this.radius = DPT+CPT;
+			this.radius = DPT + CPT;
 		}
+	}
+	
+	@Override
+	public boolean selfScaling() {
+		return false;
 	}
 }

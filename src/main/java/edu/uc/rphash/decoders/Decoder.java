@@ -6,4 +6,5 @@ public interface Decoder {
 	abstract long[] decode(float[] f);
 	abstract float getErrorRadius();
 	abstract float getDistance();
+	abstract boolean selfScaling();
 }

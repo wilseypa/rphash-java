@@ -1,17 +1,14 @@
 package edu.uc.rphash;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
-import edu.uc.rphash.tests.Agglomerative;
-import edu.uc.rphash.tests.GenerateData;
-import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.clusterers.Agglomerative;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 public class RPHashConsensusRP  implements Clusterer{
 
@@ -80,7 +77,7 @@ public class RPHashConsensusRP  implements Clusterer{
 		long startTime = System.nanoTime();
 		rphit.getCentroids();
 		long duration = (System.nanoTime() - startTime);
-		List<float[]> aligned  = TestUtil.alignCentroids(rphit.getCentroids(),gen.medoids());
+		List<float[]> aligned  = VectorUtil.alignCentroids(rphit.getCentroids(),gen.medoids());
 		System.out.println(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
 		System.out.print("\n");
 		System.gc();

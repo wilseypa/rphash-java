@@ -1,13 +1,11 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.tests.clusterers;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.PriorityQueue;
-import java.util.TreeSet;
 
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 public class Agglomerative implements Clusterer{
 	
@@ -30,7 +28,7 @@ public class Agglomerative implements Clusterer{
 		for(int i = 0 ; i < data.size();i++)
 		{
 			for(int j = 0; j < data.size();j++)
-				distances[i][j] =TestUtil.distance(data.get(i), data.get(j));
+				distances[i][j] =VectorUtil.distance(data.get(i), data.get(j));
 		}
 		
 	}

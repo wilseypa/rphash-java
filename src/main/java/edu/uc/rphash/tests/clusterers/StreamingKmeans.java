@@ -1,22 +1,23 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.tests.clusterers;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.StreamClusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.StreamObject;
-import edu.uc.rphash.concurrent.VectorLevelConcurrency;
+import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.generators.ClusterGenerator;
+import edu.uc.rphash.tests.generators.GenerateStreamData;
 import edu.uc.rphash.tests.kmeanspp.Cluster;
+import edu.uc.rphash.util.VectorUtil;
 
 /**
  * An implementation of a simple, highly accurate streaming K Means algorithm.
@@ -416,7 +417,7 @@ public class StreamingKmeans implements StreamClusterer {
 	 * A list of the first K data points. After the first K data points have
 	 * been observed, this list is set to {@code null} and never re-used.
 	 */
-	private List<float[]> firstKPoints;
+	public List<float[]> firstKPoints;
 
 	/**
 	 * The scaled clustering cost.
@@ -457,14 +458,14 @@ public class StreamingKmeans implements StreamClusterer {
 	/**
 	 * The maximum total clustering cost, based on the constant values.
 	 */
-	private final float costThreshold;
+	public final float costThreshold;
 
 	/**
 	 * The maximum number of clusters, based on the constant values.
 	 */
 	private final float facilityThreshold;
 
-	private class StreamingkmThread implements Runnable {
+	public class StreamingkmThread implements Runnable {
 
 		long id;
 		float[] value;
@@ -680,7 +681,7 @@ public class StreamingKmeans implements StreamClusterer {
 				rt.gc();
 				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-				List<float[]> aligned = TestUtil.alignCentroids(cents,
+				List<float[]> aligned = VectorUtil.alignCentroids(cents,
 						gen.getMedoids());
 				double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
 				double ssecent = StatTests.SSE(aligned, gen);

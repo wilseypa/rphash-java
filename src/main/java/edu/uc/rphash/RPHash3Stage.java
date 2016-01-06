@@ -17,10 +17,10 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
-import edu.uc.rphash.tests.GenerateData;
-import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 public class RPHash3Stage implements Clusterer {
 
@@ -82,10 +82,10 @@ public class RPHash3Stage implements Clusterer {
 
 		long hash;
 		int probes = so.getNumProjections();
-		int k = (int) (so.getk() * probes);
+//		int k = (int) (so.getk() * probes);
 		
 		//initialize our counter
-		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
+//		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
 		// create our LSH Device
 		//create same LSH Device as before
 		Random r = new Random(so.getRandomSeed());
@@ -153,7 +153,7 @@ public class RPHash3Stage implements Clusterer {
 		float[] vec = vecs.next();
 		while (vecs.hasNext()) {
 
-			int nn = TestUtil.findNearestDistance(p[0].project(vec),
+			int nn = VectorUtil.findNearestDistance(p[0].project(vec),
 					so.getCentroids());
 			centroids.get(nn).updateVec(vec);
 			vec = vecs.next();
@@ -218,7 +218,7 @@ public class RPHash3Stage implements Clusterer {
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = TestUtil.alignCentroids(
+				List<float[]> aligned = VectorUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
 				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
 						+ StatTests.WCSSE(aligned, gen.data()) + ":" + duration

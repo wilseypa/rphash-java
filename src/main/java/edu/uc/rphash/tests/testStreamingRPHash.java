@@ -5,7 +5,11 @@ import java.util.List;
 import java.util.Random;
 
 import edu.uc.rphash.RPHashStream;
+import edu.uc.rphash.RPHashStreamingAK;
 import edu.uc.rphash.StreamClusterer;
+import edu.uc.rphash.tests.clusterers.StreamingKmeans;
+import edu.uc.rphash.tests.generators.GenerateStreamData;
+import edu.uc.rphash.util.VectorUtil;
 
 public class testStreamingRPHash {
 	public static void readFileData(String[] args) throws Exception {
@@ -22,13 +26,13 @@ public class testStreamingRPHash {
 			processors = Integer.parseInt(args[0]);
 
 		Runtime rt = Runtime.getRuntime();
-		List<float[]> data = TestUtil.readFile(filename, false);
+		List<float[]> data = VectorUtil.readFile(filename, false);
 
-		 RPHashStream rphit = new RPHashStream(data,k);
-		 if(processors==1)
-		 rphit.parallel = false;
+		RPHashStream rphit = new RPHashStream(data, k);
+		if (processors == 1)
+			rphit.parallel = false;
 		// System.out.printf("Running Streaming RPHash on %d processors, d=%d,k=%d,n=%d\n",rphit.getProcessors(),d,k,interval);
-//		StreamClusterer rphit = new StreamingKmeans(data, k);
+		// StreamClusterer rphit = new StreamingKmeans(data, k);
 		// System.out.printf("Running Streaming KMeans on %d processors, d=%d,k=%d\n",1,data.size(),k);
 
 		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\n");
@@ -64,7 +68,7 @@ public class testStreamingRPHash {
 
 		Runtime rt = Runtime.getRuntime();
 		int processors = rt.availableProcessors();
-		
+
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
 
 		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
@@ -75,7 +79,7 @@ public class testStreamingRPHash {
 			rphit.parallel = false;
 		StreamClusterer rphit2 = new StreamingKmeans(k, gen1);
 
-		Random srcrand = new Random();
+		Random noiseDataRandomSrc = new Random();
 
 		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tCentSSE\n");
 		long timestart = System.nanoTime();
@@ -84,7 +88,7 @@ public class testStreamingRPHash {
 			if (i % 2 == 0) {
 				float[] noi = new float[d];
 				for (int j = 0; j < d; j++)
-					noi[j] = (srcrand.nextFloat()) * 2.0f - 1.0f;
+					noi[j] = (noiseDataRandomSrc.nextFloat()) * 2.0f - 1.0f;
 				vecsInThisRound.add(noi);
 			}
 
@@ -98,59 +102,66 @@ public class testStreamingRPHash {
 
 				}
 
-
 				List<float[]> cents = rphit.getCentroidsOfflineStep();
 				long time = System.nanoTime() - timestart;
 
 				rt.gc();
 				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-				List<float[]> aligned = TestUtil.alignCentroids(cents,
+				List<float[]> aligned = VectorUtil.alignCentroids(cents,
 						gen1.getMedoids());
 				double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
 				double ssecent = StatTests.SSE(aligned, gen1);
 
-				
 				// recreate vectors at execution time to check average
 				System.gc();
 				System.out.printf("%d\t%d\t%.4f\t%.0f\t%.3f\t", i, usedkB,
 						time / 1000000000f, wcsse, ssecent);
-				
-				
-				
+
 				timestart = System.nanoTime();
 				for (float[] f : vecsInThisRound) {
 					rphit2.addVectorOnlineStep(f);
 				}
-				
+
 				cents = rphit2.getCentroidsOfflineStep();
 				time = System.nanoTime() - timestart;
 
 				rt.gc();
 				usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-				aligned = TestUtil.alignCentroids(cents,
-						gen1.getMedoids());
+				aligned = VectorUtil.alignCentroids(cents, gen1.getMedoids());
 				wcsse = StatTests.WCSSE(cents, vecsInThisRound);
 				ssecent = StatTests.SSE(aligned, gen1);
-				
+
 				System.gc();
 				System.out.printf("%d\t%d\t%.4f\t%.0f\t%.3f\t\n", i, usedkB,
 						time / 1000000000f, wcsse, ssecent);
-				
-				vecsInThisRound = new ArrayList<float[]>();
-				
-				
-				
-				
 
+				vecsInThisRound = new ArrayList<float[]>();
 			}
 		}
 	}
 
+	public static void streamingPushtest(){
+			int k = 10;
+			int d = 5000;
+			float var = 3f;
+
+			GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
+
+
+			RPHashStreamingAK rphit = new RPHashStreamingAK(gen1);
+
+			for(int i = 0;i<10000;i++){
+				long centroidCount = rphit.addVectorOnlineStep(gen1.generateNext());
+				if(centroidCount!=-1)System.out.println(centroidCount);
+			}
+	}
+
 	public static void main(String[] args) throws Exception {
-		readFileData(args);
-		//generateAndStream();
+//		readFileData(args);
+		generateAndStream();
+//		streamingPushtest();
 	}
 
 }

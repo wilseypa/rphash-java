@@ -1,9 +1,11 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.tests.generators;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import edu.uc.rphash.util.VectorUtil;
 
 public class GenerateMovingStream extends GenerateStreamData {
 
@@ -96,7 +98,7 @@ public class GenerateMovingStream extends GenerateStreamData {
 		gen.updateMedoid();
 		print(gen.medoids.get(0));
 		
-		TestUtil.writeFile(new File("/home/lee/Desktop/out1.mat"), a,false);
+		VectorUtil.writeFile(new File("/home/lee/Desktop/out1.mat"), a,false);
 
 		gen = new GenerateMovingStream(1, 3, .2f, 1.25f);
 		a = new ArrayList<>();
@@ -108,7 +110,7 @@ public class GenerateMovingStream extends GenerateStreamData {
 		}
 		gen.updateMedoid();
 		print(gen.medoids.get(0));
-		TestUtil.writeFile(new File("/home/lee/Desktop/out2.mat"), a,false);
+		VectorUtil.writeFile(new File("/home/lee/Desktop/out2.mat"), a,false);
 
 		gen = new GenerateMovingStream(1, 3, .1f, .25f);
 		a = new ArrayList<>();
@@ -120,7 +122,7 @@ public class GenerateMovingStream extends GenerateStreamData {
 		}
 		gen.updateMedoid();
 		print(gen.medoids.get(0));
-		TestUtil.writeFile(new File("/home/lee/Desktop/out3.mat"), a,false);
+		VectorUtil.writeFile(new File("/home/lee/Desktop/out3.mat"), a,false);
 
 	}
 

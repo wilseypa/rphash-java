@@ -98,7 +98,7 @@ public class KHHCentroidCounter {
 
 	public void add(Centroid c) {
 		this.count++;
-		float count = addLong(c.id, 1);
+		float count = count(c.id);
 
 		synchronized (frequentItems) {
 			Centroid probed = frequentItems.remove(c.id);
@@ -157,7 +157,7 @@ public class KHHCentroidCounter {
 	 * @param count
 	 * @return size of min count bucket
 	 */
-	private float addLong(long item, long count) {
+	public float addLong(long item, long count) {
 
 		float min;
 		if (decayRate != null) {

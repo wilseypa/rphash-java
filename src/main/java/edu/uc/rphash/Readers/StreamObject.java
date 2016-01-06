@@ -3,32 +3,20 @@ package edu.uc.rphash.Readers;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPInputStream;
 
 import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
-import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.TestUtil;
 
 public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public List<float[]> data;
@@ -103,11 +91,11 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 		if (!raw) {
 			assin = new BufferedReader(new InputStreamReader(inputStream));
-			int d = Integer.parseInt(assin.readLine());
+			 Integer.parseInt(assin.readLine());
 			dim = Integer.parseInt(assin.readLine());
 		} else {
 			binin = new DataInputStream(new BufferedInputStream(inputStream));
-			int d = binin.readInt();
+			binin.readInt();
 			dim = binin.readInt();
 		}
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
@@ -142,12 +130,12 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 				if (!raw) {
 					assin = new BufferedReader(new InputStreamReader(
 							inputStream));
-					int d = Integer.parseInt(assin.readLine());
+					Integer.parseInt(assin.readLine());
 					dim = Integer.parseInt(assin.readLine());
 				} else {
 					binin = new DataInputStream(new BufferedInputStream(
 							inputStream));
-					int d = binin.readInt();
+					binin.readInt();
 					dim = binin.readInt();
 
 				}

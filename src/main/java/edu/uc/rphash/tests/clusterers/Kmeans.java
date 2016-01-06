@@ -1,4 +1,4 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.tests.clusterers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,8 +8,9 @@ import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.projections.DBFriendlyProjection;
-import edu.uc.rphash.projections.GaussianProjection;
 import edu.uc.rphash.projections.Projector;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 public class Kmeans  implements Clusterer{
 
@@ -96,7 +97,7 @@ public class Kmeans  implements Clusterer{
 		for(int clusterid = 0 ; clusterid< k;clusterid++)
 		{
 			for(Integer member: clusters.get(clusterid)){
-				int nearest = TestUtil.findNearestDistance(data.get(member), means);
+				int nearest = VectorUtil.findNearestDistance(data.get(member), means);
 				newClusters.get(nearest).add(member);
 				if(nearest!=clusterid)swaps++;
 			}		
@@ -160,7 +161,7 @@ public class Kmeans  implements Clusterer{
 	public static void main(String[] args){
 		GenerateData gen = new GenerateData(8,100,100);
 		Kmeans kk = new Kmeans(5,gen.data(),24);
-		TestUtil.prettyPrint(kk.getCentroids());
+		VectorUtil.prettyPrint(kk.getCentroids());
 	}
 
 

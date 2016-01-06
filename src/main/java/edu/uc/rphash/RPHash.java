@@ -19,12 +19,12 @@ import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PStableDistribution;
 import edu.uc.rphash.decoders.Spherical;
-import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.StreamingKmeans;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.tests.kmeanspp.DoublePoint;
 import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
+import edu.uc.rphash.util.VectorUtil;
 
 public class RPHash {
 
@@ -65,9 +65,9 @@ public class RPHash {
 		boolean raw = false;
 
 		if (args.length == 3) {
-			data = TestUtil.readFile(filename, raw);
+			data = VectorUtil.readFile(filename, raw);
 			RPHashSimple clusterer = new RPHashSimple(data, k);
-			TestUtil.writeFile(new File(outputFile + "."
+			VectorUtil.writeFile(new File(outputFile + "."
 					+ clusterer.getClass().getName()),
 					clusterer.getCentroids(), raw);
 		}
@@ -89,7 +89,7 @@ public class RPHash {
 		}
 
 		// run remaining, read file into ram
-		data = TestUtil.readFile(filename, raw);
+		data = VectorUtil.readFile(filename, raw);
 		runner(runs, outputFile, raw);
 
 	}
@@ -105,7 +105,7 @@ public class RPHash {
 			long startTime = System.nanoTime();
 			clu.getCentroids();
 			System.out.println((System.nanoTime() - startTime) / 1000000000f);
-			TestUtil.writeFile(new File(outputFile + "."
+			VectorUtil.writeFile(new File(outputFile + "."
 					+ ClusterHashName[ClusterHashName.length - 1]),
 					clu.getCentroids(), raw);
 		}
@@ -123,7 +123,7 @@ public class RPHash {
 	 *         streamduration vectors
 	 * @throws IOException
 	 */
-	private static long computeAverageReadTime(Integer streamDuration,
+	public static long computeAverageReadTime(Integer streamDuration,
 			String f, int testsize, boolean raw) throws IOException {
 		StreamObject streamer = new StreamObject(f, 0, raw);
 		int i = 0;
@@ -190,7 +190,7 @@ public class RPHash {
 						System.out.println(time / 1000000000f + "\t" + wcsse
 								+ "\t" + usedkB);
 
-						TestUtil.writeFile(new File(outputFile + "_round" + i
+						VectorUtil.writeFile(new File(outputFile + "_round" + i
 								+ "."
 								+ ClusterHashName[ClusterHashName.length - 1]),
 								cents, raw);

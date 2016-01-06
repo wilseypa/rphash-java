@@ -1,11 +1,8 @@
 package edu.uc.rphash.decoders;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.util.VectorUtil;
 
 public class PStableDistribution implements Decoder {
 
@@ -34,7 +31,6 @@ public class PStableDistribution implements Decoder {
 	}
 
 	public PStableDistribution(float f) {
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -96,9 +92,9 @@ public class PStableDistribution implements Decoder {
 							* ((float) i / 1000f));
 				}
 
-				distavg+=TestUtil.distance(p1,p2);
-				long[] hp1 = sp.decode(TestUtil.normalize(p1));
-				long[] hp2 = sp.decode(TestUtil.normalize(p2));
+				distavg+=VectorUtil.distance(p1,p2);
+				long[] hp1 = sp.decode(VectorUtil.normalize(p1));
+				long[] hp2 = sp.decode(VectorUtil.normalize(p2));
 				boolean test = false;
 				for(int k = 0; k< hp1.length;k++)
 				{
@@ -115,7 +111,12 @@ public class PStableDistribution implements Decoder {
 
 	@Override
 	public void setVariance(Float parameterObject) {
-		// TODO Auto-generated method stub
+
 		
+	}
+	
+	@Override
+	public boolean selfScaling() {
+		return false;
 	}
 }

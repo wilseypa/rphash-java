@@ -2,7 +2,7 @@ package edu.uc.rphash.projections;
 
 import java.util.Random;
 
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.util.VectorUtil;
 
 /**Work In Progress to implement the Fat Johnson Lindenstrauss transform
  * under the Walsh-Hadamard vector matrix transform
@@ -333,10 +333,10 @@ void randu(float []data, int m, int n) {
 
 		
 		
-		TestUtil.printDistanceMatrix(data, d);
+		VectorUtil.printDistanceMatrix(data, d);
 		FJLTProjection f = new FJLTProjection(n, t, d);
 		float[] result = f.FJLT(data);
-		TestUtil.printDistanceMatrix(result, t);
+		VectorUtil.printDistanceMatrix(result, t);
 		//make some distance matrices
 
 		

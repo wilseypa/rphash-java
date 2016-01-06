@@ -1,6 +1,5 @@
 package edu.uc.rphash;
 
-import java.util.HashSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import edu.uc.rphash.Readers.RPVector;

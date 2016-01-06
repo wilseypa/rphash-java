@@ -1,12 +1,8 @@
 package edu.uc.rphash.projections;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
-import edu.uc.rphash.tests.TestUtil;
 
 public class DBFriendlyProjection implements Projector {
 	int RAND_MAX = 2147483647;

@@ -1,4 +1,4 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.tests.generators;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -15,22 +15,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import edu.uc.rphash.Clusterer;
-
 public class GenerateData implements ClusterGenerator {
 	final RandomDistributionFnc genfnc;
 	int numClusters;
 	int numVectorsPerCluster;
 	int dimension;
 	Random r;
-	List<float[]> data;
+	public List<float[]> data;
 	List<float[]> medoids;
 	List<float[]> variances;
 	List<Integer> reps;
 	float scaler;
 	boolean shuffle;
 	float sparseness;
-	private boolean noised = true;
 
 	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension) {
 		r = new Random();
@@ -518,6 +515,7 @@ public class GenerateData implements ClusterGenerator {
 		
 		GenerateData gen = new GenerateData(k, n/k , d, var, shuffle,
 				sparseness,outputFile,lblFile,raw);
+		System.out.println(gen);
 
 
 		

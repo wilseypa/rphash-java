@@ -2,7 +2,7 @@ package edu.uc.rphash.decoders;
 
 import java.util.Random;
 
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.util.VectorUtil;
 
 
 public class Dn implements Decoder {
@@ -112,8 +112,8 @@ public class Dn implements Decoder {
 	public static void main(String[] args) {
 		Random r = new Random();
 		int d = 64;
-		int K = 6;
-		int L = 2;
+//		int K = 6;
+//		int L = 2;
 		Dn sp = new Dn(64);
 		for (int i = 0; i < 100; i++) {
 			int ct = 0;
@@ -127,9 +127,9 @@ public class Dn implements Decoder {
 							* ((float) i / 1000f));
 				}
 
-				distavg+=TestUtil.distance(p1,p2);
-				long[] hp1 = sp.decode(TestUtil.normalize(p1));
-				long[] hp2 = sp.decode(TestUtil.normalize(p2));
+				distavg+=VectorUtil.distance(p1,p2);
+				long[] hp1 = sp.decode(VectorUtil.normalize(p1));
+				long[] hp2 = sp.decode(VectorUtil.normalize(p2));
 				boolean test = false;
 				for(int k = 0; k< hp1.length;k++)
 				{
@@ -149,6 +149,13 @@ public class Dn implements Decoder {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public boolean selfScaling() {
+		return false;
+	}
+	
+	
 	
 
 }
