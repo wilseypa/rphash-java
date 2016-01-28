@@ -1,6 +1,7 @@
 package edu.uc.rphash;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -10,6 +11,7 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
+import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
@@ -39,7 +41,7 @@ public class RPHashSimple implements Clusterer {
 		long hash;
 		int k = (int) (so.getk()*Math.log(so.getk()));
 
-		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
+		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
 		// add to frequent itemset the hashed Decoded randomly projected vector
 
 		while (vecs.hasNext()) {
@@ -48,7 +50,8 @@ public class RPHashSimple implements Clusterer {
 			is.add(hash);
 			//vec.id.add(hash);
 		}
-		so.setPreviousTopID(is.getTop());		
+		so.setPreviousTopID(is.getTop());	
+//		System.out.println(is.getTop());
 //		for(long l: is.getCounts())System.out.print(l+", ");
 		return so;
 	}
@@ -63,34 +66,39 @@ public class RPHashSimple implements Clusterer {
 		if (!vecs.hasNext())
 			return so;
 		float[] vec = vecs.next();
-		int blurValue = so.getNumBlur();
 		
 		HashAlgorithm hal = new MurmurHash(so.getHashmod());
 		Decoder dec = so.getDecoderType();
 		
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
-		List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),1, new Random(), dec.getErrorRadius()/dec.getDimensionality());
+		List<float[]> noise = LSH.genNoiseTable(so.getdim(),2, new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
 		LSH lshfunc = new LSH(dec, p, hal,noise);
 		long hash[];
 		
 		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
-		for (long id : so.getPreviousTopID())
+		for (long id : so.getPreviousTopID()){
 			centroids.add(new Centroid(so.getdim(), id));
-
-		while (vecs.hasNext()) {
-			hash = lshfunc.lshHashRadiusNo2Hash(vec,blurValue);
+		}
+		int s = 0;
+		while (vecs.hasNext()) {	
+			hash = lshfunc.lshHashRadius(vec,noise);
 			for (Centroid cent : centroids){
+				int b = 0;
 				for(long h:hash){
+					
 					if(cent.ids.contains(h)){
 						cent.updateVec(vec);
+						if(b!=0)s++;
 						break;
 					}
+					b++;
 				}
 			}
 			vec = vecs.next();
 		}
-
+		System.out.println(s);
+		
 		
 		for (Centroid cent : centroids) so.addCentroid(cent.centroid());
 		

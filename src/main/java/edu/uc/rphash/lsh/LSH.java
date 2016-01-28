@@ -147,6 +147,20 @@ public class LSH {
 		return lshMinHashRadius(r, radius, times);
 	}
 
+	public long[] lshHashRadius(float[] vec,List<float[]> noise) {
+		long[] ret = new long[noise.size()+1];
+		ret[0] = lshHash(vec);
+		float[] veccopy = new float[vec.length];
+
+		for(int i = 0; i< noise.size();i++)
+		{
+			System.arraycopy(vec, 0, veccopy, 0, vec.length);
+			for(int j = 0;j<vec.length;j++)veccopy[j]+=noise.get(i)[j];
+			ret[1+i] = lshHash(veccopy);
+		}
+		return ret;
+	}
+
 	// Query adaptive (c,r)-NN similar to query adaptive lsh ipdps-
 	// TODO finish above
 	// public long[] lshHashRadius(float[] r,float radius,int times){
