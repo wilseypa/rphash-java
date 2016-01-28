@@ -26,10 +26,10 @@ public class VectorLevelConcurrency implements Runnable {
 	private void computeSequential(float[] vec) {
 
 
-		if(!lshfuncs[0].lshDecoder.selfScaling()){
-			this.vartracker.updateVarianceSampleVec(vec);
-			vec = this.vartracker.scaleVector(vec);
-		}
+//		if(!lshfuncs[0].lshDecoder.selfScaling()){
+//			this.vartracker.updateVarianceSampleVec(vec);
+//			vec = this.vartracker.scaleVector(vec);
+//		}
 
 		Centroid c = new Centroid(vec);
 		for (LSH lshfunc : lshfuncs) {

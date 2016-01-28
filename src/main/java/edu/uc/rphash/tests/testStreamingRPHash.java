@@ -62,8 +62,8 @@ public class testStreamingRPHash {
 	}
 
 	public static void generateAndStream() {
-		int k = 30;
-		int d = 10000;
+		int k = 10;
+		int d = 1000;
 		float var = 1f;
 
 		Runtime rt = Runtime.getRuntime();
@@ -142,26 +142,33 @@ public class testStreamingRPHash {
 		}
 	}
 
-	public static void streamingPushtest(){
-			int k = 10;
-			int d = 5000;
-			float var = 3f;
+	public static void streamingPushtest() {
+		int k = 10;
+		int d = 1000;
+		float var = .5f;
 
-			GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
+		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
 
+		RPHashStreamingAK rphit = new RPHashStreamingAK(gen1);
 
-			RPHashStreamingAK rphit = new RPHashStreamingAK(gen1);
-
-			for(int i = 0;i<10000;i++){
-				long centroidCount = rphit.addVectorOnlineStep(gen1.generateNext());
-				if(centroidCount!=-1)System.out.println(centroidCount);
+		ArrayList<Integer> cts = new ArrayList<Integer>();
+		for (int i = 0; i < 10000; i++) {
+			long centroidCount = rphit.addVectorOnlineStep(gen1.generateNext());
+			if (centroidCount>1 ) {
+				cts.add((int) centroidCount);
+//				List<Float> f = rphit.getTopIdSizes();
+//				for (float ff : f)
+//					System.out.print(ff/(float)i + ",");
+//				System.out.print("]\n[");
 			}
+		}
+		System.out.println(cts.toString());
 	}
 
 	public static void main(String[] args) throws Exception {
 //		readFileData(args);
-		generateAndStream();
-//		streamingPushtest();
+//		generateAndStream();
+		streamingPushtest();
 	}
 
 }

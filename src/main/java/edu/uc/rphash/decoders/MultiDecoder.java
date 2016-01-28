@@ -67,7 +67,7 @@ public class MultiDecoder implements Decoder {
 	}
 	@Override
 	public boolean selfScaling() {
-		return false;
+		return innerDec.selfScaling();
 	}
 
 }

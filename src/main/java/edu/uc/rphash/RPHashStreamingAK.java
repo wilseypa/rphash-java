@@ -9,6 +9,7 @@ import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.frequentItemSet.KHHCentroidCounterPush;
+import edu.uc.rphash.knee.LpointKnee;
 import edu.uc.rphash.knee.SimpleKnee;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
@@ -42,13 +43,22 @@ public class RPHashStreamingAK implements StreamClusterer {
 		}
 		
 		
-		Centroid c = new Centroid(this.vartracker.scaleVector(vec));
+		Centroid c = new Centroid(vec);
 		int ret = -1;
 		
 		for (LSH lshfunc : lshfuncs) {
-			long hash = lshfunc.lshHash(c.centroid());
-			is.addLong(hash,1);
-			c.addID(hash);
+			if (so.getNumBlur() != 1) {
+				long[] hash = lshfunc
+						.lshHashRadiusNo2Hash(vec, so.getNumBlur());
+				for (long h : hash) {
+					c.addID(h);
+					is.addLong(h, 1);
+				}
+			} else {
+				long hash = lshfunc.lshHash(vec);
+				c.addID(hash);
+				is.addLong(hash, 1);
+			}
 		}
 		ret = is.addAndUpdate(c);
 
@@ -63,7 +73,7 @@ public class RPHashStreamingAK implements StreamClusterer {
 		// initialize our counter
 		float decayrate = so.getDecayRate();// 1f;// bottom number is window
 											// size
-		is = new KHHCentroidCounterPush(decayrate,new SimpleKnee());
+		is = new KHHCentroidCounterPush(decayrate,new LpointKnee());
 		// create LSH Device
 		lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();

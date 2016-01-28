@@ -556,4 +556,26 @@ public class VectorUtil {
 		return x;
 	}
 
+	public static float sum(float[] x) {
+		double ret = 0.0;
+		for(float xx : x) ret+=xx;
+		return (float)ret;
+	}
+	
+	public static float[] dot(float[] x, float[] y) {
+		if(x.length!=y.length) return null;
+		float[] ret = new float[x.length];
+		for(int i = 0;i<x.length;i++)ret[i] = x[i]*y[i];
+		return ret;
+	}
+	
+	public static float dotSum(float[] x, float[] y) {
+		if(x.length!=y.length) return 0.0f;
+		double ret = 0.0;
+		for(int i = 0;i<x.length;i++)ret+= x[i]*y[i];
+		return (float )ret;
+	}
+	
+	
+
 }
