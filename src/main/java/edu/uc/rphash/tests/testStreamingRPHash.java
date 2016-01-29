@@ -149,26 +149,26 @@ public class testStreamingRPHash {
 
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
 
-		RPHashStreamingAK rphit = new RPHashStreamingAK(gen1);
+		RPHashStream rphit = new RPHashStream(k,gen1);
 
 		ArrayList<Integer> cts = new ArrayList<Integer>();
 		for (int i = 0; i < 10000; i++) {
 			long centroidCount = rphit.addVectorOnlineStep(gen1.generateNext());
-			if (centroidCount>1 ) {
-				cts.add((int) centroidCount);
+//			if (centroidCount>1 ) {
+//			cts.add((int) centroidCount);
 //				List<Float> f = rphit.getTopIdSizes();
 //				for (float ff : f)
 //					System.out.print(ff/(float)i + ",");
 //				System.out.print("]\n[");
-			}
+//			}
 		}
-		System.out.println(cts.toString());
+		//System.out.println(cts.toString());
 	}
 
 	public static void main(String[] args) throws Exception {
 //		readFileData(args);
-//		generateAndStream();
-		streamingPushtest();
+		generateAndStream();
+//		streamingPushtest();
 	}
 
 }

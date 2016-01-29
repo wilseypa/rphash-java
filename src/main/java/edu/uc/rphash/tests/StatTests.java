@@ -29,6 +29,17 @@ public class StatTests {
 		return (float)count/(float)data.size();
 	}
 	
+	public static float PR(List<float[]> estCentroids, List<Integer> labels,List<float[]> data){
+		int count = 0 ;
+
+		for(int i = 0; i< data.size();i++)
+		{
+			if(VectorUtil.findNearestDistance(data.get(i), estCentroids)==labels.get(i))count++;
+		}
+		System.out.println(data.size());
+		return (float)count/(float)data.size();
+	}
+	
 	
 	public static double WCSSE(List<float[]> estCentroids, List<float[]> data){
 		double count = 0.0 ;
