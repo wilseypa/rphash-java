@@ -23,6 +23,7 @@ public class SimpleArrayReader implements RPHashObject {
 	float decayrate;
 	List<float[]> centroids;
 	List<Long> topIDs;
+	boolean parallel = true;
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -268,6 +269,17 @@ public class SimpleArrayReader implements RPHashObject {
 	@Override
 	public float getDecayRate() {
 		return this.decayrate;
+	}
+
+	@Override
+	public void setParallel(boolean parseBoolean) {
+		this.parallel = parseBoolean;
+		
+	}
+
+	@Override
+	public boolean getParallel() {
+		return parallel;
 	}
 	
 

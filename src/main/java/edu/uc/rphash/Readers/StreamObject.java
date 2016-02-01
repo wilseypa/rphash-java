@@ -35,6 +35,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	int multiDim;
 	Decoder dec;
 	float decayrate=0;
+	boolean parallel = true;
 
 	ExecutorService executor;
 	InputStream inputStream;
@@ -294,5 +295,15 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	
 	public float getDecayRate(){
 		return this.decayrate;
+	}
+
+	@Override
+	public void setParallel(boolean parseBoolean) {
+		this.parallel = parseBoolean;
+	}
+
+	@Override
+	public boolean getParallel() {
+		return parallel;
 	}
 }

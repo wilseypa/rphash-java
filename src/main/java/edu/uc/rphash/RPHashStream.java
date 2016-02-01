@@ -30,7 +30,7 @@ public class RPHashStream implements StreamClusterer {
 	private StatTests vartracker;
 	private List<float[]> centroids = null;
 	private RPHashObject so;
-	public boolean parallel = true;
+//	public boolean parallel = true;
 	ExecutorService executor;
 	private final int processors;
 
@@ -41,7 +41,7 @@ public class RPHashStream implements StreamClusterer {
 	@Override
 	public synchronized long addVectorOnlineStep(final float[] vec) {
 
-		if (parallel) {
+		if (so.getParallel()) {
 			VectorLevelConcurrency r = new VectorLevelConcurrency(vec,
 					lshfuncs, vartracker, is,so);
 			executor.execute(r);
@@ -95,7 +95,7 @@ public class RPHashStream implements StreamClusterer {
 
 	public RPHashStream(int k, ClusterGenerator c) {
 		so = new SimpleArrayReader(c, k);
-		if (parallel)
+		if (so.getParallel())
 			this.processors = Runtime.getRuntime().availableProcessors();
 		else
 			this.processors = 1;
@@ -106,7 +106,18 @@ public class RPHashStream implements StreamClusterer {
 
 	public RPHashStream(List<float[]> data, int k) {
 		so = new SimpleArrayReader(data, k);
-		if (parallel)
+		if (so.getParallel())
+			this.processors = Runtime.getRuntime().availableProcessors();
+		else
+			this.processors = 1;
+		executor = Executors.newFixedThreadPool(this.processors);
+		init();
+	}
+	
+	public RPHashStream(List<float[]> data, int k, boolean parallel) {
+		so = new SimpleArrayReader(data, k);
+		so.setParallel(parallel);
+		if (so.getParallel())
 			this.processors = Runtime.getRuntime().availableProcessors();
 		else
 			this.processors = 1;
@@ -116,7 +127,7 @@ public class RPHashStream implements StreamClusterer {
 
 	public RPHashStream(RPHashObject so) {
 		this.so = so;
-		if (parallel)
+		if (so.getParallel())
 			this.processors = Runtime.getRuntime().availableProcessors();
 		else
 			this.processors = 1;
@@ -126,7 +137,7 @@ public class RPHashStream implements StreamClusterer {
 
 	public RPHashStream(int k, GenerateStreamData c, int processors) {
 		so = new SimpleArrayReader(c, k);
-		if (parallel)
+		if (so.getParallel())
 			this.processors = processors;
 		else
 			this.processors = 1;
@@ -145,7 +156,7 @@ public class RPHashStream implements StreamClusterer {
 	}
 
 	public List<float[]> getCentroidsOfflineStep() {
-		if (parallel) {
+		if (so.getParallel()) {
 			executor.shutdown();
 			try {
 				executor.awaitTermination(10, TimeUnit.SECONDS);
@@ -172,7 +183,7 @@ public class RPHashStream implements StreamClusterer {
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		Iterator<float[]> vecs = so.getVectorIterator();
 		while (vecs.hasNext()) {
-			if (parallel) {
+			if (so.getParallel()) {
 				float[] vec = vecs.next();
 				executor.execute(new VectorLevelConcurrency(vec, lshfuncs,
 						vartracker, is,so));

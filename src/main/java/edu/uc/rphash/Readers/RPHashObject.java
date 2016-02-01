@@ -43,6 +43,8 @@ public interface RPHashObject {
 	void setVariance(List<float[]> data);
 	void setDecayRate(float parseFloat);
 	float getDecayRate();
+	void setParallel(boolean parseBoolean);
+	boolean getParallel();
 
 
 }

@@ -28,9 +28,8 @@ public class testStreamingRPHash {
 		Runtime rt = Runtime.getRuntime();
 		List<float[]> data = VectorUtil.readFile(filename, false);
 
-		RPHashStream rphit = new RPHashStream(data, k);
-		if (processors == 1)
-			rphit.parallel = false;
+		RPHashStream rphit = new RPHashStream(data, k,processors!=1);
+
 		// System.out.printf("Running Streaming RPHash on %d processors, d=%d,k=%d,n=%d\n",rphit.getProcessors(),d,k,interval);
 		// StreamClusterer rphit = new StreamingKmeans(data, k);
 		// System.out.printf("Running Streaming KMeans on %d processors, d=%d,k=%d\n",1,data.size(),k);
@@ -75,8 +74,7 @@ public class testStreamingRPHash {
 		int interval = 10000;
 
 		RPHashStream rphit = new RPHashStream(k, gen1, processors);
-		if (processors == 1)
-			rphit.parallel = false;
+
 		StreamClusterer rphit2 = new StreamingKmeans(k, gen1);
 
 		Random noiseDataRandomSrc = new Random();

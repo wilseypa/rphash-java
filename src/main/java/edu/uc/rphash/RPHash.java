@@ -32,7 +32,7 @@ public class RPHash {
 			"multiProj", "consensus", "redux", "kmeans", "pkmeans",
 			"kmeansplusplus", "streamingkmeans" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
-			"NumBlur", "randomseed", "hashmod", "decodertype",
+			"NumBlur", "randomseed", "hashmod", "decodertype","parallel",
 			"streamduration", "raw", "decayrate" };
 	static String[] decoders = { "dn", "e8", "multie8", "leech", "multileech",
 			"pstable", "sphere" };
@@ -245,6 +245,10 @@ public class RPHash {
 			o.setDecayRate(Float.parseFloat(taggedArgs.get("decayrate")));
 			so.setDecayRate(Float.parseFloat(taggedArgs.get("decayrate")));
 		}
+		if (taggedArgs.containsKey("parallel")) {
+			o.setParallel(Boolean.parseBoolean(taggedArgs.get("parallel")));
+			so.setParallel(Boolean.parseBoolean(taggedArgs.get("parallel")));
+		}
 		if (taggedArgs.containsKey("decodertype")) {
 			switch (taggedArgs.get("decodertype").toLowerCase()) {
 			case "dn": {
@@ -296,6 +300,7 @@ public class RPHash {
 			}
 			}
 		}
+		
 
 		while (i < untaggedArgs.size()) {
 			switch (untaggedArgs.get(i).toLowerCase()) {
