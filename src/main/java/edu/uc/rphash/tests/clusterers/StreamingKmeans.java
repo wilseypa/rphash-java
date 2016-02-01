@@ -45,7 +45,7 @@ import edu.uc.rphash.util.VectorUtil;
  */
 
 public class StreamingKmeans implements StreamClusterer {
-	public boolean parallel = true;
+	public boolean parallel = false;
 	public ExecutorService executor;
 	private RPHashObject so;
 	final int processors;

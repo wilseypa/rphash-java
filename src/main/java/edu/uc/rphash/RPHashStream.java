@@ -68,10 +68,11 @@ public class RPHashStream implements StreamClusterer {
 	}
 
 	public void init() {
+		System.out.println("init rphash machine");
 		Random r = new Random(so.getRandomSeed());
 		this.vartracker = new StatTests(.01f);
 		int projections = so.getNumProjections();
-		int k = (int) (so.getk() * Math.log(so.getk() / Math.log(2.0)));
+		int k = (int) (so.getk() * Math.log(so.getk()));
 		// initialize our counter
 		float decayrate = so.getDecayRate();// 1f;// bottom number is window
 											// size

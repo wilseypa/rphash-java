@@ -262,7 +262,7 @@ public class GenerateStreamData implements ClusterGenerator {
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
 
 		int k = 10;
-		int d = 1000;
+		int d = 500;
 		int n = 20000;
 		float var = 1f;
 		float sparseness = 1f;
@@ -285,9 +285,9 @@ public class GenerateStreamData implements ClusterGenerator {
 				outputFile.getAbsolutePath()+"\n");
 
 		
-		GenerateStreamData gen = new GenerateStreamData(k , d, var, 1012012013,true);
+		GenerateStreamData gen = new GenerateStreamData(k , d, var, 1012012013,raw);
 		
-		gen.writeToFile(outputFile,lblFile,10000);;
+		gen.writeToFile(outputFile,lblFile,30000);;
 	}
 
 	private void writeToFile(File datafile,File lblfile,int numofvecs) {

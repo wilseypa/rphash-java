@@ -86,8 +86,8 @@ public class RPHash {
 			System.out.println(taggedArgs.toString());
 			runStream(runs, outputFile,
 					Integer.parseInt(taggedArgs.get("streamduration")), k, raw);
+			return;
 		}
-
 		// run remaining, read file into ram
 		data = VectorUtil.readFile(filename, raw);
 		runner(runs, outputFile, raw);
@@ -173,7 +173,7 @@ public class RPHash {
 					vecsInThisRound.add(nxt);
 					((StreamClusterer) clu).addVectorOnlineStep(nxt);
 
-					if (i % streamDuration == 0) {
+					if (i % streamDuration == 0 || !streamer.hasNext()) {
 						List<float[]> cents = ((StreamClusterer) clu)
 								.getCentroidsOfflineStep();
 
@@ -195,7 +195,6 @@ public class RPHash {
 								+ ClusterHashName[ClusterHashName.length - 1]),
 								cents, raw);
 						startTime = System.nanoTime() + avgtimeToRead;
-
 					}
 				}
 				streamer.reset();
