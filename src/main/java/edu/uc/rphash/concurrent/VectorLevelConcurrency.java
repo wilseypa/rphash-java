@@ -30,24 +30,27 @@ public class VectorLevelConcurrency implements Runnable {
 //			this.vartracker.updateVarianceSampleVec(vec);
 //			vec = this.vartracker.scaleVector(vec);
 //		}
-
-		Centroid c = new Centroid(vec);
+		int i =0;
+		
 		for (LSH lshfunc : lshfuncs) {
 			if (so.getNumBlur() != 1) {
 				long[] hash = lshfunc
 						.lshHashRadiusNo2Hash(vec, so.getNumBlur());
 				for (long h : hash) {
+					Centroid c = new Centroid(vec);
 					c.addID(h);
 					is.addLong(h, 1);
+					is.add(c);
 				}
-				System.out.println("hello");
 			} else {
+				Centroid c = new Centroid(vec);
 				long hash = lshfunc.lshHash(vec);
 				c.addID(hash);
 				is.addLong(hash, 1);
+				is.add(c);
 			}
 		}
-		is.add(c);
+//		is.add(c);
 	}
 
 	@Override

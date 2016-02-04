@@ -85,6 +85,12 @@ public class LSH {
 				tmp[k] = (float) rand.nextGaussian() * (radius);
 			noise.add(tmp);
 		}
+		
+		//add non-noised vector
+		float[] tmp = new float[len];
+		for (int k = 0; k < len; k++)tmp[k] = (float)1f;
+		noise.add(tmp);
+		
 		return noise;
 	}
 
@@ -107,9 +113,10 @@ public class LSH {
 		float[] noisedProjectedVector = new float[pr_r.length];
 		float[] noiseVec;
 
-		for (int j = 1; j < times; j++) {
+		
+		for (int j = 0; j < times; j++) {
 			System.arraycopy(pr_r, 0, noisedProjectedVector, 0, pr_r.length);
-			noiseVec = noise.get(j - 1);
+			noiseVec = noise.get(j);
 			for (int k = 0; k < pr_r.length; k++) {
 				noisedProjectedVector[k] = noisedProjectedVector[k]
 						+ noiseVec[k];
@@ -118,7 +125,7 @@ public class LSH {
 			System.arraycopy(nonoise, 0, returnHashes, j * nonoise.length,
 					nonoise.length);
 		}
-		// }
+
 		return returnHashes;
 	}
 
@@ -129,7 +136,7 @@ public class LSH {
 		long minret = ret;
 		float mindist = lshDecoder.getDistance();
 		float[] rtmp = new float[pr_r.length];
-		for (int j = 1; j < times; j++) {
+		for (int j = 0; j < times; j++) {
 			System.arraycopy(pr_r, 0, rtmp, 0, pr_r.length);
 			for (int k = 0; k < pr_r.length; k++)
 				rtmp[k] = rtmp[k] + (float) rand.nextGaussian() * (radius);
@@ -148,15 +155,16 @@ public class LSH {
 	}
 
 	public long[] lshHashRadius(float[] vec,List<float[]> noise) {
-		long[] ret = new long[noise.size()+1];
-		ret[0] = lshHash(vec);
-		float[] veccopy = new float[vec.length];
-
+		long[] ret = new long[noise.size()];
+		
+		float[] pr_r = projectionMatrix.project(vec);
+		float[] veccopy = new float[pr_r.length];
+		
 		for(int i = 0; i< noise.size();i++)
 		{
-			System.arraycopy(vec, 0, veccopy, 0, vec.length);
-			for(int j = 0;j<vec.length;j++)veccopy[j]+=noise.get(i)[j];
-			ret[1+i] = lshHash(veccopy);
+			System.arraycopy(pr_r, 0, veccopy, 0, pr_r.length);
+			for(int j = 0;j<pr_r.length;j++)veccopy[j]+=noise.get(i)[j];
+			ret[i] = lshHash(veccopy);
 		}
 		return ret;
 	}

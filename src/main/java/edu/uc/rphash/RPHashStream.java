@@ -30,7 +30,6 @@ public class RPHashStream implements StreamClusterer {
 	private StatTests vartracker;
 	private List<float[]> centroids = null;
 	private RPHashObject so;
-//	public boolean parallel = true;
 	ExecutorService executor;
 	private final int processors;
 
@@ -100,7 +99,6 @@ public class RPHashStream implements StreamClusterer {
 		else
 			this.processors = 1;
 		executor = Executors.newFixedThreadPool(this.processors);
-
 		init();
 	}
 
@@ -173,9 +171,8 @@ public class RPHashStream implements StreamClusterer {
 		for (int i = 0; i < cents.size(); i++) {
 			centroids.add(cents.get(i).centroid());
 		}
-
 		centroids = new Kmeans(so.getk(), centroids, counts).getCentroids();
-
+		
 		return centroids;
 	}
 

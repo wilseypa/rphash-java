@@ -217,10 +217,10 @@ public class KHHCentroidCounter {
 	List<Float> counts = null;
 
 	public List<Centroid> getTop() {
-		if(topcent!=null)return topcent;
+		if(topcent!=null)
+			return topcent;
 		this.topcent = new ArrayList<>();
 		this.counts = new ArrayList<>();
-		
 		
 		synchronized (priorityQueue) {
 			while (!priorityQueue.isEmpty()) {
@@ -233,10 +233,7 @@ public class KHHCentroidCounter {
 	}
 
 	public List<Float> getCounts() {
-//		if (this.counts != null)
-//			return counts;
 		getTop();
 		return counts;
 	}
 }
-

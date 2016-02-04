@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
 
 /** Spherical LSH Decoder based on SLSH (lgpl)
@@ -71,28 +70,12 @@ public class Spherical implements Decoder {
 
 	@Override
 	public long[] decode(float[] f) {
-//		byte[] lg = new byte[this.l * 8];
-		//doesnt seem to be needed since we are variance scaling in the LSH function
-//		long[] dec = Hash(TestUtil.normalize(f));
-		
-		long[] dec = Hash(f);
-//		int ct = 0;
-//		for (long d:dec) {
-//			lg[ct++] = (byte)(d >>> 56);
-//			lg[ct++] = (byte)(d >>> 48);
-//			lg[ct++] = (byte)(d >>> 40);
-//			lg[ct++] = (byte)(d >>> 32);
-//			lg[ct++] = (byte)(d >>> 24);
-//			lg[ct++] = (byte)(d >>> 16);
-//			lg[ct++] = (byte)(d >>> 8 );
-//			lg[ct++] = (byte)(d       );
-//		}
-		return dec;
+		long dec = Hash(f);
+		return new long[]{dec};
 	}
 
 	@Override
 	public float getErrorRadius() {
-
 		return d;
 	}
 
@@ -189,21 +172,23 @@ public class Spherical implements Decoder {
 	// is required to take the normalization into account.
 	//
 	// The complexity of this function is O(nL)
-	long[] Hash(float[] p) {
+	long Hash(float[] p) {
 		int ri = 0;
-		long h;
-		//if(variance!=1f)p = scale(p,variance);
-		long[] g = new long[this.l];
+		long h = 0;
+		float normp = norm(p);
+		p = scale(p, 1.0f / normp);
 		for (int i = 0; i < this.l; i++) {
-			g[i] = 0;
 			for (int j = 0; j < this.k; j++) {
 				List<float[]> vs = this.vAll.get(ri);
-				h = this.argmaxi(p, vs);
-				g[i] |= (h << (this.hbits * j));
+				h = h | this.argmaxi(p, vs);
+				h <<= this.hbits;
 				ri++;
 			}
 		}
-		return g;
+		
+		
+		return h+(int)(normp);
+		
 	}
 	
 
@@ -212,7 +197,7 @@ public class Spherical implements Decoder {
 		Random r = new Random();
 		int d = 64;
 		int K = 9; 
-		int L = 4;
+		int L = 6;
 		Spherical sp = new Spherical(d,K,L);
 		for(int i = 0; i<100;i++){
 			int ct = 0;
@@ -227,9 +212,8 @@ public class Spherical implements Decoder {
 				}
 				
 				distavg+=VectorUtil.distance(p1,p2);
-				MurmurHash mh = new MurmurHash(Long.MAX_VALUE);
-				long[] hp1 = sp.Hash(VectorUtil.normalize(p1));
-				long[] hp2 = sp.Hash(VectorUtil.normalize(p2));
+				long hp1 = sp.Hash((p1));
+				long hp2 = sp.Hash((p2));
 //				boolean test = false;
 //				for(int k = 0; k< hp1.length;k++)
 //				{
@@ -239,7 +223,7 @@ public class Spherical implements Decoder {
 //					}
 //				}
 //				if(test)ct++;
-				if(mh.hash(hp1)==mh.hash(hp2))ct++;
+				if(hp1==hp2)ct++;
 			}
 			System.out.println(distavg/10000f+"\t"+(float)ct/10000f);
 		}
