@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.Spherical;
 
 public interface RPHashObject {

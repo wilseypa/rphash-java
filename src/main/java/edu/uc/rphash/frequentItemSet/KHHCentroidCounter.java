@@ -39,13 +39,14 @@ public class KHHCentroidCounter {
 		public int compare(Centroid n1, Centroid n2) {
 			float cn1 = countlist.get(n1.id);// count(n1.id);
 			float cn2 = countlist.get(n2.id);// count(n2.id);
-			int counts = (int)(cn1-cn2);
+			int counts = (int)(cn2-cn1);
 			if (counts!=0)
 				return counts;
-			if(n1.id!=n2.id)
+			if(n1.id!=n2.id){
 				return 1;
-			else
+			}else{
 				return 0;
+			}
 			}
 	};
 	

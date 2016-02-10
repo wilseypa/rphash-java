@@ -1,6 +1,7 @@
 package edu.uc.rphash.tests.clusterers;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -12,166 +13,186 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
-public class Kmeans  implements Clusterer{
-
-	
-	
-
+public class Kmeans implements Clusterer {
 	int k;
 	int n;
 	List<float[]> data;
 	int projdim;
-	
-	List<float[]> means; 
+
+	List<float[]> means;
 	List<List<Integer>> clusters;
 	List<Float> weights;
-	public Kmeans(int k, List<float[]> data)
-	{
+
+	public Kmeans(int k, List<float[]> data) {
 		this.k = k;
 		this.data = data;
 		this.projdim = 0;
 		this.clusters = null;
 		this.weights = new ArrayList<Float>(data.size());
-		for(int i = 0;i<data.size();i++)weights.add(1f);
-	} 
-	
-	public Kmeans(int k, List<float[]> data,List<Float> weights)
-	{
+		for (int i = 0; i < data.size(); i++)
+			weights.add(1f);
+		means = null;
+	}
+
+	public Kmeans(int k, List<float[]> data, List<Float> weights) {
 		this.k = k;
 		this.data = data;
 		this.projdim = 0;
 		this.clusters = null;
 		this.weights = weights;
-	} 
+		means = null;
+	}
 
-	
-	
-	public Kmeans(int k, List<float[]> data,int projdim)
-	{
+	public Kmeans(int k, List<float[]> data, int projdim) {
 		this.k = k;
 		this.data = data;
 		this.projdim = projdim;
 		this.clusters = null;
 		this.weights = new ArrayList<Float>(data.size());
-		for(int i = 0;i<data.size();i++)weights.add(1f);
-	} 
-	
-	
-	public float[] computerCentroid(List<Integer> vectors,List<float[]> data ){
+		for (int i = 0; i < data.size(); i++)
+			weights.add(1f);
+		means = null;
+	}
+
+	public float[] computerCentroid(List<Integer> vectors, List<float[]> data) {
 		int d = data.get(0).length;
 		float[] centroid = new float[d];
 
-		for(int i = 0 ; i<d;i++)
+		for (int i = 0; i < d; i++)
 			centroid[i] = 0.0f;
 
-		float w_total = 0L;
-		for(Integer v : vectors)
-		{
-			w_total+=weights.get(v);
+		float w_total = 0f;
+		for (Integer v : vectors) {
+			w_total += weights.get(v);
 		}
-		
-		for(Integer v : vectors)
-		{
+
+		for (Integer v : vectors) {
 			float[] vec = data.get(v);
-			float weight = (float)weights.get(v)/(float)w_total;
-			for(int i = 0 ; i<d;i++)
-				centroid[i] += (vec[i]*weight);	
-			
+			float weight = (float) weights.get(v) / (float) w_total;
+			for (int i = 0; i < d; i++)
+				centroid[i] += (vec[i] * weight);
 		}
-		
 		return centroid;
 	}
-	
-	void updateMeans(List<float[]> data )
-	{
-		for(int i = 0; i< k;i++)
-			means.set(i,computerCentroid(clusters.get(i),data));
+
+	ArrayList<Integer> weightTotals;
+
+	void updateMeans(List<float[]> data) {
+		weightTotals = new ArrayList<Integer>();
+		if (means == null) {
+			means = new ArrayList<float[]>();
+			for (int i = 0; i < k; i++)
+				means.add(computerCentroid(clusters.get(i), data));
+		}
+		for (int i = 0; i < k; i++)
+			means.set(i, computerCentroid(clusters.get(i), data));
 	}
-	
-	int assignClusters(List<float[]> data)
-	{
-		int swaps = 0 ;
+
+	int assignClusters(List<float[]> data) {
+		int swaps = 0;
 		List<List<Integer>> newClusters = new ArrayList<List<Integer>>();
-		for(int j=0;j<k;j++)newClusters.add(new ArrayList<Integer>());
-		
-		for(int clusterid = 0 ; clusterid< k;clusterid++)
-		{
-			for(Integer member: clusters.get(clusterid)){
-				int nearest = VectorUtil.findNearestDistance(data.get(member), means);
+		for (int j = 0; j < k; j++)
+			newClusters.add(new ArrayList<Integer>());
+
+		for (int clusterid = 0; clusterid < k; clusterid++) {
+
+			for (Integer member : clusters.get(clusterid)) {
+
+				int nearest = VectorUtil.findNearestDistance(data.get(member),
+						means);
 				newClusters.get(nearest).add(member);
-				if(nearest!=clusterid)swaps++;
-			}		
+				if (nearest != clusterid)
+					swaps++;
+			}
+
 		}
 		clusters = newClusters;
 		return swaps;
 	}
-	
-	public void run(){
-		//StatTests.varianceAll(data);
-		int maxiters = 10000;
+
+	private void run() {
+		int maxiters = 1000;
 		int swaps = 3;
-		List<float[]> fulldata = data;
-		data = new ArrayList<float[]>();
-		Projector p=null;
-		Random r  = new Random();
-		if(projdim!=0)
-			p =  new DBFriendlyProjection(fulldata.get(0).length,projdim, r.nextInt());
+		this.n = this.data.size();
+		ArrayList<float[]> workingdata = new ArrayList<float[]>();
+		// stuff for projected kmeans
+		Projector p = null;
+		Random r = new Random();
+		if (projdim != 0)
+			p = new DBFriendlyProjection(this.data.get(0).length, projdim,
+					r.nextInt());
+		for (float[] v : this.data) {
+			if (p != null) {
+				workingdata.add(p.project(v));
+			} else
+				workingdata.add(v);
+		}
 		
-		for(float[] v: fulldata){
-			if(p!=null){
-				data.add(p.project(v));
+		int maxout = 0;
+		//loop until there are no more nullsets
+		boolean nullset = false;
+		do {
+			this.clusters = new ArrayList<List<Integer>>(k);
+			// seed data with new clusters
+			ArrayList<Integer> shufflelist = new ArrayList<Integer>(data.size());
+			for (int i = 0; i < data.size(); i++)
+				shufflelist.add(i);
+			
+			for (int i = 0; i < k; i++) {
+				List<Integer> tmp = new LinkedList<Integer>();
+				tmp.add(shufflelist.remove(0));
+				
+				for (int j = 1; j < workingdata.size() / k  ; j++) {
+					int nxt = r.nextInt(shufflelist.size());
+					tmp.add(shufflelist.remove(nxt));
+				}
+				this.clusters.add(tmp);
 			}
-			else
-				data.add(v);
-		}
-		
-		this.n = data.size();
-		
-		//initialize the clusters to the n/k step first vectors
-		means = new ArrayList<float[]>(k);
-		for(int i = 0 ; i< k;i++)means.add(data.get(i*(n/k)));
-		
-		//initialize each cluster gets n/k of the dataset at first
-		clusters = new ArrayList<List<Integer>>(k);
-		for(int i = 0 ; i< k;i++)
-		{
-			List<Integer> tmp =  new ArrayList<Integer>(n/k);
-			int start = i*(n/k);
-			for(int j = 0 ;j<n/k;j++)tmp.add(j+start);
-			clusters.add(tmp);
-		}
-		while(swaps>2 && maxiters>0){
+
+	
+			cluster(maxiters, swaps, n, workingdata, clusters);
+			
+			nullset = false;
+			
+			for (List<Integer> cluster : clusters) {
+				nullset |= (cluster.size() == 0);
+			}
+			
+		} while (nullset && ++maxout<100);
+		if (maxout == 100)
+			System.err.println("Warning: MaxIterations Reached Outer");
+
+	}
+
+	public void cluster(int maxiters, int swaps, int n,
+			ArrayList<float[]> workingdata, List<List<Integer>> clusters) {
+		while (swaps > 0 && maxiters > 0) {
 			maxiters--;
-			updateMeans(data);
-			swaps = assignClusters(data);
+			updateMeans(workingdata);
+			swaps = assignClusters(workingdata);
 		}
-		if(maxiters == 0)System.err.println("Warning: MaxIterations Reached");
-		data = fulldata;
-		updateMeans(data);
-		
+		if (maxiters == 0)
+			System.err.println("Warning: MaxIterations Reached");
+		updateMeans(this.data);
 	}
 
 	@Override
-	public List<float[]> getCentroids()
-	{
-		if(means==null)run();
+	public List<float[]> getCentroids() {
+		if (means == null)
+			run();
 		return means;
 	}
-	
-	public static void main(String[] args){
-		GenerateData gen = new GenerateData(8,100,100);
-		Kmeans kk = new Kmeans(5,gen.data(),24);
+
+	public static void main(String[] args) {
+		GenerateData gen = new GenerateData(8, 100, 100);
+		Kmeans kk = new Kmeans(5, gen.data(), 24);
 		VectorUtil.prettyPrint(kk.getCentroids());
 	}
-
-
-
 
 	@Override
 	public RPHashObject getParam() {
 
-		return new SimpleArrayReader(data, k);
+		return new SimpleArrayReader(this.data, k);
 	}
-
 
 }

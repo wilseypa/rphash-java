@@ -10,7 +10,6 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.frequentItemSet.KHHCentroidCounterPush;
 import edu.uc.rphash.knee.LpointKnee;
-import edu.uc.rphash.knee.SimpleKnee;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;

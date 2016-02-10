@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Random;
 
 import edu.uc.rphash.RPHashStream;
-import edu.uc.rphash.RPHashStreamingAK;
 import edu.uc.rphash.StreamClusterer;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.tests.generators.GenerateStreamData;

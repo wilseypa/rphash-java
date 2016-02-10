@@ -167,13 +167,14 @@ public class RPHashStream implements StreamClusterer {
 		centroids = new ArrayList<float[]>();
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
-//		System.out.println(counts);
-		for (int i = 0; i < cents.size(); i++) {
+		//get rid of size one clusters that are there just because the were added to the list last
+		for (int i =  0; i < cents.size() && counts.get(i)>1; i++) {
 			centroids.add(cents.get(i).centroid());
 		}
+
+		Kmeans km = new Kmeans(so.getk(), centroids);
+		centroids = km.getCentroids();
 		
-		centroids = new Kmeans(so.getk(), centroids, counts).getCentroids();
-		//System.out.println(centroids.size());
 		return centroids;
 	}
 
