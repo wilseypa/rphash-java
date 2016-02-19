@@ -70,11 +70,11 @@ public class testStreamingRPHash {
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
 
 		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
-		int interval = 10000;
+		int interval = 100000;
 
-		RPHashStream rphit = new RPHashStream(k, gen1, processors);
+		RPHashStream srphash = new RPHashStream(k, gen1, processors);
 
-		StreamClusterer rphit2 = new StreamingKmeans(k, gen1);
+		StreamClusterer skmeans = new StreamingKmeans(k, gen1);
 
 		Random noiseDataRandomSrc = new Random();
 
@@ -82,12 +82,12 @@ public class testStreamingRPHash {
 		long timestart = System.nanoTime();
 		for (int i = 0; i < 2500000; i++) {
 
-			if (i % 2 == 0) {
-				float[] noi = new float[d];
-				for (int j = 0; j < d; j++)
-					noi[j] = (noiseDataRandomSrc.nextFloat()) * 2.0f - 1.0f;
-				vecsInThisRound.add(noi);
-			}
+//			if (i % 2 == 0) {
+//				float[] noi = new float[d];
+//				for (int j = 0; j < d; j++)
+//					noi[j] = (noiseDataRandomSrc.nextFloat()) * 2.0f - 1.0f;
+//				vecsInThisRound.add(noi);
+//			}
 
 			vecsInThisRound.add(gen1.generateNext());
 
@@ -95,11 +95,11 @@ public class testStreamingRPHash {
 
 				timestart = System.nanoTime();
 				for (float[] f : vecsInThisRound) {
-					rphit.addVectorOnlineStep(f);
+					srphash.addVectorOnlineStep(f);
 
 				}
 
-				List<float[]> cents = rphit.getCentroidsOfflineStep();
+				List<float[]> cents = srphash.getCentroidsOfflineStep();
 				long time = System.nanoTime() - timestart;
 
 				rt.gc();
@@ -117,10 +117,10 @@ public class testStreamingRPHash {
 
 				timestart = System.nanoTime();
 				for (float[] f : vecsInThisRound) {
-					rphit2.addVectorOnlineStep(f);
+					skmeans.addVectorOnlineStep(f);
 				}
 
-				cents = rphit2.getCentroidsOfflineStep();
+				cents = skmeans.getCentroidsOfflineStep();
 				time = System.nanoTime() - timestart;
 
 				rt.gc();
@@ -142,7 +142,7 @@ public class testStreamingRPHash {
 	public static void streamingPushtest() {
 		int k = 10;
 		int d = 1000;
-		float var = .5f;
+		float var = 1f;
 
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
 

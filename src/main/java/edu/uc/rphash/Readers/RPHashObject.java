@@ -7,12 +7,12 @@ import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Spherical;
 
 public interface RPHashObject {
-	 final static int DEFAULT_NUM_PROJECTIONS = 2;
-	 public final static int DEFAULT_NUM_BLUR = 4;
+	 final static int DEFAULT_NUM_PROJECTIONS = 1;
+	 public final static int DEFAULT_NUM_BLUR = 1;
 	 final static long DEFAULT_NUM_RANDOM_SEED = 38006359550206753L;
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(64,3,1);//new Leech(1);
+	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(64,2,1);//new Leech(1);
 	 
 	int getk();
 	int getdim();

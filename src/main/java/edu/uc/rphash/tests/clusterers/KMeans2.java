@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-public class KMeans2 {
+import edu.uc.rphash.Clusterer;
+import edu.uc.rphash.Readers.RPHashObject;
+
+public class KMeans2 implements Clusterer {
 
 	class PointND
 	{
@@ -255,9 +258,9 @@ public class KMeans2 {
 	      for (int j=0;j<k;j++)
 	      {
 	        oldMeans[j]=new PointND(mu[j]);
-	        System.out.println(mu[j]);
+
 	      }
-	      System.out.println("poop");
+
 	      // classify each instance x[i] to its nearest class
 	      // first we need to clear the class array since we are reclassifying
 	      for (int j=0;j<k;j++)
@@ -451,6 +454,12 @@ public class KMeans2 {
 		}
 		
 		return centroids;
+	}
+
+	@Override
+	public RPHashObject getParam() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -1,9 +1,14 @@
 package edu.uc.rphash.tests.clusterers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.tests.clusterers.agglomerative.Cluster;
+import edu.uc.rphash.tests.clusterers.agglomerative.DefaultClusteringAlgorithm;
+import edu.uc.rphash.tests.clusterers.agglomerative.LinkageStrategy;
+import edu.uc.rphash.tests.clusterers.agglomerative.WeightedLinkageStrategy;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -13,30 +18,32 @@ public class Agglomerative implements Clusterer{
 	List<float[]> clusters;
 	List<float[]> data;
 	float[][] distances;
+	List<Integer> counts;
 	
 	public Agglomerative(int k, List<float[]> data)
 	{
 		this.k = k;
 		this.data = data;
 		this.clusters = null;
-		
+		counts = new ArrayList<Integer>();
+		for(int i = 0;i<data.size();i++)counts.add(1);
 		distanceArray(data);
 	} 
 	
-	private void distanceArray(List<float[]> data){
-		distances = new float[data.size()][data.size()];
+	public static double[][] distanceArray(List<float[]> data){
+		double[][] distances = new double[data.size()][data.size()];
 		for(int i = 0 ; i < data.size();i++)
 		{
 			for(int j = 0; j < data.size();j++)
 				distances[i][j] =VectorUtil.distance(data.get(i), data.get(j));
 		}
-		
+		return distances;
 	}
 	
 	
-	private float[] avgVector(float[] u, float[] v){
+	private float[] avgVector(float[] u, float[] v, int ct1, int ct2){
 		float[] w = new float[u.length];
-		for(int i = 0 ;i < u.length;i++)w[i] = (u[i]+v[i])/2f;
+		for(int i = 0 ;i < u.length;i++)w[i] = (u[i]*ct1+v[i]*ct2)/(ct1+ct2);
 		return w;
 	}
 	
@@ -57,22 +64,56 @@ public class Agglomerative implements Clusterer{
 			}
 			i++;
 		}
-		data.set(mini, avgVector(data.get(mini), data.get(minj)));
+		data.set(mini, avgVector(data.get(mini), data.get(minj),counts.get(mini),counts.get(minj)));
+		counts.set(minj,counts.get(mini)+counts.get(minj));
+		counts.remove(minj);
 		data.remove(minj);
 		distanceArray(data);
 		
 	}
 	
-	private void run()
+	void run()
 	{
 		while(data.size()>k)
 			merge();
 	}
 	
 	public static void main(String[] args){
-		List<float[]> data = new GenerateData(5,10,2).data;
-		Agglomerative agl = new Agglomerative(3,  data);
-		agl.run();
+		GenerateData gen =  new GenerateData(3,100,2);
+		List<float[]> data =gen.data;
+		
+		double[][] dists = distanceArray(data);
+		
+		DefaultClusteringAlgorithm clu = new DefaultClusteringAlgorithm();
+		
+		
+		
+		LinkageStrategy l =new WeightedLinkageStrategy();
+		
+		double[] weights = new double[data.size()];
+		
+		
+		
+		String[] s = new String[dists.length];
+		for(int i = 0;i< dists.length;i++)s[i] = String.valueOf(i);
+		Cluster clus = clu.performWeightedClustering(dists, s,
+			      weights, l);
+
+		
+		
+//		Agglomerative agl = new Agglomerative(3,  data);
+//		agl.run();
+//		for(float[] cent: gen.getMedoids()){
+//			for(float f : cent)System.out.print(f+" ");
+//			System.out.println();
+//		}
+//		System.out.println("computed");
+//		
+//		for(float[] cent: agl.getCentroids()){
+//			for(float f : cent)System.out.print(f+" ");
+//			System.out.println();
+//		}
+
 	}
 
 	@Override

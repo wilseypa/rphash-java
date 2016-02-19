@@ -20,6 +20,8 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.clusterers.Agglomerative2;
+import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.Kmeans;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
@@ -171,10 +173,11 @@ public class RPHashStream implements StreamClusterer {
 		for (int i =  0; i < cents.size() && counts.get(i)>1; i++) {
 			centroids.add(cents.get(i).centroid());
 		}
-
-		Kmeans km = new Kmeans(so.getk(), centroids);
+		//Clusterer km = new Kmeans(so.getk(), centroids,counts);
+//		System.out.print( centroids.size());
+		Clusterer km = new Agglomerative2(so.getk(), centroids,counts);
 		centroids = km.getCentroids();
-		
+//		System.out.print(":"+centroids.size()+"\n");
 		return centroids;
 	}
 
