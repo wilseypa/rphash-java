@@ -1,10 +1,12 @@
 package edu.uc.rphash.decoders;
 
 import java.util.Random;
-import java.util.Vector;
+
+import org.apache.commons.math3.distribution.CauchyDistribution;
 
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
+import org.apache.commons.math3.distribution.LevyDistribution;
 
 /**
  * Locality-Sensitive Hashing Scheme Based on p-Stable Distributions.
@@ -19,6 +21,7 @@ import edu.uc.rphash.util.VectorUtil;
  * 08-11, 2004, Brooklyn, New York, USA.
  */
 public class PsdLSH  implements Decoder {
+	public static int LEVY = 1;	
 	public static int CAUCHY = 1;
 	public static int GAUSSIAN = 2;
 
@@ -48,10 +51,10 @@ public class PsdLSH  implements Decoder {
 	}
 	
 	public PsdLSH() {
-		M = 1024;
-		L = 3;
-		T = GAUSSIAN;
-		W = 2f;
+		M = 512;
+		L = 2;
+		T = LEVY;
+		W = 1f;
 		D = 32;
 		bits = (int) Math.ceil(Math.log(M) / Math.log(2));
 		rndBs = new float[L];
@@ -64,8 +67,21 @@ public class PsdLSH  implements Decoder {
 		Random rng = new Random();
 
 		switch (T) {
+		case 0:{
+			LevyDistribution ld = new LevyDistribution(0,1) ;
+			for (int l = 0; l < L; l++) {
+				for (int d = 0; d < D; d++) {
+					stableArray[l][d] = (float) ld.sample();
+				}
+				rndBs[l] = rng.nextFloat() * W;
+
+			}
+			return;
+		}
+		
+		
 		case 1: {
-			org.apache.commons.math3.distribution.CauchyDistribution cd = new org.apache.commons.math3.distribution.CauchyDistribution();
+			CauchyDistribution cd = new CauchyDistribution();
 
 			for (int l = 0; l < L; l++) {
 				for (int d = 0; d < D; d++) {
@@ -91,52 +107,30 @@ public class PsdLSH  implements Decoder {
 		}
 	}
 
-	// /**
-	// * Insert a vector to the index.
-	// *
-	// * @param key
-	// * The sequence number of vector
-	// * @param domin
-	// * The pointer to the vector
-	// */
-	// void insert(long key, float[] domin) {
-	// for (int i = 0; i != L; ++i) {
-	// float sum = 0;
-	// for (int j = 0; j != D; ++j) {
-	// sum += domin[j] * stableArray.get(i).get(j);
-	// }
-	// long hashVal = (long) (Math.floor((sum + rndBs.get(i)) / W)) % M;
-	// tables.get(i).get(hashVal).add(key);
-	// }
-	// }
-
 	long[] hash(float[] domin) {
 		long[] hashVal = new long[L];
 		for (int l = 0; l < L; l++) {
+			//dot product with stable distribution
 			float sum = 0;
 			for (int d = 0; d < D; d++) {
 				sum += domin[d] * stableArray[l][d];
 			}
 			hashVal[l] = (long) (Math.floor((sum + rndBs[l]) / W)) % M;
-//			hashVal += (long) (Math.floor((sum + rndBs[l]) / W)) % M;
-//			hashVal <<= bits;
-
-
 		}
 		return hashVal;
 	}
 
 	public static void main(String[] args) {
 		Random r = new Random();
-		int M = 1024;
+		int M = 521;
 		int L = 5;
-		int T = GAUSSIAN;
-		float W = 2f;
+		int T = LEVY;
+		float W = 5f;
 		int d = 32;
 		
 		
 		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
-		float testResolution = 100000f;
+		float testResolution = 10000f;
 		
 		PsdLSH sp = new PsdLSH(M, L, d, T, W);
 		for (int i = 0; i < 300; i++) {
@@ -157,6 +151,12 @@ public class PsdLSH  implements Decoder {
 				
 				long[] hp1 = sp.hash(p1);
 				long[] hp2 = sp.hash(p2);
+//				for(int l =0;l<hp1.length-1;l++){
+//					if(hp1[l]==hp2[l] && hp1[l+1]==hp2[l+1]){
+//						ct++;
+//						break;
+//					}
+//				}
 				ct+=(hash.hash(hp2)==hash.hash(hp1))?1:0;
 				
 			}

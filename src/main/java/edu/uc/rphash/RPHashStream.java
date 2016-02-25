@@ -20,10 +20,7 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.clusterers.Agglomerative;
 import edu.uc.rphash.tests.clusterers.Agglomerative2;
-import edu.uc.rphash.tests.clusterers.KMeans2;
-import edu.uc.rphash.tests.clusterers.Kmeans;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 
@@ -160,7 +157,7 @@ public class RPHashStream implements StreamClusterer {
 		if (so.getParallel()) {
 			executor.shutdown();
 			try {
-				executor.awaitTermination(10, TimeUnit.SECONDS);
+				executor.awaitTermination(1, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -170,11 +167,16 @@ public class RPHashStream implements StreamClusterer {
 		centroids = new ArrayList<float[]>();
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
-
-		//get rid of size one clusters that are there just because the were added to the list last
-		for (int i =  0; i < cents.size() && counts.get(i)>1; i++) {
-			centroids.add(cents.get(i).centroid());
+		
+		int i =  0;
+		//get rid of size one clusters that are there just because they were added to the list more recently
+		for (; i < cents.size() ; i++) {
+			if(counts.get(i)==1)break;
+				centroids.add(cents.get(i).centroid());
+				
 		}
+		counts = counts.subList(0, i);
+		System.out.println(counts);
 		//Clusterer km = new Kmeans(so.getk(), centroids,counts);
 
 		Clusterer km = new Agglomerative2(so.getk(), centroids,counts);

@@ -60,7 +60,7 @@ public class testStreamingRPHash {
 	}
 
 	public static void generateAndStream() {
-		int k = 10;
+		int k = 20;
 		int d = 1000;
 		float var = 1f;
 
@@ -82,7 +82,7 @@ public class testStreamingRPHash {
 		long timestart = System.nanoTime();
 		for (int i = 0; i < 2500000; i++) {
 
-//			if (i % 2 == 0) {
+//			if (i % 10 == 0) {
 //				float[] noi = new float[d];
 //				for (int j = 0; j < d; j++)
 //					noi[j] = (noiseDataRandomSrc.nextFloat()) * 2.0f - 1.0f;
@@ -96,10 +96,10 @@ public class testStreamingRPHash {
 				timestart = System.nanoTime();
 				for (float[] f : vecsInThisRound) {
 					srphash.addVectorOnlineStep(f);
-
 				}
 
 				List<float[]> cents = srphash.getCentroidsOfflineStep();
+
 				long time = System.nanoTime() - timestart;
 
 				rt.gc();

@@ -218,8 +218,9 @@ public class KHHCentroidCounter {
 	List<Float> counts = null;
 
 	public List<Centroid> getTop() {
-		if(topcent!=null)
-			return topcent;
+//		if(topcent!=null)
+//			return topcent;
+		
 		this.topcent = new ArrayList<>();
 		this.counts = new ArrayList<>();
 		
@@ -234,7 +235,7 @@ public class KHHCentroidCounter {
 	}
 
 	public List<Float> getCounts() {
-		getTop();
+		if(topcent==null)getTop();
 		return counts;
 	}
 }

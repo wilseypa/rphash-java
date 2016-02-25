@@ -2,6 +2,7 @@ package edu.uc.rphash.decoders;
 
 import java.util.Random;
 
+import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
 
 /*Author: Lee Carraher
@@ -772,13 +773,18 @@ public class Leech implements Decoder {
 
 		long[] retOpt;
 
-		retOpt = new long[1];
+		retOpt = new long[2];
 		retOpt[0] = 0;
 		for (int i = 0; i < 24; i++) {
 			retOpt[0] += cw[i];
 			retOpt[0] <<= 1;
-
 		}
+		
+		for (int i = 0; i < 8; i++) {
+			retOpt[1] += quant[i];
+			retOpt[1]<<=8;
+		}
+			
 //		for (int i = 0; i < 12; i++) {
 //			retOpt[0] += cp[i];
 //			retOpt[0] <<= 1;
@@ -868,9 +874,10 @@ public class Leech implements Decoder {
 		float[][] dijks = new float[12][4];
 		// there is a set for each quarter decoder, and the A/B_ij odd/even
 		char[][] kparities = new char[12][4];
-
-		byte[] append = generateQuantizationVector(r);
-		QAM(r, evenAPts, oddAPts, dijs, dijks, kparities);
+		float[] rr = new float[24];
+		System.arraycopy(r, 0, rr, 0, 24);
+		byte[] append = generateQuantizationVector(rr);
+		QAM(rr, evenAPts, oddAPts, dijs, dijks, kparities);
 
 		// #####################Block Confidences ###################
 		// 0 1 w W
@@ -925,7 +932,7 @@ public class Leech implements Decoder {
 
 		// ----------------H_24 Half Lattice Decoder for B
 		// points----------------
-		QAM(r, evenBPts, oddBPts, dijs, dijks, kparities);
+		QAM(rr, evenBPts, oddBPts, dijs, dijks, kparities);
 		blockConf(dijs, muEs, muOs, prefRepE, prefRepO);
 
 		// ----------------B Even Quarter Lattice Decoder----------------
@@ -971,28 +978,38 @@ public class Leech implements Decoder {
 	}
 
 	public static void main(String[] args) {
-		Random r = new Random();
-		int d = 24;
-		Leech sp = new Leech();
-		for (int i = 0; i < 300; i++) {
-			int ct = 0;
-			float distavg = 0.0f;
-			for (int j = 0; j < 10000; j++) {
-				float p1[] = new float[d];
-				float p2[] = new float[d];
-				for (int k = 0; k < d; k++) {
-					p1[k] = r.nextFloat() * 2 - 1;
-					p2[k] = (float) (p1[k] + r.nextGaussian()
-							* ((float) i / 100f));
+			Random r = new Random();
+			int d = 24;
+	
+			Leech sp = new Leech(1f);
+			MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
+			float testResolution = 10000f;
+
+			for (int i = 0; i < 300; i++) {
+				int ct = 0;
+				float distavg = 0.0f;
+				for (int j = 0; j < testResolution; j++) {
+					float p1[] = new float[d];
+					float p2[] = new float[d];
+
+					// generate a vector
+					for (int k = 0; k < d; k++) {
+						p1[k] = r.nextFloat() * 2 - 1;
+						p2[k] = (float) (p1[k] + r.nextGaussian()
+								* ((float) i / 1000f));
+					}
+					float dist = VectorUtil.distance(p1, p2);
+					distavg += dist;
+
+					long hp1 = hash.hash(sp.decode(p1));
+					long hp2 = hash.hash(sp.decode(p2));
+
+					ct+=(hp2==hp1)?1:0;
+
 				}
-				distavg += VectorUtil.distance(p1, p2);
-				long[] hp1 = sp.decode(p1);
-				long[] hp2 = sp.decode(p2);
-				if (hp1[0] == hp2[0])
-					ct++;
+				System.out.println(distavg / testResolution + "\t" + (float) ct
+						/ testResolution);
 			}
-			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
-		}
 	}
 
 	// public static void main(String[] args)

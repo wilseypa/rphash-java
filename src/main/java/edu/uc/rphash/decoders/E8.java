@@ -2,6 +2,7 @@ package edu.uc.rphash.decoders;
 
 import java.util.Random;
 
+import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
 
 public class E8 implements Decoder {
@@ -183,6 +184,7 @@ public class E8 implements Decoder {
 		for (int i = 0; i < 8; i++)
 			tmp[i] = f[i]*sclr;
 		tmp = closestPoint(tmp);
+		
 		long[] tmp2 = new long[8];
 		for (int i = 0; i < 8; i++)
 			tmp2[i] = (byte) ((2 + tmp[i]*sclr) * 2);
@@ -222,36 +224,36 @@ public class E8 implements Decoder {
 	
 	public static void main(String[] args) {
 		Random r = new Random();
-		int d = 8;
-//		int K = 6;
-//		int L = 2;
-		E8 sp = new E8(1f);
-		for (int i = 0; i < 100; i++) {
+		int d = 24;
+
+		MultiDecoder sp = new MultiDecoder( d, new E8(1f));
+		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
+		float testResolution = 10000f;
+
+		for (int i = 0; i < 300; i++) {
 			int ct = 0;
 			float distavg = 0.0f;
-			for (int j = 0; j < 10000; j++) {
+			for (int j = 0; j < testResolution; j++) {
 				float p1[] = new float[d];
 				float p2[] = new float[d];
+
+				// generate a vector
 				for (int k = 0; k < d; k++) {
 					p1[k] = r.nextFloat() * 2 - 1;
 					p2[k] = (float) (p1[k] + r.nextGaussian()
-							* ((float) i / 200f));
+							* ((float) i / 1000f));
 				}
+				float dist = VectorUtil.distance(p1, p2);
+				distavg += dist;
 
-				distavg+=VectorUtil.distance(p1,p2);
-				long[] hp1 = sp.decode(VectorUtil.normalize(p1));
-				long[] hp2 = sp.decode(VectorUtil.normalize(p2));
-				boolean test = false;
-				for(int k = 0; k< hp1.length;k++)
-				{
-					if(hp1[k]==hp2[k]){
-						test=true;
-						
-					}
-				}
-				if(test)ct++;
+				long hp1 = hash.hash(sp.decode(p1));
+				long hp2 = hash.hash(sp.decode(p2));
+
+				ct+=(hp2==hp1)?1:0;
+
 			}
-			System.out.println(distavg / 10000f + "\t" + (float) ct / 10000f);
+			System.out.println(distavg / testResolution + "\t" + (float) ct
+					/ testResolution);
 		}
 	}
 

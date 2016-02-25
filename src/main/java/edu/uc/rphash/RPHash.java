@@ -17,7 +17,7 @@ import edu.uc.rphash.decoders.Dn;
 import edu.uc.rphash.decoders.E8;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
-import edu.uc.rphash.decoders.PStableDistribution;
+import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Kmeans;
@@ -281,8 +281,8 @@ public class RPHash {
 				break;
 			}
 			case "pstable": {
-				o.setDecoderType(new PStableDistribution(1f));
-				so.setDecoderType(new PStableDistribution(1f));
+				o.setDecoderType(new PsdLSH());
+				so.setDecoderType(new PsdLSH());
 				break;
 			}
 			case "sphere": {
