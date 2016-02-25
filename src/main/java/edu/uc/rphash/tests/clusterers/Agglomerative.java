@@ -5,10 +5,6 @@ import java.util.List;
 
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
-import edu.uc.rphash.tests.clusterers.agglomerative.Cluster;
-import edu.uc.rphash.tests.clusterers.agglomerative.DefaultClusteringAlgorithm;
-import edu.uc.rphash.tests.clusterers.agglomerative.LinkageStrategy;
-import edu.uc.rphash.tests.clusterers.agglomerative.WeightedLinkageStrategy;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -84,35 +80,29 @@ public class Agglomerative implements Clusterer{
 		
 		double[][] dists = distanceArray(data);
 		
-		DefaultClusteringAlgorithm clu = new DefaultClusteringAlgorithm();
-		
-		
-		
-		LinkageStrategy l =new WeightedLinkageStrategy();
-		
+	
 		double[] weights = new double[data.size()];
 		
 		
 		
 		String[] s = new String[dists.length];
 		for(int i = 0;i< dists.length;i++)s[i] = String.valueOf(i);
-		Cluster clus = clu.performWeightedClustering(dists, s,
-			      weights, l);
+
 
 		
 		
-//		Agglomerative agl = new Agglomerative(3,  data);
-//		agl.run();
-//		for(float[] cent: gen.getMedoids()){
-//			for(float f : cent)System.out.print(f+" ");
-//			System.out.println();
-//		}
-//		System.out.println("computed");
-//		
-//		for(float[] cent: agl.getCentroids()){
-//			for(float f : cent)System.out.print(f+" ");
-//			System.out.println();
-//		}
+		Agglomerative agl = new Agglomerative(3,  data);
+		agl.run();
+		for(float[] cent: gen.getMedoids()){
+			for(float f : cent)System.out.print(f+" ");
+			System.out.println();
+		}
+		System.out.println("computed");
+		
+		for(float[] cent: agl.getCentroids()){
+			for(float f : cent)System.out.print(f+" ");
+			System.out.println();
+		}
 
 	}
 

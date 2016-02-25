@@ -638,7 +638,7 @@ public class StreamingKmeans implements StreamClusterer {
 		}
 		}
 		 
-		return new Agglomerative2(numClusters, ret).getCentroids();
+		return new /*Agglomerative2*/Kmeans(numClusters, ret).getCentroids();
 
 	}
 

@@ -779,15 +779,15 @@ public class Leech implements Decoder {
 			retOpt[0] <<= 1;
 
 		}
-		for (int i = 0; i < 12; i++) {
-			retOpt[0] += cp[i];
-			retOpt[0] <<= 1;
-		}
-		if (quant != null)// use remaining 64-36 = 8 bits for a quantization
-							// vector
-			for (int i = 0; i < 8; i++) {
-				retOpt[0] ^= quant[i];
-			}
+//		for (int i = 0; i < 12; i++) {
+//			retOpt[0] += cp[i];
+//			retOpt[0] <<= 1;
+//		}
+//		if (quant != null)// use remaining 64-36 = 8 bits for a quantization
+//							// vector
+//			for (int i = 0; i < 8; i++) {
+//				retOpt[0] ^= quant[i];
+//			}
 
 		// retOpt[0] = (byte) (cw[0] + (cw[1] << 1) + (cw[2] << 2) + (cw[3] <<
 		// 3)
@@ -974,7 +974,7 @@ public class Leech implements Decoder {
 		Random r = new Random();
 		int d = 24;
 		Leech sp = new Leech();
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 300; i++) {
 			int ct = 0;
 			float distavg = 0.0f;
 			for (int j = 0; j < 10000; j++) {

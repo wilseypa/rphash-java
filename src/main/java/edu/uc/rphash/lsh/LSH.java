@@ -35,9 +35,9 @@ public class LSH {
 	 * hash(fnv,elf, murmur) on whole vector decoding.
 	 */
 	public long lshHash(float[] r) {
-
-		return standardHashAlgorithm.hash(lshDecoder.decode(projectionMatrix
+		long l = standardHashAlgorithm.hash(lshDecoder.decode(projectionMatrix
 				.project(r)));
+		return l;
 
 	}
 

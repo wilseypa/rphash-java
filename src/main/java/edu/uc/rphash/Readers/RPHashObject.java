@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.uc.rphash.decoders.Decoder;
+import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 
 public interface RPHashObject {
@@ -12,7 +13,7 @@ public interface RPHashObject {
 	 final static long DEFAULT_NUM_RANDOM_SEED = 38006359550206753L;
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(64,2,1);//new Leech(1);
+	 final static Decoder DEFAULT_INNER_DECODER = new PsdLSH();//new Spherical(64,2,1);//new Leech(1);
 	 
 	int getk();
 	int getdim();
