@@ -16,6 +16,7 @@ public class DBFriendlyProjection implements Projector {
 		this.n = n;
 		this.t = t;
 
+
 		rand = new Random();
 		M = GenRandom();
 		P = GenRandom();
@@ -24,6 +25,7 @@ public class DBFriendlyProjection implements Projector {
 	public DBFriendlyProjection(int n, int t, long randomseed) {
 		this.n = n;
 		this.t = t;
+
 		rand = new Random(randomseed);
 		M = GenRandom();
 		P = GenRandom();

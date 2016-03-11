@@ -40,6 +40,12 @@ public class LSH {
 		return l;
 
 	}
+	
+	public long lshHashAlreadyProjected(float[] r) {
+		long l = standardHashAlgorithm.hash(lshDecoder.decode(r));
+		return l;
+
+	}
 
 	public float distance() {
 		return distance;
@@ -158,13 +164,14 @@ public class LSH {
 		long[] ret = new long[noise.size()];
 		
 		float[] pr_r = projectionMatrix.project(vec);
+
 		float[] veccopy = new float[pr_r.length];
-		
+
 		for(int i = 0; i< noise.size();i++)
 		{
 			System.arraycopy(pr_r, 0, veccopy, 0, pr_r.length);
 			for(int j = 0;j<pr_r.length;j++)veccopy[j]+=noise.get(i)[j];
-			ret[i] = lshHash(veccopy);
+			ret[i] = lshHashAlreadyProjected(veccopy);
 		}
 		return ret;
 	}

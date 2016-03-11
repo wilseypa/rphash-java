@@ -21,7 +21,7 @@ import org.apache.commons.math3.distribution.LevyDistribution;
  * 08-11, 2004, Brooklyn, New York, USA.
  */
 public class PsdLSH  implements Decoder {
-	public static int LEVY = 1;	
+	public static int LEVY = 0;	
 	public static int CAUCHY = 1;
 	public static int GAUSSIAN = 2;
 
@@ -51,11 +51,26 @@ public class PsdLSH  implements Decoder {
 	}
 	
 	public PsdLSH() {
-		M = 512;
-		L = 2;
+		M = 256;
+		L = 4;
 		T = LEVY;
-		W = 1f;
+		W = 4f;
 		D = 32;
+		bits = (int) Math.ceil(Math.log(M) / Math.log(2));
+		rndBs = new float[L];
+		stableArray = new float[L][D];;
+		initialize();
+	}
+
+	public PsdLSH(int psdtype, int innerDecoderMultiplier) {
+
+		M = 256;
+		L = 4;
+		T = psdtype;
+		if(psdtype==LEVY)W = 4f;
+		if(psdtype==GAUSSIAN)W = 1f;
+		if(psdtype==CAUCHY)W = 4f;
+		D = innerDecoderMultiplier;
 		bits = (int) Math.ceil(Math.log(M) / Math.log(2));
 		rndBs = new float[L];
 		stableArray = new float[L][D];;
@@ -107,25 +122,30 @@ public class PsdLSH  implements Decoder {
 		}
 	}
 
-	long[] hash(float[] domin) {
-		long[] hashVal = new long[L];
-		for (int l = 0; l < L; l++) {
-			//dot product with stable distribution
-			float sum = 0;
-			for (int d = 0; d < D; d++) {
-				sum += domin[d] * stableArray[l][d];
+	long[] hash(float[] v) {
+
+			long[] hashVal = new long[1];
+			int tmp;
+			for (int l = 0; l < L; l++) {
+				//dot product with stable distribution
+				float sum = rndBs[l];
+				for (int d = 0; d < D; d++) {
+					sum += v[d] * stableArray[l][d];
+				}
+				tmp = ((int) ( (sum ) / W) ) % M;
+				tmp+=M/2;//shift negative number to the other side
+				hashVal[0]+= tmp;
+				hashVal[0] <<= this.bits;
 			}
-			hashVal[l] = (long) (Math.floor((sum + rndBs[l]) / W)) % M;
-		}
-		return hashVal;
+			return hashVal;
 	}
 
 	public static void main(String[] args) {
 		Random r = new Random();
-		int M = 521;
-		int L = 5;
-		int T = LEVY;
-		float W = 5f;
+		int M = 256;
+		int L = 8;
+		int T = GAUSSIAN;
+		float W = 1f;
 		int d = 32;
 		
 		
@@ -157,7 +177,7 @@ public class PsdLSH  implements Decoder {
 //						break;
 //					}
 //				}
-				ct+=(hash.hash(hp2)==hash.hash(hp1))?1:0;
+				ct+=(hp2[0]==hp1[0])?1:0;
 				
 			}
 			System.out.println(distavg / testResolution + "\t" + (float) ct / testResolution);

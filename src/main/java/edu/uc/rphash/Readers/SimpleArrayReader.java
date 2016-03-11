@@ -24,6 +24,7 @@ public class SimpleArrayReader implements RPHashObject {
 	List<float[]> centroids;
 	List<Long> topIDs;
 	boolean parallel = true;
+	private int dimparameter;
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -34,6 +35,7 @@ public class SimpleArrayReader implements RPHashObject {
 	}
 
 	public SimpleArrayReader(ClusterGenerator gen,int k) {
+
 		this.dim = gen.getDimension();
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
@@ -46,7 +48,9 @@ public class SimpleArrayReader implements RPHashObject {
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
 		this.data = gen.getData();
+		System.out.println(data.toString());
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
 	}
 	
 	
@@ -68,6 +72,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
 //		for (int i = 0; i < k; i++)
 //			topIDs.add((long) 0);
 	}
@@ -92,6 +97,7 @@ public class SimpleArrayReader implements RPHashObject {
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
 	}
 
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
@@ -104,6 +110,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.numBlur = blur;
 		this.decoderMultiplier = decoderMultiplier;
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		
 		data = X;
 		if(data!=null)
@@ -131,6 +138,7 @@ public class SimpleArrayReader implements RPHashObject {
 	 */
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
 			int decoderMultiplier, int numProjections) {
+
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
@@ -148,6 +156,7 @@ public class SimpleArrayReader implements RPHashObject {
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
 	}
 
 	public Iterator<float[]> getVectorIterator() {
@@ -282,7 +291,17 @@ public class SimpleArrayReader implements RPHashObject {
 		return parallel;
 	}
 	
+	@Override
+	public void setDimparameter(int parseInt) {
+		this.dimparameter = parseInt;
+		
+	}
 
+	@Override
+	public int getDimparameter() {
+
+		return this.dimparameter;
+	}
 
 
 

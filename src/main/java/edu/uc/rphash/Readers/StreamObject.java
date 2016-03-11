@@ -68,9 +68,11 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.data = null;
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
 	}
 
 	boolean filereader = false;
+	private int dimparameter;
 
 	public StreamObject(String f, int k, boolean raw) throws IOException {
 		this.f = f;
@@ -111,6 +113,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.data = null;
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		// dec = new MultiDecoder(
 		// getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
 	}
@@ -305,5 +308,17 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	@Override
 	public boolean getParallel() {
 		return parallel;
+	}
+
+	@Override
+	public void setDimparameter(int parseInt) {
+		this.dimparameter = parseInt;
+		
+	}
+
+	@Override
+	public int getDimparameter() {
+
+		return this.dimparameter;
 	}
 }

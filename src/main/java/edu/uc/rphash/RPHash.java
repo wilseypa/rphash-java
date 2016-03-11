@@ -33,9 +33,9 @@ public class RPHash {
 			"kmeansplusplus", "streamingkmeans" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 			"NumBlur", "randomseed", "hashmod", "decodertype","parallel",
-			"streamduration", "raw", "decayrate" };
+			"streamduration", "raw", "decayrate","dimparameter" };
 	static String[] decoders = { "dn", "e8", "multie8", "leech", "multileech",
-			"pstable", "sphere" };
+			"sphere", "levypstable", "cauchypstable","gaussianpstable"};
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException, InterruptedException {
@@ -74,6 +74,10 @@ public class RPHash {
 
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
+		
+		if (!taggedArgs.containsKey("streamduration"))data = VectorUtil.readFile(filename, raw);
+		
+
 		List<Clusterer> runs;
 		if (taggedArgs.containsKey("raw")) {
 			raw = Boolean.getBoolean(taggedArgs.get("raw"));
@@ -83,7 +87,6 @@ public class RPHash {
 		}
 
 		if (taggedArgs.containsKey("streamduration")) {
-			System.out.println(taggedArgs.toString());
 			runStream(runs, outputFile,
 					Integer.parseInt(taggedArgs.get("streamduration")), k, raw);
 			return;
@@ -214,6 +217,7 @@ public class RPHash {
 		// float variance = StatTests.varianceSample(data, .01f);
 
 		int k = Integer.parseInt(untaggedArgs.get(1));
+
 		RPHashObject o = new SimpleArrayReader(data, k);
 		StreamObject so = new StreamObject(f, k, raw);
 
@@ -249,6 +253,11 @@ public class RPHash {
 			o.setParallel(Boolean.parseBoolean(taggedArgs.get("parallel")));
 			so.setParallel(Boolean.parseBoolean(taggedArgs.get("parallel")));
 		}
+		if (taggedArgs.containsKey("dimparameter")) {
+			o.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
+			so.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
+		}
+		
 		if (taggedArgs.containsKey("decodertype")) {
 			switch (taggedArgs.get("decodertype").toLowerCase()) {
 			case "dn": {
@@ -280,16 +289,26 @@ public class RPHash {
 						.getInnerDecoderMultiplier() * 24, new Leech(1f)));
 				break;
 			}
-			case "pstable": {
-				o.setDecoderType(new PsdLSH());
-				so.setDecoderType(new PsdLSH());
+			case "levypstable": {
+				o.setDecoderType(new PsdLSH(PsdLSH.LEVY,o.getDimparameter()));
+				so.setDecoderType(new PsdLSH(PsdLSH.LEVY,o.getDimparameter()));
+				break;
+			}
+			case "cauchypstable": {
+				o.setDecoderType(new PsdLSH(PsdLSH.CAUCHY,o.getDimparameter()));
+				so.setDecoderType(new PsdLSH(PsdLSH.CAUCHY,o.getDimparameter()));
+				break;
+			}
+			case "gaussianpstable": {
+				o.setDecoderType(new PsdLSH(PsdLSH.GAUSSIAN,o.getDimparameter()));
+				so.setDecoderType(new PsdLSH(PsdLSH.GAUSSIAN,o.getDimparameter()));
 				break;
 			}
 			case "sphere": {
-				o.setDecoderType(new Spherical(so.getInnerDecoderMultiplier(),
-						4, 1));
-				so.setDecoderType(new Spherical(so.getInnerDecoderMultiplier(),
-						4, 1));
+				o.setDecoderType(new Spherical(o.getDimparameter(),
+						2, 1));
+				so.setDecoderType(new Spherical(o.getDimparameter(),
+						2, 1));
 				break;
 			}
 			default: {

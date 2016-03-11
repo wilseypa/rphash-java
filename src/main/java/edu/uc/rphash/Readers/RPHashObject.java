@@ -15,6 +15,8 @@ public interface RPHashObject {
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
 	 final static Decoder DEFAULT_INNER_DECODER =new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//;
+	 final static int DEFAULT_DIM_PARAMETER = 32;
+	 
 	 
 	int getk();
 	int getdim();
@@ -47,6 +49,7 @@ public interface RPHashObject {
 	float getDecayRate();
 	void setParallel(boolean parseBoolean);
 	boolean getParallel();
-
+	void setDimparameter(int parseInt);
+	int getDimparameter();
 
 }
