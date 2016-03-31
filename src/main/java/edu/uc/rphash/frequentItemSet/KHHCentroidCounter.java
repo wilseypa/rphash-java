@@ -88,8 +88,9 @@ public class KHHCentroidCounter {
 		if (decayRate != null) {
 			this.tableF = new float[depth][width];
 			this.decaytable = new int[depth][width];
-		} else
+		} else{
 			this.tableS = new short[depth][width];
+		}
 		this.hashA = new long[depth];
 		Random r = new Random(seed);
 		for (int i = 0; i < depth; ++i) {
@@ -140,9 +141,12 @@ public class KHHCentroidCounter {
 
 	private int hash(long item, int i) {
 		long hash = hashA[i] * item;
-		hash += hash >>> 32;
-		hash &= PRIME_MODULUS;
-		return (int) (hash % width);
+//		hash += hash >>> 32;
+//		hash &= PRIME_MODULUS;
+//		return (int) (hash % width);
+		if(item<0)
+			item=(-item)<<1;
+		return (int) (item % width);
 	}
 
 	private float decayOnInsert(float prev_val, int prevt) {

@@ -21,6 +21,7 @@ import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative2;
+import edu.uc.rphash.tests.clusterers.Kmeans;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 
@@ -46,8 +47,7 @@ public class RPHashStream implements StreamClusterer {
 			executor.execute(r);
 			return is.count;
 		}
-
-//		Centroid c = new Centroid(vec,-1);
+		
 		Centroid c = new Centroid(vec,-1);
 		
 		for (int i =0; i<lshfuncs.length;i++){
@@ -84,8 +84,12 @@ public class RPHashStream implements StreamClusterer {
 		// initialize our counter
 		float decayrate = so.getDecayRate();// 1f;// bottom number is window
 											// size
-		is = new KHHCentroidCounter(k, decayrate);// , decayrate); //add back
+		if(so.getDecayRate()==0.0){
+			is = new KHHCentroidCounter(k);
+		}else{
+			is = new KHHCentroidCounter(k, decayrate);// , decayrate); //add back
 													// for decayed
+		}
 		// create LSH Device
 		lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
@@ -143,7 +147,9 @@ public class RPHashStream implements StreamClusterer {
 	}
 
 	public RPHashStream(int k, GenerateStreamData c, int processors) {
+
 		so = new SimpleArrayReader(c, k);
+
 		if (so.getParallel())
 			this.processors = processors;
 		else
@@ -188,7 +194,7 @@ public class RPHashStream implements StreamClusterer {
 				
 		}
 		counts = counts.subList(0, i);
-		System.out.println(counts);
+
 		//Clusterer km = new Kmeans(so.getk(), centroids,counts);
 		Clusterer km = new Agglomerative2(so.getk(), centroids,counts);
 		centroids = km.getCentroids();

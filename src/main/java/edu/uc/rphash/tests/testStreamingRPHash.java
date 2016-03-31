@@ -69,7 +69,7 @@ public class testStreamingRPHash {
 
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
 		GenerateStreamData noise = new GenerateStreamData(1, d, var*10, 11331313);
-		RPHashStream rphit = new RPHashStream(k, gen1,4);
+		RPHashStream rphit = new RPHashStream(k, gen1,rt.availableProcessors());
 
 		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tRealWCSSE\n");
 		
@@ -82,7 +82,8 @@ public class testStreamingRPHash {
 				float[] vec = gen1.generateNext();
 				vecsAndNoiseInThisRound.add(vec);
 				justvecsInThisRound.add(vec);
-				vecsAndNoiseInThisRound.add(noise.generateNext());
+				//vecsAndNoiseInThisRound.add(noise.generateNext());
+				//vecsAndNoiseInThisRound.add(noise.generateNext());
 			}
 
 			timestart = System.nanoTime();

@@ -54,9 +54,9 @@ public class PsdLSH  implements Decoder {
 	public PsdLSH() {
 		M = 256;
 		L = 4;
-		T = LEVY;
-		W = 1f;
-		D = 1000;
+		T = CAUCHY;
+		W = 4f;
+		D = 32;
 		bits = (int) Math.ceil(Math.log(M) / Math.log(2));
 		rndBs = new float[L];
 		stableArray = new float[L][D];;
@@ -67,8 +67,8 @@ public class PsdLSH  implements Decoder {
 		M = 256;
 		L = 4;
 		T = psdtype;
-		if(psdtype==LEVY)W = 2f;
-		if(psdtype==GAUSSIAN)W = 2f;
+		if(psdtype==LEVY)W = 4f;
+		if(psdtype==GAUSSIAN)W = 4f;
 		if(psdtype==CAUCHY)W = 2f;
 		D = innerDecoderMultiplier;
 
@@ -82,6 +82,8 @@ public class PsdLSH  implements Decoder {
 
 		Random rng = new Random();
 
+
+
 		switch (T) {
 		case 0:{
 			LevyDistribution ld = new LevyDistribution(0,1) ;
@@ -89,7 +91,7 @@ public class PsdLSH  implements Decoder {
 				int d = 0;
 				while (d < D) {
 					stableArray[l][d] = (float) ld.sample();
-					if(stableArray[l][d]<10f&& stableArray[l][d]>-10f){
+					if(stableArray[l][d]<3f&& stableArray[l][d]>-3f){
 						d++;
 					}
 				}
@@ -105,7 +107,7 @@ public class PsdLSH  implements Decoder {
 				int d = 0;
 				while (d < D) {
 					stableArray[l][d] = (float) cd.sample();
-					if(stableArray[l][d]<10f && stableArray[l][d]>-10f){
+					if(stableArray[l][d]<3f && stableArray[l][d]>-3f){
 						d++;
 					}
 				}
@@ -131,17 +133,18 @@ public class PsdLSH  implements Decoder {
 
 	long[] hash(float[] v) {
 			long[] hashVal = new long[1];
+//			long hashVal = 0;
 			int tmp;
 			for (int l = 0; l < L; l++) {
-				//dot product with stable distribution
+				// dot product with stable distribution
 				float sum = rndBs[l];
 				for (int d = 0; d < D; d++) {
 					sum += v[d] * stableArray[l][d];
 				}
-				
-				tmp = ((int) ( (sum ) / W) ) % M;
-				tmp+=M/2;//shift negative number to the other side
-				hashVal[0]+= tmp;
+				tmp = ((int) ((sum) / W)); 
+				tmp%= M;
+				// shift negative number to the other side
+				hashVal[0] += tmp;
 				hashVal[0] <<= this.bits;
 			}
 			return hashVal;

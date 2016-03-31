@@ -48,7 +48,6 @@ public class SimpleArrayReader implements RPHashObject {
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
 		this.data = gen.getData();
-		System.out.println(data.toString());
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 	}
