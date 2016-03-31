@@ -77,6 +77,7 @@ public class Agglomerative2 implements Clusterer {
 		int n = data.size();
 		for (int i = 0; i < n - 1; i++) {
 			PQAndVector innerpq = new PQAndVector(new Integer(i));
+			
 			for (int j = i + 1; j < n; j++) {
 				DistAndVector dv = new DistAndVector();
 				dv.dist = new Float(VectorUtil.distance(data.get(i),
@@ -94,8 +95,32 @@ public class Agglomerative2 implements Clusterer {
 		// outerpq)System.out.print(p.vec+", ");System.out.println();
 
 	}
+	
+	private void distanceArray2(List<float[]> data2,List<Integer> projIDs) {
+		int n = data.size();
+		for (int i = 0; i < n - 1; i++) {
+			PQAndVector innerpq = new PQAndVector(new Integer(i));
+			
+			for (int j = i + 1; j < n; j++) {
+				DistAndVector dv = new DistAndVector();
+				if(projIDs.get(i).equals(projIDs.get(j))){
+					dv.dist = Float.MAX_VALUE;
+				}
+				else{
+					dv.dist = new Float(VectorUtil.distance(data.get(i),
+							data.get(j)));
+				}
 
-	private void mergeAndUpdateCentroids(int newdata, int olddata) {
+				
+				dv.vec = new Integer(j);
+				innerpq.pq.add(dv);
+			}
+			outerpq.add(innerpq);
+		}	
+	}
+
+	private void mergeAndUpdateCentroids(int newdata, int olddata) 
+	{
 		float[] u = data.get(newdata);
 		float[] v = data.get(olddata);
 		float ct1 = counts[newdata];
@@ -289,6 +314,7 @@ public class Agglomerative2 implements Clusterer {
 		this.counts = new float[data.size()];
 		for (int i = 0; i < counts.length; i++)
 			counts[i] = 1;
+		
 		distanceArray(data);
 
 	}
@@ -301,5 +327,15 @@ public class Agglomerative2 implements Clusterer {
 			this.counts[i] = counts.get(i);
 		distanceArray(data);
 	}
+	
+	public Agglomerative2(int k, List<float[]> data, List<Float> counts,List<Integer> projectionIDs) {
+		this.k = k;
+		this.data = data;
+		this.counts = new float[counts.size()];
+		for (int i = 0; i < counts.size(); i++)
+			this.counts[i] = counts.get(i);
+		distanceArray2(data,projectionIDs);
+	}
+
 
 }

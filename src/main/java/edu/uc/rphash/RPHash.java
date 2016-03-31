@@ -179,7 +179,7 @@ public class RPHash {
 					if (i % streamDuration == 0 || !streamer.hasNext()) {
 						List<float[]> cents = ((StreamClusterer) clu)
 								.getCentroidsOfflineStep();
-
+						
 						long time = System.nanoTime() - startTime;
 						double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
 						vecsInThisRound = new ArrayList<float[]>();

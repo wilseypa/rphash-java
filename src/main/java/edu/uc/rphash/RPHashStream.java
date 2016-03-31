@@ -47,27 +47,36 @@ public class RPHashStream implements StreamClusterer {
 			return is.count;
 		}
 
-		Centroid c = new Centroid(vec);
-		for (LSH lshfunc : lshfuncs) {
+//		Centroid c = new Centroid(vec,-1);
+		Centroid c = new Centroid(vec,-1);
+		
+		for (int i =0; i<lshfuncs.length;i++){
+			LSH lshfunc =lshfuncs[i];
+			
 			if (so.getNumBlur() != 1) {
 				long[] hash = lshfunc
 						.lshHashRadiusNo2Hash(vec, so.getNumBlur());
-				for (long h : hash) {
+				for (long h : hash) 
+				{
+					
 					c.addID(h);
+					is.add(c);
 					is.addLong(h, 1);
 				}
 			} else {
 				long hash = lshfunc.lshHash(vec);
+				is.add(c);
 				c.addID(hash);
 				is.addLong(hash, 1);
 			}
 		}
+		
 		is.add(c);
 		return is.count;
 	}
 
 	public void init() {
-		System.out.println("init rphash machine");
+//		System.out.println("init rphash machine");
 		Random r = new Random(so.getRandomSeed());
 		this.vartracker = new StatTests(.01f);
 		int projections = so.getNumProjections();
@@ -165,20 +174,22 @@ public class RPHashStream implements StreamClusterer {
 		}
 
 		centroids = new ArrayList<float[]>();
+		List<Integer> projIDs = new ArrayList<Integer>();
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
+		
 		
 		int i =  0;
 		//get rid of size one clusters that are there just because they were added to the list more recently
 		for (; i < cents.size() ; i++) {
 			if(counts.get(i)==1)break;
-				centroids.add(cents.get(i).centroid());
+			projIDs.add(cents.get(i).projectionID);
+			centroids.add(cents.get(i).centroid());
 				
 		}
 		counts = counts.subList(0, i);
 		System.out.println(counts);
 		//Clusterer km = new Kmeans(so.getk(), centroids,counts);
-
 		Clusterer km = new Agglomerative2(so.getk(), centroids,counts);
 		centroids = km.getCentroids();
 

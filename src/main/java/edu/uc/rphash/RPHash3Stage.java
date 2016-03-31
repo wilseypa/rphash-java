@@ -111,7 +111,7 @@ public class RPHash3Stage implements Clusterer {
 		HashMap<Long, Centroid> centroids = new HashMap<Long, Centroid>();
 		
 		for (Long id : so.getPreviousTopID())
-			centroids.put(id, new Centroid(100, id));
+			centroids.put(id, new Centroid(100, id,-1));
 		// start the calculation
 
 		// int probes = 1;
@@ -147,7 +147,7 @@ public class RPHash3Stage implements Clusterer {
 
 		Iterator<float[]> vecs = so.getVectorIterator();
 		for (int i = 0; i < so.getCentroids().size(); i++) {
-			Centroid cent = new Centroid(so.getdim(), i);
+			Centroid cent = new Centroid(so.getdim(), i,-1);
 			centroids.add(cent);
 		}
 		float[] vec = vecs.next();

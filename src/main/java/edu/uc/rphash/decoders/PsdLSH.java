@@ -6,6 +6,7 @@ import org.apache.commons.math3.distribution.CauchyDistribution;
 
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
+
 import org.apache.commons.math3.distribution.LevyDistribution;
 
 /**
@@ -54,8 +55,8 @@ public class PsdLSH  implements Decoder {
 		M = 256;
 		L = 4;
 		T = LEVY;
-		W = 4f;
-		D = 32;
+		W = 1f;
+		D = 1000;
 		bits = (int) Math.ceil(Math.log(M) / Math.log(2));
 		rndBs = new float[L];
 		stableArray = new float[L][D];;
@@ -63,14 +64,14 @@ public class PsdLSH  implements Decoder {
 	}
 
 	public PsdLSH(int psdtype, int innerDecoderMultiplier) {
-
 		M = 256;
 		L = 4;
 		T = psdtype;
-		if(psdtype==LEVY)W = 4f;
-		if(psdtype==GAUSSIAN)W = 1f;
-		if(psdtype==CAUCHY)W = 4f;
+		if(psdtype==LEVY)W = 2f;
+		if(psdtype==GAUSSIAN)W = 2f;
+		if(psdtype==CAUCHY)W = 2f;
 		D = innerDecoderMultiplier;
+
 		bits = (int) Math.ceil(Math.log(M) / Math.log(2));
 		rndBs = new float[L];
 		stableArray = new float[L][D];;
@@ -85,25 +86,31 @@ public class PsdLSH  implements Decoder {
 		case 0:{
 			LevyDistribution ld = new LevyDistribution(0,1) ;
 			for (int l = 0; l < L; l++) {
-				for (int d = 0; d < D; d++) {
+				int d = 0;
+				while (d < D) {
 					stableArray[l][d] = (float) ld.sample();
+					if(stableArray[l][d]<10f&& stableArray[l][d]>-10f){
+						d++;
+					}
 				}
 				rndBs[l] = rng.nextFloat() * W;
-
 			}
 			return;
 		}
-		
 		
 		case 1: {
 			CauchyDistribution cd = new CauchyDistribution();
 
 			for (int l = 0; l < L; l++) {
-				for (int d = 0; d < D; d++) {
+				int d = 0;
+				while (d < D) {
 					stableArray[l][d] = (float) cd.sample();
+					if(stableArray[l][d]<10f && stableArray[l][d]>-10f){
+						d++;
+					}
 				}
-				rndBs[l] = rng.nextFloat() * W;
 
+				rndBs[l] = rng.nextFloat() * W;
 			}
 			return;
 		}
@@ -123,7 +130,6 @@ public class PsdLSH  implements Decoder {
 	}
 
 	long[] hash(float[] v) {
-
 			long[] hashVal = new long[1];
 			int tmp;
 			for (int l = 0; l < L; l++) {
@@ -132,6 +138,7 @@ public class PsdLSH  implements Decoder {
 				for (int d = 0; d < D; d++) {
 					sum += v[d] * stableArray[l][d];
 				}
+				
 				tmp = ((int) ( (sum ) / W) ) % M;
 				tmp+=M/2;//shift negative number to the other side
 				hashVal[0]+= tmp;
@@ -142,17 +149,17 @@ public class PsdLSH  implements Decoder {
 
 	public static void main(String[] args) {
 		Random r = new Random();
-		int M = 256;
-		int L = 8;
-		int T = GAUSSIAN;
-		float W = 1f;
+//		int M = 256;
+//		int L = 8;
+//		int T = LEVY;
+//		float W = 1f;
 		int d = 32;
 		
 		
-		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
+
 		float testResolution = 10000f;
 		
-		PsdLSH sp = new PsdLSH(M, L, d, T, W);
+		PsdLSH sp = new PsdLSH();
 		for (int i = 0; i < 300; i++) {
 			int ct = 0;
 			float distavg = 0.0f;

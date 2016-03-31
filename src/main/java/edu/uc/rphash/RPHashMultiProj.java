@@ -95,7 +95,7 @@ public class RPHashMultiProj implements Clusterer {
 		// make a set of k default centroid objects
 		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
 		for (long id : so.getPreviousTopID())
-			centroids.add(new Centroid(so.getdim(), id));
+			centroids.add(new Centroid(so.getdim(), id,-1));
 
 		// create same LSH Device as before
 		Random r = new Random(so.getRandomSeed());

@@ -60,83 +60,51 @@ public class testStreamingRPHash {
 	}
 
 	public static void generateAndStream() {
-		int k = 20;
+
+		int k = 10;
 		int d = 1000;
 		float var = 1f;
-
+		int interval = 10000;
 		Runtime rt = Runtime.getRuntime();
-		int processors = rt.availableProcessors();
 
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
+		GenerateStreamData noise = new GenerateStreamData(1, d, var*10, 11331313);
+		RPHashStream rphit = new RPHashStream(k, gen1,4);
 
-		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
-		int interval = 10000;
-
-		RPHashStream srphash = new RPHashStream(k, gen1, processors);
-
-		StreamClusterer skmeans = new StreamingKmeans(k, gen1);
-
-		Random noiseDataRandomSrc = new Random();
-
-		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tCentSSE\n");
+		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tRealWCSSE\n");
+		
 		long timestart = System.nanoTime();
-		for (int i = 0; i < 2500000; i++) {
-
-//			if (i % 10 == 0) {
-//				float[] noi = new float[d];
-//				for (int j = 0; j < d; j++)
-//					noi[j] = (noiseDataRandomSrc.nextFloat()) * 2.0f - 1.0f;
-//				vecsInThisRound.add(noi);
-//			}
-
-			vecsInThisRound.add(gen1.generateNext());
-
-			if (i % interval == interval - 1) {
-
-				timestart = System.nanoTime();
-				for (float[] f : vecsInThisRound) {
-					srphash.addVectorOnlineStep(f);
-				}
-
-				List<float[]> cents = srphash.getCentroidsOfflineStep();
-
-				long time = System.nanoTime() - timestart;
-
-				rt.gc();
-				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
-
-				List<float[]> aligned = VectorUtil.alignCentroids(cents,
-						gen1.getMedoids());
-				double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
-				double ssecent = StatTests.SSE(aligned, gen1);
-
-				// recreate vectors at execution time to check average
-				System.gc();
-				System.out.printf("%d\t%d\t%.4f\t%.0f\t%.3f\t", i, usedkB,
-						time / 1000000000f, wcsse, ssecent);
-
-//				timestart = System.nanoTime();
-//				for (float[] f : vecsInThisRound) {
-//					skmeans.addVectorOnlineStep(f);
-//				}
-//
-//				cents = skmeans.getCentroidsOfflineStep();
-//				time = System.nanoTime() - timestart;
-//
-//				rt.gc();
-//				usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
-//
-//				aligned = VectorUtil.alignCentroids(cents, gen1.getMedoids());
-//				wcsse = StatTests.WCSSE(cents, vecsInThisRound);
-//				ssecent = StatTests.SSE(aligned, gen1);
-//
-//				System.gc();
-//				System.out.printf("%d\t%d\t%.4f\t%.0f\t%.3f\t", i, usedkB,
-//						time / 1000000000f, wcsse, ssecent);
-
-				System.out.printf("\n");
-				vecsInThisRound = new ArrayList<float[]>();
+		for (int i = 0; i < 2500000;) {
+			ArrayList<float[]> vecsAndNoiseInThisRound = new ArrayList<float[]>();
+			ArrayList<float[]> justvecsInThisRound = new ArrayList<float[]>();
+			
+			for (int j = 1; j < interval && i < 2500000; i++, j++){
+				float[] vec = gen1.generateNext();
+				vecsAndNoiseInThisRound.add(vec);
+				justvecsInThisRound.add(vec);
+				vecsAndNoiseInThisRound.add(noise.generateNext());
 			}
+
+			timestart = System.nanoTime();
+			for (float[] f : vecsAndNoiseInThisRound) {
+				rphit.addVectorOnlineStep(f);
+			}
+
+			List<float[]> cents = rphit.getCentroidsOfflineStep();
+			long time = System.nanoTime() - timestart;
+
+			rt.gc();
+			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+
+			double wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
+			double realwcsse = StatTests.WCSSE(gen1.medoids, justvecsInThisRound);
+			
+//			double realwcsse = WCSSE(gen1.medoids, justvecsInThisRound);
+
+			// recreate vectors at execution time to check average
+			System.gc();
+			System.out.printf("%d\t%d\t%.4f\t%.1f\t%.1f\n", i, usedkB,
+					time / 1000000000f, wcsse, realwcsse);
 		}
 	}
 

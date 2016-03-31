@@ -97,7 +97,7 @@ public class RPHashIterativeRedux  implements Clusterer
 	public RPHashObject reduce() 
 	{
 		Long lastID = so.getPreviousTopID().get(0);
-		Centroid centroid = new Centroid(so.getdim(),lastID);
+		Centroid centroid = new Centroid(so.getdim(),lastID,-1);
 		Iterator<float[]> vecs = so.getVectorIterator();
 		float[] vec;
 		

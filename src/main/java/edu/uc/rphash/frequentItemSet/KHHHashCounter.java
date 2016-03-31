@@ -154,7 +154,7 @@ public class KHHHashCounter {
 
 
 		for (long i = 1; i < 5000; i++) {
-			khh.add(new Centroid(0,r.nextInt((int) i) ));
+			khh.add(new Centroid(0,r.nextInt((int) i),-1 ));
 		}
 
 //		System.out.println(System.currentTimeMillis() - ts);

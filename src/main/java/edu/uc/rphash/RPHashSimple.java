@@ -82,7 +82,7 @@ public class RPHashSimple implements Clusterer {
 		HashMap<Long,Integer> countid = new HashMap<Long,Integer>(counts.size());
 		int i = 0;
 		for (long id : so.getPreviousTopID()){
-			centroids.add(new Centroid(so.getdim(), id));
+			centroids.add(new Centroid(so.getdim(), id,-1));
 			counts.add(0f);
 			countid.put(id, i++);
 		}
@@ -152,23 +152,35 @@ public class RPHashSimple implements Clusterer {
 		int k = 10;
 		int d = 1000;
 		int n = 10000;
-		float var = 5.5f;
+		float var = 3.5f;
 		for(float f = var;f<2*var;f+=.01f){
 			for (int i = 0; i < 5; i++) {
 				GenerateStreamData gen = new GenerateStreamData(k, d, var, 11331313,true);
+				GenerateStreamData noise = new GenerateStreamData(1, d, var*10, 11331313);
 				ArrayList<float[]> t = new ArrayList<float[]>();
 				
 				for(int j =0;j<n;j++){
 					t.add(gen.generateNext());
+					t.add(noise.generateNext());
 				}
 				
 				RPHashSimple rphit = new RPHashSimple(t, k);
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = VectorUtil.alignCentroids(
+				
+				List<float[]> aligned =  VectorUtil.alignCentroids(
 						rphit.getCentroids(), gen.getMedoids());
-				System.out.println(f+":"+StatTests.PR(aligned, gen.getLabels(),t) + ":" + duration
+				
+				ArrayList<float[]> tNoiseRemoved = new ArrayList<float[]>();
+				for(int b =0;b<t.size();b++){
+					if(b%2==0)tNoiseRemoved.add(t.get(b));
+				}
+					
+				
+				
+				
+				System.out.println(f+":"+StatTests.PR(aligned, gen.getLabels(),tNoiseRemoved) + ":" + duration
 						/ 1000000000f);
 				System.gc();
 			}

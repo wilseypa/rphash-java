@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.projections.Projector;
 
 public class VectorUtil {
@@ -82,6 +83,27 @@ public class VectorUtil {
 		float tmp;
 		for (int i = 1; i < DB.size(); i++) {
 			tmp = distance(x, DB.get(i));
+			if (tmp <= mindist) {
+				mindist = tmp;
+				minindex = i;
+			}
+		}
+		return minindex;
+	}
+	
+	/**
+	 * Linear search for x's nearest neighbor in DB
+	 * 
+	 * @param x
+	 * @param DB
+	 * @return
+	 */
+	public static int findNearestDistance(Centroid x, List<Centroid> DB) {
+		float mindist = distance(x.centroid(), DB.get(0).centroid());
+		int minindex = 0;
+		float tmp;
+		for (int i = 1; i < DB.size(); i++) {
+			tmp = distance(x.centroid(), DB.get(i).centroid());
 			if (tmp <= mindist) {
 				mindist = tmp;
 				minindex = i;

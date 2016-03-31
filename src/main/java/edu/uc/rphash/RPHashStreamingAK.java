@@ -42,7 +42,7 @@ public class RPHashStreamingAK implements StreamClusterer {
 		}
 		
 		
-		Centroid c = new Centroid(vec);
+		Centroid c = new Centroid(vec,-1);
 		int ret = -1;
 		
 		for (LSH lshfunc : lshfuncs) {

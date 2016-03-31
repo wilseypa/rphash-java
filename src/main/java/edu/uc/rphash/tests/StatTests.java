@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.StreamObject;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.util.AtomicFloat;
@@ -36,7 +37,6 @@ public class StatTests {
 		{
 			if(VectorUtil.findNearestDistance(data.get(i), estCentroids)==labels.get(i))count++;
 		}
-		System.out.println(data.size());
 		return (float)count/(float)data.size();
 	}
 	
@@ -46,6 +46,15 @@ public class StatTests {
 		for(int i = 0; i< data.size();i++)
 		{
 			count+=VectorUtil.distance(data.get(i),estCentroids.get(VectorUtil.findNearestDistance(data.get(i), estCentroids))) ;
+		}
+		return count;
+	}
+	
+	public static double WCSSE(List<Centroid> estCentroids, List<Centroid> data,boolean skip){
+		double count = 0.0 ;
+		for(int i = 0; i< data.size();i++)
+		{
+			count+=VectorUtil.distance(data.get(i).centroid(),estCentroids.get(VectorUtil.findNearestDistance(data.get(i), estCentroids)).centroid()) ;
 		}
 		return count;
 	}

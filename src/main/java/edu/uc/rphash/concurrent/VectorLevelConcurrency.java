@@ -37,13 +37,13 @@ public class VectorLevelConcurrency implements Runnable {
 				long[] hash = lshfunc
 						.lshHashRadiusNo2Hash(vec, so.getNumBlur());
 				for (long h : hash) {
-					Centroid c = new Centroid(vec);
+					Centroid c = new Centroid(vec,-1);
 					c.addID(h);
 					is.addLong(h, 1);
 					is.add(c);
 				}
 			} else {
-				Centroid c = new Centroid(vec);
+				Centroid c = new Centroid(vec,-1);
 				long hash = lshfunc.lshHash(vec);
 				c.addID(hash);
 				is.addLong(hash, 1);

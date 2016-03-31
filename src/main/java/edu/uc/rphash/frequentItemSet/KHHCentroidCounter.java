@@ -128,7 +128,7 @@ public class KHHCentroidCounter {
 					priorityQueue.add(probed);
 				}
 				// shrink if needed
-				if (priorityQueue.size() > this.k) {
+				if (priorityQueue.size() > this.k*5) {
 
 					Centroid removed = priorityQueue.poll();
 					frequentItems.remove(removed.id);
@@ -218,17 +218,16 @@ public class KHHCentroidCounter {
 	List<Float> counts = null;
 
 	public List<Centroid> getTop() {
-//		if(topcent!=null)
-//			return topcent;
 		
 		this.topcent = new ArrayList<>();
 		this.counts = new ArrayList<>();
-		
+		int count = 0;
 		synchronized (priorityQueue) {
-			while (!priorityQueue.isEmpty()) {
+			while (!priorityQueue.isEmpty() && count<origk) {
 				Centroid tmp = priorityQueue.poll();
 				topcent.add(tmp);
 				counts.add(countlist.get(tmp.id));
+				count++;
 			}
 		}
 		return topcent;
@@ -238,4 +237,6 @@ public class KHHCentroidCounter {
 		if(topcent==null)getTop();
 		return counts;
 	}
+	
+
 }

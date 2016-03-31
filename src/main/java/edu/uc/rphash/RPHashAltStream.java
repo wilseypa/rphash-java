@@ -33,7 +33,7 @@ public class RPHashAltStream implements Clusterer, Runnable {
 
 		while (vecs.hasNext()) {
 			float[] vec = vecs.next();
-			Centroid c = new Centroid(vec);
+			Centroid c = new Centroid(vec,-1);
 			is.add(c);
 
 		}
