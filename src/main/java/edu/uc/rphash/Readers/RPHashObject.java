@@ -26,6 +26,8 @@ public interface RPHashObject {
 	
 	Iterator<float[]> getVectorIterator();
 	List<float[]> getCentroids( );
+	List<Float> getCounts( );
+	void setCounts(List<Float> counts);
 	
 	List<Long> getPreviousTopID();
 	void setPreviousTopID(List<Long> i);

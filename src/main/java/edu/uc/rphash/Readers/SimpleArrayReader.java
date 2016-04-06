@@ -25,6 +25,7 @@ public class SimpleArrayReader implements RPHashObject {
 	List<Long> topIDs;
 	boolean parallel = true;
 	private int dimparameter;
+	List<Float> counts;
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -302,6 +303,16 @@ public class SimpleArrayReader implements RPHashObject {
 		return this.dimparameter;
 	}
 
+	@Override
+	public void setCounts(List<Float> counts) {
+
+		this.counts = counts;
+	}
+
+	@Override
+	public List<Float> getCounts() {
+		return counts;
+	}
 
 
 }

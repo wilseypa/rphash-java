@@ -100,7 +100,7 @@ public class KHHCentroidCounter {
 
 	public void add(Centroid c) {
 		this.count++;
-		float count = count(c.id);
+		float count = addLong(c.id,1);
 
 		synchronized (frequentItems) {
 			Centroid probed = frequentItems.remove(c.id);
@@ -129,8 +129,7 @@ public class KHHCentroidCounter {
 					priorityQueue.add(probed);
 				}
 				// shrink if needed
-				if (priorityQueue.size() > this.k*5) {
-
+				if (priorityQueue.size() > this.k*10) {
 					Centroid removed = priorityQueue.poll();
 					frequentItems.remove(removed.id);
 					countlist.remove(removed.id);
@@ -141,12 +140,10 @@ public class KHHCentroidCounter {
 
 	private int hash(long item, int i) {
 		long hash = hashA[i] * item;
-//		hash += hash >>> 32;
-//		hash &= PRIME_MODULUS;
-//		return (int) (hash % width);
-		if(item<0)
-			item=(-item)<<1;
-		return (int) (item % width);
+		hash += hash >>> 32;
+		hash &= PRIME_MODULUS;
+		return (int) (hash % width);
+
 	}
 
 	private float decayOnInsert(float prev_val, int prevt) {

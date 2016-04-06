@@ -215,6 +215,7 @@ public class Leech implements Decoder {
 	public float scaler;
 
 	public Leech(float scaler) {
+		
 		this.setVariance(scaler);
 	}
 
@@ -316,7 +317,6 @@ public class Leech implements Decoder {
 			// r[i*2+1]= r[i*2+1]+2f ;
 			// ret+=1;
 			// }
-
 			float dist000 = distance(r, evenPts[0], i * 2);
 			float dist110 = distance(r, evenPts[1], i * 2);
 			float dist001 = distance(r, evenPts[2], i * 2);
@@ -1063,6 +1063,7 @@ public class Leech implements Decoder {
 
 	@Override
 	public void setVariance(Float parameterObject) {
+		if(parameterObject == 0)parameterObject = 1f;
 		if (scaler != parameterObject.floatValue()) {
 			scaler = parameterObject;
 			radius = (DPT + CPT) * scaler;

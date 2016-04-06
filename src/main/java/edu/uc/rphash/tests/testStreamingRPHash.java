@@ -2,11 +2,8 @@ package edu.uc.rphash.tests;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import edu.uc.rphash.RPHashStream;
-import edu.uc.rphash.StreamClusterer;
-import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -27,7 +24,7 @@ public class testStreamingRPHash {
 		Runtime rt = Runtime.getRuntime();
 		List<float[]> data = VectorUtil.readFile(filename, false);
 
-		RPHashStream rphit = new RPHashStream(data, k,processors!=1);
+		RPHashStream rphit = new RPHashStream(data, k);
 
 		// System.out.printf("Running Streaming RPHash on %d processors, d=%d,k=%d,n=%d\n",rphit.getProcessors(),d,k,interval);
 		// StreamClusterer rphit = new StreamingKmeans(data, k);
@@ -63,7 +60,7 @@ public class testStreamingRPHash {
 
 		int k = 10;
 		int d = 1000;
-		float var = 1f;
+		float var = 2f;
 		int interval = 10000;
 		Runtime rt = Runtime.getRuntime();
 

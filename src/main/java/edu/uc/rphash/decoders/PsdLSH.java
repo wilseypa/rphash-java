@@ -54,8 +54,8 @@ public class PsdLSH  implements Decoder {
 	public PsdLSH() {
 		M = 256;
 		L = 4;
-		T = CAUCHY;
-		W = 4f;
+		T = GAUSSIAN;
+		W = 2f;
 		D = 32;
 		bits = (int) Math.ceil(Math.log(M) / Math.log(2));
 		rndBs = new float[L];
@@ -68,7 +68,7 @@ public class PsdLSH  implements Decoder {
 		L = 4;
 		T = psdtype;
 		if(psdtype==LEVY)W = 4f;
-		if(psdtype==GAUSSIAN)W = 4f;
+		if(psdtype==GAUSSIAN)W = 1f;
 		if(psdtype==CAUCHY)W = 2f;
 		D = innerDecoderMultiplier;
 
@@ -132,6 +132,7 @@ public class PsdLSH  implements Decoder {
 	}
 
 	long[] hash(float[] v) {
+
 			long[] hashVal = new long[1];
 //			long hashVal = 0;
 			int tmp;

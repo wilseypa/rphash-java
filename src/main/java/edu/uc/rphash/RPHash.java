@@ -166,7 +166,7 @@ public class RPHash {
 						+ "} \n cpu time \t wcsse \t\t\t mem(kb)\n");
 
 				long startTime = System.nanoTime() + avgtimeToRead;
-				int i = 0;
+				int i = 1;
 				ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
 
 				while (streamer.hasNext()) {
@@ -179,20 +179,16 @@ public class RPHash {
 					if (i % streamDuration == 0 || !streamer.hasNext()) {
 						List<float[]> cents = ((StreamClusterer) clu)
 								.getCentroidsOfflineStep();
-						
 						long time = System.nanoTime() - startTime;
 						double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
 						vecsInThisRound = new ArrayList<float[]>();
-
 						rt.gc();
 						Thread.sleep(10);
 						rt.gc();
 
 						long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
-
 						System.out.println(time / 1000000000f + "\t" + wcsse
 								+ "\t" + usedkB);
-
 						VectorUtil.writeFile(new File(outputFile + "_round" + i
 								+ "."
 								+ ClusterHashName[ClusterHashName.length - 1]),
@@ -257,36 +253,35 @@ public class RPHash {
 			o.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
 			so.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
 		}
-		
 		if (taggedArgs.containsKey("decodertype")) {
 			switch (taggedArgs.get("decodertype").toLowerCase()) {
 			case "dn": {
-				o.setDecoderType(new Dn(o.getInnerDecoderMultiplier()));
-				so.setDecoderType(new Dn(o.getInnerDecoderMultiplier()));
+				o.setDecoderType(new Dn(o.getDimparameter()));
+				so.setDecoderType(new Dn(o.getDimparameter()));
 				break;
 			}
 			case "e8": {
-				o.setDecoderType(new E8(1f));
-				so.setDecoderType(new E8(1f));
+				o.setDecoderType(new E8(2f));
+				so.setDecoderType(new E8(2f));
 				break;
 			}
 			case "multie8": {
 				o.setDecoderType(new MultiDecoder(
-						o.getInnerDecoderMultiplier() * 8, new E8(1f)));
+						o.getInnerDecoderMultiplier() * 8, new E8(2f)));
 				so.setDecoderType(new MultiDecoder(so
-						.getInnerDecoderMultiplier() * 8, new E8(1f)));
+						.getInnerDecoderMultiplier() * 8, new E8(2f)));
 				break;
 			}
 			case "leech": {
-				o.setDecoderType(new Leech(1f));
-				so.setDecoderType(new Leech(1f));
+				o.setDecoderType(new Leech(2f));
+				so.setDecoderType(new Leech(2f));
 				break;
 			}
 			case "multileech": {
 				o.setDecoderType(new MultiDecoder(
-						o.getInnerDecoderMultiplier() * 24, new Leech(1f)));
+						o.getInnerDecoderMultiplier() * 24, new Leech(2f)));
 				so.setDecoderType(new MultiDecoder(so
-						.getInnerDecoderMultiplier() * 24, new Leech(1f)));
+						.getInnerDecoderMultiplier() * 24, new Leech(2f)));
 				break;
 			}
 			case "levypstable": {
@@ -306,9 +301,9 @@ public class RPHash {
 			}
 			case "sphere": {
 				o.setDecoderType(new Spherical(o.getDimparameter(),
-						2, 1));
+						3, 2));
 				so.setDecoderType(new Spherical(o.getDimparameter(),
-						2, 1));
+						3, 2));
 				break;
 			}
 			default: {

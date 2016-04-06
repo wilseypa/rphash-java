@@ -53,7 +53,12 @@ public class RPHashSimple implements Clusterer {
 			is.add(hash);
 			//vec.id.add(hash);
 		}
-		so.setPreviousTopID(is.getTop());	
+		so.setPreviousTopID(is.getTop());
+		
+		List<Float> countsAsFloats = new ArrayList<Float>();
+		for(long ct: is.getCounts())countsAsFloats.add((float) ct);
+		so.setCounts(countsAsFloats);
+		System.out.println(countsAsFloats);
 		return so;
 	}
 
@@ -78,13 +83,13 @@ public class RPHashSimple implements Clusterer {
 		long hash[];
 		
 		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
-		List<Float> counts = new ArrayList<Float>(centroids.size());
-		HashMap<Long,Integer> countid = new HashMap<Long,Integer>(counts.size());
-		int i = 0;
+//		List<Float> counts = new ArrayList<Float>(centroids.size());
+//		HashMap<Long,Integer> countid = new HashMap<Long,Integer>(counts.size());
+//		int i = 0;
 		for (long id : so.getPreviousTopID()){
 			centroids.add(new Centroid(so.getdim(), id,-1));
-			counts.add(0f);
-			countid.put(id, i++);
+//			counts.add(0f);
+//			countid.put(id, i++);
 		}
 		
 		while (vecs.hasNext()) {	
@@ -93,17 +98,17 @@ public class RPHashSimple implements Clusterer {
 				for(long h:hash){
 					if(cent.ids.contains(h)){
 						cent.updateVec(vec);
-						int tmp = countid.get(cent.id);
-						counts.set(tmp,counts.get(tmp)+1);
+//						int tmp = countid.get(cent.id);
+//						counts.set(tmp,counts.get(tmp)+1);
 						break;
 					}
 				}
 			}
 			vec = vecs.next();
 		}
-		
+//		System.out.println(counts);
 		for (Centroid c: centroids) so.addCentroid(c.centroid());
-		so.setCentroids(new Kmeans(so.getk(),so.getCentroids(),counts).getCentroids());
+		so.setCentroids(new Kmeans(so.getk(),so.getCentroids(),so.getCounts()).getCentroids());
 		return so;
 	}
 

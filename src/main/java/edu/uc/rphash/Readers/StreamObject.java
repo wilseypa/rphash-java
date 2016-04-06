@@ -73,6 +73,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	boolean filereader = false;
 	private int dimparameter;
+	private List<Float> counts;
 
 	public StreamObject(String f, int k, boolean raw) throws IOException {
 		this.f = f;
@@ -318,7 +319,17 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	@Override
 	public int getDimparameter() {
-
 		return this.dimparameter;
+	}
+	
+	@Override
+	public void setCounts(List<Float> counts) {
+
+		this.counts = counts;
+	}
+
+	@Override
+	public List<Float> getCounts() {
+		return counts;
 	}
 }
