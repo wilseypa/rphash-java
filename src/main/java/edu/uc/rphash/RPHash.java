@@ -176,13 +176,10 @@ public class RPHash {
 			Clusterer clu = cluit.next();
 			StreamObject streamer = (StreamObject) clu.getParam();
 			if (clu instanceof StreamClusterer) {
-				String[] ClusterHashName = clu.getClass().getName()
-						.split("\\.");
-				String[] DecoderHashName = clu.getParam().toString()
-						.split("\\.");
-				System.out.print("Streaming -- "
-						+ ClusterHashName[ClusterHashName.length - 1] + "{"
-						+ DecoderHashName[DecoderHashName.length - 1]
+				String[] ClusterHashName = clu.getClass().getName().split("\\.");
+				System.out.print(ClusterHashName[ClusterHashName.length - 1] 
+						+ " { "+clu.getParam().toString()
+						+ "}"
 						+ ",stream_duration:" + streamDuration
 						+ "} \n cpu time \t wcsse \t\t\t mem(kb)\n");
 
