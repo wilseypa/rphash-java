@@ -82,7 +82,7 @@ public class RPHashStreamingAK implements StreamClusterer {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
-					SimpleArrayReader.DEFAULT_NUM_BLUR, r, dec.getErrorRadius()
+					so.getNumBlur(), r, dec.getErrorRadius()
 							/ dec.getDimensionality());
 			lshfuncs[i] = new LSH(dec, p, hal, noise);
 		}
@@ -119,7 +119,11 @@ public class RPHashStreamingAK implements StreamClusterer {
 			centroids.add(cents.get(i).centroid());
 		}
 
-		centroids = new Kmeans(so.getk(), centroids, counts).getCentroids();
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setWeights(so.getCounts());
+		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setK(so.getk());
+		centroids = offlineclusterer.getCentroids();
 
 		return centroids;
 	}
@@ -140,6 +144,24 @@ public class RPHashStreamingAK implements StreamClusterer {
 	@Override
 	public RPHashObject getParam() {
 		return this.so;
+	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

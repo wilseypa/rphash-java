@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.zip.GZIPInputStream;
 
+import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.tests.StatTests;
@@ -69,11 +70,13 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 
 	boolean filereader = false;
 	private int dimparameter;
 	private List<Float> counts;
+	private Clusterer clusterer;
 
 	public StreamObject(String f, int k, boolean raw) throws IOException {
 		this.f = f;
@@ -115,6 +118,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 		// dec = new MultiDecoder(
 		// getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
 	}
@@ -242,6 +246,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		ret += ", Blur:" + numBlur;
 		ret += ", Projections:" + numProjections;
 		ret += ", Outer Decoder Multiplier:" + decoderMultiplier;
+		ret += ", Offline Clusterer:" + clusterer.getClass().getName();
 		return ret;
 	}
 
@@ -331,5 +336,15 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	@Override
 	public List<Float> getCounts() {
 		return counts;
+	}
+	
+	@Override
+	public void setOfflineClusterer(Clusterer agglomerative3) {
+		this.clusterer = agglomerative3;
+	}
+	
+	@Override
+	public Clusterer getOfflineClusterer() {
+		return this.clusterer;
 	}
 }

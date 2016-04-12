@@ -17,6 +17,7 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
+import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative;
 import edu.uc.rphash.tests.clusterers.Agglomerative2;
@@ -46,7 +47,7 @@ public class RPHashMultiProj implements Clusterer {
 
 		long hash;
 		int projections = so.getNumProjections();
-		int k = (int) (so.getk() * projections);
+		int k = (int) (so.getk() * projections)*2;
 
 		// initialize our counter
 		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
@@ -55,27 +56,30 @@ public class RPHashMultiProj implements Clusterer {
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[projections];
 
-		Decoder dec = new Leech(variance);
+		Decoder dec =  so.getDecoderType();
 		// Decoder dec = new MultiDecoder(1, innerdec);
 
-		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		HashAlgorithm hal = new NoHash(so.getHashmod());
 
 		// create same projection matrices as before
 		for (int i = 0; i < projections; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
-			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),1, r, dec.getErrorRadius()/dec.getDimensionality());
+			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), r, dec.getErrorRadius()/dec.getDimensionality());
 			lshfuncs[i] = new LSH(dec, p, hal,noise);
 		}
+		
+//		int waa = 0;
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
 			float[] vec = vecs.next();
+//			waa++;
 			for (int i = 0; i < projections; i++) {
 				hash = lshfuncs[i].lshHash(vec);
+//				if(waa%1000==0)System.out.println(waa+":"+hash);
 				is.add(hash);
 			}
 		}
-
 
 		so.setPreviousTopID(is.getTop());
 		List<Float> countsAsFloats = new ArrayList<Float>();
@@ -97,7 +101,7 @@ public class RPHashMultiProj implements Clusterer {
 		int blurProbings = so.getNumBlur();
 		int projections = so.getNumProjections();
 
-		long hash[];
+		long hash[] = new long[blurProbings];
 		// make a set of k default centroid objects
 		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
 		for (long id : so.getPreviousTopID())
@@ -107,15 +111,15 @@ public class RPHashMultiProj implements Clusterer {
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[projections];
 		// Decoder dec = so.getDecoderType();
-		Decoder dec = new Leech(variance);
+		Decoder dec = so.getDecoderType();
 		// Decoder dec = new MultiDecoder(1, innerdec);
-		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		HashAlgorithm hal =  new NoHash(so.getHashmod());
 
 		// create same projection matrices as before
 		for (int i = 0; i < projections; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
-			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),1, r, dec.getErrorRadius()/dec.getDimensionality());
+			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), r, .1f*dec.getErrorRadius()/dec.getDimensionality());
 			lshfuncs[i] = new LSH(dec, p, hal,noise);
 		}
 
@@ -125,7 +129,6 @@ public class RPHashMultiProj implements Clusterer {
 			for (LSH lshfunc : lshfuncs) {
 				// could do a big parallel projection here
 				hash = lshfunc.lshHashRadiusNo2Hash(vec, blurProbings);
-				// iterate over the blurred vectors
 				for (Centroid cent : centroids) {
 					for (long hh : hash) {
 						if (cent.ids.contains(hh)) {
@@ -137,19 +140,26 @@ public class RPHashMultiProj implements Clusterer {
 			}
 		}
 
-		for (Centroid cent : centroids)
-			so.addCentroid(cent.centroid());
-
+		List<float[]> centvectors = new ArrayList<float[]>();
+		List<Float> centcounts = new ArrayList<Float>();
+		for (Centroid cent : centroids){
+			centvectors.add(cent.centroid());
+			centcounts.add((float)cent.getCount());
+		}
+		
+		so.setCentroids(centvectors);
+		so.setCounts(centcounts);
 		return so;
 	}
 
 	private List<float[]> centroids = null;
 	private RPHashObject so;
 
-	public RPHashMultiProj(List<float[]> data, int k) {
-		variance = StatTests.varianceSample(data, .01f);
+	public RPHashMultiProj( int k,List<float[]> data) {
+//		variance = StatTests.varianceSample(data, .01f);
+//		System.out.println(variance);
 		so = new SimpleArrayReader(data, k);
-		so.getDecoderType().setVariance(variance);
+//		so.getDecoderType().setVariance(variance);
 	}
 
 	// public RPHashMultiProj(List<float[]> data, int k, int numProjections) {
@@ -182,14 +192,19 @@ public class RPHashMultiProj implements Clusterer {
 		if (centroids == null)
 			run();
 		
-		return new Agglomerative2(so.getk(), so.getCentroids(),so.getCounts()).getCentroids();
+		return centroids;
 	}
 
 	private void run() {
 
 		map();
 		reduce();
-		centroids = new Agglomerative2(so.getk(), so.getCentroids(),so.getCounts()).getCentroids();
+		
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setWeights(so.getCounts());
+		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setK(so.getk());
+		centroids = offlineclusterer.getCentroids();
 	}
 
 	public static void main(String[] args) {
@@ -200,12 +215,11 @@ public class RPHashMultiProj implements Clusterer {
 		int n = 20000;
 
 
-		float var = 1.5f;
-		for (float f = var; f < 4.1; f += .2f) {
+		float var = .1f;
+		for (float f = var; f < 2.1; f += .01f) {
 			for (int i = 0; i < 1; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
-				RPHashMultiProj rphit = new RPHashMultiProj(gen.data(), k);
-
+				RPHashMultiProj rphit = new RPHashMultiProj( k,gen.data());
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
@@ -222,6 +236,24 @@ public class RPHashMultiProj implements Clusterer {
 	@Override
 	public RPHashObject getParam() {
 		return so;
+	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

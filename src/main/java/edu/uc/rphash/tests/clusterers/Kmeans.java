@@ -17,6 +17,30 @@ public class Kmeans implements Clusterer {
 	int k;
 	int n;
 	List<float[]> data;
+	public int getK() {
+		return k;
+	}
+
+	public void setK(int k) {
+		this.k = k;
+	}
+
+	public List<float[]> getData() {
+		return data;
+	}
+
+	public void setData(List<float[]> data) {
+		this.data = data;
+	}
+
+	public List<Float> getWeights() {
+		return weights;
+	}
+
+	public void setWeights(List<Float> weights) {
+		this.weights = weights;
+	}
+
 	int projdim;
 
 	List<float[]> means;
@@ -52,6 +76,10 @@ public class Kmeans implements Clusterer {
 		for (int i = 0; i < data.size(); i++)
 			weights.add(1f);
 		means = null;
+	}
+
+	public Kmeans() {
+		// TODO Auto-generated constructor stub
 	}
 
 	public float[] computerCentroid(List<Integer> vectors, List<float[]> data) {

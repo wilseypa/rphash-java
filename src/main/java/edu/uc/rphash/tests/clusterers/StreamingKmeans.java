@@ -638,7 +638,7 @@ public class StreamingKmeans implements StreamClusterer {
 		}
 		}
 		 
-		return new /*Agglomerative2*/Kmeans(numClusters, ret).getCentroids();
+		return new Agglomerative2(numClusters, ret).getCentroids();
 
 	}
 
@@ -702,5 +702,16 @@ public class StreamingKmeans implements StreamClusterer {
 		return processors;
 	}
 
+	@Override
+	public void setWeights(List<Float> counts) {
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		this.data = centroids;
+	}
+	@Override
+	public void setK(int getk) {
+	}
 
 }

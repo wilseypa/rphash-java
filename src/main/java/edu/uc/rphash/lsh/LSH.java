@@ -12,7 +12,7 @@ public class LSH {
 	public Projector projectionMatrix;
 	HashAlgorithm standardHashAlgorithm;
 	public Decoder lshDecoder;
-	int times;
+//	int times;
 	Random rand;
 	float radius;
 	float distance = 0.0f;
@@ -24,7 +24,7 @@ public class LSH {
 		// this.projectionMatrices[0] = p;
 		this.standardHashAlgorithm = hal;
 		this.lshDecoder = dec;
-		this.times = 1;
+//		this.times = 1;
 		rand = new Random();
 		radius = dec.getErrorRadius() / dec.getDimensionality();
 		this.noise = noise;

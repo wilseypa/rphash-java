@@ -3,10 +3,13 @@ package edu.uc.rphash.Readers;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
+import edu.uc.rphash.tests.clusterers.Agglomerative3;
+import edu.uc.rphash.tests.clusterers.Kmeans;
 
 public interface RPHashObject {
 	 final static int DEFAULT_NUM_PROJECTIONS = 2;
@@ -16,6 +19,7 @@ public interface RPHashObject {
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
 	 final static Decoder DEFAULT_INNER_DECODER =new PsdLSH();//new Spherical(64,2,1);//new Leech(3);//;
 	 final static int DEFAULT_DIM_PARAMETER = 32;
+	 final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new Agglomerative3(Agglomerative3.ClusteringType.AVG_LINKAGE);
 	 
 	 
 	int getk();
@@ -53,5 +57,7 @@ public interface RPHashObject {
 	boolean getParallel();
 	void setDimparameter(int parseInt);
 	int getDimparameter();
+	void setOfflineClusterer(Clusterer agglomerative3);
+	Clusterer getOfflineClusterer();
 
 }

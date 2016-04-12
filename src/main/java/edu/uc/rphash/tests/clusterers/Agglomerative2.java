@@ -336,6 +336,23 @@ public class Agglomerative2 implements Clusterer {
 			this.counts[i] = counts.get(i);
 		distanceArray2(data,projectionIDs);
 	}
+	
+	@Override
+	public void setWeights(List<Float> counts) {
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		this.data = centroids;
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		this.k = getk;
+	}
+	
 
 
 }

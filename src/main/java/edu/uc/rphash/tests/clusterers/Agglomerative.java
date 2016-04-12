@@ -117,6 +117,23 @@ public class Agglomerative implements Clusterer{
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+		
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		this.data = centroids;
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		this.k = getk;
+	}
 	
 	
 	

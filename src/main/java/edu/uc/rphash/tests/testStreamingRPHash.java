@@ -3,6 +3,7 @@ package edu.uc.rphash.tests;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uc.rphash.RPHashMultiProj;
 import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 import edu.uc.rphash.util.VectorUtil;
@@ -58,7 +59,7 @@ public class testStreamingRPHash {
 
 	public static void generateAndStream() {
 
-		int k = 10;
+		int k = 20;
 		int d = 1000;
 		float var = 2f;
 		int interval = 10000;
@@ -67,13 +68,15 @@ public class testStreamingRPHash {
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
 		GenerateStreamData noise = new GenerateStreamData(1, d, var*10, 11331313);
 		RPHashStream rphit = new RPHashStream(k, gen1,rt.availableProcessors());
-
+		
 		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tRealWCSSE\n");
 		
 		long timestart = System.nanoTime();
 		for (int i = 0; i < 2500000;) {
 			ArrayList<float[]> vecsAndNoiseInThisRound = new ArrayList<float[]>();
 			ArrayList<float[]> justvecsInThisRound = new ArrayList<float[]>();
+			
+			
 			
 			for (int j = 1; j < interval && i < 2500000; i++, j++){
 				float[] vec = gen1.generateNext();
@@ -82,13 +85,17 @@ public class testStreamingRPHash {
 				//vecsAndNoiseInThisRound.add(noise.generateNext());
 				//vecsAndNoiseInThisRound.add(noise.generateNext());
 			}
-
+			
+			
 			timestart = System.nanoTime();
 			for (float[] f : vecsAndNoiseInThisRound) {
 				rphit.addVectorOnlineStep(f);
 			}
 
 			List<float[]> cents = rphit.getCentroidsOfflineStep();
+			
+
+			
 			long time = System.nanoTime() - timestart;
 
 			rt.gc();
@@ -109,7 +116,7 @@ public class testStreamingRPHash {
 	public static void streamingPushtest() {
 		int k = 10;
 		int d = 1000;
-		float var = 1f;
+		float var = 4.5f;
 
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
 

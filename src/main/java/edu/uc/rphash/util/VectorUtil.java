@@ -201,6 +201,7 @@ public class VectorUtil {
 		} else {
 			for (int i = 0; i < mat.size(); i++) {
 				prettyPrint(mat.get(i));
+				System.out.print("\n");
 			}
 		}
 	}

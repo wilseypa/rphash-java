@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.tests.StatTests;
@@ -26,6 +27,7 @@ public class SimpleArrayReader implements RPHashObject {
 	boolean parallel = true;
 	private int dimparameter;
 	List<Float> counts;
+	private Clusterer clusterer;
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -51,6 +53,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.data = gen.getData();
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 	
 	
@@ -73,6 +76,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.topIDs = new ArrayList<Long>();
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 //		for (int i = 0; i < k; i++)
 //			topIDs.add((long) 0);
 	}
@@ -98,6 +102,7 @@ public class SimpleArrayReader implements RPHashObject {
 			topIDs.add((long) 0);
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
@@ -122,6 +127,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.topIDs = new ArrayList<Long>();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 
 	/**
@@ -157,6 +163,7 @@ public class SimpleArrayReader implements RPHashObject {
 			topIDs.add((long) 0);
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 
 	public Iterator<float[]> getVectorIterator() {
@@ -257,6 +264,7 @@ public class SimpleArrayReader implements RPHashObject {
 		ret+=", Blur:"+numBlur;
 		ret+=", Projections:"+numProjections;
 		ret+=", Outer Decoder Multiplier:"+decoderMultiplier;
+		ret += ", Offline Clusterer:" + clusterer.getClass().getName();
 		return ret;
 	}
 
@@ -314,5 +322,13 @@ public class SimpleArrayReader implements RPHashObject {
 		return counts;
 	}
 
+	@Override
+	public void setOfflineClusterer(Clusterer agglomerative3) {
+		this.clusterer = agglomerative3;
+	}
 
+	@Override
+	public Clusterer getOfflineClusterer() {
+		return this.clusterer;
+	}
 }

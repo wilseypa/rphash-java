@@ -297,4 +297,19 @@ public class MLE2 implements Clusterer {
 		return new SimpleArrayReader(this.data, T);
 	}
 
+	@Override
+	public void setWeights(List<Float> counts) {
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		this.data = centroids;
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+	}
+	
 }

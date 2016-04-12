@@ -606,8 +606,17 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 		
 		System.out.println( StatTests.PR(aligned, gen) + ":"+StatTests.WCSSE(aligned, gen.getData()));
 		System.gc();
-
 	}
 	
+	@Override
+	public void setWeights(List<Float> counts) {
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+	}
+	@Override
+	public void setK(int getk) {
+	}
 
 }

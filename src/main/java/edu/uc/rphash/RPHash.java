@@ -20,6 +20,7 @@ import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.clusterers.Kmeans;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.tests.kmeanspp.DoublePoint;
@@ -29,27 +30,39 @@ import edu.uc.rphash.util.VectorUtil;
 public class RPHash {
 
 	static String[] clusteringmethods = { "simple", "streaming", "3stage",
-			"multiProj", "consensus", "redux", "kmeans", "pkmeans",
+			"multiproj", "consensus", "redux", "kmeans", "pkmeans",
 			"kmeansplusplus", "streamingkmeans" };
+	static String[] offlineclusteringmethods = { "singlelink",
+			"completelink", "averagelink", "kmeans" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
-			"NumBlur", "randomseed", "hashmod", "decodertype","parallel",
-			"streamduration", "raw", "decayrate","dimparameter" };
+			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
+			"raw", "decayrate", "dimparameter", "decodertype","offlineclusterer"
+			 };
 	static String[] decoders = { "dn", "e8", "multie8", "leech", "multileech",
-			"sphere", "levypstable", "cauchypstable","gaussianpstable"};
+			"sphere", "levypstable", "cauchypstable", "gaussianpstable" };
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException, InterruptedException {
 
 		if (args.length < 3) {
-			System.out.print("Usage: rphash InputFile k OutputFile [");
+			System.out.print("Usage: rphash InputFile k OutputFile [CLUSTERING_METHOD ...][OPTIONAL_ARG=value ...]\n");
+			
+			System.out.print("\tCLUSTERING_METHOD:\n");
 			for (String s : clusteringmethods)
-				System.out.print(s + " ,");
-			System.out.print("] [arg=value...]\n \t Optional Args:\n");
-
-			for (String s : ops)
+				System.out.print("\t\t"+s +"\n");
+			
+			System.out.print("\tOPTIONAL_ARG:\n");
+			for (int i = 0;i<ops.length-2;i++)
+			{	String s = ops[i];
 				System.out.println("\t\t" + s);
-			System.out.print("\t\t\t\t:[");
+			}
+			System.out.print("\t\t"+ops[ops.length-2]+"\t:[");
 			for (String s : decoders)
+				System.out.print(s + " ,");
+			System.out.print("]\n");
+
+			System.out.print("\t\t"+ops[ops.length-1]+"\t:[");
+			for (String s : offlineclusteringmethods)
 				System.out.print(s + " ,");
 			System.out.print("]\n");
 
@@ -74,9 +87,9 @@ public class RPHash {
 
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
-		
-		if (!taggedArgs.containsKey("streamduration"))data = VectorUtil.readFile(filename, raw);
-		
+
+		if (!taggedArgs.containsKey("streamduration"))
+			data = VectorUtil.readFile(filename, raw);
 
 		List<Clusterer> runs;
 		if (taggedArgs.containsKey("raw")) {
@@ -98,16 +111,24 @@ public class RPHash {
 	}
 
 	public static void runner(List<Clusterer> runitems, String outputFile,
-			boolean raw) {
+			boolean raw) throws InterruptedException {
 		for (Clusterer clu : runitems) {
 			String[] ClusterHashName = clu.getClass().getName().split("\\.");
-			String[] DecoderHashName = clu.getParam().toString().split("\\.");
-			System.out.print(ClusterHashName[ClusterHashName.length - 1] + "{"
-					+ DecoderHashName[DecoderHashName.length - 1]
+//			String[] DecoderHashName = clu.getParam().toString().split("\\.");
+			System.out.print(ClusterHashName[ClusterHashName.length - 1] + " { "+clu.getParam().toString()
+//					ClusterHashName[ClusterHashName.length - 1] + "{"
+//					+ DecoderHashName[DecoderHashName.length - 2]
 					+ "} processing time : ");
+			
+			Runtime rt = Runtime.getRuntime();
+			rt.gc();
+			Thread.sleep(10);
+			rt.gc();
 			long startTime = System.nanoTime();
 			clu.getCentroids();
-			System.out.println((System.nanoTime() - startTime) / 1000000000f);
+			
+			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+			System.out.println((System.nanoTime() - startTime) / 1000000000f + ", used(KB): "+usedkB);
 			VectorUtil.writeFile(new File(outputFile + "."
 					+ ClusterHashName[ClusterHashName.length - 1]),
 					clu.getCentroids(), raw);
@@ -126,8 +147,8 @@ public class RPHash {
 	 *         streamduration vectors
 	 * @throws IOException
 	 */
-	public static long computeAverageReadTime(Integer streamDuration,
-			String f, int testsize, boolean raw) throws IOException {
+	public static long computeAverageReadTime(Integer streamDuration, String f,
+			int testsize, boolean raw) throws IOException {
 		StreamObject streamer = new StreamObject(f, 0, raw);
 		int i = 0;
 
@@ -179,6 +200,7 @@ public class RPHash {
 					if (i % streamDuration == 0 || !streamer.hasNext()) {
 						List<float[]> cents = ((StreamClusterer) clu)
 								.getCentroidsOfflineStep();
+						
 						long time = System.nanoTime() - startTime;
 						double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
 						vecsInThisRound = new ArrayList<float[]>();
@@ -285,36 +307,71 @@ public class RPHash {
 				break;
 			}
 			case "levypstable": {
-				o.setDecoderType(new PsdLSH(PsdLSH.LEVY,o.getDimparameter()));
-				so.setDecoderType(new PsdLSH(PsdLSH.LEVY,o.getDimparameter()));
+				o.setDecoderType(new PsdLSH(PsdLSH.LEVY, o.getDimparameter()));
+				so.setDecoderType(new PsdLSH(PsdLSH.LEVY, o.getDimparameter()));
 				break;
 			}
 			case "cauchypstable": {
-				o.setDecoderType(new PsdLSH(PsdLSH.CAUCHY,o.getDimparameter()));
-				so.setDecoderType(new PsdLSH(PsdLSH.CAUCHY,o.getDimparameter()));
+				o.setDecoderType(new PsdLSH(PsdLSH.CAUCHY, o.getDimparameter()));
+				so.setDecoderType(new PsdLSH(PsdLSH.CAUCHY, o.getDimparameter()));
 				break;
 			}
 			case "gaussianpstable": {
-				o.setDecoderType(new PsdLSH(PsdLSH.GAUSSIAN,o.getDimparameter()));
-				so.setDecoderType(new PsdLSH(PsdLSH.GAUSSIAN,o.getDimparameter()));
+				o.setDecoderType(new PsdLSH(PsdLSH.GAUSSIAN, o
+						.getDimparameter()));
+				so.setDecoderType(new PsdLSH(PsdLSH.GAUSSIAN, o
+						.getDimparameter()));
 				break;
 			}
 			case "sphere": {
-				o.setDecoderType(new Spherical(o.getDimparameter(),
-						3, 2));
-				so.setDecoderType(new Spherical(o.getDimparameter(),
-						3, 2));
+				o.setDecoderType(new Spherical(o.getDimparameter(), 3, 2));
+				so.setDecoderType(new Spherical(o.getDimparameter(), 3, 2));
 				break;
 			}
 			default: {
 				System.out.println(taggedArgs.get("decodertype")
-						+ " decoder does not exist");
-				o.setDecoderType(null);
-				so.setDecoderType(null);
+						+ " decoder does not exist, using defaults");
 			}
 			}
 		}
-		
+
+		if (taggedArgs.containsKey("offlineclusterer")) 
+		{
+			switch (taggedArgs.get("offlineclusterer").toLowerCase()) {
+			case "singlelink": {
+
+				o.setOfflineClusterer(new Agglomerative3(
+						Agglomerative3.ClusteringType.SINGLE_LINKAGE));
+				so.setOfflineClusterer(new Agglomerative3(
+						Agglomerative3.ClusteringType.SINGLE_LINKAGE));
+				break;
+			}
+			case "completelink": {
+
+				o.setOfflineClusterer(new Agglomerative3(
+						Agglomerative3.ClusteringType.COMPLETE_LINKAGE));
+				so.setOfflineClusterer(new Agglomerative3(
+						Agglomerative3.ClusteringType.COMPLETE_LINKAGE));
+				break;
+			}
+			case "averagelink": {
+				o.setOfflineClusterer(new Agglomerative3(
+						Agglomerative3.ClusteringType.AVG_LINKAGE));
+				so.setOfflineClusterer(new Agglomerative3(
+						Agglomerative3.ClusteringType.AVG_LINKAGE));
+				break;
+			}
+			case "kmeans": {
+				o.setOfflineClusterer(new Kmeans());
+				so.setOfflineClusterer(new Kmeans());
+				break;
+			}
+			default: {
+				System.out.println(taggedArgs.get("clustering type")
+						+ "does not exist, using defaults");
+			}
+			}
+		}
 
 		while (i < untaggedArgs.size()) {
 			switch (untaggedArgs.get(i).toLowerCase()) {

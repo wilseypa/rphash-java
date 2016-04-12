@@ -61,7 +61,11 @@ public class RPHashConsensusRP  implements Clusterer{
 		manyCentroids.addAll(new RPHashIterativeRedux(so).getCentroids());
 		//stream, multiproj, are simply sub versions of rphash.
 		//sphereical is not complete
-		centroids =  ( new Agglomerative(k,manyCentroids)).getCentroids();
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setWeights(so.getCounts());
+		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setK(so.getk());
+		centroids = offlineclusterer.getCentroids();
 		
 	}
 	
@@ -87,6 +91,24 @@ public class RPHashConsensusRP  implements Clusterer{
 	@Override
 	public RPHashObject getParam() {
 		return so;
+	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	

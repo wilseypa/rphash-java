@@ -53,7 +53,7 @@ public class RPHash3Stage implements Clusterer {
 		for (int i = 0; i < probes; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
-			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),1, r, dec.getErrorRadius()/dec.getDimensionality());
+			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), r, dec.getErrorRadius()/dec.getDimensionality());
 			
 			lshfuncs[i] = new LSH(dec, p, hal,noise);
 		}
@@ -101,7 +101,7 @@ public class RPHash3Stage implements Clusterer {
 		for (int i = 0; i < probes; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
-			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),1, r, dec.getErrorRadius()/dec.getDimensionality());
+			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), r, dec.getErrorRadius()/dec.getDimensionality());
 			lshfuncs[i] = new LSH(dec, p, hal,noise);
 		}
 
@@ -200,7 +200,12 @@ public class RPHash3Stage implements Clusterer {
 		so = mapP2();
 		so = mapP3();
 
-		centroids = new Kmeans(so.getk(),so.getCentroids()).getCentroids();
+		
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setWeights(so.getCounts());
+		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setK(so.getk());
+		centroids = offlineclusterer.getCentroids();
 	}
 
 	public static void main(String[] args) {
@@ -233,5 +238,23 @@ public class RPHash3Stage implements Clusterer {
 	public RPHashObject getParam() {
 
 		return so;
+	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		// TODO Auto-generated method stub
+		
 	}
 }

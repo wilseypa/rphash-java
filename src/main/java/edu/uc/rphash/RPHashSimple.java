@@ -1,7 +1,6 @@
 package edu.uc.rphash;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -17,7 +16,6 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.clusterers.Kmeans;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -37,7 +35,7 @@ public class RPHashSimple implements Clusterer {
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
 		//no noise to start with
-		List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),0, new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
+		List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
 		
 		LSH lshfunc = new LSH(dec, p, hal,noise);
 		long hash;
@@ -58,7 +56,6 @@ public class RPHashSimple implements Clusterer {
 		List<Float> countsAsFloats = new ArrayList<Float>();
 		for(long ct: is.getCounts())countsAsFloats.add((float) ct);
 		so.setCounts(countsAsFloats);
-		System.out.println(countsAsFloats);
 		return so;
 	}
 
@@ -78,18 +75,15 @@ public class RPHashSimple implements Clusterer {
 		
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
-		List<float[]> noise = LSH.genNoiseTable(so.getdim(),1, new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
+		List<float[]> noise = LSH.genNoiseTable(so.getdim(),so.getNumBlur(), new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
 		LSH lshfunc = new LSH(dec, p, hal,noise);
 		long hash[];
 		
-		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
-//		List<Float> counts = new ArrayList<Float>(centroids.size());
-//		HashMap<Long,Integer> countid = new HashMap<Long,Integer>(counts.size());
-//		int i = 0;
+		List<Centroid> centroids = new ArrayList<Centroid>();
+
 		for (long id : so.getPreviousTopID()){
 			centroids.add(new Centroid(so.getdim(), id,-1));
-//			counts.add(0f);
-//			countid.put(id, i++);
+
 		}
 		
 		while (vecs.hasNext()) {	
@@ -98,17 +92,24 @@ public class RPHashSimple implements Clusterer {
 				for(long h:hash){
 					if(cent.ids.contains(h)){
 						cent.updateVec(vec);
-//						int tmp = countid.get(cent.id);
-//						counts.set(tmp,counts.get(tmp)+1);
-						break;
 					}
 				}
 			}
 			vec = vecs.next();
 		}
-//		System.out.println(counts);
+
+		
 		for (Centroid c: centroids) so.addCentroid(c.centroid());
-		so.setCentroids(new Kmeans(so.getk(),so.getCentroids(),so.getCounts()).getCentroids());
+		
+		
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setWeights(so.getCounts());
+		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setK(so.getk());
+		this.centroids = offlineclusterer.getCentroids();
+		so.setCentroids(this.centroids);
+		
+		
 		return so;
 	}
 
@@ -196,5 +197,23 @@ public class RPHashSimple implements Clusterer {
 	@Override
 	public RPHashObject getParam() {
 		return so;
+	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		// TODO Auto-generated method stub
+		
 	}
 }

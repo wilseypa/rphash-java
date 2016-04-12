@@ -21,6 +21,7 @@ import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative2;
+import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.clusterers.Kmeans;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
@@ -73,7 +74,7 @@ public class RPHashStream implements StreamClusterer {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
-					SimpleArrayReader.DEFAULT_NUM_BLUR, r, dec.getErrorRadius()
+					so.getNumBlur(), r, dec.getErrorRadius()
 							/ dec.getDimensionality());
 			lshfuncs[i] = new LSH(dec, p, hal, noise);
 		}
@@ -152,11 +153,11 @@ public class RPHashStream implements StreamClusterer {
 			centroids.add(cents.get(i).centroid());
 		}
 		counts = counts.subList(0, i);
-
-		
-		//Clusterer km = new Kmeans(so.getk(), centroids,counts);
-		Clusterer km = new Agglomerative2(so.getk(), centroids,counts);
-		centroids = km.getCentroids();
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setWeights(counts);
+		offlineclusterer.setData(centroids);
+		offlineclusterer.setK(so.getk());
+		centroids = offlineclusterer.getCentroids();
 
 		return centroids;
 	}
@@ -181,6 +182,21 @@ public class RPHashStream implements StreamClusterer {
 	@Override
 	public RPHashObject getParam() {
 		return so;
+	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+	}
+
+	@Override
+	public void setK(int getk) {
+		
 	}
 
 }

@@ -76,7 +76,13 @@ public class RPHashAltStream implements Clusterer, Runnable {
 		centroids = new ArrayList<float[]>();
 		for (Centroid c : is.getTop())
 			centroids.add(c.centroid());
-		centroids = new Kmeans(so.getk(), centroids).getCentroids();
+		
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setWeights(so.getCounts());
+		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setK(so.getk());
+		centroids = offlineclusterer.getCentroids();
+
 	}
 
 	public static void main(String[] args) {
@@ -105,6 +111,24 @@ public class RPHashAltStream implements Clusterer, Runnable {
 	@Override
 	public RPHashObject getParam() {
 		return so;
+	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

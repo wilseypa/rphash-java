@@ -67,7 +67,7 @@ public class PsdLSH  implements Decoder {
 		M = 256;
 		L = 4;
 		T = psdtype;
-		if(psdtype==LEVY)W = 4f;
+		if(psdtype==LEVY)W = 2f;
 		if(psdtype==GAUSSIAN)W = 1f;
 		if(psdtype==CAUCHY)W = 2f;
 		D = innerDecoderMultiplier;
