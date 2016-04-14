@@ -347,4 +347,9 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public Clusterer getOfflineClusterer() {
 		return this.clusterer;
 	}
+
+	@Override
+	public List<float[]> getData() {
+		return this.data;
+	}
 }

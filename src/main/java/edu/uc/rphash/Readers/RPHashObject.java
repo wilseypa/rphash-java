@@ -59,5 +59,6 @@ public interface RPHashObject {
 	int getDimparameter();
 	void setOfflineClusterer(Clusterer agglomerative3);
 	Clusterer getOfflineClusterer();
+	List<float[]> getData();
 
 }

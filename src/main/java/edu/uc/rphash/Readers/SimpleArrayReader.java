@@ -89,9 +89,9 @@ public class SimpleArrayReader implements RPHashObject {
 		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
 		this.numProjections = DEFAULT_NUM_PROJECTIONS;
 		this.numBlur = blur;
-		data = X;
+		this.data = X;
 //		this.n = X.size();
-		if(data!=null)
+		if(this.data!=null)
 			this.dim = data.get(0).length;
 		else 
 			this.dim = null;
@@ -117,9 +117,9 @@ public class SimpleArrayReader implements RPHashObject {
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		
-		data = X;
-		if(data!=null)
-			this.dim = data.get(0).length;
+		this.data = X;
+		if(this.data!=null)
+			this.dim = this.data.get(0).length;
 		else 
 			this.dim = null;
 		this.k = k;
@@ -330,5 +330,9 @@ public class SimpleArrayReader implements RPHashObject {
 	@Override
 	public Clusterer getOfflineClusterer() {
 		return this.clusterer;
+	}
+
+	public List<float[]> getData() {
+		return data;
 	}
 }

@@ -1,6 +1,7 @@
 package edu.uc.rphash;
 
 import java.io.File;
+import java.io.FileWriter;
 //import java.io.FileInputStream;
 import java.io.IOException;
 //import java.io.InputStreamReader;
@@ -121,14 +122,33 @@ public class RPHash {
 					+ "} processing time : ");
 			
 			Runtime rt = Runtime.getRuntime();
-			rt.gc();
-			Thread.sleep(10);
-			rt.gc();
+
+			long startmemory = rt.totalMemory() - rt.freeMemory();
 			long startTime = System.nanoTime();
-			clu.getCentroids();
+			List<float[]> cents = clu.getCentroids();
+			float timed = (System.nanoTime() - startTime) / 1000000000f;
+			long usedkB = ((rt.totalMemory() - rt.freeMemory())-startmemory) / 1024;
 			
-			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
-			System.out.println((System.nanoTime() - startTime) / 1000000000f + ", used(KB): "+usedkB);
+			RPHashObject reader = clu.getParam();
+
+					
+			double wcsse = StatTests.WCSSE(cents, reader.getData());
+
+			
+
+			System.out.println(timed + ", used(KB): "+usedkB +", wcsse: "+wcsse);
+			try {
+				FileWriter metricsfile =new FileWriter(new File("metrics_time_memkb_wcsse.csv"));
+				metricsfile.write(timed+","+usedkB+","+wcsse+"\n");
+				metricsfile.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			
+			
 			VectorUtil.writeFile(new File(outputFile + "."
 					+ ClusterHashName[ClusterHashName.length - 1]),
 					clu.getCentroids(), raw);
@@ -233,6 +253,7 @@ public class RPHash {
 
 		int k = Integer.parseInt(untaggedArgs.get(1));
 
+		
 		RPHashObject o = new SimpleArrayReader(data, k);
 		StreamObject so = new StreamObject(f, k, raw);
 
