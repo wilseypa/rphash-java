@@ -131,10 +131,7 @@ public class RPHash {
 			
 			RPHashObject reader = clu.getParam();
 
-					
 			double wcsse = StatTests.WCSSE(cents, reader.getData());
-
-			
 
 			System.out.println(timed + ", used(KB): "+usedkB +", wcsse: "+wcsse);
 			try {
@@ -396,9 +393,13 @@ public class RPHash {
 			case "simple":
 				runitems.add(new RPHashSimple(o));
 				break;
-			case "streaming":
-				runitems.add(new RPHashStream(so));
+			case "streaming":{
+				if(taggedArgs.containsKey("streamduration"))
+					runitems.add(new RPHashStream(so));
+				else
+					runitems.add(new RPHashStream(o));
 				break;
+			}
 			case "3stage":
 				runitems.add(new RPHash3Stage(o));
 				break;
@@ -420,9 +421,13 @@ public class RPHash {
 			case "kmeansplusplus":
 				runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
 				break;
-			case "streamingkmeans":
-				runitems.add(new StreamingKmeans(so));
+			case "streamingkmeans":{
+				if(taggedArgs.containsKey("streamduration"))
+					runitems.add(new StreamingKmeans(so));
+				else
+					runitems.add(new StreamingKmeans(o));
 				break;
+			}
 			default:
 				System.out.println(untaggedArgs.get(i) + " does not exist");
 				break;

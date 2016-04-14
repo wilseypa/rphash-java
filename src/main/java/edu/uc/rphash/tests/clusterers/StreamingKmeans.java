@@ -298,7 +298,7 @@ public class StreamingKmeans implements StreamClusterer {
 	}
 
 
-	public StreamingKmeans(StreamObject streamObject) 
+	public StreamingKmeans(RPHashObject streamObject) 
 	{
 		
 		
@@ -306,6 +306,7 @@ public class StreamingKmeans implements StreamClusterer {
 		else this.processors = 1;
 		executor = Executors.newFixedThreadPool(processors);
 		
+		this.data = streamObject.getData();
 		
 		this.so = streamObject;
 		centroids = null;
