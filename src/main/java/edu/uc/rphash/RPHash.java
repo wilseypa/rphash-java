@@ -16,6 +16,7 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.Readers.StreamObject;
 import edu.uc.rphash.decoders.Dn;
 import edu.uc.rphash.decoders.E8;
+import edu.uc.rphash.decoders.Golay;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
@@ -39,7 +40,7 @@ public class RPHash {
 			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
 			"raw", "decayrate", "dimparameter", "decodertype","offlineclusterer"
 			 };
-	static String[] decoders = { "dn", "e8", "multie8", "leech", "multileech",
+	static String[] decoders = { "dn", "e8","golay", "multie8", "leech", "multileech",
 			"sphere", "levypstable", "cauchypstable", "gaussianpstable" };
 
 	public static void main(String[] args) throws NumberFormatException,
@@ -122,11 +123,16 @@ public class RPHash {
 					+ "} processing time : ");
 			
 			Runtime rt = Runtime.getRuntime();
-
+			rt.gc();
+			Thread.sleep(10);
+			rt.gc();
 			long startmemory = rt.totalMemory() - rt.freeMemory();
 			long startTime = System.nanoTime();
 			List<float[]> cents = clu.getCentroids();
 			float timed = (System.nanoTime() - startTime) / 1000000000f;
+			rt.gc();
+			Thread.sleep(10);
+			rt.gc();
 			long usedkB = ((rt.totalMemory() - rt.freeMemory())-startmemory) / 1024;
 			
 			RPHashObject reader = clu.getParam();
@@ -199,7 +205,11 @@ public class RPHash {
 						+ "}"
 						+ ",stream_duration:" + streamDuration
 						+ "} \n cpu time \t wcsse \t\t\t mem(kb)\n");
-
+				
+				rt.gc();
+				Thread.sleep(10);
+				rt.gc();
+				
 				long startTime = System.nanoTime() + avgtimeToRead;
 				int i = 1;
 				ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
@@ -300,6 +310,11 @@ public class RPHash {
 			case "e8": {
 				o.setDecoderType(new E8(2f));
 				so.setDecoderType(new E8(2f));
+				break;
+			}
+			case "golay": {
+				o.setDecoderType(new Golay());
+				so.setDecoderType(new Golay());
 				break;
 			}
 			case "multie8": {

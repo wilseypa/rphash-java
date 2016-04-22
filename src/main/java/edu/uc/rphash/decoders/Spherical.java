@@ -202,9 +202,9 @@ public class Spherical implements Decoder {
 
 	public static void main(String[] args) {
 		Random r = new Random();
-		int d = 24;
-		int K = 3;
-		int L = 2;
+		int d = 64;
+		int K = 2;
+		int L = 1;
 		Spherical sp = new Spherical(d, K, L);
 		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
 		float testResolution = 10000f;

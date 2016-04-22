@@ -186,17 +186,16 @@ public class RPHashStream implements StreamClusterer {
 
 	@Override
 	public void setWeights(List<Float> counts) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void setData(List<float[]> centroids) {
+
 	}
 
 	@Override
 	public void setK(int getk) {
-		
+
 	}
 
 }

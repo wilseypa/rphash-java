@@ -1,8 +1,12 @@
 package edu.uc.rphash.decoders;
 
 import java.util.Arrays;
+import java.util.Random;
 
-public class Golay {
+import edu.uc.rphash.standardhash.MurmurHash;
+import edu.uc.rphash.util.VectorUtil;
+
+public class Golay implements Decoder{
 	        /**
 	         * Utility methods that converts a binary string into and int.
 	         * 
@@ -233,8 +237,7 @@ public class Golay {
 	     * @param codeword a valid code word
 	     * @return the corresponding data word
 	     */
-	    
-	    public static int decode(final int codeword) {
+	    public static int decodeWord(final int codeword) {
 	        return (codeword >> 12) & MASK;
 	    }
 
@@ -250,7 +253,7 @@ public class Golay {
 	    public static int correctAndDecode(final int word) {
 	        int err = sErrors[ syndrome(word) ];
 	        //for 4 errors we currently just give up!!
-	        return err <= 0 ? decode(word) : decode(word ^ err);
+	        return err <= 0 ? decodeWord(word) : decodeWord(word ^ err);
 	    }
 	 
 	    // constructor
@@ -259,6 +262,77 @@ public class Golay {
 	     * Cannot be instantiated.
 	     */
 	    
-	    private Golay() { }
+	    public Golay() { }
+	    
+	    
+	    public static void main(String[] args) {
+			Random r = new Random();
+			int d = 24;
+	
+			Golay sp = new Golay();
+			MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
+			float testResolution = 10000f;
+
+			for (int i = 0; i < 300; i++) {
+				int ct = 0;
+				float distavg = 0.0f;
+				for (int j = 0; j < testResolution; j++) {
+					float p1[] = new float[d];
+					float p2[] = new float[d];
+
+					// generate a vector
+					for (int k = 0; k < d; k++) {
+						p1[k] = r.nextFloat() * 2 - 1;
+						p2[k] = (float) (p1[k] + r.nextGaussian()
+								* ((float) i / 1000f));
+					}
+					float dist = VectorUtil.distance(p1, p2);
+					distavg += dist;
+
+					long hp1 = hash.hash(sp.decode(p1));
+					long hp2 = hash.hash(sp.decode(p2));
+
+					ct+=(hp2==hp1)?1:0;
+
+				}
+				System.out.println(distavg / testResolution + "\t" + (float) ct
+						/ testResolution);
+			}
+	}
+	    @Override
+		public long[] decode(float[] p1) {
+			int codeword = 0;
+			for(int i=0;i<24;i++){
+				if(p1[i]>0)codeword+=1;
+				codeword<<=1;
+			}
+			return new long[]{codeword};
+		}
+
+		@Override
+		public void setVariance(Float parameterObject) {
+	
+		}
+
+		@Override
+		public int getDimensionality() {
+			return 24;
+		}
+
+		@Override
+		public float getErrorRadius() {
+			return 1;
+		}
+
+		@Override
+		public float getDistance() {
+			return 0;
+		}
+
+		@Override
+		public boolean selfScaling() {
+			return false;
+		}
+
 	    
 }

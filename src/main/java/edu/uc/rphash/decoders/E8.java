@@ -168,7 +168,7 @@ public class E8 implements Decoder {
 		v = new float[n];
 		dn1 = new Dn(n);
 		dn2 = new Dn(n);
-		this.variance = var;
+		this.variance = 1.0f;//var;
 	}
 	@Override
 	/**
@@ -180,14 +180,14 @@ public class E8 implements Decoder {
 	 */
 	public long[] decode(float[] f) {
 		float[] tmp = new float[8];
-		float sclr = 1f/variance;
+//		float sclr = 1f;///variance;
 		for (int i = 0; i < 8; i++)
-			tmp[i] = f[i]*sclr;
+			tmp[i] = f[i];
 		tmp = closestPoint(tmp);
 		
 		long[] tmp2 = new long[8];
 		for (int i = 0; i < 8; i++)
-			tmp2[i] = (byte) ((2 + tmp[i]*sclr) * 2);
+			tmp2[i] = (byte) ((2 + tmp[i]) * 2);
 
 		return tmp2;
 	}

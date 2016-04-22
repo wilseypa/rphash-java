@@ -5,7 +5,10 @@ import java.util.List;
 
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
+import edu.uc.rphash.decoders.E8;
+import edu.uc.rphash.decoders.Golay;
 import edu.uc.rphash.decoders.Leech;
+import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
@@ -17,8 +20,8 @@ public interface RPHashObject {
 	 final static long DEFAULT_NUM_RANDOM_SEED = 38006359550206753L;
 	 final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	 final static Decoder DEFAULT_INNER_DECODER =new PsdLSH();//new Spherical(64,2,1);//new Leech(3);//;
-	 final static int DEFAULT_DIM_PARAMETER = 32;
+	 final static Decoder DEFAULT_INNER_DECODER = new MultiDecoder(24, new E8(2f));//new Golay();//new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//
+	 final static int DEFAULT_DIM_PARAMETER = DEFAULT_INNER_DECODER.getDimensionality();
 	 final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new Agglomerative3(Agglomerative3.ClusteringType.AVG_LINKAGE);
 	 
 	 

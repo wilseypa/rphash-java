@@ -61,12 +61,12 @@ public class testStreamingRPHash {
 
 		int k = 20;
 		int d = 1000;
-		float var = 2f;
+		float var = 5f;
 		int interval = 10000;
 		Runtime rt = Runtime.getRuntime();
 
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
-		GenerateStreamData noise = new GenerateStreamData(1, d, var*10, 11331313);
+		GenerateStreamData noise = new GenerateStreamData(1, d, var*2, 11331313);
 		RPHashStream rphit = new RPHashStream(k, gen1,rt.availableProcessors());
 		
 		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tRealWCSSE\n");
@@ -75,8 +75,6 @@ public class testStreamingRPHash {
 		for (int i = 0; i < 2500000;) {
 			ArrayList<float[]> vecsAndNoiseInThisRound = new ArrayList<float[]>();
 			ArrayList<float[]> justvecsInThisRound = new ArrayList<float[]>();
-			
-			
 			
 			for (int j = 1; j < interval && i < 2500000; i++, j++){
 				float[] vec = gen1.generateNext();

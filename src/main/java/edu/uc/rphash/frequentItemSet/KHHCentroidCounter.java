@@ -53,8 +53,8 @@ public class KHHCentroidCounter {
 	public KHHCentroidCounter(int k) {
 		this.origk = k;
 		this.k = (int) (k * Math.log(k));
-		double epsOfTotalCount = .00001;
-		double confidence = .99;
+		double epsOfTotalCount = .0005;
+		double confidence = .97;
 		int seed = (int) System.currentTimeMillis();
 		this.decayRate = null;
 		count = 0;

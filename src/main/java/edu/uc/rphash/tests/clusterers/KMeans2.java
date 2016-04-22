@@ -214,6 +214,10 @@ public class KMeans2 implements Clusterer {
 		  init(data,getk);
 	}
 
+	public KMeans2() {
+		// TODO Auto-generated constructor stub
+	}
+
 	/**
 	   * Intialize the parameters of the k-means algorithm
 	   * Randomly assign a point in x to each mean mu[j]
@@ -469,6 +473,7 @@ public class KMeans2 implements Clusterer {
 
 	@Override
 	public void setData(List<float[]> centroids) {
+		this.centroids =centroids;
 	}
 
 	@Override
