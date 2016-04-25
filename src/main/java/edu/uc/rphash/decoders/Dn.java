@@ -15,7 +15,6 @@ public class Dn implements Decoder {
 		this.n = n;
 		u = new float[n];
 		v = new float[n];
-
 	}
 	
 	static float dist(float[] x, float[] s) {
@@ -70,7 +69,6 @@ public class Dn implements Decoder {
 	            }
 	            u[k] += Math.signum(y[k] - u[k]);
 	        }
-	        
 	        dist = dist(u, y);
 	        return u;
 	    }

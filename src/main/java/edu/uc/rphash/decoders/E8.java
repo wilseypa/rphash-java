@@ -1,5 +1,6 @@
 package edu.uc.rphash.decoders;
 
+import java.util.HashMap;
 import java.util.Random;
 
 import edu.uc.rphash.standardhash.MurmurHash;
@@ -10,7 +11,7 @@ public class E8 implements Decoder {
 	int n = 8;
 	float[] yt;
 	float[] u; 
-	float[] v ;
+	byte[] v ;
 
 	Dn dn1;
 	Dn dn2;
@@ -65,107 +66,40 @@ public class E8 implements Decoder {
 	// return Dn.closestPoint(r, 8);
 	// }
 
-	public float[] closestPoint(float[] y) {
-
+	public byte[] closestPoint(float[] y) {
 		dn1.closestPoint(y);
+		
 		for (int i = 0; i < n; i++)
 			yt[i] = y[i] -.5f;
 		dn2.closestPoint(yt);
-
+		
 		if (dn1.distance() < dn2.distance()) {
 			distance = dn1.distance();
-			System.arraycopy(dn1.getLatticePoint(), 0, v, 0, n);
+			for (int i = 0; i < n; i++){
+				v[i] = (byte)(4+dn2.getLatticePoint()[i]*2);
+			}
 		} else {
 			distance = dn2.distance();
-			for (int i = 0; i < n; i++)
-				v[i] = dn2.getLatticePoint()[i] + .5f;
-
+			for (int i = 0; i < n; i++){
+				v[i] =(byte)(4+2*(dn2.getLatticePoint()[i] + .5f));
+			}
 		}
 		return v;
 	}
-
-	// public float[] closestPoint(float[] y) {
-	// Dn dn1 = new Dn(8),dn2 = new Dn(8);
-	// float dist = 0.0f;
-	// float[] yt= new float[8],v = new float[8];
-	// dn1.closestPoint(y);
-	//
-	// for (int i = 0; i < 8; i++)
-	// yt[i] = y[i] - .5f;
-	//
-	// dn2.closestPoint(yt);
-	//
-	// if (dn1.distance() < dn2.distance()) {
-	// dist = dn1.distance();
-	// System.arraycopy(dn1.getLatticePoint(), 0, v, 0, 8);
-	// } else {
-	// dist = dn2.distance();
-	// for (int i = 0; i < 8; i++)
-	// v[i] = dn2.getLatticePoint()[i] + .5f;
-	// }
-	// return v;
-	// }
-	// byte[] decodeE8(float[] r) {
-	//
-	// float[] nr = decodeD8(r);// normal
-	//
-	//
-	// nr = decodeD8( r);
-	//
-	// float[] hr = Arrays.copyOf(r, 8);
-	// for (int i = 0; i < 8; i++) {
-	// hr[i] -= .5f;
-	// }
-	// hr = decodeD8( hr);
-	// for (int i = 0; i < 8; i++) {
-	// hr[i] += .5f;
-	// }
-	// float nrd = dist(nr, r);
-	// float hrd = dist(hr, r);
-	//
-	// // our range is 0-2, so normalized to 2
-	// if (hrd < nrd)
-	// nr = hr;
-	// // float[] nr = closestPoint(r);
-	// byte[] ret = new byte[8];
-	// for (int i = 0; i < 8; i++)
-	// ret[i] = (byte) (nr[i] );
-	//
-	// return ret;
-	// }
-
-	// int decodeE8Int(float[] r) {
-	// int s = 0;
-	// byte[] nr = decodeE8(r);
-	//
-	// for (int i = 0; i < 8; i++) {
-	// s += nr[i];
-	// s <<= 2;
-	// }
-	//
-	// return s;
-	// }
+	
 
 	@Override
 	public int getDimensionality() {
 		return 8;
 	}
 
-	public static long hash(float[] s) {
-		long ret = (int) s[0];
-		for (int i = 1; i < s.length; i++) {
-			ret <<= 8;
-			ret += (int) (2 * ((s[i] + 2)));
 
-		}
-		return ret;
-	}
-	float variance;
+	final float variance;
 	public E8(float var){
 		int n = 8;
 		yt = new float[n];
 		u = new float[n];
-		v = new float[n];
+		v = new byte[n];
 		dn1 = new Dn(n);
 		dn2 = new Dn(n);
 		this.variance = 1.0f;//var;
@@ -179,17 +113,20 @@ public class E8 implements Decoder {
 	 * @return
 	 */
 	public long[] decode(float[] f) {
-		float[] tmp = new float[8];
-//		float sclr = 1f;///variance;
-		for (int i = 0; i < 8; i++)
-			tmp[i] = f[i];
-		tmp = closestPoint(tmp);
-		
-		long[] tmp2 = new long[8];
-		for (int i = 0; i < 8; i++)
-			tmp2[i] = (byte) ((2 + tmp[i]) * 2);
 
-		return tmp2;
+		
+		byte[] tmp = closestPoint(f);
+		
+		long tmp2 = tmp[0];
+		tmp2 += tmp[1]<<3;
+		tmp2 += tmp[2]<<6;
+		tmp2 += tmp[3]<<9;
+		tmp2 += tmp[4]<<12;
+		tmp2 += tmp[5]<<15;
+		tmp2 += tmp[6]<<18;
+		tmp2 += tmp[7]<<21;
+		
+		return new long[]{tmp2};
 	}
 
 	@Override
@@ -224,13 +161,16 @@ public class E8 implements Decoder {
 	
 	public static void main(String[] args) {
 		Random r = new Random();
-		int d = 24;
+		int d = 8;//24;
 
-		MultiDecoder sp = new MultiDecoder( d, new E8(1f));
+		E8 sp = new E8(1f);
+//		MultiDecoder sp = new MultiDecoder( d, e8);
 		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
 		float testResolution = 10000f;
+		
+		HashMap<Long,Integer> ctmap = new HashMap<Long,Integer>();
 
-		for (int i = 0; i < 300; i++) {
+		for (int i = 0; i < 500; i++) {
 			int ct = 0;
 			float distavg = 0.0f;
 			for (int j = 0; j < testResolution; j++) {
@@ -245,16 +185,23 @@ public class E8 implements Decoder {
 				}
 				float dist = VectorUtil.distance(p1, p2);
 				distavg += dist;
-
-				long hp1 = hash.hash(sp.decode(p1));
-				long hp2 = hash.hash(sp.decode(p2));
+				long[] l1 = sp.decode(p1);
+				long[] l2 = sp.decode(p2);
+				
+				ctmap.put(l1[0],ctmap.containsKey(l1[0])?1+ctmap.get(l1[0]):1);
+				
+				long hp1 = hash.hash(l1);
+				long hp2 = hash.hash(l2);
 
 				ct+=(hp2==hp1)?1:0;
 
 			}
+			
+			
 			System.out.println(distavg / testResolution + "\t" + (float) ct
 					/ testResolution);
 		}
+		System.out.println(ctmap.size());
 	}
 
 	@Override

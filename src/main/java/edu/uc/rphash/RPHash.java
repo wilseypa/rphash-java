@@ -145,13 +145,9 @@ public class RPHash {
 				metricsfile.write(timed+","+usedkB+","+wcsse+"\n");
 				metricsfile.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			
-			
-			
+
 			VectorUtil.writeFile(new File(outputFile + "."
 					+ ClusterHashName[ClusterHashName.length - 1]),
 					clu.getCentroids(), raw);
@@ -194,6 +190,7 @@ public class RPHash {
 		// needs work, just use for both to be more accurate
 		long avgtimeToRead = 0;// computeAverageReadTime(streamDuration,f,streamDuration);
 		Runtime rt = Runtime.getRuntime();
+		
 
 		while (cluit.hasNext()) {
 			Clusterer clu = cluit.next();
@@ -210,6 +207,7 @@ public class RPHash {
 				Thread.sleep(10);
 				rt.gc();
 				
+				long usedkB = (rt.totalMemory() - rt.freeMemory());
 				long startTime = System.nanoTime() + avgtimeToRead;
 				int i = 1;
 				ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
@@ -228,13 +226,14 @@ public class RPHash {
 						long time = System.nanoTime() - startTime;
 						double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
 						vecsInThisRound = new ArrayList<float[]>();
+						
 						rt.gc();
 						Thread.sleep(10);
 						rt.gc();
 
-						long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+						
 						System.out.println(time / 1000000000f + "\t" + wcsse
-								+ "\t" + usedkB);
+								+ "\t " + ((rt.totalMemory() - rt.freeMemory()) - usedkB)/1024);
 						VectorUtil.writeFile(new File(outputFile + "_round" + i
 								+ "."
 								+ ClusterHashName[ClusterHashName.length - 1]),

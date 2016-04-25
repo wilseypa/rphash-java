@@ -107,29 +107,31 @@ public class LSH {
 	 * @param times
 	 * @return
 	 */
-	public long[] lshHashRadiusNo2Hash(float[] r, int times) {
+	public long[] lshHashRadius(float[] r, int times) {
 
 		float[] pr_r = projectionMatrix.project(r);
-		long[] nonoise = lshDecoder.decode(pr_r);
-		long[] returnHashes = new long[times * nonoise.length];
-
+		long nonoise = standardHashAlgorithm.hash(lshDecoder.decode(pr_r));
+		
+		long[] returnHashes = new long[times];
 		// if(times>1){
-		System.arraycopy(nonoise, 0, returnHashes, 0, nonoise.length);
+		returnHashes[0] = nonoise;
+//		System.arraycopy(nonoise, 0, returnHashes, 0, nonoise.length);
 		// add some blurring probes in addition to the unnoised decoding
 		float[] noisedProjectedVector = new float[pr_r.length];
 		float[] noiseVec;
 
-		
-		for (int j = 0; j < times; j++) {
+
+		for (int j = 1; j < times; j++) {
 			System.arraycopy(pr_r, 0, noisedProjectedVector, 0, pr_r.length);
 			noiseVec = noise.get(j);
 			for (int k = 0; k < pr_r.length; k++) {
 				noisedProjectedVector[k] = noisedProjectedVector[k]
 						+ noiseVec[k];
 			}
-			nonoise = lshDecoder.decode(noisedProjectedVector);
-			System.arraycopy(nonoise, 0, returnHashes, j * nonoise.length,
-					nonoise.length);
+//			nonoise = standardHashAlgorithm.hash(lshDecoder.decode(noisedProjectedVector));
+			returnHashes[j] = standardHashAlgorithm.hash(lshDecoder.decode(noisedProjectedVector));
+//			System.arraycopy(nonoise, 0, returnHashes, j * nonoise.length,
+//					nonoise.length);
 		}
 
 		return returnHashes;
