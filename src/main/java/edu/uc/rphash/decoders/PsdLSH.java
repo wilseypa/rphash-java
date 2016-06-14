@@ -1,5 +1,6 @@
 package edu.uc.rphash.decoders;
 
+import java.util.HashMap;
 import java.util.Random;
 
 import org.apache.commons.math3.distribution.CauchyDistribution;
@@ -157,41 +158,49 @@ public class PsdLSH  implements Decoder {
 //		int L = 8;
 //		int T = LEVY;
 //		float W = 1f;
-		int d = 32;
-		
-		
+		int d = 24;
 
-		float testResolution = 10000f;
 		
 		PsdLSH sp = new PsdLSH();
-		for (int i = 0; i < 300; i++) {
+		
+		// MultiDecoder sp = new MultiDecoder( d, e8);
+		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
+		float testResolution = 10000f;
+
+		HashMap<Long, Integer> ctmap = new HashMap<Long, Integer>();
+
+		for (int i = 0; i < 400; i++) {
 			int ct = 0;
 			float distavg = 0.0f;
 			for (int j = 0; j < testResolution; j++) {
 				float p1[] = new float[d];
 				float p2[] = new float[d];
-				
-				//generate a vector
+
+				// generate a vector
 				for (int k = 0; k < d; k++) {
-					p1[k] = r.nextFloat() * 2 - 1;
+					p1[k] = r.nextFloat() * 2 - 1f;
 					p2[k] = (float) (p1[k] + r.nextGaussian()
 							* ((float) i / 1000f));
 				}
 				float dist = VectorUtil.distance(p1, p2);
 				distavg += dist;
-				
-				long[] hp1 = sp.hash(p1);
-				long[] hp2 = sp.hash(p2);
-//				for(int l =0;l<hp1.length-1;l++){
-//					if(hp1[l]==hp2[l] && hp1[l+1]==hp2[l+1]){
-//						ct++;
-//						break;
-//					}
-//				}
-				ct+=(hp2[0]==hp1[0])?1:0;
-				
+				long[] l1 = sp.decode(p1);
+				long[] l2 = sp.decode(p2);
+
+				ctmap.put(l1[0],
+						ctmap.containsKey(l1[0]) ? 1 + ctmap.get(l1[0]) : 1);
+
+				long hp1 = hash.hash(l1);
+				long hp2 = hash.hash(l2);
+
+				// ctmap.put(hp1,ctmap.containsKey(hp1)?1+ctmap.get(hp1):1);
+
+				ct += (hp2 == hp1) ? 1 : 0;
+
 			}
-			System.out.println(distavg / testResolution + "\t" + (float) ct / testResolution);
+
+			System.out.println(distavg / testResolution + "\t" + (float) ct
+			/ testResolution);
 		}
 	}
 

@@ -1,7 +1,16 @@
 package edu.uc.rphash.decoders;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
+import edu.uc.rphash.Centroid;
+import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
+import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -165,14 +174,42 @@ public class Leech implements Decoder {
 
 	public Leech() {
 		this.scaler = 1.0f;
-		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
-				{ APT, BPT } };
-		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
-				{ DPT, CPT } };
-		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
-				{ BPT, BPT } };
-		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
-				{ APT, CPT } };
+
+		float p3 = 1f/3f;
+		float p6 = 2f/3f;
+		
+		
+		float[][] evenAPts = {{-1,0},{p3,0},{-p3,p6},{-p3,-p6}};
+		float[][] oddAPts  = {{-p3,0},{1,0},{p3,-p6},{p3,p6}};
+		float[][] evenBPts = {{-p6,p3},{-p6,p3},{0,1},{0,-p3}};
+		float[][] oddBPts  = {{0,p3},{0,-1},{p6,-p3},{-p6,-p3}};
+		
+		for(float[] f :evenAPts )
+			System.out.print(f[0]+",");
+		for(float[] f :oddAPts )
+			System.out.print(f[0]+",");
+		for(float[] f :evenBPts )
+			System.out.print(f[0]+",");
+		for(float[] f :oddBPts )
+			System.out.print(f[0]+",");
+		System.out.println();
+		for(float[] f :evenAPts )
+			System.out.print(f[1]+",");
+		for(float[] f :oddAPts )
+			System.out.print(f[1]+",");
+		for(float[] f :evenBPts )
+			System.out.print(f[1]+",");
+		for(float[] f :oddBPts )
+			System.out.print(f[1]+",");
+		System.out.println();
+//		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
+//				{ APT, BPT } };
+//		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
+//				{ DPT, CPT } };
+//		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
+//				{ BPT, BPT } };
+//		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
+//				{ APT, CPT } };
 		this.evenAPts = evenAPts;
 		this.oddAPts = oddAPts;
 		this.evenBPts = evenBPts;
@@ -773,22 +810,36 @@ public class Leech implements Decoder {
 
 		long[] retOpt;
 
-		retOpt = new long[2];
+		retOpt = new long[1];
 		retOpt[0] = 0;
 		for (int i = 0; i < 24; i++) {
 			retOpt[0] += cw[i];
 			retOpt[0] <<= 1;
 		}
 		
-		for (int i = 0; i < 8; i++) {
-			retOpt[1] += quant[i];
-			retOpt[1]<<=8;
-		}
-			
+
+
 //		for (int i = 0; i < 12; i++) {
 //			retOpt[0] += cp[i];
 //			retOpt[0] <<= 1;
 //		}
+		
+//		int val = 0;
+//		if(parity%2==1){
+//			val = 1;
+//		}
+//		
+//		for (int i = 0; i < 12; i++) {
+//			retOpt[0] += val;
+//			retOpt[0] <<= 1;
+//		}
+		//should use 48 bits of data
+		
+//		for (int i = 0; i < 8; i++) {
+//		retOpt[1] += quant[i];
+//		retOpt[1]<<=8;
+//	}
+		
 //		if (quant != null)// use remaining 64-36 = 8 bits for a quantization
 //							// vector
 //			for (int i = 0; i < 8; i++) {
@@ -977,39 +1028,109 @@ public class Leech implements Decoder {
 		return this.distance;
 	}
 
-	public static void main(String[] args) {
-			Random r = new Random();
-			int d = 24;
 	
-			Leech sp = new Leech(1f);
-			MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
-			float testResolution = 10000f;
 
-			for (int i = 0; i < 300; i++) {
-				int ct = 0;
-				float distavg = 0.0f;
-				for (int j = 0; j < testResolution; j++) {
-					float p1[] = new float[d];
-					float p2[] = new float[d];
+	
+	
+	
+	
+	
+	
+	
+	public static void main(String[] args) {
+		Random r = new Random();
+		int d =  24;
 
-					// generate a vector
-					for (int k = 0; k < d; k++) {
-						p1[k] = r.nextFloat() * 2 - 1;
-						p2[k] = (float) (p1[k] + r.nextGaussian()
-								* ((float) i / 1000f));
-					}
-					float dist = VectorUtil.distance(p1, p2);
-					distavg += dist;
+		Leech sp = new Leech(1f);
+		// MultiDecoder sp = new MultiDecoder( d, e8);
+		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
+		float testResolution = 10000f;
 
-					long hp1 = hash.hash(sp.decode(p1));
-					long hp2 = hash.hash(sp.decode(p2));
+		HashMap<Long, Integer> ctmap = new HashMap<Long, Integer>();
 
-					ct+=(hp2==hp1)?1:0;
+		for (int i = 0; i < 400; i++) {
+			int ct = 0;
+			float distavg = 0.0f;
+			for (int j = 0; j < testResolution; j++) {
+				float p1[] = new float[d];
+				float p2[] = new float[d];
 
+				// generate a vector
+				for (int k = 0; k < d; k++) {
+					p1[k] = r.nextFloat() * 2 - 1f;
+					p2[k] = (float) (p1[k] + r.nextGaussian()
+							* ((float) i / 1000f));
 				}
-				System.out.println(distavg / testResolution + "\t" + (float) ct
-						/ testResolution);
+				float dist = VectorUtil.distance(p1, p2);
+				distavg += dist;
+				long[] l1 = sp.decode(p1);
+				long[] l2 = sp.decode(p2);
+
+				ctmap.put(l1[0],
+						ctmap.containsKey(l1[0]) ? 1 + ctmap.get(l1[0]) : 1);
+
+				long hp1 = hash.hash(l1);
+				long hp2 = hash.hash(l2);
+
+				// ctmap.put(hp1,ctmap.containsKey(hp1)?1+ctmap.get(hp1):1);
+
+				ct += (hp2 == hp1) ? 1 : 0;
+
 			}
+
+			System.out.println(distavg / testResolution + "\t" + (float) ct
+			/ testResolution);
+		}
+		
+		
+		
+		
+//		new Leech();
+//		class ConcurrentGen implements Runnable {
+//			
+//			Random r;
+//			Map<Long,Integer> ctmap;
+//			Decoder sp;
+//			public ConcurrentGen(Random r,Map<Long,Integer> ctmap, Decoder sp){
+//				this.ctmap = ctmap;
+//				this.r = r;
+//				this.sp = sp;
+//			}
+//			
+//			@Override
+//			public void run() {
+//				int d = 24;
+//				float p1[] = new float[d];
+//				long[] l1 = new long[1] ;
+//				int prevsize = 0;
+//				for (long i = 0; i < 100_000_000; i++) {
+//					for (long j = 0; j < 1_000_000; j++) {
+//						// generate a vector
+//						for (int k = 0; k < d; k++) {
+//							p1[k] = r.nextFloat() * 2 - 1f;
+//						}
+//						l1 = sp.decode(p1);
+//						ctmap.put(l1[0],
+//								ctmap.containsKey(l1[0]) ? 1 + ctmap.get(l1[0]) : 1);
+//					}
+//					if(prevsize==ctmap.size())return;
+//					System.out.println(ctmap.size());
+//					
+//				}
+//			}
+//		}
+//
+//		
+//		Random r = new Random();
+//		Leech sp = new Leech(1f);
+//		// MultiDecoder sp = new MultiDecoder( d, e8);
+//		int processors =  Runtime.getRuntime().availableProcessors();
+//		Executor executor = Executors.newFixedThreadPool(processors);
+//		ConcurrentHashMap<Long, Integer> ctmap = new ConcurrentHashMap<Long, Integer>(16_800_000);
+//		for(int i = 0; i < processors; i++){
+//			executor.execute(new ConcurrentGen(new Random(r.nextInt()/211),ctmap,sp));
+//		}
+		
 	}
 
 	// public static void main(String[] args)

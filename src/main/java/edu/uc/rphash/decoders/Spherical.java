@@ -1,6 +1,7 @@
 package edu.uc.rphash.decoders;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -94,10 +95,10 @@ public class Spherical implements Decoder {
 		return distance;
 	}
 
-	long argmaxi(float[] p, List<float[]> vs) {
+	long argmaxi(float[] p, int index) {
+		List<float[]> vs = vAll.get(index);
 		long maxi = 0;
 		float max = 0;
-
 		for (int i = 0; i < this.d; i++) {
 			float dot = dot(p, vs.get(i));
 			// compute orthoplex of -1 and 1 simultaneously
@@ -105,7 +106,6 @@ public class Spherical implements Decoder {
 			if (abs < max) {
 				continue;
 			}
-
 			max = abs;
 			maxi = dot >= 0 ? i : i + this.d;
 		}
@@ -185,17 +185,15 @@ public class Spherical implements Decoder {
 	long Hash(float[] p) {
 		int ri = 0;
 		long h = 0;
-		float normp = norm(p);
+//		float normp = norm(p);
 //		p = scale(p, 1.0f / normp);
 		for (int i = 0; i < this.l; i++) {
 			for (int j = 0; j < this.k; j++) {
-				List<float[]> vs = this.vAll.get(ri);
-				h = h | this.argmaxi(p, vs);
+				h = h | this.argmaxi(p, ri);
 				h <<= this.hbits;
 				ri++;
 			}
 		}
-
 		return h ;//+ (int) (normp);
 
 	}
@@ -206,10 +204,14 @@ public class Spherical implements Decoder {
 		int K = 2;
 		int L = 1;
 		Spherical sp = new Spherical(d, K, L);
+
+		// MultiDecoder sp = new MultiDecoder( d, e8);
 		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
 		float testResolution = 10000f;
 
-		for (int i = 0; i < 300; i++) {
+		HashMap<Long, Integer> ctmap = new HashMap<Long, Integer>();
+
+		for (int i = 0; i < 400; i++) {
 			int ct = 0;
 			float distavg = 0.0f;
 			for (int j = 0; j < testResolution; j++) {
@@ -218,21 +220,29 @@ public class Spherical implements Decoder {
 
 				// generate a vector
 				for (int k = 0; k < d; k++) {
-					p1[k] = r.nextFloat() * 2 - 1;
+					p1[k] = r.nextFloat() * 2 - 1f;
 					p2[k] = (float) (p1[k] + r.nextGaussian()
 							* ((float) i / 1000f));
 				}
 				float dist = VectorUtil.distance(p1, p2);
 				distavg += dist;
+				long[] l1 = sp.decode(p1);
+				long[] l2 = sp.decode(p2);
 
-				long hp1 = hash.hash(sp.decode(p1));
-				long hp2 = hash.hash(sp.decode(p2));
+				ctmap.put(l1[0],
+						ctmap.containsKey(l1[0]) ? 1 + ctmap.get(l1[0]) : 1);
 
-				ct+=(hp2==hp1)?1:0;
+				long hp1 = hash.hash(l1);
+				long hp2 = hash.hash(l2);
+
+				// ctmap.put(hp1,ctmap.containsKey(hp1)?1+ctmap.get(hp1):1);
+
+				ct += (hp2 == hp1) ? 1 : 0;
 
 			}
+
 			System.out.println(distavg / testResolution + "\t" + (float) ct
-					/ testResolution);
+			/ testResolution);
 		}
 	}
 

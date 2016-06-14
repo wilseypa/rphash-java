@@ -1,6 +1,7 @@
 package edu.uc.rphash.projections;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -15,20 +16,15 @@ public class DBFriendlyProjection implements Projector {
 	public DBFriendlyProjection(int n, int t) {
 		this.n = n;
 		this.t = t;
-
-
 		rand = new Random();
-		M = GenRandom();
-		P = GenRandom();
+		GenRandom();
 	}
 
 	public DBFriendlyProjection(int n, int t, long randomseed) {
 		this.n = n;
 		this.t = t;
-
 		rand = new Random(randomseed);
-		M = GenRandom();
-		P = GenRandom();
+		GenRandom();
 	}
 
 	/*
@@ -38,26 +34,37 @@ public class DBFriendlyProjection implements Projector {
 	 * Naive method O(n), faster select and bookkeeping should be O((5/12 )n),
 	 * still linear
 	 */
-	int[][] GenRandom() {
-		int[][] M = new int[t][];
-		// float scale = (float)Math.sqrt(3.0f/(m));
+	void GenRandom() {
+		M = new int[t][];
+		P = new int[t][];
 		int r = 0;
-		int[] tmp;
 		for (int i = 0; i < t; i++) {
-			List<Integer> ordered = new ArrayList<Integer>(n / 6);
+													   //approx size
+			List<Integer> orderedM = new ArrayList<Integer>(n / 6);
+			List<Integer> orderedP = new ArrayList<Integer>(n / 6);
 			for (int j = 0; j < n; j++) {
 				r = rand.nextInt(6);
 				if (r == 0)
-					ordered.add(j);
+					orderedM.add(j);
+				if( r == 1)
+					orderedP.add(j);
 			}
-			tmp = new int[ordered.size()];
-			int j = 0;
-			for (Integer in : ordered)
-				tmp[j++] = in.intValue();
+			
+			Collections.sort(orderedM);
 
-			M[i] = tmp;
+			M[i] = new int[orderedM.size()];
+			int j = 0;
+			for (Integer in : orderedM)
+				M[i][j++] = in;
+			
+			P[i] = new int[orderedP.size()];
+			j = 0;
+			Collections.sort(orderedP);
+			for (Integer in : orderedP)
+				P[i][j++] = in;
+			
 		}
-		return M;
+
 	}
 
 	@Override
@@ -77,17 +84,15 @@ public class DBFriendlyProjection implements Projector {
 		float sum;
 		float scale = (float) Math.sqrt(3.0f / ((float) t));
 		int[] tmp;
+
 		for (int i = 0; i < t; i++) {
 			sum = 0.0f;
-			tmp = M[i];
-			for (int k = 0; k < tmp.length; k++) {
-				sum -= v[tmp[k]] * scale;
-			}
-			tmp = P[i];
-			for (int k = 0; k < tmp.length; k++) {
-				sum += v[tmp[k]] * scale;
-			}
-			r[i] = sum;
+			
+			for (int col :  M[i]) sum -= v[col] ;
+			
+			for(int col :  P[i]) sum += v[col] ;
+			
+			r[i] = sum* scale;
 		}
 		return r;
 	}
