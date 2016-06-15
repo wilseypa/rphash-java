@@ -211,7 +211,7 @@ public class RPHash {
 				long startTime = System.nanoTime() + avgtimeToRead;
 				int i = 1;
 				ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
-
+				int count = 0;
 				while (streamer.hasNext()) {
 
 					i++;
@@ -225,6 +225,7 @@ public class RPHash {
 						
 						long time = System.nanoTime() - startTime;
 						double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
+						count += vecsInThisRound.size();
 						vecsInThisRound = new ArrayList<float[]>();
 						
 						rt.gc();
@@ -234,7 +235,7 @@ public class RPHash {
 						
 						System.out.println(time / 1000000000f + "\t" + wcsse
 								+ "\t " + ((rt.totalMemory() - rt.freeMemory()) - usedkB)/1024);
-						VectorUtil.writeFile(new File(outputFile + "_round" + i
+						VectorUtil.writeFile(new File(outputFile + "_round" + new Integer(count).toString()
 								+ "."
 								+ ClusterHashName[ClusterHashName.length - 1]),
 								cents, raw);

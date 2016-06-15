@@ -134,7 +134,7 @@ public class RPHashStream implements StreamClusterer {
 		if (so.getParallel()) {
 			executor.shutdown();
 			try {
-				executor.awaitTermination(1, TimeUnit.SECONDS);
+				executor.awaitTermination(10, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
