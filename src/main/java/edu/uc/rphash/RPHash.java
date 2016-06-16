@@ -219,7 +219,7 @@ public class RPHash {
 					vecsInThisRound.add(nxt);
 					((StreamClusterer) clu).addVectorOnlineStep(nxt);
 
-					if (i % streamDuration == 0 || !streamer.hasNext()) {
+					if (i % streamDuration == 0) {
 						List<float[]> cents = ((StreamClusterer) clu)
 								.getCentroidsOfflineStep();
 						

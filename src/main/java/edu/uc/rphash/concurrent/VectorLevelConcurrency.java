@@ -47,13 +47,12 @@ public class VectorLevelConcurrency implements Runnable {
 					is.addLong(h, 1);
 				}
 				
-				hash = lshfunc.lshHashRadius(scale(vec,.25f), so.getNumBlur());
-				//onehalfin'
-				for (long h : hash) {
-					c.addID(h);
-					is.addLong(h, 4);
-				}
-				
+//				hash = lshfunc.lshHashRadius(scale(vec,2f), so.getNumBlur());
+//				//onehalfin'
+//				for (long h : hash) {
+//					c.addID(h);
+//					is.addLong(h, 2);
+//				}
 				
 			}
 			else 

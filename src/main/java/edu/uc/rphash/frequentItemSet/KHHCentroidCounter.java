@@ -22,7 +22,7 @@ public class KHHCentroidCounter {
 	private int depth;
 	private int width;
 	private float[][] tableF;
-	private short[][] tableS;
+	private int[][] tableS;
 	private int[][] decaytable;
 	private long[] hashA;
 	public long count;
@@ -89,7 +89,7 @@ public class KHHCentroidCounter {
 			this.tableF = new float[depth][width];
 			this.decaytable = new int[depth][width];
 		} else{
-			this.tableS = new short[depth][width];
+			this.tableS = new int[depth][width];
 		}
 		this.hashA = new long[depth];
 		Random r = new Random(seed);

@@ -140,7 +140,7 @@ public class Kmeans implements Clusterer {
 
 	private void run() {
 		int maxiters = 1000;
-		int swaps = 3;
+		int swaps = 2;
 		this.n = this.data.size();
 		ArrayList<float[]> workingdata = new ArrayList<float[]>();
 		// stuff for projected kmeans
