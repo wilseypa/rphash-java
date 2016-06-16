@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -102,8 +104,9 @@ public class RPHash {
 		}
 
 		if (taggedArgs.containsKey("streamduration")) {
-			runStream(runs, outputFile,
+			runStreamForSetOfClusterers(runs, outputFile,
 					Integer.parseInt(taggedArgs.get("streamduration")), k, raw);
+			
 			return;
 		}
 		// run remaining, read file into ram
@@ -182,7 +185,67 @@ public class RPHash {
 		return (System.nanoTime() - startTime);
 	}
 
-	public static void runStream(List<Clusterer> runitems, String outputFile,
+	public static void runStreamForAClusterer( String outputFile,
+			Integer streamDuration, int k, boolean raw,Clusterer clu,long avgtimeToRead,Runtime rt,StreamObject streamer) throws IOException,
+			InterruptedException {
+		
+		if (clu instanceof StreamClusterer) {
+			String[] ClusterHashName = clu.getClass().getName().split("\\.");
+			System.out.print(ClusterHashName[ClusterHashName.length - 1] 
+					+ " { "+clu.getParam().toString()
+					+ "}"
+					+ ",stream_duration:" + streamDuration
+					+ "} \n cpu time \t wcsse \t\t\t mem(kb)\n");
+			
+			rt.gc();
+			Thread.sleep(10);
+			rt.gc();
+			
+			long usedkB = (rt.totalMemory() - rt.freeMemory());
+			long startTime = System.nanoTime() + avgtimeToRead;
+			int i = 1;
+			ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
+			int count = 0;
+			while (streamer.hasNext()) {
+				i++;
+				float[] nxt = streamer.next();
+				vecsInThisRound.add(nxt);
+				((StreamClusterer) clu).addVectorOnlineStep(nxt);
+
+				if (i % streamDuration == 0 ) 
+				{
+					List<float[]> cents = ((StreamClusterer) clu)
+							.getCentroidsOfflineStep();
+					
+					long time = System.nanoTime() - startTime;
+					double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
+					count += vecsInThisRound.size();
+					vecsInThisRound = new ArrayList<float[]>();
+					
+					rt.gc();
+					Thread.sleep(10);
+					rt.gc();
+
+					
+					System.out.println(time / 1000000000f + "\t" + wcsse
+							+ "\t " + ((rt.totalMemory() - rt.freeMemory()) - usedkB)/1024);
+					VectorUtil.writeFile(new File(outputFile + "_round" + new Integer(count).toString()
+							+ "."
+							+ ClusterHashName[ClusterHashName.length - 1]),
+							cents, raw);
+					
+					startTime = System.nanoTime() + avgtimeToRead;
+				}
+				if(!streamer.hasNext()){
+					((StreamClusterer) clu).shutdown();
+				}
+			}
+			streamer.reset();
+		}
+		
+	}
+	
+	public static void runStreamForSetOfClusterers(List<Clusterer> runitems, String outputFile,
 			Integer streamDuration, int k, boolean raw) throws IOException,
 			InterruptedException {
 
@@ -195,57 +258,11 @@ public class RPHash {
 		while (cluit.hasNext()) {
 			Clusterer clu = cluit.next();
 			StreamObject streamer = (StreamObject) clu.getParam();
-			if (clu instanceof StreamClusterer) {
-				String[] ClusterHashName = clu.getClass().getName().split("\\.");
-				System.out.print(ClusterHashName[ClusterHashName.length - 1] 
-						+ " { "+clu.getParam().toString()
-						+ "}"
-						+ ",stream_duration:" + streamDuration
-						+ "} \n cpu time \t wcsse \t\t\t mem(kb)\n");
-				
-				rt.gc();
-				Thread.sleep(10);
-				rt.gc();
-				
-				long usedkB = (rt.totalMemory() - rt.freeMemory());
-				long startTime = System.nanoTime() + avgtimeToRead;
-				int i = 1;
-				ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
-				int count = 0;
-				while (streamer.hasNext()) {
-
-					i++;
-					float[] nxt = streamer.next();
-					vecsInThisRound.add(nxt);
-					((StreamClusterer) clu).addVectorOnlineStep(nxt);
-
-					if (i % streamDuration == 0) {
-						List<float[]> cents = ((StreamClusterer) clu)
-								.getCentroidsOfflineStep();
-						
-						long time = System.nanoTime() - startTime;
-						double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
-						count += vecsInThisRound.size();
-						vecsInThisRound = new ArrayList<float[]>();
-						
-						rt.gc();
-						Thread.sleep(10);
-						rt.gc();
-
-						
-						System.out.println(time / 1000000000f + "\t" + wcsse
-								+ "\t " + ((rt.totalMemory() - rt.freeMemory()) - usedkB)/1024);
-						VectorUtil.writeFile(new File(outputFile + "_round" + new Integer(count).toString()
-								+ "."
-								+ ClusterHashName[ClusterHashName.length - 1]),
-								cents, raw);
-						startTime = System.nanoTime() + avgtimeToRead;
-					}
-				}
-				streamer.reset();
-				cluit.remove();
-			}
+			runStreamForAClusterer( outputFile,
+					streamDuration, k, raw,clu,avgtimeToRead,rt,streamer);
+			cluit.remove();
 		}
+
 	}
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,

@@ -164,4 +164,10 @@ public class RPHashStreamingAK implements StreamClusterer {
 		
 	}
 
+	@Override
+	public void shutdown() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

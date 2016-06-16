@@ -146,7 +146,7 @@ public class RPHashStream implements StreamClusterer {
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
 		
-		System.out.println(counts);
+//		System.out.println(counts);
 		
 		int i =  0;
 		//get rid of size one clusters that are there just because they were added to the list at the end
@@ -199,6 +199,20 @@ public class RPHashStream implements StreamClusterer {
 	@Override
 	public void setK(int getk) {
 
+	}
+
+	@Override
+	public void shutdown() {
+		if (so.getParallel()) {
+			executor.shutdown();
+			try {
+				executor.awaitTermination(10, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			executor = Executors.newFixedThreadPool(getProcessors());
+		}
+		
 	}
 
 }

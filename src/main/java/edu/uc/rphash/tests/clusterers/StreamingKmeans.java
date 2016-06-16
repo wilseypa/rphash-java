@@ -703,4 +703,18 @@ public class StreamingKmeans implements StreamClusterer {
 	public void setK(int getk) {
 	}
 
+	@Override
+	public void shutdown() {
+		if (so.getParallel()) {
+			executor.shutdown();
+			try {
+				executor.awaitTermination(10, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			executor = Executors.newFixedThreadPool(getProcessors());
+		}
+		
+	}
+
 }
