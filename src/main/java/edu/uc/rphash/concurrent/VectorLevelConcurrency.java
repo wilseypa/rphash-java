@@ -24,10 +24,11 @@ public class VectorLevelConcurrency implements Runnable {
 	}
 
 	static float[] scale(float[] t, float s) {
+		float[] ret = new float[t.length];
 		for (int i = 0; i < t.length; i++) {
-			t[i] *= s;
+			ret[i] *= s;
 		}
-		return t;
+		return ret;
 	}
 	
 	

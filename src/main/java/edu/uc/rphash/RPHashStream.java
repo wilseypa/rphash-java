@@ -145,6 +145,9 @@ public class RPHashStream implements StreamClusterer {
 		List<Integer> projIDs = new ArrayList<Integer>();
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
+		
+		
+		System.out.println(counts);
 		int i =  0;
 		//get rid of size one clusters that are there just because they were added to the list more recently
 		for (; i < cents.size() ; i++) {
@@ -159,6 +162,7 @@ public class RPHashStream implements StreamClusterer {
 		offlineclusterer.setK(so.getk());
 		centroids = offlineclusterer.getCentroids();
 
+		System.out.println(centroids.size());
 		return centroids;
 	}
 
