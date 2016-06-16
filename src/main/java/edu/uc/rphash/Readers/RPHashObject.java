@@ -22,7 +22,7 @@ public interface RPHashObject {
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
 	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(24,6,1);//new MultiDecoder(24, new E8(1f));//new Golay();//new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//
 	 final static int DEFAULT_DIM_PARAMETER = DEFAULT_INNER_DECODER.getDimensionality();
-	 final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new Agglomerative3(Agglomerative3.ClusteringType.AVG_LINKAGE);
+	 final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new Kmeans();
 	 
 	 
 	int getk();

@@ -185,8 +185,8 @@ public class Spherical implements Decoder {
 	long Hash(float[] p) {
 		int ri = 0;
 		long h = 0;
-//		float normp = norm(p);
-//		p = scale(p, 1.0f / normp);
+		float normp = norm(p);
+		p = scale(p, 1.0f / normp);
 		for (int i = 0; i < this.l; i++) {
 			for (int j = 0; j < this.k; j++) {
 				h = h | this.argmaxi(p, ri);

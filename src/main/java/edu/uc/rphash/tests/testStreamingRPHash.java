@@ -61,7 +61,7 @@ public class testStreamingRPHash {
 	public static void generateAndStream() throws InterruptedException {
 
 		int k = 20;
-		int d = 1000;
+		int d = 27000;
 		float var = 4f;
 		int interval = 10000;
 		Runtime rt = Runtime.getRuntime();
@@ -70,7 +70,8 @@ public class testStreamingRPHash {
 		GenerateStreamData noise = new GenerateStreamData(1, d, var*var, 11331313);
 		RPHashStream rphit = new RPHashStream(k, gen1,rt.availableProcessors());
 		StreamingKmeans skmi = new StreamingKmeans(k, gen1);
-		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tStreamKM\tTime\tWCSSE\tReal\tWCSSE\n");
+		System.out.printf("\tStreamingRPHash\t\t\tStreamingKmeans\t\tReal\n");
+		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\t\tTime\tWCSSE\t\tWCSSE\n");
 		
 		long timestart = System.nanoTime();
 		for (int i = 0; i < 2500000;) {
@@ -95,8 +96,8 @@ public class testStreamingRPHash {
 			rt.gc();
 			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-			double wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
-			double realwcsse = StatTests.WCSSE(gen1.medoids, justvecsInThisRound);
+			double wcsse = 0;//StatTests.WCSSE(cents, justvecsInThisRound);
+			double realwcsse = 0;//StatTests.WCSSE(gen1.medoids, justvecsInThisRound);
 			
 			System.out.printf("%d\t%d\t%.4f\t%.1f\t\t", i, usedkB,
 					time / 1000000000f, wcsse);
@@ -106,22 +107,22 @@ public class testStreamingRPHash {
 			
 			timestart = System.nanoTime();
 			for (float[] f : vecsAndNoiseInThisRound) {
-				skmi.addVectorOnlineStep(f);
+				;//skmi.addVectorOnlineStep(f);
 			}
 
-			cents = rphit.getCentroidsOfflineStep();
+			//cents = rphit.getCentroidsOfflineStep();
 			time = System.nanoTime() - timestart;
 
 			rt.gc();
 			usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-			wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
+			wcsse = 0.0;//StatTests.WCSSE(cents, justvecsInThisRound);
 			// recreate vectors at execution time to check average
 			rt.gc();
 			Thread.sleep(1000);
 			rt.gc();
 			
-			System.out.printf("%.1f\t%.1f\t\t%.1f\n",time/ 1000000000f,wcsse,realwcsse);
+			System.out.printf("%.4f\t%.1f\t\t%.1f\n",time/ 1000000000f,wcsse,realwcsse);
 		}
 	}
 
