@@ -61,7 +61,7 @@ public class testStreamingRPHash {
 	public static void generateAndStream() throws InterruptedException {
 
 		int k = 20;
-		int d = 27000;
+		int d = 5000;
 		float var = 4f;
 		int interval = 10000;
 		Runtime rt = Runtime.getRuntime();
@@ -96,8 +96,8 @@ public class testStreamingRPHash {
 			rt.gc();
 			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-			double wcsse = 0;//StatTests.WCSSE(cents, justvecsInThisRound);
-			double realwcsse = 0;//StatTests.WCSSE(gen1.medoids, justvecsInThisRound);
+			double wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
+			double realwcsse = StatTests.WCSSE(gen1.medoids, justvecsInThisRound);
 			
 			System.out.printf("%d\t%d\t%.4f\t%.1f\t\t", i, usedkB,
 					time / 1000000000f, wcsse);
