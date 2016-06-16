@@ -23,6 +23,14 @@ public class VectorLevelConcurrency implements Runnable {
 		this.so = so;
 	}
 
+	static float[] scale(float[] t, float s) {
+		for (int i = 0; i < t.length; i++) {
+			t[i] *= s;
+		}
+		return t;
+	}
+	
+	
 	public static long computeSequential(float[] vec,LSH[] lshfuncs,KHHCentroidCounter is,RPHashObject so) {
 //		if(!lshfuncs[0].lshDecoder.selfScaling()){
 //			this.vartracker.updateVarianceSampleVec(vec);
@@ -31,12 +39,21 @@ public class VectorLevelConcurrency implements Runnable {
 		Centroid c = new Centroid(vec,-1);
 		for (LSH lshfunc : lshfuncs) {
 			if (so.getNumBlur() != 1) {
-				long[] hash = lshfunc
-						.lshHashRadius(vec, so.getNumBlur());
+				long[] hash = lshfunc.lshHashRadius(vec, so.getNumBlur());
+				
 				for (long h : hash) {
 					c.addID(h);
 					is.addLong(h, 1);
 				}
+				
+				hash = lshfunc.lshHashRadius(scale(vec,.5f), so.getNumBlur());
+				//onehalfin'
+				for (long h : hash) {
+					c.addID(h);
+					is.addLong(h, 2);
+				}
+				
+				
 			}
 			else 
 			{
