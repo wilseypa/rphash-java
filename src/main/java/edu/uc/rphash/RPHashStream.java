@@ -161,7 +161,9 @@ public class RPHashStream implements StreamClusterer {
 		offlineclusterer.setData(centroids);
 		offlineclusterer.setK(so.getk());
 		centroids = offlineclusterer.getCentroids();
-
+		
+		while(centroids.size()<so.getk() && counts.size()>so.getk())centroids = offlineclusterer.getCentroids();
+		if(counts.size()<so.getk())System.out.println("WARNING: Failed to partition dataset into K clusters");
 		return centroids;
 	}
 

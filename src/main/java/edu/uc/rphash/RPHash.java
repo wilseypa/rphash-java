@@ -195,7 +195,7 @@ public class RPHash {
 					+ " { "+clu.getParam().toString()
 					+ "}"
 					+ ",stream_duration:" + streamDuration
-					+ "} \n cpu time \t wcsse \t\t\t mem(kb)\n");
+					+ "} \n cpu time \t wcsse \t\t\t mem(kb)\t\tcluster_count\n");
 			
 			rt.gc();
 			Thread.sleep(10);
@@ -207,7 +207,7 @@ public class RPHash {
 			ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
 			int count = 0;
 			while (streamer.hasNext()) {
-				i++;
+				
 				float[] nxt = streamer.next();
 				vecsInThisRound.add(nxt);
 				((StreamClusterer) clu).addVectorOnlineStep(nxt);
@@ -228,7 +228,7 @@ public class RPHash {
 
 					
 					System.out.println(time / 1000000000f + "\t" + wcsse
-							+ "\t " + ((rt.totalMemory() - rt.freeMemory()) - usedkB)/1024);
+							+ "\t " + ((rt.totalMemory() - rt.freeMemory()) - usedkB)/1024+"\t\t\t"+cents.size());
 					VectorUtil.writeFile(new File(outputFile + "_round" + new Integer(count).toString()
 							+ "."
 							+ ClusterHashName[ClusterHashName.length - 1]),
@@ -237,8 +237,11 @@ public class RPHash {
 					startTime = System.nanoTime() + avgtimeToRead;
 				}
 				if(!streamer.hasNext()){
+
+					
 					((StreamClusterer) clu).shutdown();
 				}
+				i++;
 			}
 			streamer.reset();
 		}
