@@ -1,8 +1,5 @@
 package edu.uc.rphash.concurrent;
 
-import java.util.List;
-import java.util.concurrent.RecursiveAction;
-
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
@@ -12,45 +9,50 @@ import edu.uc.rphash.tests.StatTests;
 public class VectorLevelConcurrency implements Runnable {
 
 	private float[] vec;
-	private StatTests vartracker;
-	private RPHashObject so;
+//	private StatTests vartracker;
 	private LSH[] lshfuncs;
 	private KHHCentroidCounter is;
-	
-	public VectorLevelConcurrency(float[] vec,RPHashObject so,LSH[] lshfuncs,StatTests vartracker,KHHCentroidCounter is) {
-		this.vec = vec;		
-		this.vartracker = vartracker;
-		this.so = so;
+	private RPHashObject so;
+
+	public VectorLevelConcurrency(float[] vec, LSH[] lshfuncs,
+			/*StatTests vartracker,*/ KHHCentroidCounter is,RPHashObject so) {
+		this.vec = vec;
+//		this.vartracker = vartracker;
 		this.lshfuncs = lshfuncs;
 		this.is = is;
+		this.so = so;
 	}
 
-	private void computeSequential(float[] vec){
-
-		long hash[];
-//		Centroid c = new Centroid(vec);
-//		float tmpvar = vartracker.updateVarianceSample(vec);
-		float[] tmpvar = vartracker.updateVarianceSampleVec(vec);
-		float[] scaledvec = new float[vec.length]; 
-		for(int i = 0;i<vec.length;i++)scaledvec[i] = vec[i]/tmpvar[i];
-		for (LSH lshfunc : lshfuncs) 
-		{
-
-			Centroid c = new Centroid(vec);
-			c.addID(lshfunc.lshHash(scaledvec));
-			is.add(c);
-//			lshfunc.updateDecoderVariance(tmpvar);
-//			hash = lshfunc.lshHashRadiusNo2Hash(scaledvec, so.getNumBlur());
-//			for (long h : hash)
-//				c.addID(h);
+	public static long computeSequential(float[] vec,LSH[] lshfuncs,KHHCentroidCounter is,RPHashObject so) {
+//		if(!lshfuncs[0].lshDecoder.selfScaling()){
+//			this.vartracker.updateVarianceSampleVec(vec);
+//			vec = this.vartracker.scaleVector(vec);
+//		}
+		Centroid c = new Centroid(vec,-1);
+		for (LSH lshfunc : lshfuncs) {
+			if (so.getNumBlur() != 1) {
+				long[] hash = lshfunc
+						.lshHashRadius(vec, so.getNumBlur());
+				for (long h : hash) {
+					c.addID(h);
+					is.addLong(h, 1);
+				}
+			}
+			else 
+			{
+				long hash = lshfunc.lshHash(vec);
+				c.addID(hash);
+				is.addLong(hash, 1);
+			}
+			
 		}
-//		is.add(c);
+		is.add(c);
+		return is.count;
 	}
-	
+
 	@Override
 	public void run() {
-			computeSequential(vec);
+		computeSequential(this.vec,this.lshfuncs,this.is,this.so);
 	}
-
 
 }

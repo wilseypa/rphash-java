@@ -3,32 +3,21 @@ package edu.uc.rphash.Readers;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPInputStream;
 
+import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
-import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.TestUtil;
 
 public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public List<float[]> data;
@@ -47,6 +36,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	int multiDim;
 	Decoder dec;
 	float decayrate=0;
+	boolean parallel = true;
 
 	ExecutorService executor;
 	InputStream inputStream;
@@ -79,9 +69,14 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.data = null;
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 
 	boolean filereader = false;
+	private int dimparameter;
+	private List<Float> counts;
+	private Clusterer clusterer;
 
 	public StreamObject(String f, int k, boolean raw) throws IOException {
 		this.f = f;
@@ -103,11 +98,11 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 		if (!raw) {
 			assin = new BufferedReader(new InputStreamReader(inputStream));
-			int d = Integer.parseInt(assin.readLine());
+			 Integer.parseInt(assin.readLine());
 			dim = Integer.parseInt(assin.readLine());
 		} else {
 			binin = new DataInputStream(new BufferedInputStream(inputStream));
-			int d = binin.readInt();
+			binin.readInt();
 			dim = binin.readInt();
 		}
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
@@ -122,6 +117,8 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.data = null;
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 		// dec = new MultiDecoder(
 		// getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
 	}
@@ -142,12 +139,12 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 				if (!raw) {
 					assin = new BufferedReader(new InputStreamReader(
 							inputStream));
-					int d = Integer.parseInt(assin.readLine());
+					Integer.parseInt(assin.readLine());
 					dim = Integer.parseInt(assin.readLine());
 				} else {
 					binin = new DataInputStream(new BufferedInputStream(
 							inputStream));
-					int d = binin.readInt();
+					binin.readInt();
 					dim = binin.readInt();
 
 				}
@@ -249,6 +246,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		ret += ", Blur:" + numBlur;
 		ret += ", Projections:" + numProjections;
 		ret += ", Outer Decoder Multiplier:" + decoderMultiplier;
+		ret += ", Offline Clusterer:" + clusterer.getClass().getName();
 		return ret;
 	}
 
@@ -306,5 +304,52 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	
 	public float getDecayRate(){
 		return this.decayrate;
+	}
+
+	@Override
+	public void setParallel(boolean parseBoolean) {
+		this.parallel = parseBoolean;
+	}
+
+	@Override
+	public boolean getParallel() {
+		return parallel;
+	}
+
+	@Override
+	public void setDimparameter(int parseInt) {
+		this.dimparameter = parseInt;
+		
+	}
+
+	@Override
+	public int getDimparameter() {
+		return this.dimparameter;
+	}
+	
+	@Override
+	public void setCounts(List<Float> counts) {
+
+		this.counts = counts;
+	}
+
+	@Override
+	public List<Float> getCounts() {
+		return counts;
+	}
+	
+	@Override
+	public void setOfflineClusterer(Clusterer agglomerative3) {
+		this.clusterer = agglomerative3;
+	}
+	
+	@Override
+	public Clusterer getOfflineClusterer() {
+		return this.clusterer;
+	}
+
+	@Override
+	public List<float[]> getData() {
+		return this.data;
 	}
 }

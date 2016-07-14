@@ -1,13 +1,14 @@
 package edu.uc.rphash.tests;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.StreamObject;
+import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.util.AtomicFloat;
+import edu.uc.rphash.util.VectorUtil;
 
 public class StatTests {
 	Random r;
@@ -23,9 +24,19 @@ public class StatTests {
 		List<float[]> data = gen.getData();
 		for(int i = 0; i< data.size();i++)
 		{
-			if(TestUtil.findNearestDistance(data.get(i), estCentroids)==gen.getLabels().get(i))count++;
+			if(VectorUtil.findNearestDistance(data.get(i), estCentroids)==gen.getLabels().get(i))count++;
 		}
 		System.out.println(data.size());
+		return (float)count/(float)data.size();
+	}
+	
+	public static float PR(List<float[]> estCentroids, List<Integer> labels,List<float[]> data){
+		int count = 0 ;
+
+		for(int i = 0; i< data.size();i++)
+		{
+			if(VectorUtil.findNearestDistance(data.get(i), estCentroids)==labels.get(i))count++;
+		}
 		return (float)count/(float)data.size();
 	}
 	
@@ -34,7 +45,16 @@ public class StatTests {
 		double count = 0.0 ;
 		for(int i = 0; i< data.size();i++)
 		{
-			count+=TestUtil.distance(data.get(i),estCentroids.get(TestUtil.findNearestDistance(data.get(i), estCentroids))) ;
+			count+=VectorUtil.distance(data.get(i),estCentroids.get(VectorUtil.findNearestDistance(data.get(i), estCentroids))) ;
+		}
+		return count;
+	}
+	
+	public static double WCSSE(List<Centroid> estCentroids, List<Centroid> data,boolean skip){
+		double count = 0.0 ;
+		for(int i = 0; i< data.size();i++)
+		{
+			count+=VectorUtil.distance(data.get(i).centroid(),estCentroids.get(VectorUtil.findNearestDistance(data.get(i), estCentroids)).centroid()) ;
 		}
 		return count;
 	}
@@ -45,7 +65,7 @@ public class StatTests {
 		while(data.hasNext())
 		{
 			float[] next = data.next();
-			count+=TestUtil.distance(next,estCentroids.get(TestUtil.findNearestDistance(next, estCentroids))) ;
+			count+=VectorUtil.distance(next,estCentroids.get(VectorUtil.findNearestDistance(next, estCentroids))) ;
 		}
 		return count;
 	}
@@ -55,7 +75,7 @@ public class StatTests {
 		List<float[]> data = gen.getMedoids();
 		for(int i = 0; i< data.size();i++)
 		{
-			count+=TestUtil.distance(data.get(i),estCentroids.get(TestUtil.findNearestDistance(data.get(i), estCentroids))) ;
+			count+=VectorUtil.distance(data.get(i),estCentroids.get(VectorUtil.findNearestDistance(data.get(i), estCentroids))) ;
 		}
 		return count;
 	}
@@ -78,9 +98,9 @@ public class StatTests {
 	}
 	
 
-	private float[] meanv;
+	private float[] meanv=null;
 	private float[] M2v;
-	private float[] variance;
+	private float[] variance=null;
 	public float[] updateVarianceSampleVec(float[] row){
 		if(n==0){
 			meanv = new float[row.length];
@@ -102,9 +122,14 @@ public class StatTests {
 			M2v[i] = M2v[i] + delta*(x-meanv[i]);
 			variance[i] = M2v[i]/(n-1f);
 		}	
-		
-		
 		return variance;
+	}
+	
+	public float[] scaleVector(float[] vec)
+	{
+		if(meanv==null || variance==null)return vec;
+		for(int i =0;i<vec.length;i++)vec[i] = (vec[i]-meanv[i])/variance[i];
+		return vec;
 	}
 	
 	

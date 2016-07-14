@@ -1,20 +1,24 @@
 package edu.uc.rphash.decoders;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
 import edu.uc.rphash.standardhash.MurmurHash;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.util.VectorUtil;
 
-/** Spherical LSH Decoder based on SLSH (lgpl)
+/**
+ * Spherical LSH Decoder based on SLSH (lgpl)
+ * 
  * @author lee
  *
  */
 public class Spherical implements Decoder {
 	int HashBits = 64;
-	final List<List<float[]>> vAll; // vAll[i][j] is the vector $A_i \tilde v_j$ from
-				// the article.
+	final List<List<float[]>> vAll; // vAll[i][j] is the vector $A_i \tilde v_j$
+									// from
+	// the article.
 	int hbits; // Ceil(Log2(2*d)).
 	int d; // the dimension of the feature space.
 	int k; // number of elementary hash functions (h) to be concatenated to
@@ -27,16 +31,21 @@ public class Spherical implements Decoder {
 	float distance = 0;
 
 	/**
-	 * This class represent a spherical lsh scheme. Vectors are decoded to the nearest vertex of the d dimensional orthoplex
-	 * reresented by a canonical ordered integer.
-	 * @param d - the number of dimension in the orthoplex
-	 * @param k - number of rotations of the fundamental hash functions
-	 * @param L - the number to search, currently ignored in RPHash
+	 * This class represent a spherical lsh scheme. Vectors are decoded to the
+	 * nearest vertex of the d dimensional orthoplex reresented by a canonical
+	 * ordered integer.
+	 * 
+	 * @param d
+	 *            - the number of dimension in the orthoplex
+	 * @param k
+	 *            - number of rotations of the fundamental hash functions
+	 * @param L
+	 *            - the number to search, currently ignored in RPHash
 	 */
 	public Spherical(int d, int k, int L) {
-		this.d = d;//number of dimensions
-		this.k = k;//number of elementary hash functions
-		this.l = 1;//L;//number of copies to search
+		this.d = d;// number of dimensions
+		this.k = k;// number of elementary hash functions
+		this.l = 1;// L;//number of copies to search
 		double nvertex = 2.0 * this.d;
 		this.hbits = (int) Math.ceil(Math.log(nvertex) / Math.log(2));
 		int kmax = (int) (HashBits / this.hbits);
@@ -47,7 +56,8 @@ public class Spherical implements Decoder {
 		}
 
 		Random[] r = new Random[d];
-		for(int i = 0 ; i< d;i++)r[i] = new Random();
+		for (int i = 0; i < d; i++)
+			r[i] = new Random();
 
 		// For orthoplex, the basis Vectortors v_i are permutations of the
 		// Vectortor (1, 0, ..., 0),
@@ -57,8 +67,9 @@ public class Spherical implements Decoder {
 		// This means we don't need any matrix multiplication; R matrix is the
 		// list of
 		// rotated vectors itself!
-		this.vAll = new ArrayList<List<float[]>>(k*l); // random rotation matrices
-		for (int i = 0; i < k*l; i++) {
+		this.vAll = new ArrayList<List<float[]>>(k * l); // random rotation
+															// matrices
+		for (int i = 0; i < k * l; i++) {
 			this.vAll.add(i, randomRotation(this.d, r));
 		}
 	}
@@ -68,31 +79,14 @@ public class Spherical implements Decoder {
 		return d;
 	}
 
-
 	@Override
 	public long[] decode(float[] f) {
-//		byte[] lg = new byte[this.l * 8];
-		//doesnt seem to be needed since we are variance scaling in the LSH function
-//		long[] dec = Hash(TestUtil.normalize(f));
-		
-		long[] dec = Hash(f);
-//		int ct = 0;
-//		for (long d:dec) {
-//			lg[ct++] = (byte)(d >>> 56);
-//			lg[ct++] = (byte)(d >>> 48);
-//			lg[ct++] = (byte)(d >>> 40);
-//			lg[ct++] = (byte)(d >>> 32);
-//			lg[ct++] = (byte)(d >>> 24);
-//			lg[ct++] = (byte)(d >>> 16);
-//			lg[ct++] = (byte)(d >>> 8 );
-//			lg[ct++] = (byte)(d       );
-//		}
-		return dec;
+		long dec = Hash(f);
+		return new long[] { dec };
 	}
 
 	@Override
 	public float getErrorRadius() {
-
 		return d;
 	}
 
@@ -101,18 +95,17 @@ public class Spherical implements Decoder {
 		return distance;
 	}
 
-	long argmaxi(float[] p, List<float[]> vs) {
+	long argmaxi(float[] p, int index) {
+		List<float[]> vs = vAll.get(index);
 		long maxi = 0;
 		float max = 0;
-
 		for (int i = 0; i < this.d; i++) {
 			float dot = dot(p, vs.get(i));
-			//compute orthoplex of -1 and 1 simultaneously
+			// compute orthoplex of -1 and 1 simultaneously
 			float abs = dot >= 0 ? dot : -dot;
 			if (abs < max) {
 				continue;
 			}
-
 			max = abs;
 			maxi = dot >= 0 ? i : i + this.d;
 		}
@@ -189,66 +182,80 @@ public class Spherical implements Decoder {
 	// is required to take the normalization into account.
 	//
 	// The complexity of this function is O(nL)
-	long[] Hash(float[] p) {
+	long Hash(float[] p) {
 		int ri = 0;
-		long h;
-		//if(variance!=1f)p = scale(p,variance);
-		long[] g = new long[this.l];
+		long h = 0;
+//		float normp = norm(p);
+//		p = scale(p, 1.0f / normp);
 		for (int i = 0; i < this.l; i++) {
-			g[i] = 0;
 			for (int j = 0; j < this.k; j++) {
-				List<float[]> vs = this.vAll.get(ri);
-				h = this.argmaxi(p, vs);
-				g[i] |= (h << (this.hbits * j));
+				h = h | this.argmaxi(p, ri);
+				h <<= this.hbits;
 				ri++;
 			}
 		}
-		return g;
-	}
-	
+		return h ;//+ (int) (normp);
 
-	
-	public static void main(String[] args){
+	}
+
+	public static void main(String[] args) {
 		Random r = new Random();
 		int d = 64;
-		int K = 9; 
-		int L = 4;
-		Spherical sp = new Spherical(d,K,L);
-		for(int i = 0; i<100;i++){
+		int K = 2;
+		int L = 1;
+		Spherical sp = new Spherical(d, K, L);
+
+		// MultiDecoder sp = new MultiDecoder( d, e8);
+		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
+		float testResolution = 10000f;
+
+		HashMap<Long, Integer> ctmap = new HashMap<Long, Integer>();
+
+		for (int i = 0; i < 400; i++) {
 			int ct = 0;
 			float distavg = 0.0f;
-			for(int j = 0; j<10000;j++){
+			for (int j = 0; j < testResolution; j++) {
 				float p1[] = new float[d];
 				float p2[] = new float[d];
-				for(int k = 0;k<d;k++)
-				{
-					p1[k] = r.nextFloat()*2-1;
-					p2[k] = (float) (p1[k]+r.nextGaussian()*((float)i/100f));
+
+				// generate a vector
+				for (int k = 0; k < d; k++) {
+					p1[k] = r.nextFloat() * 2 - 1f;
+					p2[k] = (float) (p1[k] + r.nextGaussian()
+							* ((float) i / 1000f));
 				}
-				
-				distavg+=TestUtil.distance(p1,p2);
-				MurmurHash mh = new MurmurHash(Long.MAX_VALUE);
-				long[] hp1 = sp.Hash(TestUtil.normalize(p1));
-				long[] hp2 = sp.Hash(TestUtil.normalize(p2));
-				boolean test = false;
-//				for(int k = 0; k< hp1.length;k++)
-//				{
-//					if(hp1[k]==hp2[k]){
-//						test=true;
-//						
-//					}
-//				}
-//				if(test)ct++;
-				if(mh.hash(hp1)==mh.hash(hp2))ct++;
+				float dist = VectorUtil.distance(p1, p2);
+				distavg += dist;
+				long[] l1 = sp.decode(p1);
+				long[] l2 = sp.decode(p2);
+
+				ctmap.put(l1[0],
+						ctmap.containsKey(l1[0]) ? 1 + ctmap.get(l1[0]) : 1);
+
+				long hp1 = hash.hash(l1);
+				long hp2 = hash.hash(l2);
+
+				// ctmap.put(hp1,ctmap.containsKey(hp1)?1+ctmap.get(hp1):1);
+
+				ct += (hp2 == hp1) ? 1 : 0;
+
 			}
-			System.out.println(distavg/10000f+"\t"+(float)ct/10000f);
+
+			System.out.println(distavg / testResolution + "\t" + (float) ct
+			/ testResolution);
 		}
 	}
 
 	float variance = 1f;
+
 	@Override
 	public void setVariance(Float parameterObject) {
 		variance = parameterObject;
+	}
+
+	@Override
+	public boolean selfScaling() {
+		return true;
 	}
 
 }

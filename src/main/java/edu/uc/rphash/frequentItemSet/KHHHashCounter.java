@@ -8,13 +8,8 @@ import java.util.PriorityQueue;
 import java.util.Random;
 
 import edu.uc.rphash.Centroid;
-import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.Golay;
-import edu.uc.rphash.decoders.Leech;
-import edu.uc.rphash.projections.DBFriendlyProjection;
-import edu.uc.rphash.projections.Projector;
 
-@SuppressWarnings("rawtypes")
+
 /**Tuple of counts and items
 * @author lee
  *Note: this class has a natural ordering that is inconsistent with
@@ -157,10 +152,9 @@ public class KHHHashCounter {
 		
 		KHHHashCounter khh = new KHHHashCounter(20);
 
-		long ts = System.currentTimeMillis();
 
 		for (long i = 1; i < 5000; i++) {
-			khh.add(new Centroid(0,r.nextInt((int) i) ));
+			khh.add(new Centroid(0,r.nextInt((int) i),-1 ));
 		}
 
 //		System.out.println(System.currentTimeMillis() - ts);

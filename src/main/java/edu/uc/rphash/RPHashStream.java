@@ -1,21 +1,17 @@
 package edu.uc.rphash;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeUnit;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.concurrent.VectorLevelConcurrency;
 import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
 //import edu.uc.rphash.frequentItemSet.KHHCountMinSketch.Tuple;
 import edu.uc.rphash.lsh.LSH;
@@ -23,21 +19,19 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
-import edu.uc.rphash.tests.ClusterGenerator;
-import edu.uc.rphash.tests.GenerateData;
-import edu.uc.rphash.tests.GenerateStreamData;
-import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.StreamingKmeans;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.clusterers.Agglomerative2;
+import edu.uc.rphash.tests.clusterers.Agglomerative3;
+import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.generators.ClusterGenerator;
+import edu.uc.rphash.tests.generators.GenerateStreamData;
 
 public class RPHashStream implements StreamClusterer {
 	public KHHCentroidCounter is;
 	private LSH[] lshfuncs;
-	private StatTests vartracker;
+//	private StatTests vartracker;
 	private List<float[]> centroids = null;
 	private RPHashObject so;
-	public boolean parallel = true;
 	ExecutorService executor;
 	private final int processors;
 
@@ -46,37 +40,31 @@ public class RPHashStream implements StreamClusterer {
 	}
 
 	@Override
-	public synchronized long addVectorOnlineStep(final float[] vec) {
-
-		if (parallel) 
-		{
-			VectorLevelConcurrency r = new VectorLevelConcurrency(vec, so,
-					lshfuncs, vartracker, is);
+	public long addVectorOnlineStep(final float[] vec) {
+		if (so.getParallel()) {
+			VectorLevelConcurrency r = new VectorLevelConcurrency(vec,
+					lshfuncs,  is,so);
 			executor.execute(r);
 			return is.count;
 		}
-
-//		long hash[];
-		Centroid c = new Centroid(vec);
-		for (LSH lshfunc : lshfuncs) {
-//			hash = lshfunc.lshHashRadiusNo2Hash(vec, so.getNumBlur());
-//			for (long h : hash)
-//				c.addID(h);
-			long hash = lshfunc.lshHash(vec);
-			c.addID(hash);
-		}
-		is.add(c);
-		return is.count;
+		return VectorLevelConcurrency.computeSequential(vec, lshfuncs, is, so);
 	}
 
 	public void init() {
+//		System.out.println("init rphash machine");
 		Random r = new Random(so.getRandomSeed());
-		this.vartracker = new StatTests(.01f);
+//		this.vartracker = new StatTests(.01f);
+		
 		int projections = so.getNumProjections();
-		int k = (int) (so.getk() * Math.log(so.getk() / Math.log(2.0)));
+		int k = (int) (so.getk()*Math.log(so.getk()));
 		// initialize our counter
-		float decayrate = so.getDecayRate();// 1f;// bottom number is window size
-		is = new KHHCentroidCounter(k,decayrate);// , decayrate); //add back for decayed
+		float decayrate = so.getDecayRate();// 1f;// bottom number is window
+											// size
+		if(so.getDecayRate()==0.0){
+			is = new KHHCentroidCounter(k);
+		}else{
+			is = new KHHCentroidCounter(k, decayrate);
+		}
 		// create LSH Device
 		lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
@@ -86,26 +74,25 @@ public class RPHashStream implements StreamClusterer {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
-					SimpleArrayReader.DEFAULT_NUM_BLUR, r, dec.getErrorRadius()
+					so.getNumBlur(), r, dec.getErrorRadius()
 							/ dec.getDimensionality());
 			lshfuncs[i] = new LSH(dec, p, hal, noise);
 		}
 	}
 
 	public RPHashStream(int k, ClusterGenerator c) {
-		so = new SimpleArrayReader(k, c);
-		if (parallel)
+		so = new SimpleArrayReader(c, k);
+		if (so.getParallel())
 			this.processors = Runtime.getRuntime().availableProcessors();
 		else
 			this.processors = 1;
 		executor = Executors.newFixedThreadPool(this.processors);
-
 		init();
 	}
 
 	public RPHashStream(List<float[]> data, int k) {
 		so = new SimpleArrayReader(data, k);
-		if (parallel)
+		if (so.getParallel())
 			this.processors = Runtime.getRuntime().availableProcessors();
 		else
 			this.processors = 1;
@@ -115,7 +102,7 @@ public class RPHashStream implements StreamClusterer {
 
 	public RPHashStream(RPHashObject so) {
 		this.so = so;
-		if (parallel)
+		if (so.getParallel())
 			this.processors = Runtime.getRuntime().availableProcessors();
 		else
 			this.processors = 1;
@@ -124,15 +111,14 @@ public class RPHashStream implements StreamClusterer {
 	}
 
 	public RPHashStream(int k, GenerateStreamData c, int processors) {
-		so = new SimpleArrayReader(k, c);
-		if (parallel)
+		so = new SimpleArrayReader(c, k);
+		if (so.getParallel())
 			this.processors = processors;
 		else
 			this.processors = 1;
 		executor = Executors.newFixedThreadPool(this.processors);
 		init();
 	}
-
 
 	@Override
 	public List<float[]> getCentroids() {
@@ -145,10 +131,10 @@ public class RPHashStream implements StreamClusterer {
 	}
 
 	public List<float[]> getCentroidsOfflineStep() {
-		if (parallel) {
+		if (so.getParallel()) {
 			executor.shutdown();
 			try {
-				executor.awaitTermination(10, TimeUnit.SECONDS);
+				executor.awaitTermination(1, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -156,14 +142,22 @@ public class RPHashStream implements StreamClusterer {
 		}
 
 		centroids = new ArrayList<float[]>();
+		List<Integer> projIDs = new ArrayList<Integer>();
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
-
-		for (int i = 0; i < cents.size(); i++) {
+		int i =  0;
+		//get rid of size one clusters that are there just because they were added to the list more recently
+		for (; i < cents.size() ; i++) {
+			if(counts.get(i)==1)break;
+			projIDs.add(cents.get(i).projectionID);
 			centroids.add(cents.get(i).centroid());
 		}
-
-		centroids = new Kmeans(so.getk(), centroids, counts).getCentroids();
+		counts = counts.subList(0, i);
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setWeights(counts);
+		offlineclusterer.setData(centroids);
+		offlineclusterer.setK(so.getk());
+		centroids = offlineclusterer.getCentroids();
 
 		return centroids;
 	}
@@ -172,10 +166,9 @@ public class RPHashStream implements StreamClusterer {
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		Iterator<float[]> vecs = so.getVectorIterator();
 		while (vecs.hasNext()) {
-			if (parallel) {
+			if (so.getParallel()) {
 				float[] vec = vecs.next();
-				executor.execute(new VectorLevelConcurrency(vec, so,
-						lshfuncs, vartracker, is));
+				executor.execute(new VectorLevelConcurrency(vec, lshfuncs,is,so));
 			} else {
 				addVectorOnlineStep(vecs.next());
 			}
@@ -189,6 +182,20 @@ public class RPHashStream implements StreamClusterer {
 	@Override
 	public RPHashObject getParam() {
 		return so;
+	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+
+	}
+
+	@Override
+	public void setK(int getk) {
+
 	}
 
 }

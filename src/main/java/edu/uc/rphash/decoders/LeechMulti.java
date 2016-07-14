@@ -1022,4 +1022,10 @@ public class LeechMulti implements Decoder {
 		}
 	}
 
+	
+	@Override
+	public boolean selfScaling() {
+		return false;
+	}
+	
 }

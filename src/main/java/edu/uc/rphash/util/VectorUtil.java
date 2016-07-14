@@ -1,4 +1,4 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,9 +19,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.projections.Projector;
 
-public class TestUtil {
+public class VectorUtil {
 
 	/**
 	 * Return the euclidean distance between two vectors x and y Returns
@@ -83,6 +83,27 @@ public class TestUtil {
 		float tmp;
 		for (int i = 1; i < DB.size(); i++) {
 			tmp = distance(x, DB.get(i));
+			if (tmp <= mindist) {
+				mindist = tmp;
+				minindex = i;
+			}
+		}
+		return minindex;
+	}
+	
+	/**
+	 * Linear search for x's nearest neighbor in DB
+	 * 
+	 * @param x
+	 * @param DB
+	 * @return
+	 */
+	public static int findNearestDistance(Centroid x, List<Centroid> DB) {
+		float mindist = distance(x.centroid(), DB.get(0).centroid());
+		int minindex = 0;
+		float tmp;
+		for (int i = 1; i < DB.size(); i++) {
+			tmp = distance(x.centroid(), DB.get(i).centroid());
 			if (tmp <= mindist) {
 				mindist = tmp;
 				minindex = i;
@@ -180,6 +201,7 @@ public class TestUtil {
 		} else {
 			for (int i = 0; i < mat.size(); i++) {
 				prettyPrint(mat.get(i));
+				System.out.print("\n");
 			}
 		}
 	}
@@ -274,7 +296,7 @@ public class TestUtil {
 			aligned.add(new float[0]);
 
 		for (float[] estCentroid : estCentroids) {
-			int index = TestUtil
+			int index = VectorUtil
 					.findNearestDistance(estCentroid, realCentroids);
 			aligned.set(index, estCentroid);
 		}
@@ -328,7 +350,7 @@ public class TestUtil {
 		return mx;
 	}
 
-	public static double max(List l) {
+	public static double max(List<Number> l) {
 		double mx = (double) l.get(0);
 		for (int i = 1; i < l.size(); i++) {
 			if ((double) l.get(i) > mx) {
@@ -496,7 +518,7 @@ public class TestUtil {
 		for (int i = 0; i < s; i++) {
 			for (int j = 0; j < s; j++) {
 				System.out.printf("%.3f",
-						TestUtil.distance(b, b, i * d, j * d, d));
+						VectorUtil.distance(b, b, i * d, j * d, d));
 				System.out.print("\t");
 			}
 			System.out.println();
@@ -556,5 +578,27 @@ public class TestUtil {
 			x[i] /= variance;
 		return x;
 	}
+
+	public static float sum(float[] x) {
+		double ret = 0.0;
+		for(float xx : x) ret+=xx;
+		return (float)ret;
+	}
+	
+	public static float[] dot(float[] x, float[] y) {
+		if(x.length!=y.length) return null;
+		float[] ret = new float[x.length];
+		for(int i = 0;i<x.length;i++)ret[i] = x[i]*y[i];
+		return ret;
+	}
+	
+	public static float dotSum(float[] x, float[] y) {
+		if(x.length!=y.length) return 0.0f;
+		double ret = 0.0;
+		for(int i = 0;i<x.length;i++)ret+= x[i]*y[i];
+		return (float )ret;
+	}
+	
+	
 
 }

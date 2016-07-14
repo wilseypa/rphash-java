@@ -1,19 +1,14 @@
 package edu.uc.rphash.Readers;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
+import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.E8;
-import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
-import edu.uc.rphash.decoders.PStableDistribution;
-import edu.uc.rphash.decoders.Spherical;
-import edu.uc.rphash.tests.ClusterGenerator;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.generators.ClusterGenerator;
 
 public class SimpleArrayReader implements RPHashObject {
 
@@ -29,6 +24,10 @@ public class SimpleArrayReader implements RPHashObject {
 	float decayrate;
 	List<float[]> centroids;
 	List<Long> topIDs;
+	boolean parallel = true;
+	private int dimparameter;
+	List<Float> counts;
+	private Clusterer clusterer;
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -38,7 +37,8 @@ public class SimpleArrayReader implements RPHashObject {
 		this.numBlur = numBlur;
 	}
 
-	public SimpleArrayReader(int k, ClusterGenerator gen) {
+	public SimpleArrayReader(ClusterGenerator gen,int k) {
+
 		this.dim = gen.getDimension();
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
@@ -52,6 +52,8 @@ public class SimpleArrayReader implements RPHashObject {
 		this.topIDs = new ArrayList<Long>();
 		this.data = gen.getData();
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 	
 	
@@ -73,6 +75,8 @@ public class SimpleArrayReader implements RPHashObject {
 		this.centroids = new ArrayList<float[]>();
 		this.topIDs = new ArrayList<Long>();
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 //		for (int i = 0; i < k; i++)
 //			topIDs.add((long) 0);
 	}
@@ -85,9 +89,9 @@ public class SimpleArrayReader implements RPHashObject {
 		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
 		this.numProjections = DEFAULT_NUM_PROJECTIONS;
 		this.numBlur = blur;
-		data = X;
+		this.data = X;
 //		this.n = X.size();
-		if(data!=null)
+		if(this.data!=null)
 			this.dim = data.get(0).length;
 		else 
 			this.dim = null;
@@ -97,6 +101,8 @@ public class SimpleArrayReader implements RPHashObject {
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
@@ -109,10 +115,11 @@ public class SimpleArrayReader implements RPHashObject {
 		this.numBlur = blur;
 		this.decoderMultiplier = decoderMultiplier;
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		
-		data = X;
-		if(data!=null)
-			this.dim = data.get(0).length;
+		this.data = X;
+		if(this.data!=null)
+			this.dim = this.data.get(0).length;
 		else 
 			this.dim = null;
 		this.k = k;
@@ -120,6 +127,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.topIDs = new ArrayList<Long>();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 
 	/**
@@ -136,6 +144,7 @@ public class SimpleArrayReader implements RPHashObject {
 	 */
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
 			int decoderMultiplier, int numProjections) {
+
 		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
@@ -153,6 +162,8 @@ public class SimpleArrayReader implements RPHashObject {
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 
 	public Iterator<float[]> getVectorIterator() {
@@ -253,6 +264,7 @@ public class SimpleArrayReader implements RPHashObject {
 		ret+=", Blur:"+numBlur;
 		ret+=", Projections:"+numProjections;
 		ret+=", Outer Decoder Multiplier:"+decoderMultiplier;
+		ret += ", Offline Clusterer:" + clusterer.getClass().getName();
 		return ret;
 	}
 
@@ -275,9 +287,52 @@ public class SimpleArrayReader implements RPHashObject {
 	public float getDecayRate() {
 		return this.decayrate;
 	}
+
+	@Override
+	public void setParallel(boolean parseBoolean) {
+		this.parallel = parseBoolean;
+		
+	}
+
+	@Override
+	public boolean getParallel() {
+		return parallel;
+	}
 	
+	@Override
+	public void setDimparameter(int parseInt) {
+		this.dimparameter = parseInt;
+		
+	}
 
+	@Override
+	public int getDimparameter() {
 
+		return this.dimparameter;
+	}
 
+	@Override
+	public void setCounts(List<Float> counts) {
 
+		this.counts = counts;
+	}
+
+	@Override
+	public List<Float> getCounts() {
+		return counts;
+	}
+
+	@Override
+	public void setOfflineClusterer(Clusterer agglomerative3) {
+		this.clusterer = agglomerative3;
+	}
+
+	@Override
+	public Clusterer getOfflineClusterer() {
+		return this.clusterer;
+	}
+
+	public List<float[]> getData() {
+		return data;
+	}
 }

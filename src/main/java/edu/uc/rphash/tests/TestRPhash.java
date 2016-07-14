@@ -4,6 +4,9 @@ package edu.uc.rphash.tests;
 import java.util.List;
 
 import edu.uc.rphash.RPHashSimple;
+import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 
 //import edu.uc.rphash.frequentItemSet.KarpFrequentItemSet;
@@ -24,7 +27,7 @@ public class TestRPhash {
 		List<float[]> M = ( new Kmeans(k,gen.data(),projdim)).getCentroids();
 		long duration = (System.nanoTime() - startTime);
 
-		List<float[]> aligned = TestUtil.alignCentroids(M,gen.medoids());
+		List<float[]> aligned = VectorUtil.alignCentroids(M,gen.medoids());
 		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
 		System.out.print("\t");
 		System.gc();
@@ -38,7 +41,7 @@ public class TestRPhash {
 		List<float[]> centroids = rph.getCentroids();
 		duration = (System.nanoTime() - startTime);
 		
-		aligned  = TestUtil.alignCentroids(centroids,gen.medoids());
+		aligned  = VectorUtil.alignCentroids(centroids,gen.medoids());
 		System.out.print(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
 		System.out.print("\t");
 		System.gc();

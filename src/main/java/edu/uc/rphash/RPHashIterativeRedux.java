@@ -9,22 +9,19 @@ import java.util.List;
 import java.util.Random;
 
 import edu.uc.rphash.Readers.RPHashObject;
-import edu.uc.rphash.Readers.RPVector;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
-import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
-import edu.uc.rphash.standardhash.NoHash;
-import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 /**This is the Iterative Redux Version Of RPHash
  * Instead of a constant number of passes over the data as in RPHash
@@ -63,7 +60,7 @@ public class RPHashIterativeRedux  implements Clusterer
 		for (int i = 0; i < probes; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
-			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),1, new Random(), dec.getErrorRadius()/dec.getDimensionality());
+			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), new Random(), dec.getErrorRadius()/dec.getDimensionality());
 			lshfuncs[i] = new LSH(dec, p, hal,noise);
 		}
 		// add to frequent itemset the hashed Decoded randomly projected vector
@@ -100,7 +97,7 @@ public class RPHashIterativeRedux  implements Clusterer
 	public RPHashObject reduce() 
 	{
 		Long lastID = so.getPreviousTopID().get(0);
-		Centroid centroid = new Centroid(so.getdim(),lastID);
+		Centroid centroid = new Centroid(so.getdim(),lastID,-1);
 		Iterator<float[]> vecs = so.getVectorIterator();
 		float[] vec;
 		
@@ -112,7 +109,7 @@ public class RPHashIterativeRedux  implements Clusterer
 		while(vecs.hasNext())
 		{
 			vec = vecs.next();
-			pq.add(new Tuple(vec,TestUtil.distance(vec,centroid.centroid())));
+			pq.add(new Tuple(vec,VectorUtil.distance(vec,centroid.centroid())));
 		}
 		
 		Collections.sort(pq);
@@ -121,7 +118,7 @@ public class RPHashIterativeRedux  implements Clusterer
 		while(vecs.hasNext())
 		{
 				vec = vecs.next();
-				if(TestUtil.distance(vec,centroid.centroid()) < cutoff){
+				if(VectorUtil.distance(vec,centroid.centroid()) < cutoff){
 					centroid.updateVec(vec);
 					vecs.remove();
 				}
@@ -186,7 +183,7 @@ public class RPHashIterativeRedux  implements Clusterer
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = TestUtil.alignCentroids(
+				List<float[]> aligned = VectorUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
 				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
 						+ StatTests.WCSSE(aligned, gen.getData()) + ":" + duration
@@ -200,6 +197,21 @@ public class RPHashIterativeRedux  implements Clusterer
 	@Override
 	public RPHashObject getParam() {
 		return so;
+	}
+	@Override
+	public void setWeights(List<Float> counts) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void setData(List<float[]> centroids) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void setK(int getk) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

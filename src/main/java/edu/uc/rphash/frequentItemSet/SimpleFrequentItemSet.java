@@ -33,15 +33,12 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 	@Override
 	public ArrayList<E> getTop() 
 	{
-		if(ret!=null)return ret;
-		
 		ArrayList<tuple<E>> sortedData = new ArrayList<tuple<E>>(data.size());
 
 		for(E key:data.keySet())sortedData.add(new tuple<E>(key,data.get(key)));
 		
 		Collections.sort(sortedData);
 
-		
 		setsize = setsize<sortedData.size()?setsize:sortedData.size();
 		
 		ret = new ArrayList<E>(setsize);
@@ -57,10 +54,9 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 	@Override
 	public List<Long> getCounts() {
 		if(counts!=null){
-			
-			return counts;
+			getTop() ;
 		}
-		getTop() ;
+		
 		return counts;
 	}
 

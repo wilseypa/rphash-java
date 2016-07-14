@@ -1,6 +1,5 @@
 package edu.uc.rphash.Readers;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
 public class RPVector {

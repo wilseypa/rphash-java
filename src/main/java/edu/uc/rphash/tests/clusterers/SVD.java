@@ -1,4 +1,4 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.tests.clusterers;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -292,8 +292,7 @@ public class SVD {
 
 	// test it
 	public static void main(String[] args) {
-		float[] d;
-		float[][] v;
+
 
 			float[][] u = {{1,2,3,4},{5,7,11,1},{2,5,6,3}};
 			SVD svd = new SVD(u);
@@ -354,7 +353,7 @@ public class SVD {
 			float[][] U;
 			float[][]V;
 			boolean sorted;
-			private boolean transpose;
+
 			
 			public  SVDMatrix(float[][] u, float[] d, float[][]v, boolean transpose)
 			{
@@ -375,7 +374,7 @@ public class SVD {
 			
 			public void sortSingularValues()
 			{
-				svdpairs = new ArrayList(D.length);
+				svdpairs = new ArrayList<SVDValuePairs>(D.length);
 				
 				for(int i = 0; i< D.length;i++){
 					float urow[] = new float[U[0].length];
@@ -434,7 +433,7 @@ public class SVD {
 			}
 
 
-			private class SVDValuePairs implements Comparable{
+			private class SVDValuePairs implements Comparable<SVDValuePairs>{
 				float singularValue;
 				float[] urows;
 				float[] vrows;
@@ -445,7 +444,7 @@ public class SVD {
 					this.urows = urows;
 				}
 				
-				public int compareTo(Object o) {
+				public int compareTo(SVDValuePairs o) {
 					if(o instanceof SVDValuePairs)
 					return 0;
 					if(((SVDValuePairs)o).singularValue == this.singularValue)return 0;

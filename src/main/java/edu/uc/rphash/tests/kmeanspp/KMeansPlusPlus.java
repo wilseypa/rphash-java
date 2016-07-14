@@ -27,9 +27,9 @@ import java.util.Random;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
-import edu.uc.rphash.tests.GenerateData;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 
 /**
@@ -542,7 +542,8 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 //   }
 	  final private List<float[]> data;
 	  
-    public KMeansPlusPlus(List<float[]> data,int k) {
+    @SuppressWarnings("unchecked")
+	public KMeansPlusPlus(List<float[]> data,int k) {
     	random  =new Random();
     	emptyStrategy= EmptyClusterStrategy.LARGEST_POINTS_NUMBER;
 		this.k = k;
@@ -600,13 +601,22 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 		KMeansPlusPlus<DoublePoint> kk = new KMeansPlusPlus<>(gen.data(),3);
 
 		
-		List<float[]> aligned = TestUtil.alignCentroids(
+		List<float[]> aligned = VectorUtil.alignCentroids(
 				kk.getCentroids(), gen.medoids());
 		
 		System.out.println( StatTests.PR(aligned, gen) + ":"+StatTests.WCSSE(aligned, gen.getData()));
 		System.gc();
-
 	}
 	
+	@Override
+	public void setWeights(List<Float> counts) {
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+	}
+	@Override
+	public void setK(int getk) {
+	}
 
 }

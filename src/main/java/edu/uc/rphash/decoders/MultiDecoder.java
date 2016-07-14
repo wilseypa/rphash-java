@@ -33,6 +33,7 @@ public class MultiDecoder implements Decoder {
 		if(innerDec.getDimensionality() == f.length){
 			return innerDec.decode(f);//no looping needed
 		}
+		
 		float[] innerpartition = new float[innerDec.getDimensionality()];
 		int numRounds = (int) Math.ceil((double)dimension/(double)innerDec.getDimensionality());
 		System.arraycopy(f, 0, innerpartition, 0, Math.min(f.length, innerpartition.length));
@@ -64,6 +65,10 @@ public class MultiDecoder implements Decoder {
 	@Override
 	public void setVariance(Float parameterObject) {
 		innerDec.setVariance(parameterObject);
+	}
+	@Override
+	public boolean selfScaling() {
+		return innerDec.selfScaling();
 	}
 
 }

@@ -39,21 +39,22 @@ public class KHHCentroidCounter {
 		public int compare(Centroid n1, Centroid n2) {
 			float cn1 = countlist.get(n1.id);// count(n1.id);
 			float cn2 = countlist.get(n2.id);// count(n2.id);
-			int counts = (int)(cn1-cn2);
+			int counts = (int)(cn2-cn1);
 			if (counts!=0)
 				return counts;
-			if(n1.id!=n2.id)
+			if(n1.id!=n2.id){
 				return 1;
-			else
+			}else{
 				return 0;
+			}
 			}
 	};
 	
 	public KHHCentroidCounter(int k) {
 		this.origk = k;
 		this.k = (int) (k * Math.log(k));
-		double epsOfTotalCount = .00001;
-		double confidence = .99;
+		double epsOfTotalCount = .0005;
+		double confidence = .97;
 		int seed = (int) System.currentTimeMillis();
 		this.decayRate = null;
 		count = 0;
@@ -87,8 +88,9 @@ public class KHHCentroidCounter {
 		if (decayRate != null) {
 			this.tableF = new float[depth][width];
 			this.decaytable = new int[depth][width];
-		} else
+		} else{
 			this.tableS = new short[depth][width];
+		}
 		this.hashA = new long[depth];
 		Random r = new Random(seed);
 		for (int i = 0; i < depth; ++i) {
@@ -98,7 +100,7 @@ public class KHHCentroidCounter {
 
 	public void add(Centroid c) {
 		this.count++;
-		float count = addLong(c.id, 1);
+		float count = addLong(c.id,1);
 
 		synchronized (frequentItems) {
 			Centroid probed = frequentItems.remove(c.id);
@@ -127,8 +129,7 @@ public class KHHCentroidCounter {
 					priorityQueue.add(probed);
 				}
 				// shrink if needed
-				if (priorityQueue.size() > this.k) {
-
+				if (priorityQueue.size() > this.k*10) {
 					Centroid removed = priorityQueue.poll();
 					frequentItems.remove(removed.id);
 					countlist.remove(removed.id);
@@ -142,6 +143,7 @@ public class KHHCentroidCounter {
 		hash += hash >>> 32;
 		hash &= PRIME_MODULUS;
 		return (int) (hash % width);
+
 	}
 
 	private float decayOnInsert(float prev_val, int prevt) {
@@ -157,7 +159,7 @@ public class KHHCentroidCounter {
 	 * @param count
 	 * @return size of min count bucket
 	 */
-	private float addLong(long item, long count) {
+	public float addLong(long item, long count) {
 
 		float min;
 		if (decayRate != null) {
@@ -212,28 +214,30 @@ public class KHHCentroidCounter {
 		}
 		return min;
 	}
-
+	
 	List<Centroid> topcent = null;
 	List<Float> counts = null;
 
 	public List<Centroid> getTop() {
+		
 		this.topcent = new ArrayList<>();
 		this.counts = new ArrayList<>();
+		int count = 0;
 		synchronized (priorityQueue) {
-			while (!priorityQueue.isEmpty()) {
+			while (!priorityQueue.isEmpty() && count<origk) {
 				Centroid tmp = priorityQueue.poll();
 				topcent.add(tmp);
 				counts.add(countlist.get(tmp.id));
+				count++;
 			}
 		}
 		return topcent;
 	}
 
 	public List<Float> getCounts() {
-		if (this.counts != null)
-			return counts;
-		getTop();
+		if(topcent==null)getTop();
 		return counts;
 	}
-}
+	
 
+}

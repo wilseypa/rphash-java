@@ -1,25 +1,25 @@
-package edu.uc.rphash.tests;
+package edu.uc.rphash.tests.clusterers;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.StreamClusterer;
 import edu.uc.rphash.Readers.RPHashObject;
-import edu.uc.rphash.Readers.StreamObject;
-import edu.uc.rphash.concurrent.VectorLevelConcurrency;
+import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.generators.ClusterGenerator;
+import edu.uc.rphash.tests.generators.GenerateStreamData;
 import edu.uc.rphash.tests.kmeanspp.Cluster;
+import edu.uc.rphash.util.VectorUtil;
 
 /**
- * An implementation of a simple, highly accurate streaming K Means algorithm.
+ * An implementation of streaming K Means algorithm.
  * It is based on a the following paper:
  *
  * <ul>
@@ -30,21 +30,10 @@ import edu.uc.rphash.tests.kmeanspp.Cluster;
  * </ul>
  *
  * </p>
- *
- * A key feature of this algorithm is that only one pass is made through a data
- * set. It is intended for applications where the total number of data points is
- * known, but can be used if a rough estimate of the data points is known. This
- * algorithm periodically reformulates the centroids by performing an batch form
- * of K Means over the centroids, and potentially a sample of data points
- * assigned to each centroid, clearing out all centroids, and then treating the
- * old centroids as new heavily weighted data points. This process happens
- * automatically when one of several thresholds are passed.
- *
- * @author Keith Stevens
  */
 
 public class StreamingKmeans implements StreamClusterer {
-	public boolean parallel = true;
+	public boolean parallel = false;
 	public ExecutorService executor;
 	private RPHashObject so;
 	final int processors;
@@ -297,7 +286,7 @@ public class StreamingKmeans implements StreamClusterer {
 	}
 
 
-	public StreamingKmeans(StreamObject streamObject) 
+	public StreamingKmeans(RPHashObject streamObject) 
 	{
 		
 		
@@ -305,6 +294,7 @@ public class StreamingKmeans implements StreamClusterer {
 		else this.processors = 1;
 		executor = Executors.newFixedThreadPool(processors);
 		
+		this.data = streamObject.getData();
 		
 		this.so = streamObject;
 		centroids = null;
@@ -416,7 +406,7 @@ public class StreamingKmeans implements StreamClusterer {
 	 * A list of the first K data points. After the first K data points have
 	 * been observed, this list is set to {@code null} and never re-used.
 	 */
-	private List<float[]> firstKPoints;
+	public List<float[]> firstKPoints;
 
 	/**
 	 * The scaled clustering cost.
@@ -457,14 +447,14 @@ public class StreamingKmeans implements StreamClusterer {
 	/**
 	 * The maximum total clustering cost, based on the constant values.
 	 */
-	private final float costThreshold;
+	public final float costThreshold;
 
 	/**
 	 * The maximum number of clusters, based on the constant values.
 	 */
 	private final float facilityThreshold;
 
-	private class StreamingkmThread implements Runnable {
+	public class StreamingkmThread implements Runnable {
 
 		long id;
 		float[] value;
@@ -637,7 +627,7 @@ public class StreamingKmeans implements StreamClusterer {
 		}
 		}
 		 
-		return new Kmeans(numClusters, ret).getCentroids();
+		return new Agglomerative2(numClusters, ret).getCentroids();
 
 	}
 
@@ -680,7 +670,7 @@ public class StreamingKmeans implements StreamClusterer {
 				rt.gc();
 				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-				List<float[]> aligned = TestUtil.alignCentroids(cents,
+				List<float[]> aligned = VectorUtil.alignCentroids(cents,
 						gen.getMedoids());
 				double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
 				double ssecent = StatTests.SSE(aligned, gen);
@@ -701,5 +691,16 @@ public class StreamingKmeans implements StreamClusterer {
 		return processors;
 	}
 
+	@Override
+	public void setWeights(List<Float> counts) {
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		this.data = centroids;
+	}
+	@Override
+	public void setK(int getk) {
+	}
 
 }

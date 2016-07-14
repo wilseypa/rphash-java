@@ -17,10 +17,10 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
-import edu.uc.rphash.tests.GenerateData;
-import edu.uc.rphash.tests.Kmeans;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.TestUtil;
+import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 public class RPHash3Stage implements Clusterer {
 
@@ -53,7 +53,7 @@ public class RPHash3Stage implements Clusterer {
 		for (int i = 0; i < probes; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
-			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),1, r, dec.getErrorRadius()/dec.getDimensionality());
+			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), r, dec.getErrorRadius()/dec.getDimensionality());
 			
 			lshfuncs[i] = new LSH(dec, p, hal,noise);
 		}
@@ -82,10 +82,10 @@ public class RPHash3Stage implements Clusterer {
 
 		long hash;
 		int probes = so.getNumProjections();
-		int k = (int) (so.getk() * probes);
+//		int k = (int) (so.getk() * probes);
 		
 		//initialize our counter
-		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
+//		ItemSet<Long> is = new KHHCountMinSketch<Long>(k);
 		// create our LSH Device
 		//create same LSH Device as before
 		Random r = new Random(so.getRandomSeed());
@@ -101,7 +101,7 @@ public class RPHash3Stage implements Clusterer {
 		for (int i = 0; i < probes; i++) {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
-			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),1, r, dec.getErrorRadius()/dec.getDimensionality());
+			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), r, dec.getErrorRadius()/dec.getDimensionality());
 			lshfuncs[i] = new LSH(dec, p, hal,noise);
 		}
 
@@ -111,7 +111,7 @@ public class RPHash3Stage implements Clusterer {
 		HashMap<Long, Centroid> centroids = new HashMap<Long, Centroid>();
 		
 		for (Long id : so.getPreviousTopID())
-			centroids.put(id, new Centroid(100, id));
+			centroids.put(id, new Centroid(100, id,-1));
 		// start the calculation
 
 		// int probes = 1;
@@ -147,13 +147,13 @@ public class RPHash3Stage implements Clusterer {
 
 		Iterator<float[]> vecs = so.getVectorIterator();
 		for (int i = 0; i < so.getCentroids().size(); i++) {
-			Centroid cent = new Centroid(so.getdim(), i);
+			Centroid cent = new Centroid(so.getdim(), i,-1);
 			centroids.add(cent);
 		}
 		float[] vec = vecs.next();
 		while (vecs.hasNext()) {
 
-			int nn = TestUtil.findNearestDistance(p[0].project(vec),
+			int nn = VectorUtil.findNearestDistance(p[0].project(vec),
 					so.getCentroids());
 			centroids.get(nn).updateVec(vec);
 			vec = vecs.next();
@@ -200,7 +200,12 @@ public class RPHash3Stage implements Clusterer {
 		so = mapP2();
 		so = mapP3();
 
-		centroids = new Kmeans(so.getk(),so.getCentroids()).getCentroids();
+		
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setWeights(so.getCounts());
+		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setK(so.getk());
+		centroids = offlineclusterer.getCentroids();
 	}
 
 	public static void main(String[] args) {
@@ -218,7 +223,7 @@ public class RPHash3Stage implements Clusterer {
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = TestUtil.alignCentroids(
+				List<float[]> aligned = VectorUtil.alignCentroids(
 						rphit.getCentroids(), gen.medoids());
 				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
 						+ StatTests.WCSSE(aligned, gen.data()) + ":" + duration
@@ -233,5 +238,23 @@ public class RPHash3Stage implements Clusterer {
 	public RPHashObject getParam() {
 
 		return so;
+	}
+
+	@Override
+	public void setWeights(List<Float> counts) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setData(List<float[]> centroids) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		// TODO Auto-generated method stub
+		
 	}
 }
