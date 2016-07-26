@@ -49,9 +49,14 @@ public class Kmeans implements Clusterer {
 	int projdim;
 
 //	List<float[]> means;
-	List<float[]> kmeansCentroids = new ArrayList<float[]>();
+//	List<float[]> kmeansCentroids = new ArrayList<float[]>();
 	List<List<Integer>> clusters;
 	List<Float> weights;
+	Rengine re;
+	
+	public void setRengine(Rengine re) {
+		this.re = re;
+	}
 
 	public Kmeans(int k, List<float[]> data) {
 		this.k = k;
@@ -84,8 +89,9 @@ public class Kmeans implements Clusterer {
 //		means = null;
 	}
 
-	public Kmeans() {
+	public Kmeans(Rengine re) {
 		// TODO Auto-generated constructor stub
+		this.re = re;
 	}
 
 	/*
@@ -214,14 +220,18 @@ public class Kmeans implements Clusterer {
 	}
 	*/
 
+	public Kmeans() {
+		// TODO Auto-generated constructor stub
+	}
+
 	@Override
 	public List<float[]> getCentroids() {
 		// if (means == null) {
 		// run();
 
-		Rengine re = Rengine.getMainEngine();
-		if(re == null)
-			re = new Rengine(new String[] {"--no-save"}, false, null);
+//		Rengine re = Rengine.getMainEngine();
+//		if(re == null)
+//			re = new Rengine(new String[] {"--no-save"}, false, null);
 		
 		if (!re.waitForR())
 			System.out.println("Cannot load R");
@@ -229,6 +239,7 @@ public class Kmeans implements Clusterer {
 		ArrayList<float[]> workingdata = new ArrayList<float[]>();
 		for (float[] v : this.data)
 			workingdata.add(v);
+		List<float[]> kmeansCentroids = new ArrayList<float[]>();
 
 		// Convert List<float[]> data to a 2D array
 		float[][] matrix = new float[workingdata.size()][];
@@ -266,7 +277,7 @@ public class Kmeans implements Clusterer {
 				vector[j] = (float) kmOut[i][j];
 			kmeansCentroids.add(vector);
 		}
-		re.end();
+//		re.end();
 		// }
 		return kmeansCentroids;
 	}
