@@ -345,7 +345,7 @@ public class StreamingKmeans implements StreamClusterer {
 		List<float[]> ret = new ArrayList<>();
 		for (CentroidCluster c1 : getClusters())
 			ret.add(c1.centroid());
-		return new Kmeans(numClusters, ret).getCentroids();
+		return new LloydIterativeKmeans(numClusters, ret).getCentroids();
 
 	}
 

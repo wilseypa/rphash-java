@@ -19,10 +19,6 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
-import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.clusterers.Agglomerative2;
-import edu.uc.rphash.tests.clusterers.Agglomerative3;
-import edu.uc.rphash.tests.clusterers.Kmeans;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 
@@ -146,7 +142,7 @@ public class RPHashStream implements StreamClusterer {
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
 		
-//		System.out.println(counts);
+		System.out.println(counts);
 		
 		int i =  0;
 		//get rid of size one clusters that are there just because they were added to the list at the end

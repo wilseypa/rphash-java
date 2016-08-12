@@ -86,7 +86,7 @@ public class LeechMulti implements Decoder {
 	float DPT = .75f;
 
 	public LeechMulti() {
-		this.scaler = 1.0f;
+		this.variance = 1.0f;
 		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
 				{ APT, BPT } };
 		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
@@ -134,10 +134,10 @@ public class LeechMulti implements Decoder {
 
 	}
 
-	public float scaler;
+	public float variance;
 
 	public LeechMulti(float scaler) {
-		this.scaler = scaler;
+		this.variance = scaler;
 		radius = (DPT + CPT) * scaler;
 		APT = (float) (this.APT * scaler);
 		BPT = (float) (this.BPT * scaler);
@@ -792,7 +792,7 @@ public class LeechMulti implements Decoder {
 	}
 
 	public long[] decode(float[] r) {
-		return new Leech(scaler).decode(r);
+		return new Leech(variance).decode(r);
 	}
 
 	// static int [] winners = new int[4];
@@ -998,13 +998,13 @@ public class LeechMulti implements Decoder {
 
 	@Override
 	public void setVariance(Float parameterObject) {
-		if(scaler!=parameterObject.floatValue()){
-			scaler = parameterObject;
-			radius = (DPT + CPT) * scaler;
-			APT = (float) (this.APT * scaler);
-			BPT = (float) (this.BPT * scaler);
-			CPT = (float) (this.CPT * scaler);
-			DPT = (float) (this.DPT * scaler);
+		if(variance!=parameterObject.floatValue()){
+			variance = parameterObject;
+			radius = (DPT + CPT) * variance;
+			APT = (float) (this.APT * variance);
+			BPT = (float) (this.BPT * variance);
+			CPT = (float) (this.CPT * variance);
+			DPT = (float) (this.DPT * variance);
 	
 			float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
 					{ APT, BPT } };
@@ -1027,5 +1027,11 @@ public class LeechMulti implements Decoder {
 	public boolean selfScaling() {
 		return false;
 	}
+	
+	@Override
+	public float getVariance(){
+		return variance;
+	}
+	
 	
 }

@@ -60,14 +60,14 @@ public class testStreamingRPHash {
 
 	public static void generateAndStream() throws InterruptedException {
 
-		int k = 20;
+		int k = 50;
 		int d = 5000;
 		float var = 4f;
 		int interval = 10000;
 		Runtime rt = Runtime.getRuntime();
 
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
-		GenerateStreamData noise = new GenerateStreamData(1, d, var*var, 11331313);
+		GenerateStreamData noise = new GenerateStreamData(1, d, var*10, 11331313);
 		RPHashStream rphit = new RPHashStream(k, gen1,rt.availableProcessors());
 		StreamingKmeans skmi = new StreamingKmeans(k, gen1);
 		System.out.printf("\tStreamingRPHash\t\t\tStreamingKmeans\t\tReal\n");

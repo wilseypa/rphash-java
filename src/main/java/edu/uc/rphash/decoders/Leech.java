@@ -173,83 +173,58 @@ public class Leech implements Decoder {
 	float DPT = .75f;
 
 	public Leech() {
-		this.scaler = 1.0f;
 
 		float p3 = 1f/3f;
 		float p6 = 2f/3f;
-		
 		
 		float[][] evenAPts = {{-1,0},{p3,0},{-p3,p6},{-p3,-p6}};
 		float[][] oddAPts  = {{-p3,0},{1,0},{p3,-p6},{p3,p6}};
 		float[][] evenBPts = {{-p6,p3},{-p6,p3},{0,1},{0,-p3}};
 		float[][] oddBPts  = {{0,p3},{0,-1},{p6,-p3},{-p6,-p3}};
-		
-		for(float[] f :evenAPts )
-			System.out.print(f[0]+",");
-		for(float[] f :oddAPts )
-			System.out.print(f[0]+",");
-		for(float[] f :evenBPts )
-			System.out.print(f[0]+",");
-		for(float[] f :oddBPts )
-			System.out.print(f[0]+",");
-		System.out.println();
-		for(float[] f :evenAPts )
-			System.out.print(f[1]+",");
-		for(float[] f :oddAPts )
-			System.out.print(f[1]+",");
-		for(float[] f :evenBPts )
-			System.out.print(f[1]+",");
-		for(float[] f :oddBPts )
-			System.out.print(f[1]+",");
-		System.out.println();
-//		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
-//				{ APT, BPT } };
-//		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
-//				{ DPT, CPT } };
-//		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
-//				{ BPT, BPT } };
-//		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
-//				{ APT, CPT } };
+
 		this.evenAPts = evenAPts;
 		this.oddAPts = oddAPts;
 		this.evenBPts = evenBPts;
 		this.oddBPts = oddBPts;
-		radius = DPT + CPT;
-
+		radius = (float) Math.sqrt(2);
 	}
+/*	
+ * rotate a square in a circle what do you get... just a different perspective of a circle in a
+ * square, so why do papers always talk about this? its because when you encode something in an
+ * QAM, fsk+psk, you wanna use both frequency and amplitude capacity equally, here we don't care
+ * so we should never need to rotate
+*/
+//	public void RotateLattice90() {
+//		// col1
+//		float r1 = 0.70710678f;
+//		float r2 = 0.70710678f;
+//		// col2
+//		float r3 = -0.70710678f;
+//		float r4 = 0.70710678f;
+//
+//		for (int i = 0; i < 4; i++) {
+//			float tmp = r1 * evenAPts[i][0] + r2 * evenAPts[i][1];
+//			evenAPts[i][1] = r3 * evenAPts[i][0] + r4 * evenAPts[i][1];
+//			evenAPts[i][0] = tmp;
+//		}
+//		for (int i = 0; i < 4; i++) {
+//			float tmp = r1 * oddAPts[i][0] + r2 * oddAPts[i][1];
+//			oddAPts[i][1] = r3 * oddAPts[i][0] + r4 * oddAPts[i][1];
+//			oddAPts[i][0] = tmp;
+//		}
+//		for (int i = 0; i < 4; i++) {
+//			float tmp = r1 * evenBPts[i][0] + r2 * evenBPts[i][1];
+//			evenBPts[i][1] = r3 * evenBPts[i][0] + r4 * evenBPts[i][1];
+//			evenBPts[i][0] = tmp;
+//		}
+//		for (int i = 0; i < 4; i++) {
+//			float tmp = r1 * oddBPts[i][0] + r2 * oddBPts[i][1];
+//			oddBPts[i][1] = r3 * oddBPts[i][0] + r4 * oddBPts[i][1];
+//			oddBPts[i][0] = tmp;
+//		}
+//	}
 
-	public void RotateLattice90() {
-		// col1
-		float r1 = 0.70710678f;
-		float r2 = 0.70710678f;
-		// col2
-		float r3 = -0.70710678f;
-		float r4 = 0.70710678f;
-
-		for (int i = 0; i < 4; i++) {
-			float tmp = r1 * evenAPts[i][0] + r2 * evenAPts[i][1];
-			evenAPts[i][1] = r3 * evenAPts[i][0] + r4 * evenAPts[i][1];
-			evenAPts[i][0] = tmp;
-		}
-		for (int i = 0; i < 4; i++) {
-			float tmp = r1 * oddAPts[i][0] + r2 * oddAPts[i][1];
-			oddAPts[i][1] = r3 * oddAPts[i][0] + r4 * oddAPts[i][1];
-			oddAPts[i][0] = tmp;
-		}
-		for (int i = 0; i < 4; i++) {
-			float tmp = r1 * evenBPts[i][0] + r2 * evenBPts[i][1];
-			evenBPts[i][1] = r3 * evenBPts[i][0] + r4 * evenBPts[i][1];
-			evenBPts[i][0] = tmp;
-		}
-		for (int i = 0; i < 4; i++) {
-			float tmp = r1 * oddBPts[i][0] + r2 * oddBPts[i][1];
-			oddBPts[i][1] = r3 * oddBPts[i][0] + r4 * oddBPts[i][1];
-			oddBPts[i][0] = tmp;
-		}
-
-	}
-
-	public float scaler;
+	public float variance;
 
 	public Leech(float scaler) {
 		
@@ -1028,15 +1003,6 @@ public class Leech implements Decoder {
 		return this.distance;
 	}
 
-	
-
-	
-	
-	
-	
-	
-	
-	
 	public static void main(String[] args) {
 		Random r = new Random();
 		int d =  24;
@@ -1184,33 +1150,34 @@ public class Leech implements Decoder {
 
 	@Override
 	public void setVariance(Float parameterObject) {
-		if(parameterObject == 0)parameterObject = 1f;
-		if (scaler != parameterObject.floatValue()) {
-			scaler = parameterObject;
-			radius = (DPT + CPT) * scaler;
-			APT = (float) (this.APT * scaler);
-			BPT = (float) (this.BPT * scaler);
-			CPT = (float) (this.CPT * scaler);
-			DPT = (float) (this.DPT * scaler);
+		variance = parameterObject;
+		radius = radius * variance;
+		APT = (float) (this.APT * variance);
+		BPT = (float) (this.BPT * variance);
+		CPT = (float) (this.CPT * variance);
+		DPT = (float) (this.DPT * variance);
 
-			float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
-					{ APT, BPT } };
-			float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
-					{ DPT, CPT } };
-			float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
-					{ BPT, BPT } };
-			float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
-					{ APT, CPT } };
-			this.evenAPts = evenAPts;
-			this.oddAPts = oddAPts;
-			this.evenBPts = evenBPts;
-			this.oddBPts = oddBPts;
-			this.radius = DPT + CPT;
-		}
+		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
+				{ APT, BPT } };
+		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
+				{ DPT, CPT } };
+		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
+				{ BPT, BPT } };
+		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
+				{ APT, CPT } };
+		this.evenAPts = evenAPts;
+		this.oddAPts = oddAPts;
+		this.evenBPts = evenBPts;
+		this.oddBPts = oddBPts;
 	}
 	
 	@Override
 	public boolean selfScaling() {
 		return false;
+	}
+	
+	@Override
+	public float getVariance(){
+		return variance;
 	}
 }

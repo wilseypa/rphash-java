@@ -52,24 +52,39 @@ public class Dn implements Decoder {
 		return t;
 	}
 
+	 public float[] scale(float[] y) 
+	 {
+		 float[] ycopy = new float[y.length];
+		 for(int i = 0;i<ycopy.length;i++) 
+			 ycopy[i] = y[i]/variance;
+		 return ycopy;
+	 }
+	
+	    /** This function returns an e8 encoded vector scaled between -1:3
+	     * any comparisons will have to be rescaled
+	     * @param y
+	     * @return e8 codeword
+	     */
 	    public float[] closestPoint(float[] y) {
-	        if (n != y.length) throw new RuntimeException("y is the wrong length");
+	    	
+	    	float[] ycopy =  scale(y);
+	        if (n != ycopy.length) throw new RuntimeException("y is the wrong length");
 	        
-	        round(y, u);
+	        round(ycopy, u);
 	        int m = (int)Math.rint(sum(u));
 	        if( mod(m, 2) == 1){
 	            int k = 0;
 	            float D = Float.NEGATIVE_INFINITY;
 	            for(int i = 0; i < n; i++){
-	                float d = Math.abs(y[i] - u[i]);
+	                float d = Math.abs(ycopy[i] - u[i]);
 	                if( d > D){
 	                    k = i;
 	                    D = d;
 	                }
 	            }
-	            u[k] += Math.signum(y[k] - u[k]);
+	            u[k] += Math.signum(ycopy[k] - u[k]);
 	        }
-	        dist = dist(u, y);
+	        dist = dist(u, ycopy);
 	        return u;
 	    }
 	    
@@ -142,10 +157,10 @@ public class Dn implements Decoder {
 		}
 	}
 
+	float variance = 1.0f;
 	@Override
 	public void setVariance(Float parameterObject) {
-		// TODO Auto-generated method stub
-		
+		variance = parameterObject;
 	}
 
 	@Override
@@ -153,6 +168,10 @@ public class Dn implements Decoder {
 		return false;
 	}
 	
+	@Override
+	public float getVariance(){
+		return variance;
+	}
 	
 	
 

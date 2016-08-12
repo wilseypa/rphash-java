@@ -13,7 +13,7 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
-public class Kmeans implements Clusterer {
+public class LloydIterativeKmeans implements Clusterer {
 	int k;
 	int n;
 	List<float[]> data;
@@ -47,7 +47,7 @@ public class Kmeans implements Clusterer {
 	List<List<Integer>> clusters;
 	List<Float> weights;
 
-	public Kmeans(int k, List<float[]> data) {
+	public LloydIterativeKmeans(int k, List<float[]> data) {
 		this.k = k;
 		this.data = data;
 		this.projdim = 0;
@@ -58,7 +58,7 @@ public class Kmeans implements Clusterer {
 		means = null;
 	}
 
-	public Kmeans(int k, List<float[]> data, List<Float> weights) {
+	public LloydIterativeKmeans(int k, List<float[]> data, List<Float> weights) {
 		this.k = k;
 		this.data = data;
 		this.projdim = 0;
@@ -67,7 +67,7 @@ public class Kmeans implements Clusterer {
 		means = null;
 	}
 
-	public Kmeans(int k, List<float[]> data, int projdim) {
+	public LloydIterativeKmeans(int k, List<float[]> data, int projdim) {
 		this.k = k;
 		this.data = data;
 		this.projdim = projdim;
@@ -78,7 +78,7 @@ public class Kmeans implements Clusterer {
 		means = null;
 	}
 
-	public Kmeans() {
+	public LloydIterativeKmeans() {
 		// TODO Auto-generated constructor stub
 	}
 
@@ -213,7 +213,7 @@ public class Kmeans implements Clusterer {
 
 	public static void main(String[] args) {
 		GenerateData gen = new GenerateData(8, 100, 100);
-		Kmeans kk = new Kmeans(5, gen.data(), 24);
+		LloydIterativeKmeans kk = new LloydIterativeKmeans(5, gen.data(), 24);
 		VectorUtil.prettyPrint(kk.getCentroids());
 	}
 

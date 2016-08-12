@@ -4,7 +4,6 @@ import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
 import edu.uc.rphash.lsh.LSH;
-import edu.uc.rphash.tests.StatTests;
 
 public class VectorLevelConcurrency implements Runnable {
 
@@ -21,22 +20,21 @@ public class VectorLevelConcurrency implements Runnable {
 		this.lshfuncs = lshfuncs;
 		this.is = is;
 		this.so = so;
+
 	}
 
 	static float[] scale(float[] t, float s) {
 		float[] ret = new float[t.length];
 		for (int i = 0; i < t.length; i++) {
-			ret[i] *= s;
+			ret[i] = s*t[i];
 		}
+		
 		return ret;
 	}
 	
 	
 	public static long computeSequential(float[] vec,LSH[] lshfuncs,KHHCentroidCounter is,RPHashObject so) {
-//		if(!lshfuncs[0].lshDecoder.selfScaling()){
-//			this.vartracker.updateVarianceSampleVec(vec);
-//			vec = this.vartracker.scaleVector(vec);
-//		}
+
 		Centroid c = new Centroid(vec,-1);
 		for (LSH lshfunc : lshfuncs) {
 			if (so.getNumBlur() != 1) {
@@ -46,13 +44,6 @@ public class VectorLevelConcurrency implements Runnable {
 					c.addID(h);
 					is.addLong(h, 1);
 				}
-				
-//				hash = lshfunc.lshHashRadius(scale(vec,.5f), so.getNumBlur());
-//				//onehalfin'
-//				for (long h : hash) {
-//					c.addID(h);
-//					is.addLong(h, 2);
-//				}
 				
 			}
 			else 

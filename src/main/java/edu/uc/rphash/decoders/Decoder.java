@@ -7,4 +7,5 @@ public interface Decoder {
 	abstract float getErrorRadius();
 	abstract float getDistance();
 	abstract boolean selfScaling();
+	abstract float getVariance();
 }

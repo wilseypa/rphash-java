@@ -7,7 +7,7 @@ import java.util.Vector;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 
-public class KMeans2 implements Clusterer {
+public class MaxLikelihoodKMeans2 implements Clusterer {
 
 	class PointND
 	{
@@ -205,7 +205,7 @@ public class KMeans2 implements Clusterer {
 	  private List<float[]> centroids;
 
 
-	  public KMeans2(int getk, List<float[]> centroids) {
+	  public MaxLikelihoodKMeans2(int getk, List<float[]> centroids) {
 		  PointND[] data = new PointND[centroids.size()];
 		  for(int i = 0;i<centroids.size();i++){
 			  data[i] = new PointND(centroids.get(i));
@@ -214,7 +214,7 @@ public class KMeans2 implements Clusterer {
 		  init(data,getk);
 	}
 
-	public KMeans2() {
+	public MaxLikelihoodKMeans2() {
 		// TODO Auto-generated constructor stub
 	}
 

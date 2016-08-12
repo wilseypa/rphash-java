@@ -232,5 +232,9 @@ public class PsdLSH  implements Decoder {
 	public boolean selfScaling() {
 		return true;
 	}
+	@Override
+	public float getVariance(){
+		return 1.0f;
+	}
 
 }

@@ -28,7 +28,7 @@ public class KHHCentroidCounter {
 	public long count;
 
 	PriorityBlockingQueue<Centroid> priorityQueue;
-	int k;
+	public int k;
 	int origk;
 	ConcurrentHashMap<Long, Centroid> frequentItems;
 	ConcurrentHashMap<Long, Float> countlist;

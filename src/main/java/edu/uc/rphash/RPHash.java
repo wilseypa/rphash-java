@@ -25,7 +25,7 @@ import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
-import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.tests.kmeanspp.DoublePoint;
 import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
@@ -412,8 +412,8 @@ public class RPHash {
 				break;
 			}
 			case "kmeans": {
-				o.setOfflineClusterer(new Kmeans());
-				so.setOfflineClusterer(new Kmeans());
+				o.setOfflineClusterer(new LloydIterativeKmeans());
+				so.setOfflineClusterer(new LloydIterativeKmeans());
 				break;
 			}
 			default: {
@@ -448,10 +448,10 @@ public class RPHash {
 				runitems.add(new RPHashIterativeRedux(o));
 				break;
 			case "kmeans":
-				runitems.add(new Kmeans(k, data));
+				runitems.add(new LloydIterativeKmeans(k, data));
 				break;
 			case "pkmeans":
-				runitems.add(new Kmeans(k, data, o.getNumProjections()));
+				runitems.add(new LloydIterativeKmeans(k, data, o.getNumProjections()));
 				break;
 			case "kmeansplusplus":
 				runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));

@@ -12,7 +12,7 @@ import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
-import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 
 public interface RPHashObject {
 	 final static int DEFAULT_NUM_PROJECTIONS = 2;
@@ -22,7 +22,7 @@ public interface RPHashObject {
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
 	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(24,6,1);//new MultiDecoder(24, new E8(1f));//new Golay();//new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//
 	 final static int DEFAULT_DIM_PARAMETER = DEFAULT_INNER_DECODER.getDimensionality();
-	 final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new Kmeans();
+	 final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new LloydIterativeKmeans();
 	 
 	 
 	int getk();

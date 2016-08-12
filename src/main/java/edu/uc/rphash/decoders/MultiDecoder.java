@@ -70,5 +70,9 @@ public class MultiDecoder implements Decoder {
 	public boolean selfScaling() {
 		return innerDec.selfScaling();
 	}
+	@Override
+	public float getVariance(){
+		return innerDec.getVariance();
+	}
 
 }

@@ -270,7 +270,7 @@ public class Agglomerative2 implements Clusterer {
 				List<float[]> data = gen.data;
 
 				long timestart = System.currentTimeMillis();
-				Clusterer km1 = new Kmeans(10, data);
+				Clusterer km1 = new LloydIterativeKmeans(10, data);
 				Clusterer ag1 = new Agglomerative2(10, data);
 				avgdistagg+=StatTests.WCSSE(ag1.getCentroids(), data);
 				avgdistkm+=StatTests.WCSSE(km1.getCentroids(), data);
