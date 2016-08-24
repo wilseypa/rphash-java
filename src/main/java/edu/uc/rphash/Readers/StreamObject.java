@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
 
 import edu.uc.rphash.Clusterer;
@@ -351,5 +352,17 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	@Override
 	public List<float[]> getData() {
 		return this.data;
+	}
+
+	@Override
+	public void remove() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void forEachRemaining(Consumer<? super float[]> action) {
+		// TODO Auto-generated method stub
+		
 	}
 }

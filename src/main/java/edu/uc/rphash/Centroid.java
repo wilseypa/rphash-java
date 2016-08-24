@@ -82,7 +82,7 @@ public class Centroid {
 		updateCentroidVector(rp);
 	}
 
-	public long getCount() {
+	public Long getCount() {
 		return count;
 	}
 	

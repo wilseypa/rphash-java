@@ -142,7 +142,7 @@ public class RPHashStream implements StreamClusterer {
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
 		
-		System.out.println(counts);
+//		System.out.println(counts);
 		
 		int i =  0;
 		//get rid of size one clusters that are there just because they were added to the list at the end
@@ -154,11 +154,13 @@ public class RPHashStream implements StreamClusterer {
 		counts = counts.subList(0, i);
 		Clusterer offlineclusterer = so.getOfflineClusterer();
 		offlineclusterer.setWeights(counts);
-		offlineclusterer.setData(centroids);
 		offlineclusterer.setK(so.getk());
+		offlineclusterer.setData(centroids);
 		centroids = offlineclusterer.getCentroids();
 		
-		while(centroids.size()<so.getk() && counts.size()>so.getk())centroids = offlineclusterer.getCentroids();
+		while(centroids.size()<so.getk() && counts.size()>so.getk())
+			centroids = offlineclusterer.getCentroids();
+		
 		if(counts.size()<so.getk())System.out.println("WARNING: Failed to partition dataset into K clusters");
 		return centroids;
 	}

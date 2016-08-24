@@ -82,7 +82,7 @@ public class testStreamingRPHash {
 				float[] vec = gen1.generateNext();
 				vecsAndNoiseInThisRound.add(vec);
 				justvecsInThisRound.add(vec);
-				//vecsAndNoiseInThisRound.add(noise.generateNext());
+				vecsAndNoiseInThisRound.add(noise.generateNext());
 				//vecsAndNoiseInThisRound.add(noise.generateNext());
 			}
 			
@@ -107,16 +107,16 @@ public class testStreamingRPHash {
 			
 			timestart = System.nanoTime();
 			for (float[] f : vecsAndNoiseInThisRound) {
-				;//skmi.addVectorOnlineStep(f);
+				skmi.addVectorOnlineStep(f);
 			}
 
-			//cents = rphit.getCentroidsOfflineStep();
+			cents = rphit.getCentroidsOfflineStep();
 			time = System.nanoTime() - timestart;
 
 			rt.gc();
 			usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-			wcsse = 0.0;//StatTests.WCSSE(cents, justvecsInThisRound);
+			wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
 			// recreate vectors at execution time to check average
 			rt.gc();
 			Thread.sleep(1000);
