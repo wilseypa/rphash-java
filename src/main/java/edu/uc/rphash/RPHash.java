@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.rosuda.JRI.Rengine;
+
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.Readers.StreamObject;
@@ -25,6 +27,7 @@ import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
+import edu.uc.rphash.tests.clusterers.HartiganWongKMeans;
 import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.tests.kmeanspp.DoublePoint;
@@ -80,6 +83,10 @@ public class RPHash {
 		String outputFile = args[2];
 
 		boolean raw = false;
+		
+		Rengine re = Rengine.getMainEngine();
+		if(re == null)
+			re = new Rengine(new String[] {"--no-save"}, false, null);
 
 		if (args.length == 3) {
 			data = VectorUtil.readFile(filename, raw);
@@ -98,21 +105,24 @@ public class RPHash {
 		List<Clusterer> runs;
 		if (taggedArgs.containsKey("raw")) {
 			raw = Boolean.getBoolean(taggedArgs.get("raw"));
-			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, true);
+			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, true, re);
 		} else {
-			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false);
+			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false, re);
 		}
 
 		if (taggedArgs.containsKey("streamduration")) {
 			runStreamForSetOfClusterers(runs, outputFile,
-					Integer.parseInt(taggedArgs.get("streamduration")), k, raw);
+					Integer.parseInt(taggedArgs.get("streamduration")), k, raw, re);
 			
 			return;
 		}
 		// run remaining, read file into ram
 		data = VectorUtil.readFile(filename, raw);
 		runner(runs, outputFile, raw);
-
+		
+		if (re.waitForR())
+			re.end();
+		
 	}
 
 	public static void runner(List<Clusterer> runitems, String outputFile,
@@ -186,7 +196,7 @@ public class RPHash {
 	}
 
 	public static void runStreamForAClusterer( String outputFile,
-			Integer streamDuration, int k, boolean raw,Clusterer clu,long avgtimeToRead,Runtime rt,StreamObject streamer) throws IOException,
+			Integer streamDuration, int k, boolean raw,Clusterer clu,long avgtimeToRead,Runtime rt,StreamObject streamer, Rengine re) throws IOException,
 			InterruptedException {
 		
 		if (clu instanceof StreamClusterer) {
@@ -236,20 +246,21 @@ public class RPHash {
 					
 					startTime = System.nanoTime() + avgtimeToRead;
 				}
-				if(!streamer.hasNext()){
-
+				if(!streamer.hasNext()){	
 					
 					((StreamClusterer) clu).shutdown();
+					
 				}
 				i++;
 			}
+			re.end();
 			streamer.reset();
 		}
 		
 	}
 	
 	public static void runStreamForSetOfClusterers(List<Clusterer> runitems, String outputFile,
-			Integer streamDuration, int k, boolean raw) throws IOException,
+			Integer streamDuration, int k, boolean raw, Rengine re) throws IOException,
 			InterruptedException {
 
 		Iterator<Clusterer> cluit = runitems.iterator();
@@ -262,7 +273,7 @@ public class RPHash {
 			Clusterer clu = cluit.next();
 			StreamObject streamer = (StreamObject) clu.getParam();
 			runStreamForAClusterer( outputFile,
-					streamDuration, k, raw,clu,avgtimeToRead,rt,streamer);
+					streamDuration, k, raw,clu,avgtimeToRead,rt,streamer, re);
 			cluit.remove();
 		}
 
@@ -270,7 +281,7 @@ public class RPHash {
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
 			Map<String, String> taggedArgs, List<float[]> data, String f,
-			boolean raw) throws IOException {
+			boolean raw, Rengine re) throws IOException {
 
 		List<Clusterer> runitems = new ArrayList<>();
 		int i = 3;
@@ -412,8 +423,10 @@ public class RPHash {
 				break;
 			}
 			case "kmeans": {
-				o.setOfflineClusterer(new LloydIterativeKmeans());
-				so.setOfflineClusterer(new LloydIterativeKmeans());
+
+				o.setOfflineClusterer(new HartiganWongKMeans());
+				so.setOfflineClusterer(new HartiganWongKMeans());
+
 				break;
 			}
 			default: {
