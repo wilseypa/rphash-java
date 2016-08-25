@@ -15,8 +15,8 @@ import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.rosuda.JRI.REXP;
-import org.rosuda.JRI.Rengine;
+//import org.rosuda.JRI.REXP;
+//import org.rosuda.JRI.Rengine;
 
 public class Kmeans implements Clusterer {
 	int k;
@@ -52,11 +52,11 @@ public class Kmeans implements Clusterer {
 //	List<float[]> kmeansCentroids = new ArrayList<float[]>();
 	List<List<Integer>> clusters;
 	List<Float> weights;
-	Rengine re;
-	
-	public void setRengine(Rengine re) {
-		this.re = re;
-	}
+//	Rengine re;
+//	
+//	public void setRengine(Rengine re) {
+//		this.re = re;
+//	}
 
 	public Kmeans(int k, List<float[]> data) {
 		this.k = k;
@@ -89,10 +89,10 @@ public class Kmeans implements Clusterer {
 //		means = null;
 	}
 
-	public Kmeans(Rengine re) {
-		// TODO Auto-generated constructor stub
-		this.re = re;
-	}
+//	public Kmeans(Rengine re) {
+//		// TODO Auto-generated constructor stub
+//		this.re = re;
+//	}
 
 	/*
 	public float[] computerCentroid(List<Integer> vectors, List<float[]> data) {
@@ -233,8 +233,8 @@ public class Kmeans implements Clusterer {
 //		if(re == null)
 //			re = new Rengine(new String[] {"--no-save"}, false, null);
 		
-		if (!re.waitForR())
-			System.out.println("Cannot load R");
+//		if (!re.waitForR())
+//			System.out.println("Cannot load R");
 
 		ArrayList<float[]> workingdata = new ArrayList<float[]>();
 		for (float[] v : this.data)
@@ -258,25 +258,25 @@ public class Kmeans implements Clusterer {
 		// Convert the 2D array to a 1D double array to feed into R
 		double[] oneDArray = flatten(matrix);
 
-		// Feed the 1D array, k and number of rows and columns to R
-		re.assign("data", oneDArray);
-		re.assign("numberOfRows", numRows);
-		re.assign("numberOfCols", numCols);
-		re.assign("k", kAsString);
-
-		// Create the data matrix in R
-		re.eval("dataMatrix <- matrix(data, nrow = as.numeric(numberOfRows), ncol = as.numeric(numberOfCols), byrow = TRUE)");
-
-		// Run k-means in R
-		double[][] kmOut = re.eval("kmeans(dataMatrix, as.numeric(k), nstart = 25)$centers").asDoubleMatrix();
+//		// Feed the 1D array, k and number of rows and columns to R
+//		re.assign("data", oneDArray);
+//		re.assign("numberOfRows", numRows);
+//		re.assign("numberOfCols", numCols);
+//		re.assign("k", kAsString);
+//
+//		// Create the data matrix in R
+//		re.eval("dataMatrix <- matrix(data, nrow = as.numeric(numberOfRows), ncol = as.numeric(numberOfCols), byrow = TRUE)");
+//
+//		// Run k-means in R
+//		double[][] kmOut = re.eval("kmeans(dataMatrix, as.numeric(k), nstart = 25)$centers").asDoubleMatrix();
 
 		// Convert the 2D array back to List<float[]> format
-		for (int i = 0; i < kmOut.length; i++) {
-			float[] vector = new float[kmOut[0].length];
-			for (int j = 0; j < kmOut[0].length; j++)
-				vector[j] = (float) kmOut[i][j];
-			kmeansCentroids.add(vector);
-		}
+//		for (int i = 0; i < kmOut.length; i++) {
+//			float[] vector = new float[kmOut[0].length];
+//			for (int j = 0; j < kmOut[0].length; j++)
+//				vector[j] = (float) kmOut[i][j];
+//			kmeansCentroids.add(vector);
+//		}
 //		re.end();
 		// }
 		return kmeansCentroids;

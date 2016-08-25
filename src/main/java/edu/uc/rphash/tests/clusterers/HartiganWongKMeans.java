@@ -99,22 +99,27 @@ public class HartiganWongKMeans implements Clusterer {
 		// needs to happen before duplications
 		// so we dont end up with an initial
 		// centroid set of all the same thing
+		
+		this.m = data.size();
+		this.a = new double[m*n];
+		this.ic1 = new int[m];
+		for (int i = 0; i < m; i++) {
+			for (int j = 0; j < n; j++) {
+				this.a[i + (j) * m] = data.get(i)[j];
+			}
+		}
+//	}
 		c = new double[k * n];
 		for (int i = 0; i < k; i++) {
 			for (int j = 0; j < n; j++) {
-				c[i + j * k] = data.get(i)[j];
+				c[i + j * k] = this.a[i + (j) * m];
 			}
 		}
 		
 		//convert to col X row matrix (fortran...)
 //		if(weights==null){
 			//no weights
-			for (int i = 0; i < m; i++) {
-				for (int j = 0; j < n; j++) {
-					this.a[i + (j) * m] = data.get(i)[j];
-				}
-			}
-//		}
+
 //		else
 //		{
 //			//poor mans weights 10 is the resolution
@@ -128,9 +133,6 @@ public class HartiganWongKMeans implements Clusterer {
 //				}
 //			}
 //			
-//			this.m = data.size();
-//			this.a = new double[m*n];
-//			this.ic1 = new int[m];
 //			for (int i = 0; i < m; i++) {
 //				for (int j = 0; j < n; j++) {
 //					this.a[i + (j) * m] = this.data.get(i)[j];

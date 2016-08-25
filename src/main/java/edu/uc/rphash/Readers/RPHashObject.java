@@ -3,8 +3,6 @@ package edu.uc.rphash.Readers;
 import java.util.Iterator;
 import java.util.List;
 
-import org.rosuda.JRI.Rengine;
-
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.E8;

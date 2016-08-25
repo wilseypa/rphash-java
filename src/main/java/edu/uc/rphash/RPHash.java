@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.rosuda.JRI.Rengine;
+//import org.rosuda.JRI.Rengine;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -84,9 +84,9 @@ public class RPHash {
 
 		boolean raw = false;
 		
-		Rengine re = Rengine.getMainEngine();
-		if(re == null)
-			re = new Rengine(new String[] {"--no-save"}, false, null);
+//		Rengine re = Rengine.getMainEngine();
+//		if(re == null)
+//			re = new Rengine(new String[] {"--no-save"}, false, null);
 
 		if (args.length == 3) {
 			data = VectorUtil.readFile(filename, raw);
@@ -105,14 +105,14 @@ public class RPHash {
 		List<Clusterer> runs;
 		if (taggedArgs.containsKey("raw")) {
 			raw = Boolean.getBoolean(taggedArgs.get("raw"));
-			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, true, re);
+			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, true/*, re*/);
 		} else {
-			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false, re);
+			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false/*, re*/);
 		}
 
 		if (taggedArgs.containsKey("streamduration")) {
 			runStreamForSetOfClusterers(runs, outputFile,
-					Integer.parseInt(taggedArgs.get("streamduration")), k, raw, re);
+					Integer.parseInt(taggedArgs.get("streamduration")), k, raw/*, re*/);
 			
 			return;
 		}
@@ -120,8 +120,8 @@ public class RPHash {
 		data = VectorUtil.readFile(filename, raw);
 		runner(runs, outputFile, raw);
 		
-		if (re.waitForR())
-			re.end();
+//		if (re.waitForR())
+//			re.end();
 		
 	}
 
@@ -196,7 +196,7 @@ public class RPHash {
 	}
 
 	public static void runStreamForAClusterer( String outputFile,
-			Integer streamDuration, int k, boolean raw,Clusterer clu,long avgtimeToRead,Runtime rt,StreamObject streamer, Rengine re) throws IOException,
+			Integer streamDuration, int k, boolean raw,Clusterer clu,long avgtimeToRead,Runtime rt,StreamObject streamer/*, Rengine re*/) throws IOException,
 			InterruptedException {
 		
 		if (clu instanceof StreamClusterer) {
@@ -253,14 +253,14 @@ public class RPHash {
 				}
 				i++;
 			}
-			re.end();
+//			re.end();
 			streamer.reset();
 		}
 		
 	}
 	
 	public static void runStreamForSetOfClusterers(List<Clusterer> runitems, String outputFile,
-			Integer streamDuration, int k, boolean raw, Rengine re) throws IOException,
+			Integer streamDuration, int k, boolean raw/*, Rengine re*/) throws IOException,
 			InterruptedException {
 
 		Iterator<Clusterer> cluit = runitems.iterator();
@@ -273,7 +273,7 @@ public class RPHash {
 			Clusterer clu = cluit.next();
 			StreamObject streamer = (StreamObject) clu.getParam();
 			runStreamForAClusterer( outputFile,
-					streamDuration, k, raw,clu,avgtimeToRead,rt,streamer, re);
+					streamDuration, k, raw,clu,avgtimeToRead,rt,streamer/*, re*/);
 			cluit.remove();
 		}
 
@@ -281,7 +281,7 @@ public class RPHash {
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
 			Map<String, String> taggedArgs, List<float[]> data, String f,
-			boolean raw, Rengine re) throws IOException {
+			boolean raw/*, Rengine re*/) throws IOException {
 
 		List<Clusterer> runitems = new ArrayList<>();
 		int i = 3;

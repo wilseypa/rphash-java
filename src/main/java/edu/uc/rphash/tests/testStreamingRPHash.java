@@ -60,9 +60,9 @@ public class testStreamingRPHash {
 
 	public static void generateAndStream() throws InterruptedException {
 
-		int k = 50;
+		int k = 10;
 		int d = 5000;
-		float var = 4f;
+		float var = 1f;
 		int interval = 10000;
 		Runtime rt = Runtime.getRuntime();
 
@@ -83,7 +83,6 @@ public class testStreamingRPHash {
 				vecsAndNoiseInThisRound.add(vec);
 				justvecsInThisRound.add(vec);
 				vecsAndNoiseInThisRound.add(noise.generateNext());
-				//vecsAndNoiseInThisRound.add(noise.generateNext());
 			}
 			
 			timestart = System.nanoTime();
@@ -110,7 +109,7 @@ public class testStreamingRPHash {
 				skmi.addVectorOnlineStep(f);
 			}
 
-			cents = rphit.getCentroidsOfflineStep();
+			cents = skmi.getCentroidsOfflineStep();
 			time = System.nanoTime() - timestart;
 
 			rt.gc();
