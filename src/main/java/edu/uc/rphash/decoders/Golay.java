@@ -255,6 +255,8 @@ public class Golay implements Decoder{
 	        //for 4 errors we currently just give up!!
 	        return err <= 0 ? decodeWord(word) : decodeWord(word ^ err);
 	    }
+
+		private Float variance;
 	 
 	    // constructor
 	    
@@ -303,7 +305,7 @@ public class Golay implements Decoder{
 		public long[] decode(float[] p1) {
 			int codeword = 0;
 			for(int i=0;i<24;i++){
-				if(p1[i]>0)codeword+=1;
+				if(p1[i]/variance>0)codeword+=1;
 				codeword<<=1;
 			}
 			return new long[]{codeword};
@@ -311,7 +313,7 @@ public class Golay implements Decoder{
 
 		@Override
 		public void setVariance(Float parameterObject) {
-	
+			variance = parameterObject;
 		}
 
 		@Override
@@ -332,6 +334,11 @@ public class Golay implements Decoder{
 		@Override
 		public boolean selfScaling() {
 			return false;
+		}
+		
+		@Override
+		public float getVariance(){
+			return variance;
 		}
 
 	    

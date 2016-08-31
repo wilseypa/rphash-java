@@ -21,7 +21,7 @@ import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative;
 import edu.uc.rphash.tests.clusterers.Agglomerative2;
-import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 

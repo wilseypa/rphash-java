@@ -16,7 +16,7 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 
 /**This is an adaptation of RPHash Streaming with support for 
@@ -160,6 +160,12 @@ public class RPHashStreamingAK implements StreamClusterer {
 
 	@Override
 	public void setK(int getk) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void shutdown() {
 		// TODO Auto-generated method stub
 		
 	}

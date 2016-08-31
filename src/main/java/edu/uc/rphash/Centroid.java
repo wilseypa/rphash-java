@@ -5,14 +5,17 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import edu.uc.rphash.Readers.RPVector;
 
 public class Centroid {
-	private float[] vec;
+	private float[] centroid;
 	private long count;
 	public ConcurrentSkipListSet<Long> ids;
 	public long id;
 	public int projectionID;
-
+	private float[] M2;
+	private float wcss;
+	
 	public Centroid(int dim, long id,int projectionID) {
-		this.vec = new float[dim];
+		this.centroid = new float[dim];
+		this.M2 = new float[dim];
 		this.count = 0;
 		this.id = id;
 		this.ids = new ConcurrentSkipListSet<Long>();
@@ -21,42 +24,57 @@ public class Centroid {
 	}
 
 	public Centroid(float[] data,int projectionID) {
-		this.vec = data;
+		this.centroid = data;
+		this.M2 = new float[this.centroid.length];
 		this.ids = new ConcurrentSkipListSet<Long>();
 		this.projectionID = projectionID;
 		this.count = 1;
 	}
 
 	public Centroid(float[] data, long id,int projectionID) {
-		this.vec = data;
+		this.centroid = data;
+		this.M2 = new float[this.centroid.length];
 		this.ids = new ConcurrentSkipListSet<Long>();
 		ids.add(id);
 		this.id = id;
 		this.projectionID = projectionID;
 		this.count = 1;
+		
 	}
 
 	private void updateCentroidVector(float[] data) {
 		float delta;
 		count++;
+		float tmpsum = 0.0f;
 		for (int i = 0; i < data.length; i++) {
-			delta = data[i] - vec[i];
-			vec[i] = vec[i] + delta / (float)count;
+			delta = data[i] - centroid[i];
+			centroid[i] = centroid[i] + delta / (float)count;
+			M2[i] = M2[i]+delta*data[i]-centroid[i];
+			tmpsum+=M2[i];
 		}
+		this.wcss = tmpsum/(float)count;
 	}
 
 	public float[] centroid() {
-		return vec;
+		return centroid;
 	}
 
 	public void updateVec(Centroid rp) {
 		ids.addAll(rp.ids);
 		float delta;
 		count= count+rp.count;
-		for (int i = 0; i < rp.vec.length; i++) {
-			delta = rp.vec[i] - rp.vec[i];
-			vec[i] = vec[i] + (rp.count*delta) / (float)count;
+		float tmpsum = 0.0f;
+		for (int i = 0; i < rp.centroid.length; i++) {
+			delta = rp.centroid[i] - centroid[i];
+			centroid[i] = centroid[i] + (rp.count*delta) / (float)count;
+			M2[i] = M2[i]+rp.count*delta*rp.centroid[i]-centroid[i];
+			tmpsum+=M2[i];
 		}
+		this.wcss = tmpsum/(float)count;
+	}
+	
+	public float getWCSS() {
+		return this.wcss;
 	}
 	
 
@@ -64,7 +82,7 @@ public class Centroid {
 		updateCentroidVector(rp);
 	}
 
-	public long getCount() {
+	public Long getCount() {
 		return count;
 	}
 	

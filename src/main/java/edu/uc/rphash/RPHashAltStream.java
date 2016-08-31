@@ -9,7 +9,7 @@ import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 

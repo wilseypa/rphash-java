@@ -19,10 +19,6 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
-import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.clusterers.Agglomerative2;
-import edu.uc.rphash.tests.clusterers.Agglomerative3;
-import edu.uc.rphash.tests.clusterers.Kmeans;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 
@@ -134,7 +130,7 @@ public class RPHashStream implements StreamClusterer {
 		if (so.getParallel()) {
 			executor.shutdown();
 			try {
-				executor.awaitTermination(1, TimeUnit.SECONDS);
+				executor.awaitTermination(10, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -145,8 +141,11 @@ public class RPHashStream implements StreamClusterer {
 		List<Integer> projIDs = new ArrayList<Integer>();
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
+		
+//		System.out.println(counts);
+		
 		int i =  0;
-		//get rid of size one clusters that are there just because they were added to the list more recently
+		//get rid of size one clusters that are there just because they were added to the list at the end
 		for (; i < cents.size() ; i++) {
 			if(counts.get(i)==1)break;
 			projIDs.add(cents.get(i).projectionID);
@@ -155,10 +154,14 @@ public class RPHashStream implements StreamClusterer {
 		counts = counts.subList(0, i);
 		Clusterer offlineclusterer = so.getOfflineClusterer();
 		offlineclusterer.setWeights(counts);
-		offlineclusterer.setData(centroids);
 		offlineclusterer.setK(so.getk());
+		offlineclusterer.setData(centroids);
 		centroids = offlineclusterer.getCentroids();
-
+		
+		while(centroids.size()<so.getk() && counts.size()>so.getk())
+			centroids = offlineclusterer.getCentroids();
+		
+		if(counts.size()<so.getk())System.out.println("WARNING: Failed to partition dataset into K clusters");
 		return centroids;
 	}
 
@@ -196,6 +199,20 @@ public class RPHashStream implements StreamClusterer {
 	@Override
 	public void setK(int getk) {
 
+	}
+
+	@Override
+	public void shutdown() {
+		if (so.getParallel()) {
+			executor.shutdown();
+			try {
+				executor.awaitTermination(10, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			executor = Executors.newFixedThreadPool(getProcessors());
+		}
+		
 	}
 
 }

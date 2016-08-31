@@ -345,7 +345,7 @@ public class StreamingKmeans implements StreamClusterer {
 		List<float[]> ret = new ArrayList<>();
 		for (CentroidCluster c1 : getClusters())
 			ret.add(c1.centroid());
-		return new Kmeans(numClusters, ret).getCentroids();
+		return new HartiganWongKMeans(numClusters, ret).getCentroids();
 
 	}
 
@@ -701,6 +701,20 @@ public class StreamingKmeans implements StreamClusterer {
 	}
 	@Override
 	public void setK(int getk) {
+	}
+
+	@Override
+	public void shutdown() {
+		if (so.getParallel()) {
+			executor.shutdown();
+			try {
+				executor.awaitTermination(10, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			executor = Executors.newFixedThreadPool(getProcessors());
+		}
+		
 	}
 
 }

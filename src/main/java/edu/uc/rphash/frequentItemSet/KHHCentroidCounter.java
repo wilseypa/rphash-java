@@ -22,33 +22,36 @@ public class KHHCentroidCounter {
 	private int depth;
 	private int width;
 	private float[][] tableF;
-	private short[][] tableS;
+	private int[][] tableS;
 	private int[][] decaytable;
 	private long[] hashA;
 	public long count;
 
 	PriorityBlockingQueue<Centroid> priorityQueue;
-	int k;
+	public int k;
 	int origk;
 	ConcurrentHashMap<Long, Centroid> frequentItems;
 	ConcurrentHashMap<Long, Float> countlist;
 	Float decayRate;
 
-	Comparator<Centroid> cmp = new Comparator<Centroid>() {
-		@Override
-		public int compare(Centroid n1, Centroid n2) {
-			float cn1 = countlist.get(n1.id);// count(n1.id);
-			float cn2 = countlist.get(n2.id);// count(n2.id);
-			int counts = (int)(cn2-cn1);
-			if (counts!=0)
-				return counts;
-			if(n1.id!=n2.id){
-				return 1;
-			}else{
-				return 0;
-			}
-			}
-	};
+	
+
+	Comparator<Centroid> cmp;	
+//	Comparator<Centroid> cmp = new Comparator<Centroid>() {
+//		@Override
+//		public int compare(Centroid n1, Centroid n2) {
+//			float cn1 = countlist.get(n1.id);// count(n1.id);
+//			float cn2 = countlist.get(n2.id);// count(n2.id);
+//			int counts = (int)(cn2-cn1);
+//			if (counts!=0)
+//				return counts;
+//			if(n1.id!=n2.id){
+//				return 1;
+//			}else{
+//				return 0;
+//			}
+//			}
+//	};
 	
 	public KHHCentroidCounter(int k) {
 		this.origk = k;
@@ -59,6 +62,12 @@ public class KHHCentroidCounter {
 		this.decayRate = null;
 		count = 0;
 		countlist = new ConcurrentHashMap<>();
+		
+		//i dont know why adding lambdas means that comparators are all broken, but here it is
+		this.cmp = (p, o) -> p.getCount().compareTo(o.getCount());
+    	this.cmp = this.cmp.thenComparing((p, o) -> p.getCount().compareTo(o.getCount()));
+    	
+		
 		priorityQueue = new PriorityBlockingQueue<Centroid>(this.k + 1, cmp);
 		frequentItems = new ConcurrentHashMap<>();
 		this.width = (int) Math.ceil(2 / epsOfTotalCount);
@@ -76,7 +85,7 @@ public class KHHCentroidCounter {
 		count = 0;
 		countlist = new ConcurrentHashMap<>();
 
-		priorityQueue = new PriorityBlockingQueue<Centroid>(this.k + 1, cmp);
+		priorityQueue = new PriorityBlockingQueue<Centroid>(this.k + 1, this.cmp);
 		frequentItems = new ConcurrentHashMap<>();
 		this.width = (int) Math.ceil(2 / epsOfTotalCount);
 		this.depth = (int) Math.ceil(-Math.log(1 - confidence) / Math.log(2));
@@ -89,7 +98,7 @@ public class KHHCentroidCounter {
 			this.tableF = new float[depth][width];
 			this.decaytable = new int[depth][width];
 		} else{
-			this.tableS = new short[depth][width];
+			this.tableS = new int[depth][width];
 		}
 		this.hashA = new long[depth];
 		Random r = new Random(seed);

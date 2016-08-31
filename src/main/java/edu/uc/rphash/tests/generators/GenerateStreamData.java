@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 public class GenerateStreamData implements ClusterGenerator {
 
@@ -220,6 +221,18 @@ public class GenerateStreamData implements ClusterGenerator {
 			@Override
 			public float[] next() {
 				return generateNext();
+			}
+
+			@Override
+			public void remove() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void forEachRemaining(Consumer<? super float[]> action) {
+				// TODO Auto-generated method stub
+				
 			}
 			
 		};
