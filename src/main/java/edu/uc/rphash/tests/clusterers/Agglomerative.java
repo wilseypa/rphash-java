@@ -14,20 +14,23 @@ public class Agglomerative implements Clusterer{
 	List<float[]> clusters;
 	List<float[]> data;
 	float[][] distances;
-	List<Integer> counts;
-	
+	List<Float> counts;
+	public Agglomerative()
+	{
+		
+	}
 	public Agglomerative(int k, List<float[]> data)
 	{
 		this.k = k;
 		this.data = data;
 		this.clusters = null;
-		counts = new ArrayList<Integer>();
-		for(int i = 0;i<data.size();i++)counts.add(1);
-		distanceArray(data);
+		counts = new ArrayList<Float>();
+		for(int i = 0;i<data.size();i++)counts.add(1f);
 	} 
 	
-	public static double[][] distanceArray(List<float[]> data){
-		double[][] distances = new double[data.size()][data.size()];
+	public static float[][] distanceArray(List<float[]> data){
+		float[][] distances = new float[data.size()][data.size()];
+	
 		for(int i = 0 ; i < data.size();i++)
 		{
 			for(int j = 0; j < data.size();j++)
@@ -37,9 +40,9 @@ public class Agglomerative implements Clusterer{
 	}
 	
 	
-	private float[] avgVector(float[] u, float[] v, int ct1, int ct2){
+	private float[] avgVector(float[] u, float[] v, Float float1, Float float2){
 		float[] w = new float[u.length];
-		for(int i = 0 ;i < u.length;i++)w[i] = (u[i]*ct1+v[i]*ct2)/(ct1+ct2);
+		for(int i = 0 ;i < u.length;i++)w[i] = (u[i]*float1+v[i]*float2)/(float1+float2);
 		return w;
 	}
 	
@@ -70,26 +73,21 @@ public class Agglomerative implements Clusterer{
 	
 	void run()
 	{
+		this.distances = distanceArray(data);
+		
 		while(data.size()>k)
 			merge();
 	}
 	
 	public static void main(String[] args){
-		GenerateData gen =  new GenerateData(3,100,2);
+		GenerateData gen =  new GenerateData(3,500,2);
 		List<float[]> data =gen.data;
-		
-		double[][] dists = distanceArray(data);
-		
-	
-		double[] weights = new double[data.size()];
-		
+		float[][] dists = distanceArray(data);
+//		double[] weights = new double[data.size()];
 		
 		
 		String[] s = new String[dists.length];
 		for(int i = 0;i< dists.length;i++)s[i] = String.valueOf(i);
-
-
-		
 		
 		Agglomerative agl = new Agglomerative(3,  data);
 		agl.run();
@@ -120,8 +118,8 @@ public class Agglomerative implements Clusterer{
 
 	@Override
 	public void setWeights(List<Float> counts) {
-		
-		
+		//this.counts = counts;
+		counts = new ArrayList<Float>();
 	}
 
 	@Override

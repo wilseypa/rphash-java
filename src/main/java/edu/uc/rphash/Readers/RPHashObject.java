@@ -11,9 +11,10 @@ import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
+import edu.uc.rphash.tests.clusterers.Agglomerative;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
-import edu.uc.rphash.tests.clusterers.HartiganWongKMeans;
-import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
+import edu.uc.rphash.tests.clusterers.KMeans2;
+import edu.uc.rphash.tests.clusterers.Kmeans;
 
 public interface RPHashObject {
 	 final static int DEFAULT_NUM_PROJECTIONS = 2;
@@ -23,7 +24,9 @@ public interface RPHashObject {
 	 final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
 	 final static Decoder DEFAULT_INNER_DECODER = new Spherical(24,6,1);//new MultiDecoder(24, new E8(1f));//new Golay();//new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//
 	 final static int DEFAULT_DIM_PARAMETER = DEFAULT_INNER_DECODER.getDimensionality();
-	 final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new HartiganWongKMeans();
+
+	 final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new KMeans2();
+
 	 
 	 
 	int getk();
