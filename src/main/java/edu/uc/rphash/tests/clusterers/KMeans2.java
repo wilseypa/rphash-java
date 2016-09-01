@@ -215,7 +215,6 @@ public class KMeans2 implements Clusterer {
 	}
 
 	public KMeans2() {
-		// TODO Auto-generated constructor stub
 	}
 
 	/**

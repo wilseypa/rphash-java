@@ -62,7 +62,7 @@ public class testStreamingRPHash {
 
 		int k = 20;
 		int d = 5000;
-		float var = 4f;
+		float var = 1f;
 		int interval = 10000;
 		Runtime rt = Runtime.getRuntime();
 
