@@ -20,7 +20,7 @@ import edu.uc.rphash.tests.generators.GenerateStreamData;
  *         Clustering Algorithm, Applied Statistics, Volume 28, Number 1, 1979,
  *         pages 100-108.
  */
-public class HartiganWongKMeans implements Clusterer {
+public class HartiganWongKmeans implements Clusterer {
 
 	private int k;
 	private final int iter;
@@ -37,11 +37,11 @@ public class HartiganWongKMeans implements Clusterer {
 	private List<float[]> data;
 	// public double[] vars;
 
-	public HartiganWongKMeans() {
+	public HartiganWongKmeans() {
 		this.iter = 50;
 	}
 
-	public HartiganWongKMeans(int k, List<float[]> data) {
+	public HartiganWongKmeans(int k, List<float[]> data) {
 		this.k = k;
 		this.iter = 50;
 		this.n = data.get(0).length;
@@ -791,7 +791,7 @@ public class HartiganWongKMeans implements Clusterer {
 		
 		for (int i = 0; i < 1000; i++) {
 			Collections.shuffle(data);
-			HartiganWongKMeans clu = runtests(data, k);
+			HartiganWongKmeans clu = runtests(data, k);
 			double nc_sum = 0;
 			double wss_sum = 0.0;
 
@@ -814,9 +814,9 @@ public class HartiganWongKMeans implements Clusterer {
 		}
 	}
 
-	public static HartiganWongKMeans runtests(ArrayList<float[]> data, int k) {
+	public static HartiganWongKmeans runtests(ArrayList<float[]> data, int k) {
 
-		HartiganWongKMeans clu = new HartiganWongKMeans(k, data);
+		HartiganWongKmeans clu = new HartiganWongKmeans(k, data);
 		ArrayList<Float> weights = new ArrayList<Float>();
 		for (int i = 0; i < data.size(); i++)
 			weights.add((float) 1);
