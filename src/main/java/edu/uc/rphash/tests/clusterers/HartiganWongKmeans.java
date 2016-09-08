@@ -114,6 +114,8 @@ public class HartiganWongKmeans implements Clusterer {
 					this.a[i + (j) * m] = data.get(i)[j];
 				}
 			}
+			
+
 //		}
 //		else
 //		{
@@ -168,6 +170,8 @@ public class HartiganWongKmeans implements Clusterer {
 		// IC2(I). Assign the point to IC1(I).
 		//
 		for (int i = 0; i < m; i++) {
+			
+
 			ic1[i] = 1;
 			ic2[i] = 2;
 
@@ -698,15 +702,13 @@ public class HartiganWongKmeans implements Clusterer {
 		//find minimum of kmeans iterations
 		double mint_wcss = Double.MAX_VALUE;
 		
+		System.out.println("optra");
 //		int origm = m;
 		double[] cmin = new double[k * n];
 		for(int i =0;i<iterations;)
 		{
 			
-//			this.m = origm;
-			// this shuffle is broken if we assume weights
-			//TODO ^^^^^^^^^^^^^^^^
-			Collections.shuffle(data);
+			//Collections.shuffle(data);
 			int err = kmns();
 			
 			double t_wcss = 0.0;
@@ -750,7 +752,6 @@ public class HartiganWongKmeans implements Clusterer {
 	@Override
 	public void setData(List<float[]> data) {
 		this.data = data;
-		
 		this.n = data.get(0).length;
 		this.m = data.size();
 		this.a = new double[m * n];

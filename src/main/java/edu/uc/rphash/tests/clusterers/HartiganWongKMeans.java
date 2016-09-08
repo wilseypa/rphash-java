@@ -30,7 +30,7 @@ public class HartiganWongKMeans implements Clusterer {
 	private double[] a;
 	private double[] c;
 
-	public Float[] weights = null;
+//	public Float[] weights = null;
 	public double[] wss;
 	public int[] ic1;
 	public int[] nc;
@@ -701,14 +701,13 @@ public class HartiganWongKMeans implements Clusterer {
 		//find minimum of kmeans iterations
 		double mint_wcss = Double.MAX_VALUE;
 		
-//		int origm = m;
+		int origm = m;
 		double[] cmin = new double[k * n];
 		for(int i =0;i<iterations;)
 		{
 			
-//			this.m = origm;
-			// this shuffle is broken if we assume weights
-			//TODO ^^^^^^^^^^^^^^^^
+			this.m = origm;
+
 			Collections.shuffle(data);
 			int err = kmns();
 			
@@ -723,6 +722,8 @@ public class HartiganWongKMeans implements Clusterer {
 					mint_wcss = t_wcss;
 				}
 				i++;
+			}else{
+				System.out.println("error occured: "+ err);
 			}
 			// remove duplicated weight objects
 //			this.data = this.data.subList(0, m);
@@ -747,7 +748,7 @@ public class HartiganWongKMeans implements Clusterer {
 
 	@Override
 	public void setWeights(List<Float> weights) {
-		this.weights = weights.toArray(new Float[0]);
+//		this.weights = weights.toArray(new Float[0]);
 	}
 
 	@Override
