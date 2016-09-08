@@ -8,10 +8,10 @@ import java.util.ArrayList;
 import java.util.Collections;  
 import org.apache.commons.math3.distribution.NormalDistribution; 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D; 
-import org.apache.commons.math3.ml.clustering.CentroidCluster; 
+//import org.apache.commons.math3.ml.clustering.CentroidCluster; 
 import org.apache.commons.math3.ml.clustering.Cluster; 
-import org.apache.commons.math3.ml.clustering.Clusterable; 
-import org.apache.commons.math3.ml.clustering.Clusterer; 
+//import org.apache.commons.math3.ml.clustering.Clusterable; 
+//import org.apache.commons.math3.ml.clustering.Clusterer; 
 import org.apache.commons.math3.ml.clustering.DoublePoint; 
 //import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer; 
 import org.apache.commons.math3.random.RandomAdaptor; 
@@ -22,9 +22,12 @@ import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.util.FastMath; 
 //import org.apache.commons.math3.util.Pair; 
 
+import edu.uc.rphash.Clusterer;
+import edu.uc.rphash.Readers.RPHashObject;
 
 
-public class DBScan {
+
+public class DBScan implements Clusterer{
 
     
       public static Vector2D generateNoiseVector(NormalDistribution distribution) { 
@@ -72,6 +75,54 @@ public class DBScan {
         
    }
   
+   
+   
+	//List<float[]> getCentroids();
+   
+   public List<float[]> getCentroids() {   // to be completed
+		return null ;
+	}
+	
+	
+//	abstract RPHashObject getParam();    
+   @Override
+	public RPHashObject getParam() {      // to be completed    
+		return null;
+	}
+	
+	
+//	void setWeights(List<Float> counts);
+	
+	public void setWeights(List<Float> weights) {      // not needed
+		return;
+	}
+
+	
+	//void setData(List<float[]> centroids);
+	
+	@Override
+	public void setData(List<float[]> data) {           // to be completed
+	/*  this.data = data;
+		
+		this.n = data.get(0).length;
+		this.m = data.size();
+		this.a = new double[m * n];
+		this.c = new double[k * n];
+		this.nc = new int[k];
+		this.wss = new double[k];      */
+		// weights = new Float[m];
+		// Collections.shuffle(data);
+
+	}
+
+	
+	
+	public void setK(int k) {                         // not needed
+		return;
+	}
+	
+	
+   
     public static void main(String[] args) {
       
     int nSamples = 1500;
