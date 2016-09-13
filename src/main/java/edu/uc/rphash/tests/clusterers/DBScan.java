@@ -20,14 +20,24 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well19937c; 
 //import org.apache.commons.math3.userguide.ExampleUtils.ExampleFrame; 
 import org.apache.commons.math3.util.FastMath; 
-//import org.apache.commons.math3.util.Pair; 
+import org.apache.commons.math3.util.Pair; 
 
+<<<<<<< HEAD
 import edu.uc.rphash.Clusterer;
+import edu.uc.rphash.Readers.RPHashObject;
+=======
+import org.apache.commons.math3.ml.distance.DistanceMeasure; 
+import org.apache.commons.math3.ml.distance.EuclideanDistance;
+>>>>>>> refs/remotes/origin/rphash-java-branch-deysn
+
 import edu.uc.rphash.Readers.RPHashObject;
 
 
-
+<<<<<<< HEAD
 public class DBScan implements Clusterer{
+=======
+public class DBScan implements edu.uc.rphash.Clusterer{
+>>>>>>> refs/remotes/origin/rphash-java-branch-deysn
 
     
       public static Vector2D generateNoiseVector(NormalDistribution distribution) { 
@@ -46,8 +56,7 @@ public class DBScan implements Clusterer{
         } 
         return points; 
     } 
-     
-    
+        
    public static List<Vector2D> makeCircles(int samples, boolean shuffle, double noise, double factor, final RandomGenerator random) { 
         if (factor < 0 || factor > 1) { 
             throw new IllegalArgumentException(); 
@@ -74,8 +83,11 @@ public class DBScan implements Clusterer{
         
         
    }
+<<<<<<< HEAD
   
    
+=======
+>>>>>>> refs/remotes/origin/rphash-java-branch-deysn
    
 	//List<float[]> getCentroids();
    
@@ -122,10 +134,13 @@ public class DBScan implements Clusterer{
 	}
 	
 	
+<<<<<<< HEAD
    
+=======
+>>>>>>> refs/remotes/origin/rphash-java-branch-deysn
     public static void main(String[] args) {
       
-    int nSamples = 1500;
+    int nSamples = 2000;
    
     RandomGenerator rng = new Well19937c(0);
     
@@ -155,8 +170,12 @@ public class DBScan implements Clusterer{
           List<?> cluster2 = cl2.getPoints();
           System.out.println("The points in cluster1:" + cluster1);
           System.out.println("The points in cluster2 :" + cluster2);
-        
-        
+          
+          
+          CentroidDBScan m = new CentroidDBScan() ;
+          System.out.println("The centroid in cluster1:" + m.centroidOf(cl1)); 
+          System.out.println("The centroid in cluster2:" + m.centroidOf(cl2)); 
+               
     }
     
 }
