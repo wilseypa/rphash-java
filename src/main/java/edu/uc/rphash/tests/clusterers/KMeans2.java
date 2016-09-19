@@ -35,144 +35,11 @@ public class KMeans2 implements Clusterer {
 		 * Create a new point identical to point p
 		 **/
 		public PointND(PointND p) {
-			this.dimension = p.getDimension();
+			this.dimension = p.dimension;
 			this.coordinates = new float[dimension];
 			for (int i = 0; i < dimension; i++)
-				this.coordinates[i] = p.getCoordinate(i);
+				this.coordinates[i] = p.coordinates[i];
 		}
-
-		/**
-		 * Create a new point identical to point p
-		 **/
-		public void setToOrigin() {
-			for (int i = 0; i < dimension; i++)
-				coordinates[i] = 0;
-		}
-
-		/**
-		 * Return the euclidian norm of this point
-		 **/
-		public float norm() {
-			float sum = 0;
-			for (int i = 0; i < dimension; i++)
-				sum = (float) (sum + Math.pow(coordinates[i], 2));
-			return (float) Math.sqrt(sum);
-		}
-
-		/**
-		 * Add point p to this point
-		 **/
-		public void add(PointND p) {
-			for (int i = 0; i < dimension; i++)
-				coordinates[i] = coordinates[i] + p.getCoordinate(i);
-		}
-
-		/**
-		 * Subtract point p to this point
-		 **/
-		public void subtract(PointND p) {
-			for (int i = 0; i < dimension; i++)
-				coordinates[i] = coordinates[i] - p.getCoordinate(i);
-		}
-
-		/**
-		 * Multiply this point by a scalar
-		 **/
-		public void multiply(float scalar) {
-			for (int i = 0; i < dimension; i++)
-				coordinates[i] = scalar * coordinates[i];
-		}
-
-		/**
-		 * Exponentiate this point by exp
-		 **/
-		public void pow(float exp) {
-			for (int i = 0; i < dimension; i++)
-				coordinates[i] = (float) Math.pow(coordinates[i], exp);
-		}
-
-		/**
-		 * Compute the euclidian distance of this point to point p2
-		 **/
-		public float dist(PointND p2) {
-			PointND p1 = new PointND(this);
-			p1.subtract(p2);
-			return p1.norm();
-		}
-
-		/**
-		 * Return the coordinate of maximum value of this point
-		 **/
-		public float max() {
-			float value;
-			float max = coordinates[0];
-			for (int i = 1; i < dimension; i++) {
-				value = coordinates[i];
-				if (value > max)
-					max = value;
-			}
-			return max;
-		}
-
-		/**
-		 * Return the probability of this point given it is normally distributed
-		 * with a a diagonal covariance matrix of coefficients sigma
-		 **/
-		public float normal(PointND mean, PointND sigma) {
-			float mahalanobis;
-			float productSigma = 1;
-			PointND temp = new PointND(this);
-			temp.subtract(mean);
-			// compute the product of the deviations and the mahalanobis
-			// distance
-			for (int i = 0; i < dimension; i++) {
-				productSigma = sigma.getCoordinate(i) * productSigma;
-				temp.setCoordinate(i,
-						temp.getCoordinate(i) / sigma.getCoordinate(i));
-			}
-			mahalanobis = (float) Math.pow(temp.norm(), 2);
-			return (float) (1.0f / (Math.pow((2 * Math.PI), dimension / 2.0f) * productSigma) * Math
-					.exp(-1.0f / 2 * mahalanobis));
-		}
-
-		/**
-		 * Return coordinate i of this point
-		 **/
-		public float getCoordinate(int i) {
-			return coordinates[i];
-		}
-
-		/**
-		 * Set coordinate[i] to the specified value
-		 **/
-		public void setCoordinate(int i, float value) {
-			coordinates[i] = value;
-		}
-
-		/**
-		 * Return the number of coordinates of this point
-		 **/
-		public int getDimension() {
-			return dimension;
-		}
-
-		/**
-		 * Return the coordinate array of this point
-		 **/
-		public float[] getCoordinates() {
-			return coordinates;
-		}
-
-		/**
-		 * Return a string representation of this point
-		 **/
-		public String toString() {
-			String s = "" + coordinates[0];
-			for (int i = 1; i < dimension; i++)
-				s = s + " " + coordinates[i];
-			return s;
-		}
-
 	}
 
 	private int n; // number of instances to classify
@@ -183,8 +50,8 @@ public class KMeans2 implements Clusterer {
 									// w[j]
 	private PointND[] sigma; // holds the standard deviation of each class i
 	private float[] prior; // holds the prior of each class i
-	private float logLikelihood; // holds the log likelihood of each of the k
-									// Gaussians
+	// private float logLikelihood; // holds the log likelihood of each of the k
+	// Gaussians
 	private float MDL; // the minimum description length of the model
 	private int numIterations;
 
@@ -192,9 +59,9 @@ public class KMeans2 implements Clusterer {
 	private PointND[] data;
 
 	public KMeans2(int getk, List<float[]> data) {
-		this.data = new PointND[centroids.size()];
-		for (int i = 0; i < centroids.size(); i++) {
-			this.data[i] = new PointND(centroids.get(i));
+		this.data = new PointND[data.size()];
+		for (int i = 0; i < data.size(); i++) {
+			this.data[i] = new PointND(data.get(i));
 		}
 		this.centroids = null;
 		init(this.data, getk);
@@ -209,7 +76,7 @@ public class KMeans2 implements Clusterer {
 	 **/
 	private void init(PointND[] x, int k) {
 		this.n = x.length;
-		this.d = x[0].getDimension();
+		this.d = x[0].dimension;
 		this.k = k;
 		this.mu = new PointND[k];
 		this.w = new Vector[k];
@@ -272,12 +139,12 @@ public class KMeans2 implements Clusterer {
 		int nearestClass;
 
 		// compute the distance x is from mean mu[0]
-		smallestDist = x.dist(mu[0]);
+		smallestDist = distance(x.coordinates, mu[0].coordinates);
 		nearestClass = 0;
 
 		// compute the distance x is from the other classes
 		for (int j = 1; j < k; j++) {
-			dist = x.dist(mu[j]);
+			dist = distance(x.coordinates, mu[j].coordinates);
 			if (dist < smallestDist) {
 				smallestDist = dist;
 				nearestClass = j;
@@ -285,6 +152,51 @@ public class KMeans2 implements Clusterer {
 		}
 		// classify x into class its nearest class
 		w[nearestClass].add(x);
+	}
+
+	float distance(float[] x, float[] y) {
+		float ret = 0.0f;
+		if (x.length != y.length)
+			return Float.MAX_VALUE;
+		for (int i = 0; i < x.length; i++)
+			ret += (x[i] - y[i]) * (x[i] - y[i]);
+		return (float) Math.sqrt(ret);
+	}
+
+	float[] subtract(float[] x, float[] y) {
+		float[] ret = new float[x.length];
+		if (x.length != y.length)
+			return null;
+		for (int i = 0; i < x.length; i++)
+			ret[i] = x[i] - y[i];
+		return ret;
+	}
+
+	float[] add(float[] x, float[] y) {
+		float[] ret = new float[x.length];
+		if (x.length != y.length)
+			return null;
+		for (int i = 0; i < x.length; i++)
+			ret[i] = x[i] + y[i];
+		return ret;
+	}
+
+	float[] multiply(float[] x, float scalar) {
+		float[] ret = new float[x.length];
+		for (int i = 0; i < x.length; i++)
+			ret[i] = x[i] * scalar;
+		return ret;
+	}
+
+	public float max(float[] coordinates) {
+		float value;
+		float max = coordinates[0];
+		for (int i = 1; i < coordinates.length; i++) {
+			value = coordinates[i];
+			if (value > max)
+				max = value;
+		}
+		return max;
 	}
 
 	/**
@@ -296,16 +208,20 @@ public class KMeans2 implements Clusterer {
 
 		// init the means to zero
 		for (int j = 0; j < k; j++)
-			mu[j].setToOrigin();
+			mu[j] = new PointND(mu[j].dimension);
 
 		// recompute the means of each cluster
 		for (int j = 0; j < k; j++) {
 			numInstances = w[j].size();
 			for (int i = 0; i < numInstances; i++) {
-				instance = (PointND) (w[j].get(i));
-				mu[j].add(instance);
+				instance = w[j].get(i);
+				mu[j] = new PointND(
+						add(mu[j].coordinates, instance.coordinates));
+				// mu[j].add(instance);
 			}
-			mu[j].multiply(1.0f / numInstances);
+			// mu[j].multiply(1.0f / numInstances);
+			mu[j] = new PointND(
+					multiply(mu[j].coordinates, 1.0f / numInstances));
 		}
 
 	}
@@ -315,94 +231,99 @@ public class KMeans2 implements Clusterer {
 	 **/
 	private float maxDeltaMeans(PointND[] oldMeans) {
 		float delta;
-		oldMeans[0].subtract(mu[0]);
-		float maxDelta = oldMeans[0].max();
+		oldMeans[0] = new PointND(subtract(oldMeans[0].coordinates,
+				mu[0].coordinates));
+		// oldMeans[0].subtract(mu[0]);
+
+		float maxDelta = max(oldMeans[0].coordinates);
 		for (int j = 1; j < k; j++) {
-			oldMeans[j].subtract(mu[j]);
-			delta = oldMeans[j].max();
+			// oldMeans[j].subtract(mu[j]);
+			oldMeans[j] = new PointND(subtract(oldMeans[j].coordinates,
+					mu[j].coordinates));
+			delta = max(oldMeans[j].coordinates);
 			if (delta > maxDelta)
 				maxDelta = delta;
 		}
 		return maxDelta;
 	}
 
-	/**
-	 * Compute the standard deviation of the k Gaussians
-	 **/
-	private void computeDeviation() {
-		int numInstances; // number of instances in each class w[j]
-		PointND instance;
-		PointND temp;
-
-		// set the standard deviation to zero
-		for (int j = 0; j < k; j++)
-			sigma[j].setToOrigin();
-
-		// for each cluster j...
-		for (int j = 0; j < k; j++) {
-			numInstances = w[j].size();
-			for (int i = 0; i < numInstances; i++) {
-				instance = (PointND) (w[j].get(i));
-				temp = new PointND(instance);
-				temp.subtract(mu[j]);
-				temp.pow(2.0f); // (x[i]-mu[j])^2
-				temp.multiply(1.0f / numInstances); // multiply by proba of
-													// having x[i] in cluster j
-				sigma[j].add(temp); // sum i (x[i]-mu[j])^2 * p(x[i])
-			}
-			sigma[j].pow((1.0f / 2f)); // because we want the standard deviation
-		}
-	}
-
-	/**
-	 * Compute the priors of the k Gaussians
-	 **/
-	private void computePriors() {
-		float numInstances; // number of instances in each class w[j]
-		for (int j = 0; j < k; j++) {
-			numInstances = w[j].size() * (1.0f);
-			prior[j] = numInstances / n;
-		}
-	}
-
-	/**
-	 * Assume the standard deviations and priors of each cluster have been
-	 * computed
-	 **/
-	private void computeLogLikelihood(PointND[] x) {
-		float temp1 = 0;
-		float temp2 = 0;
-		PointND variance;
-		float ln2 = (float) Math.log(2);
-		// for each instance x
-		for (int i = 0; i < n; i++) {
-			// for each cluster j
-			temp1 = 0;
-			for (int j = 0; j < k; j++) {
-				temp1 = temp1 + (x[i].normal(mu[j], sigma[j]) * prior[j]);
-			}
-			temp2 = (float) (temp2 + Math.log(temp1) / ln2);
-		}
-		logLikelihood = temp2;
-	}
-
-	/**
-	 * Assume the log likelihood and priors have been computed
-	 **/
-	private void computeMDL() {
-		float temp = 0;
-		float numInstances;
-		float ln2 = (float) Math.log(2);
-		for (int j = 0; j < k; j++) {
-			numInstances = w[j].size();
-			for (int i = 0; i < d; i++) {
-				temp = (float) (temp - Math.log(sigma[j].getCoordinate(i)
-						/ Math.sqrt(numInstances))
-						/ ln2);
-			}
-		}
-		MDL = temp - logLikelihood;
-	}
+	// /**
+	// * Compute the standard deviation of the k Gaussians
+	// **/
+	// private void computeDeviation() {
+	// int numInstances; // number of instances in each class w[j]
+	// PointND instance;
+	// PointND temp;
+	//
+	// // set the standard deviation to zero
+	// for (int j = 0; j < k; j++)
+	// sigma[j].setToOrigin();
+	//
+	// // for each cluster j...
+	// for (int j = 0; j < k; j++) {
+	// numInstances = w[j].size();
+	// for (int i = 0; i < numInstances; i++) {
+	// instance = (PointND) (w[j].get(i));
+	// temp = new PointND(instance);
+	// temp.subtract(mu[j]);
+	// temp.pow(2.0f); // (x[i]-mu[j])^2
+	// temp.multiply(1.0f / numInstances); // multiply by proba of
+	// // having x[i] in cluster j
+	// sigma[j].add(temp); // sum i (x[i]-mu[j])^2 * p(x[i])
+	// }
+	// sigma[j].pow((1.0f / 2f)); // because we want the standard deviation
+	// }
+	// }
+	//
+	// /**
+	// * Compute the priors of the k Gaussians
+	// **/
+	// private void computePriors() {
+	// float numInstances; // number of instances in each class w[j]
+	// for (int j = 0; j < k; j++) {
+	// numInstances = w[j].size() * (1.0f);
+	// prior[j] = numInstances / n;
+	// }
+	// }
+	//
+	// /**
+	// * Assume the standard deviations and priors of each cluster have been
+	// * computed
+	// **/
+	// private void computeLogLikelihood(PointND[] x) {
+	// float temp1 = 0;
+	// float temp2 = 0;
+	// PointND variance;
+	// float ln2 = (float) Math.log(2);
+	// // for each instance x
+	// for (int i = 0; i < n; i++) {
+	// // for each cluster j
+	// temp1 = 0;
+	// for (int j = 0; j < k; j++) {
+	// temp1 = temp1 + (x[i].normal(mu[j], sigma[j]) * prior[j]);
+	// }
+	// temp2 = (float) (temp2 + Math.log(temp1) / ln2);
+	// }
+	// logLikelihood = temp2;
+	// }
+	//
+	// /**
+	// * Assume the log likelihood and priors have been computed
+	// **/
+	// private void computeMDL() {
+	// float temp = 0;
+	// float numInstances;
+	// float ln2 = (float) Math.log(2);
+	// for (int j = 0; j < k; j++) {
+	// numInstances = w[j].size();
+	// for (int i = 0; i < d; i++) {
+	// temp = (float) (temp - Math.log(sigma[j].getCoordinate(i)
+	// / Math.sqrt(numInstances))
+	// / ln2);
+	// }
+	// }
+	// MDL = temp - logLikelihood;
+	// }
 
 	public float getMDL() {
 		return MDL;
@@ -421,8 +342,8 @@ public class KMeans2 implements Clusterer {
 		// compute sum of squares
 		double sigtotal = 0.0;
 		for (int i = 0; i < sigma.length; i++)
-			for (int j = 0; j < sigma[i].getDimension(); j++)
-				sigtotal += sigma[i].getCoordinate(j);
+			for (int j = 0; j < sigma[i].dimension; j++)
+				sigtotal += sigma[i].coordinates[j];
 
 		return centroids;
 	}
@@ -464,7 +385,7 @@ public class KMeans2 implements Clusterer {
 		GenerateStreamData noise = new GenerateStreamData(1, d, var * 10,
 				11331313);
 		KMeans2 km2 = new KMeans2();
-		HartiganWongKMeans hwkm = new HartiganWongKMeans();
+		// HartiganWongKMeans hwkm = new HartiganWongKMeans();
 
 		System.out.printf("\tKMeans\t\t\tNull\t\tReal\n");
 		System.out
@@ -497,10 +418,9 @@ public class KMeans2 implements Clusterer {
 					justvecsInThisRound);
 			System.out.printf("%d\t%d\t%.4f\t%.1f\t\t", i, usedkB,
 					time / 1000000000f, wcsse);
-			
-			hwkm.setData(vecsAndNoiseInThisRound);
-			hwkm.setK(10);
-			cents = hwkm.getCentroids();
+
+			cents = new HartiganWongKMeans(k, vecsAndNoiseInThisRound)
+					.getCentroids();
 			time = System.nanoTime() - timestart;
 			usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 			wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
