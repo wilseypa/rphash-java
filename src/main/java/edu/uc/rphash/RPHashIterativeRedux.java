@@ -221,5 +221,11 @@ public class RPHashIterativeRedux  implements Clusterer
 		// TODO Auto-generated method stub
 		
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+		so.setRandomSeed(randomseed);
+	}
 
 }

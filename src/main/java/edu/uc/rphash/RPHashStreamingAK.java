@@ -178,5 +178,11 @@ public class RPHashStreamingAK implements StreamClusterer {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+		so.setRandomSeed(randomseed);
+	}
 
 }

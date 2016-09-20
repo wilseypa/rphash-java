@@ -320,4 +320,9 @@ public class MLE2 implements Clusterer {
 	public void setK(int getk) {
 	}
 	
+	@Override
+	public void reset(int randomseed) {
+		
+	}
+	
 }

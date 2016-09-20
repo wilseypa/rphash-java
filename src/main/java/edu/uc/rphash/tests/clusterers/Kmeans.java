@@ -305,6 +305,11 @@ public class Kmeans implements Clusterer {
 
 		return d;
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		
+	}
 
 	public static void main(String[] args) {
 		GenerateData gen = new GenerateData(8, 100, 100);

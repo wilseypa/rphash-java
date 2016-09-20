@@ -122,6 +122,11 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 		public void setK(int k) {                         // to be completed
 			return;
 		}
+		
+		@Override
+		public void reset(int randomseed) {
+			
+		}
 	
 // testing the algorithm :
 		
@@ -163,10 +168,7 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 	       
 	         CentroidDBScan n = new CentroidDBScan() ;                              // though the name is CentroidDBScan it is a general class that has the method to compute the centroid of a cluster.
 	         System.out.println("The centroid in cluster1:" + n.centroidOf(clkm1)); 
-	         System.out.println("The centroid in cluster2:" + n.centroidOf(clkm2)); 
-	        
-	         
-	        
+	         System.out.println("The centroid in cluster2:" + n.centroidOf(clkm2));  
 	    }
 	    
 	}

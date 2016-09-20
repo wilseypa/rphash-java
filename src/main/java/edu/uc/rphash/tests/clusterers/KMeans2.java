@@ -438,5 +438,10 @@ public class KMeans2 implements Clusterer {
 					wcsse, realwcsse);
 		}
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+	}
 
 }

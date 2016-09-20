@@ -383,6 +383,11 @@ public class MaxLikelihoodKMeans2 implements Clusterer {
 	public void setK(int getk) {
 		this.k = getk;
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+	}
 
 	public static void main(String[] args) {
 		int k = 10;

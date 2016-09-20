@@ -288,10 +288,15 @@ public class Agglomerative2 implements Clusterer {
 
 	@Override
 	public List<Centroid> getCentroids() {
-		run();
+		if(centroids==null)run();
 		List<Centroid> cents = new ArrayList<>(centroids.size());
 		for(float[] v : this.centroids)cents.add(new Centroid(v,0));
 		return cents;
+	}
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
 	}
 
 	@Override

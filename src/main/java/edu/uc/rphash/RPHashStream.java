@@ -221,7 +221,12 @@ public class RPHashStream implements StreamClusterer {
 			}
 			executor = Executors.newFixedThreadPool(getProcessors());
 		}
-		
+	}
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+		so.setRandomSeed(randomseed);
 	}
 
 }

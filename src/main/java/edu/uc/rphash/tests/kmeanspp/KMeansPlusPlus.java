@@ -516,7 +516,7 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
         return minCluster;
     }
 	
-	  final Collection<T> points;
+	  Collection<T> points;
 	  final int maxIterations;
 	  int k;
 	  List<float[]> centroids;//
@@ -541,7 +541,7 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 //       this.random        = random;
 //       this.emptyStrategy = emptyStrategy;
 //   }
-	  final private List<float[]> data;
+//	  final private List<float[]> data;
 	  
     @SuppressWarnings("unchecked")
 	public KMeansPlusPlus(List<float[]> data,int k) {
@@ -550,7 +550,7 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 		this.k = k;
 		maxIterations = 10000;
 		points = new ArrayList<>();
-		this.data = data;
+//		this.data = data;
 		this.dim = data.get(0).length;
 		for(float[] f: data)
 		{
@@ -594,8 +594,7 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 
 	@Override
 	public RPHashObject getParam() {
-		
-		return new SimpleArrayReader(data, k);
+		return null;
 	}
 	public static void main(String[] args){
 		GenerateData gen = new GenerateData(3,5000,2,.1f);
@@ -616,14 +615,37 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 
 	@Override
 	public void setRawData(List<float[]> centroids) {
-		// TODO Auto-generated method stub
+    	random  =new Random();
+		points = new ArrayList<>();
+
+		for(float[] f: centroids)
+		{
+			DoublePoint p = new DoublePoint(f);
+			points.add((T)p);
+		}
 		
+		centroids = null;
 	}
 
 	@Override
 	public void setData(List<Centroid> centroids) {
+    	random  =new Random();
+		points = new ArrayList<>();
+
+		for(Centroid f: centroids)
+		{
+			DoublePoint p = new DoublePoint(f.centroid());
+			points.add((T)p);
+		}
 		
+		centroids = null;
 		
+	}
+
+	@Override
+	public void reset(int randomseed) {
+		random  =new Random(randomseed);
+		centroids = null;
 	}
 
 }

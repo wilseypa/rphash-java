@@ -119,7 +119,10 @@ public class DBScan implements Clusterer{
 		// Collections.shuffle(data);
 	}
 
-
+	@Override
+	public void reset(int randomseed) {
+		
+	}
 	
 	
 	public void setK(int k) {                         // not needed

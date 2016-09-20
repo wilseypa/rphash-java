@@ -10,10 +10,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 //import org.rosuda.JRI.Rengine;
+
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -39,36 +41,38 @@ public class RPHash {
 	static String[] clusteringmethods = { "simple", "streaming", "3stage",
 			"multiproj", "consensus", "redux", "kmeans", "pkmeans",
 			"kmeansplusplus", "streamingkmeans" };
-	static String[] offlineclusteringmethods = { "singlelink",
-			"completelink", "averagelink", "kmeans" };
+	static String[] offlineclusteringmethods = { "singlelink", "completelink",
+			"averagelink", "kmeans" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
-			"raw", "decayrate", "dimparameter", "decodertype","offlineclusterer"
-			 };
-	static String[] decoders = { "dn", "e8","golay", "multie8", "leech", "multileech",
-			"sphere", "levypstable", "cauchypstable", "gaussianpstable" };
+			"raw", "decayrate", "dimparameter", "decodertype",
+			"offlineclusterer", "runs" };
+	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
+			"multileech", "sphere", "levypstable", "cauchypstable",
+			"gaussianpstable" };
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException, InterruptedException {
 
 		if (args.length < 3) {
-			System.out.print("Usage: rphash InputFile k OutputFile [CLUSTERING_METHOD ...][OPTIONAL_ARG=value ...]\n");
-			
+			System.out
+					.print("Usage: rphash InputFile k OutputFile [CLUSTERING_METHOD ...][OPTIONAL_ARG=value ...]\n");
+
 			System.out.print("\tCLUSTERING_METHOD:\n");
 			for (String s : clusteringmethods)
-				System.out.print("\t\t"+s +"\n");
-			
+				System.out.print("\t\t" + s + "\n");
+
 			System.out.print("\tOPTIONAL_ARG:\n");
-			for (int i = 0;i<ops.length-2;i++)
-			{	String s = ops[i];
+			for (int i = 0; i < ops.length - 2; i++) {
+				String s = ops[i];
 				System.out.println("\t\t" + s);
 			}
-			System.out.print("\t\t"+ops[ops.length-2]+"\t:[");
+			System.out.print("\t\t" + ops[ops.length - 2] + "\t:[");
 			for (String s : decoders)
 				System.out.print(s + " ,");
 			System.out.print("]\n");
 
-			System.out.print("\t\t"+ops[ops.length-1]+"\t:[");
+			System.out.print("\t\t" + ops[ops.length - 1] + "\t:[");
 			for (String s : offlineclusteringmethods)
 				System.out.print(s + " ,");
 			System.out.print("]\n");
@@ -83,10 +87,11 @@ public class RPHash {
 		String outputFile = args[2];
 
 		boolean raw = false;
-		
-//		Rengine re = Rengine.getMainEngine();
-//		if(re == null)
-//			re = new Rengine(new String[] {"--no-save"}, false, null);
+		int bestofruns = 1;
+
+		// Rengine re = Rengine.getMainEngine();
+		// if(re == null)
+		// re = new Rengine(new String[] {"--no-save"}, false, null);
 
 		if (args.length == 3) {
 			data = VectorUtil.readFile(filename, raw);
@@ -105,57 +110,107 @@ public class RPHash {
 		List<Clusterer> runs;
 		if (taggedArgs.containsKey("raw")) {
 			raw = Boolean.getBoolean(taggedArgs.get("raw"));
-			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, true/*, re*/);
+			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, true);
 		} else {
-			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false/*, re*/);
+			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false);
+		}
+
+		if (taggedArgs.containsKey("runs")) {
+			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false);
 		}
 
 		if (taggedArgs.containsKey("streamduration")) {
 			runStreamForSetOfClusterers(runs, outputFile,
-					Integer.parseInt(taggedArgs.get("streamduration")), k, raw/*, re*/);
-			
-			return;
+					Integer.parseInt(taggedArgs.get("streamduration")), k, raw,bestofruns);
+		} else {
+			// run remaining, read file into ram
+			data = VectorUtil.readFile(filename, raw);
+			runner(runs, outputFile, raw,bestofruns);
 		}
-		// run remaining, read file into ram
-		data = VectorUtil.readFile(filename, raw);
-		runner(runs, outputFile, raw);
-		
-//		if (re.waitForR())
-//			re.end();
-		
+
 	}
 
+	/** Run the cluster and find the best clustering
+	 * @param clu
+	 * @param raw
+	 * @param runs
+	 * @return the minimum wcss centroid set
+	 */
+	public static List<Centroid> runclusterer(Clusterer clu, boolean raw,
+			int runs) {
+
+		List<Centroid> mincents = clu.getCentroids();
+		double minwcss = 0.0;
+		for (Centroid c : mincents) {
+			minwcss += c.getWCSS();
+		}
+
+		for (int i = 1; i < runs; i++) {
+			List<Centroid> tmpcents = clu.getCentroids();
+			double tmpwcss = 0.0;
+			for (Centroid c : tmpcents) {
+				tmpwcss += c.getWCSS();
+			}
+			if (tmpwcss < minwcss) {
+				minwcss = tmpwcss;
+				mincents = tmpcents;
+			}
+			
+			clu.reset(new Random().nextInt());
+		}
+
+		return mincents;
+
+	}
+
+	/**
+	 * This function runs the set of run items as specified on the command line
+	 * as an ordered list of cluster tasks
+	 * 
+	 * @param runitems
+	 * @param outputFile
+	 * @param raw
+	 * @param runs
+	 * @throws InterruptedException
+	 */
 	public static void runner(List<Clusterer> runitems, String outputFile,
-			boolean raw) throws InterruptedException {
+			boolean raw, int runs) throws InterruptedException {
 		for (Clusterer clu : runitems) {
 			String[] ClusterHashName = clu.getClass().getName().split("\\.");
-//			String[] DecoderHashName = clu.getParam().toString().split("\\.");
-			System.out.print(ClusterHashName[ClusterHashName.length - 1] + " { "+clu.getParam().toString()
-//					ClusterHashName[ClusterHashName.length - 1] + "{"
-//					+ DecoderHashName[DecoderHashName.length - 2]
+			// String[] DecoderHashName =
+			// clu.getParam().toString().split("\\.");
+			System.out.print(ClusterHashName[ClusterHashName.length - 1]
+					+ " { " + clu.getParam().toString()
+					// ClusterHashName[ClusterHashName.length - 1] + "{"
+					// + DecoderHashName[DecoderHashName.length - 2]
 					+ "} processing time : ");
-			
+
 			Runtime rt = Runtime.getRuntime();
 			rt.gc();
 			Thread.sleep(10);
 			rt.gc();
 			long startmemory = rt.totalMemory() - rt.freeMemory();
 			long startTime = System.nanoTime();
-			List<Centroid> cents = clu.getCentroids();
+
+			List<Centroid> cents = runclusterer(clu, raw, runs);
+
 			float timed = (System.nanoTime() - startTime) / 1000000000f;
 			rt.gc();
 			Thread.sleep(10);
 			rt.gc();
-			long usedkB = ((rt.totalMemory() - rt.freeMemory())-startmemory) / 1024;
-			
+			long usedkB = ((rt.totalMemory() - rt.freeMemory()) - startmemory) / 1024;
+
 			RPHashObject reader = clu.getParam();
 
-			double wcsse = StatTests.WCSSECentroidsFloat(cents, reader.getData());
+			double wcsse = StatTests.WCSSECentroidsFloat(cents,
+					reader.getData());
 
-			System.out.println(timed + ", used(KB): "+usedkB +", wcsse: "+wcsse);
+			System.out.println(timed + ", used(KB): " + usedkB + ", wcsse: "
+					+ wcsse);
 			try {
-				FileWriter metricsfile =new FileWriter(new File("metrics_time_memkb_wcsse.csv"));
-				metricsfile.write(timed+","+usedkB+","+wcsse+"\n");
+				FileWriter metricsfile = new FileWriter(new File(
+						"metrics_time_memkb_wcsse.csv"));
+				metricsfile.write(timed + "," + usedkB + "," + wcsse + "\n");
 				metricsfile.close();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -195,85 +250,115 @@ public class RPHash {
 		return (System.nanoTime() - startTime);
 	}
 
-	public static void runStreamForAClusterer( String outputFile,
-			Integer streamDuration, int k, boolean raw,Clusterer clu,long avgtimeToRead,Runtime rt,StreamObject streamer/*, Rengine re*/) throws IOException,
-			InterruptedException {
-		
+	/**
+	 * Run a subset of a stream for the available clusterers print the results
+	 * NOTE this does not use the bestOfRuns parameter yet
+	 * @param outputFile
+	 * @param streamDuration
+	 * @param k
+	 * @param raw
+	 * @param clu
+	 * @param avgtimeToRead
+	 * @param rt
+	 * @param streamer
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public static void runStreamForAClusterer(String outputFile,
+			Integer streamDuration, int k, boolean raw, Clusterer clu,
+			long avgtimeToRead, Runtime rt, StreamObject streamer/* , Rengine re */)
+			throws IOException, InterruptedException {
+
 		if (clu instanceof StreamClusterer) {
 			String[] ClusterHashName = clu.getClass().getName().split("\\.");
-			System.out.print(ClusterHashName[ClusterHashName.length - 1] 
-					+ " { "+clu.getParam().toString()
-					+ "}"
-					+ ",stream_duration:" + streamDuration
-					+ "} \n cpu time \t wcsse \t\t\t mem(kb)\t\tcluster_count\n");
-			
+			System.out
+					.print(ClusterHashName[ClusterHashName.length - 1]
+							+ " { "
+							+ clu.getParam().toString()
+							+ "}"
+							+ ",stream_duration:"
+							+ streamDuration
+							+ "} \n cpu time \t wcsse \t\t\t mem(kb)\t\tcluster_count\n");
+
 			rt.gc();
 			Thread.sleep(10);
 			rt.gc();
-			
+
 			long usedkB = (rt.totalMemory() - rt.freeMemory());
 			long startTime = System.nanoTime() + avgtimeToRead;
 			int i = 1;
 			ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
 			int count = 0;
 			while (streamer.hasNext()) {
-				
+
 				float[] nxt = streamer.next();
 				vecsInThisRound.add(nxt);
 				((StreamClusterer) clu).addVectorOnlineStep(nxt);
 
-				if (i % streamDuration == 0 ) 
-				{
+				if (i % streamDuration == 0) {
 					List<Centroid> cents = ((StreamClusterer) clu)
 							.getCentroidsOfflineStep();
-					
+
 					long time = System.nanoTime() - startTime;
-					double wcsse = StatTests.WCSSECentroidsFloat(cents, vecsInThisRound);
+					double wcsse = StatTests.WCSSECentroidsFloat(cents,
+							vecsInThisRound);
 					count += vecsInThisRound.size();
 					vecsInThisRound = new ArrayList<float[]>();
-					
+
 					rt.gc();
 					Thread.sleep(10);
 					rt.gc();
 
-					
 					System.out.println(time / 1000000000f + "\t" + wcsse
-							+ "\t " + ((rt.totalMemory() - rt.freeMemory()) - usedkB)/1024+"\t\t\t"+cents.size());
-					VectorUtil.writeCentroidsToFile(new File(outputFile + "_round" + new Integer(count).toString()
-							+ "."
+							+ "\t "
+							+ ((rt.totalMemory() - rt.freeMemory()) - usedkB)
+							/ 1024 + "\t\t\t" + cents.size());
+					VectorUtil.writeCentroidsToFile(new File(outputFile
+							+ "_round" + new Integer(count).toString() + "."
 							+ ClusterHashName[ClusterHashName.length - 1]),
 							cents, raw);
-					
+
 					startTime = System.nanoTime() + avgtimeToRead;
 				}
-				if(!streamer.hasNext()){	
-					
+				if (!streamer.hasNext()) {
+
 					((StreamClusterer) clu).shutdown();
-					
+
 				}
 				i++;
 			}
-//			re.end();
+			// re.end();
 			streamer.reset();
 		}
-		
+
 	}
-	
-	public static void runStreamForSetOfClusterers(List<Clusterer> runitems, String outputFile,
-			Integer streamDuration, int k, boolean raw/*, Rengine re*/) throws IOException,
-			InterruptedException {
+
+	/**
+	 * Apply stream to set of clusterers, output results periodically according to
+	 * cmd parameter StreamDuration
+	 * @param runitems
+	 * @param outputFile
+	 * @param streamDuration
+	 * @param k
+	 * @param raw
+	 * @param bestofruns
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public static void runStreamForSetOfClusterers(List<Clusterer> runitems,
+			String outputFile, Integer streamDuration, int k, boolean raw, int bestofruns)
+			throws IOException, InterruptedException {
 
 		Iterator<Clusterer> cluit = runitems.iterator();
 		// needs work, just use for both to be more accurate
 		long avgtimeToRead = 0;// computeAverageReadTime(streamDuration,f,streamDuration);
 		Runtime rt = Runtime.getRuntime();
-		
 
 		while (cluit.hasNext()) {
 			Clusterer clu = cluit.next();
 			StreamObject streamer = (StreamObject) clu.getParam();
-			runStreamForAClusterer( outputFile,
-					streamDuration, k, raw,clu,avgtimeToRead,rt,streamer/*, re*/);
+			runStreamForAClusterer(outputFile, streamDuration, k, raw, clu,
+					avgtimeToRead, rt, streamer);
 			cluit.remove();
 		}
 
@@ -281,7 +366,7 @@ public class RPHash {
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
 			Map<String, String> taggedArgs, List<float[]> data, String f,
-			boolean raw/*, Rengine re*/) throws IOException {
+			boolean raw/* , Rengine re */) throws IOException {
 
 		List<Clusterer> runitems = new ArrayList<>();
 		int i = 3;
@@ -291,7 +376,6 @@ public class RPHash {
 
 		int k = Integer.parseInt(untaggedArgs.get(1));
 
-		
 		RPHashObject o = new SimpleArrayReader(data, k);
 		StreamObject so = new StreamObject(f, k, raw);
 
@@ -396,8 +480,7 @@ public class RPHash {
 			}
 		}
 
-		if (taggedArgs.containsKey("offlineclusterer")) 
-		{
+		if (taggedArgs.containsKey("offlineclusterer")) {
 			switch (taggedArgs.get("offlineclusterer").toLowerCase()) {
 			case "singlelink": {
 
@@ -441,8 +524,8 @@ public class RPHash {
 			case "simple":
 				runitems.add(new RPHashSimple(o));
 				break;
-			case "streaming":{
-				if(taggedArgs.containsKey("streamduration"))
+			case "streaming": {
+				if (taggedArgs.containsKey("streamduration"))
 					runitems.add(new RPHashStream(so));
 				else
 					runitems.add(new RPHashStream(o));
@@ -464,13 +547,14 @@ public class RPHash {
 				runitems.add(new LloydIterativeKmeans(k, data));
 				break;
 			case "pkmeans":
-				runitems.add(new LloydIterativeKmeans(k, data, o.getNumProjections()));
+				runitems.add(new LloydIterativeKmeans(k, data, o
+						.getNumProjections()));
 				break;
 			case "kmeansplusplus":
 				runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
 				break;
-			case "streamingkmeans":{
-				if(taggedArgs.containsKey("streamduration"))
+			case "streamingkmeans": {
+				if (taggedArgs.containsKey("streamduration"))
 					runitems.add(new StreamingKmeans(so));
 				else
 					runitems.add(new StreamingKmeans(o));

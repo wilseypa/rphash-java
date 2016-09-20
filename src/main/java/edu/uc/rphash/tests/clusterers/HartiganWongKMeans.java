@@ -777,6 +777,10 @@ public class HartiganWongKMeans implements Clusterer {
 //		this.nc = new int[k];
 //		this.wss = new double[k];
 	}
+	@Override
+	public void reset(int randomseed) {
+		cents = null;
+	}
 
 	public static void main(String[] args) {
 		int k = 3;

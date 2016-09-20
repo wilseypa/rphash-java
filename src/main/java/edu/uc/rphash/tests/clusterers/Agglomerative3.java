@@ -376,10 +376,15 @@ public class Agglomerative3 implements Clusterer {
 
 	@Override
 	public List<Centroid> getCentroids() {
-		run();
+		if(means == null)run();
 		List<Centroid> cents = new ArrayList<>(means.size());
 		for(float[] v : this.means)cents.add(new Centroid(v,0));
 		return cents;
+	}
+	
+	@Override
+	public void reset(int randomseed) {
+		means = null;
 	}
 
 	@Override

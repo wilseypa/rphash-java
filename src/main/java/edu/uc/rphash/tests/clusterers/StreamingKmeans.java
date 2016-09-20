@@ -5,6 +5,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -740,6 +741,11 @@ public class StreamingKmeans implements StreamClusterer {
 			executor = Executors.newFixedThreadPool(getProcessors());
 		}
 
+	}
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
 	}
 
 }

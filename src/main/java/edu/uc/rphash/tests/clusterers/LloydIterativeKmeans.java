@@ -224,6 +224,11 @@ public class LloydIterativeKmeans implements Clusterer {
 		}
 		return centroids;
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		means = null;
+	}
 
 	public static void main(String[] args) {
 		GenerateData gen = new GenerateData(8, 100, 100);

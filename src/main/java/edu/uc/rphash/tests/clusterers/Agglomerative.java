@@ -75,7 +75,6 @@ public class Agglomerative implements Clusterer{
 	void run()
 	{
 		this.distances = distanceArray(data);
-		
 		while(data.size()>k)
 			merge();
 	}
@@ -107,12 +106,17 @@ public class Agglomerative implements Clusterer{
 
 	@Override
 	public List<Centroid> getCentroids() {
-		run();
-		
-		List<Centroid> cents = new ArrayList<>(data.size());
-		for(float[] v : this.data)cents.add(new Centroid(v,0));
+		if(clusters==null)run();
+		List<Centroid> cents = new ArrayList<>(clusters.size());
+		for(float[] v : this.clusters)cents.add(new Centroid(v,0));
 		return cents;
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		clusters = null;
+	}
+
 
 	@Override
 	public RPHashObject getParam() {

@@ -259,4 +259,12 @@ public class RPHash3Stage implements Clusterer {
 	public void setK(int getk) {
 		this.so.setK(getk);
 	}
+
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+		so.setRandomSeed(randomseed);
+	}
+	
+	
 }

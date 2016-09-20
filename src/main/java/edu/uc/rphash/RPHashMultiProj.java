@@ -254,5 +254,11 @@ public class RPHashMultiProj implements Clusterer {
 			this.centroids.add(new Centroid(f,0));
 		}
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+		so.setRandomSeed(randomseed);
+	}
 
 }

@@ -11,5 +11,5 @@ public interface Clusterer {
 	void setRawData(List<float[]> centroids);
 	void setData(List<Centroid> centroids);
 	void setK(int getk);
-
+	void reset(int randomseed);
 }
