@@ -61,7 +61,6 @@ public class AdaptiveMeanShift implements Clusterer {
 	float convergeValue = (float) 0.00001;			//maximum change in each dimension to 'converge'
 	float blurPercent = (float) 0.5;				//Amount to blur centroids to group similar Floats
 	
-
 		
 	public void setMode(int mode){ this.kernelMode = mode; }
 	
@@ -81,8 +80,11 @@ public class AdaptiveMeanShift implements Clusterer {
 	}
 
 	
-	public AdaptiveMeanShift(int h, List<float[]> data){
+	public AdaptiveMeanShift(int h, int windowMode, int kernelMode, int n, List<float[]> data){
 		this.h = h;
+		this.windowMode = windowMode;
+		this.kernelMode = kernelMode;
+		this.n = n;
 		this.data = data;
 		this.centroids = new ArrayList<float[]>();
 	}
@@ -98,7 +100,7 @@ public class AdaptiveMeanShift implements Clusterer {
 			mPoint = workingData;
 		}
 		
-		//Mode 1 is Gaussian (use n_euc) -> NEEDS VALIDATION
+		//Mode 1 is Gaussian -> NEEDS VALIDATION
 		else if (kernelMode == 1){
 			
 			float c = (float) (1.0/Math.pow(h,2));
@@ -114,17 +116,17 @@ public class AdaptiveMeanShift implements Clusterer {
 		return mPoint;
 	}
 	
+	
 	public void adaptH(List<float[]> data, int curPoint){
 		if(windowMode == 0){
 			return; //No adaptivity
 		}
-		if(windowMode == 1){
+		else if(windowMode == 1){
 			return; //Balloon estimator
 		}
-		if(windowMode == 2){
+		else if(windowMode == 2){
 			return; //KNN sample point estimator
 		}
-		
 	}
 	
 	
@@ -230,6 +232,7 @@ public class AdaptiveMeanShift implements Clusterer {
 		}
 	}
 	
+	
 	public boolean checkAllCentroids(float[] window){
 		float[] centroid;
 		for(int i = 0; i < centroids.size(); i++){
@@ -255,6 +258,7 @@ public class AdaptiveMeanShift implements Clusterer {
 		}
 		return true;
 	}
+	
 	
 	public void reducedCentroids(){
 		System.out.println("h: " + h);
@@ -285,11 +289,13 @@ public class AdaptiveMeanShift implements Clusterer {
 		System.out.println("AMS Clustering completed in: " + (endTime - startTime)/1000.0 + " seconds\n");
 	}
 	
+	
 	public void printDebug(String s){
 		if(debug)
 			System.out.println(s);
 	}
 
+	
 	public static void main(String[] args){
 		AdaptiveMeanShift ams = new AdaptiveMeanShift();
 		ams.run();
@@ -313,6 +319,7 @@ public class AdaptiveMeanShift implements Clusterer {
 			
 		}
 	}
+	
 
 	@Override
 	public List<float[]> getCentroids() {
