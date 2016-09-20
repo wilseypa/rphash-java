@@ -91,7 +91,7 @@ public class RPHash {
 		if (args.length == 3) {
 			data = VectorUtil.readFile(filename, raw);
 			RPHashSimple clusterer = new RPHashSimple(data, k);
-			VectorUtil.writeFile(new File(outputFile + "."
+			VectorUtil.writeCentroidsToFile(new File(outputFile + "."
 					+ clusterer.getClass().getName()),
 					clusterer.getCentroids(), raw);
 		}
@@ -141,7 +141,7 @@ public class RPHash {
 			rt.gc();
 			long startmemory = rt.totalMemory() - rt.freeMemory();
 			long startTime = System.nanoTime();
-			List<float[]> cents = clu.getCentroids();
+			List<Centroid> cents = clu.getCentroids();
 			float timed = (System.nanoTime() - startTime) / 1000000000f;
 			rt.gc();
 			Thread.sleep(10);
@@ -150,7 +150,7 @@ public class RPHash {
 			
 			RPHashObject reader = clu.getParam();
 
-			double wcsse = StatTests.WCSSE(cents, reader.getData());
+			double wcsse = StatTests.WCSSECentroidsFloat(cents, reader.getData());
 
 			System.out.println(timed + ", used(KB): "+usedkB +", wcsse: "+wcsse);
 			try {
@@ -161,7 +161,7 @@ public class RPHash {
 				e.printStackTrace();
 			}
 
-			VectorUtil.writeFile(new File(outputFile + "."
+			VectorUtil.writeCentroidsToFile(new File(outputFile + "."
 					+ ClusterHashName[ClusterHashName.length - 1]),
 					clu.getCentroids(), raw);
 		}
@@ -224,11 +224,11 @@ public class RPHash {
 
 				if (i % streamDuration == 0 ) 
 				{
-					List<float[]> cents = ((StreamClusterer) clu)
+					List<Centroid> cents = ((StreamClusterer) clu)
 							.getCentroidsOfflineStep();
 					
 					long time = System.nanoTime() - startTime;
-					double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
+					double wcsse = StatTests.WCSSECentroidsFloat(cents, vecsInThisRound);
 					count += vecsInThisRound.size();
 					vecsInThisRound = new ArrayList<float[]>();
 					
@@ -239,7 +239,7 @@ public class RPHash {
 					
 					System.out.println(time / 1000000000f + "\t" + wcsse
 							+ "\t " + ((rt.totalMemory() - rt.freeMemory()) - usedkB)/1024+"\t\t\t"+cents.size());
-					VectorUtil.writeFile(new File(outputFile + "_round" + new Integer(count).toString()
+					VectorUtil.writeCentroidsToFile(new File(outputFile + "_round" + new Integer(count).toString()
 							+ "."
 							+ ClusterHashName[ClusterHashName.length - 1]),
 							cents, raw);

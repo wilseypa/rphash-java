@@ -123,14 +123,14 @@ public class RPHashIterativeRedux  implements Clusterer
 					vecs.remove();
 				}
 		}
-		so.addCentroid(centroid.centroid());
+		so.addCentroid(centroid);
 		return so;
 	}
 	
 	
 	
 	
-	private List<float[]> centroids=null;
+	private List<Centroid> centroids=null;
 	private RPHashObject so;
 	public RPHashIterativeRedux (List<float[]> data,int k){
 		variance = StatTests.varianceAll(data);
@@ -145,13 +145,13 @@ public class RPHashIterativeRedux  implements Clusterer
 	}
 
 	
-	public List<float[]> getCentroids(RPHashObject so){
+	public List<Centroid> getCentroids(RPHashObject so){
 		if(centroids == null)run();
 		return centroids;
 	}
 	
 	@Override
-	public List<float[]> getCentroids(){
+	public List<Centroid> getCentroids(){
 		
 		if(centroids == null)run();
 		return centroids;
@@ -183,11 +183,11 @@ public class RPHashIterativeRedux  implements Clusterer
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = VectorUtil.alignCentroids(
-						rphit.getCentroids(), gen.medoids());
-				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
-						+ StatTests.WCSSE(aligned, gen.getData()) + ":" + duration
-						/ 1000000000f);
+//				List<float[]> aligned = VectorUtil.alignCentroids(
+//						rphit.getCentroids(), gen.medoids());
+//				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
+//						+ StatTests.WCSSE(aligned, gen.getData()) + ":" + duration
+//						/ 1000000000f);
 				System.gc();
 			}
 		}
@@ -204,10 +204,18 @@ public class RPHashIterativeRedux  implements Clusterer
 		
 	}
 	@Override
-	public void setData(List<float[]> centroids) {
-		// TODO Auto-generated method stub
+	public void setData(List<Centroid> centroids) {
+		this.centroids = centroids;
 		
 	}
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		if(this.centroids == null) this.centroids = new ArrayList<>(centroids.size());
+		for(float[] f: centroids){
+			this.centroids.add(new Centroid(f,0));
+		}
+	}
+	
 	@Override
 	public void setK(int getk) {
 		// TODO Auto-generated method stub

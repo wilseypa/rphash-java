@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.MultiDecoder;
@@ -18,11 +19,11 @@ public class SimpleArrayReader implements RPHashObject {
 	int decoderMultiplier;
 	long randomSeed;
 	long hashmod;
-	final int k;
+	int k;
 	int numBlur;
 	Decoder dec;
 	float decayrate;
-	List<float[]> centroids;
+	List<Centroid> centroids;
 	List<Long> topIDs;
 	boolean parallel = true;
 	private int dimparameter;
@@ -48,7 +49,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.numBlur = DEFAULT_NUM_BLUR;
 		this.k = k;
 //		this.n = 0;
-		this.centroids = new ArrayList<float[]>();
+		this.centroids = new ArrayList<Centroid>();
 		this.topIDs = new ArrayList<Long>();
 		this.data = gen.getData();
 		this.decayrate = 0;
@@ -72,7 +73,7 @@ public class SimpleArrayReader implements RPHashObject {
 		else 
 			this.dim = null;
 		this.k = k;
-		this.centroids = new ArrayList<float[]>();
+		this.centroids = new ArrayList<Centroid>();
 		this.topIDs = new ArrayList<Long>();
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
@@ -96,7 +97,7 @@ public class SimpleArrayReader implements RPHashObject {
 		else 
 			this.dim = null;
 		this.k = k;
-		this.centroids = new ArrayList<float[]>();
+		this.centroids = new ArrayList<Centroid>();
 		this.topIDs = new ArrayList<Long>();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
@@ -123,7 +124,7 @@ public class SimpleArrayReader implements RPHashObject {
 		else 
 			this.dim = null;
 		this.k = k;
-		this.centroids = new ArrayList<float[]>();
+		this.centroids = new ArrayList<Centroid>();
 		this.topIDs = new ArrayList<Long>();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
@@ -157,7 +158,7 @@ public class SimpleArrayReader implements RPHashObject {
 		else 
 			this.dim = null;
 		this.k = k;
-		this.centroids = new ArrayList<float[]>();
+		this.centroids = new ArrayList<Centroid>();
 		this.topIDs = new ArrayList<Long>();
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
@@ -198,17 +199,17 @@ public class SimpleArrayReader implements RPHashObject {
 	}
 
 	@Override
-	public void addCentroid(float[] v) {
+	public void addCentroid(Centroid v) {
 		centroids.add(v);
 	}
 
 	@Override
-	public void setCentroids(List<float[]> l) {
+	public void setCentroids(List<Centroid> l) {
 		centroids = l;
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		return centroids;
 	}
 
@@ -334,5 +335,12 @@ public class SimpleArrayReader implements RPHashObject {
 
 	public List<float[]> getData() {
 		return data;
+	}
+
+	@Override
+	public void setK(int getk) {
+		this.k = getk;
+		for (int i = 0; i < this.k; i++)
+			topIDs.add((long) 0);
 	}
 }

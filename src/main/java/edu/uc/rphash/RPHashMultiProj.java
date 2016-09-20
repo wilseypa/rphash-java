@@ -39,7 +39,6 @@ import edu.uc.rphash.util.VectorUtil;
  */
 public class RPHashMultiProj implements Clusterer {
 	float variance;
-
 	public RPHashObject map() {
 		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
@@ -146,20 +145,20 @@ public class RPHashMultiProj implements Clusterer {
 			}
 		}
 
-		List<float[]> centvectors = new ArrayList<float[]>();
-		List<Float> centcounts = new ArrayList<Float>();
-
-		for (Centroid cent : centroids) {
-			centvectors.add(cent.centroid());
-			centcounts.add((float) cent.getCount());
-		}
-		so.setCentroids(centvectors);
-		so.setCounts(centcounts);
+//		List<float[]> centvectors = new ArrayList<float[]>();
+//		List<Float> centcounts = new ArrayList<Float>();
+//
+//		for (Centroid cent : centroids) {
+//			centvectors.add(cent.centroid());
+//			centcounts.add((float) cent.getCount());
+//		}
+		so.setCentroids(centroids);
+//		so.setCounts(centcounts);
 
 		return so;
 	}
 
-	private List<float[]> centroids = null;
+	private List<Centroid> centroids = null;
 	private RPHashObject so;
 
 	public RPHashMultiProj(int k, List<float[]> data) {
@@ -173,7 +172,7 @@ public class RPHashMultiProj implements Clusterer {
 		this.so = so;
 	}
 
-	public List<float[]> getCentroids(RPHashObject so) {
+	public List<Centroid> getCentroids(RPHashObject so) {
 		this.so = so;
 		if (centroids == null)
 			run();
@@ -181,7 +180,7 @@ public class RPHashMultiProj implements Clusterer {
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 
 		if (centroids == null)
 			run();
@@ -215,11 +214,11 @@ public class RPHashMultiProj implements Clusterer {
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = VectorUtil.alignCentroids(
-						rphit.getCentroids(), gen.medoids());
-				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
-						+ StatTests.WCSSE(aligned, gen.getData()) + ":"
-						+ duration / 1000000000f);
+//				List<float[]> aligned = VectorUtil.alignCentroids(
+//						rphit.getCentroids(), gen.medoids());
+//				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
+//						+ StatTests.WCSSE(aligned, gen.getData()) + ":"
+//						+ duration / 1000000000f);
 				System.gc();
 			}
 		}
@@ -237,15 +236,23 @@ public class RPHashMultiProj implements Clusterer {
 	}
 
 	@Override
-	public void setData(List<float[]> centroids) {
-		// TODO Auto-generated method stub
+	public void setData(List<Centroid> centroids) {
+		this.centroids = centroids;
 
 	}
 
 	@Override
 	public void setK(int getk) {
-		// TODO Auto-generated method stub
+//		this.so.setK(getk);
 
+	}
+
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		if(this.centroids == null) this.centroids = new ArrayList<>(centroids.size());
+		for(float[] f: centroids){
+			this.centroids.add(new Centroid(f,0));
+		}
 	}
 
 }

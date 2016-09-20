@@ -3,6 +3,7 @@ package edu.uc.rphash.tests.clusterers;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.generators.GenerateData;
@@ -97,17 +98,20 @@ public class Agglomerative implements Clusterer{
 		}
 		System.out.println("computed");
 		
-		for(float[] cent: agl.getCentroids()){
-			for(float f : cent)System.out.print(f+" ");
+		for(Centroid cent: agl.getCentroids()){
+			for(float f : cent.centroid())System.out.print(f+" ");
 			System.out.println();
 		}
 
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		run();
-		return data;
+		
+		List<Centroid> cents = new ArrayList<>(data.size());
+		for(float[] v : this.data)cents.add(new Centroid(v,0));
+		return cents;
 	}
 
 	@Override
@@ -121,19 +125,17 @@ public class Agglomerative implements Clusterer{
 		//this.counts = counts;
 		counts = new ArrayList<Float>();
 	}
-
-	@Override
-	public void setData(List<float[]> centroids) {
-		this.data = centroids;
-		
-	}
-
 	@Override
 	public void setK(int getk) {
 		this.k = getk;
 	}
-	
-	
-	
-
+	@Override
+	public void setData(List<Centroid> centroids) {
+		this.data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids) data.add(c.centroid());
+	}
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		this.data = centroids;
+	}
 }

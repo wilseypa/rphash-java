@@ -99,7 +99,7 @@ public class RPHashSimple implements Clusterer {
 		}
 
 		
-		for (Centroid c: centroids) so.addCentroid(c.centroid());
+		for (Centroid c: centroids) so.addCentroid(c);
 		
 		
 		Clusterer offlineclusterer = so.getOfflineClusterer();
@@ -107,13 +107,13 @@ public class RPHashSimple implements Clusterer {
 		offlineclusterer.setData(so.getCentroids());
 		offlineclusterer.setK(so.getk());
 		this.centroids = offlineclusterer.getCentroids();
-		so.setCentroids(this.centroids);
+		so.setCentroids(centroids);
 		
 		
 		return so;
 	}
 
-	private List<float[]> centroids = null;
+	private List<Centroid> centroids = null;
 	private RPHashObject so;
 
 	public RPHashSimple(List<float[]> data, int k) {
@@ -132,7 +132,7 @@ public class RPHashSimple implements Clusterer {
 		this.so = so;
 	}
 
-	public List<float[]> getCentroids(RPHashObject so) {
+	public List<Centroid> getCentroids(RPHashObject so) {
 		this.so=so;
 		if (centroids == null)
 			run();
@@ -140,7 +140,7 @@ public class RPHashSimple implements Clusterer {
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		if (centroids == null)
 			run();
 		
@@ -175,8 +175,8 @@ public class RPHashSimple implements Clusterer {
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
 				
-				List<float[]> aligned =  VectorUtil.alignCentroids(
-						rphit.getCentroids(), gen.getMedoids());
+//				List<float[]> aligned =  VectorUtil.alignCentroids(
+//						rphit.getCentroids(), gen.getMedoids());
 				
 				ArrayList<float[]> tNoiseRemoved = new ArrayList<float[]>();
 				for(int b =0;b<t.size();b++){
@@ -186,8 +186,8 @@ public class RPHashSimple implements Clusterer {
 				
 				
 				
-				System.out.println(f+":"+StatTests.PR(aligned, gen.getLabels(),tNoiseRemoved) + ":" + duration
-						/ 1000000000f);
+//				System.out.println(f+":"+StatTests.PR(aligned, gen.getLabels(),tNoiseRemoved) + ":" + duration
+//						/ 1000000000f);
 				System.gc();
 			}
 		}
@@ -206,9 +206,16 @@ public class RPHashSimple implements Clusterer {
 	}
 
 	@Override
-	public void setData(List<float[]> centroids) {
-		// TODO Auto-generated method stub
+	public void setData(List<Centroid> centroids) {
+		this.centroids = centroids;
 		
+	}
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		if(this.centroids == null) this.centroids = new ArrayList<>(centroids.size());
+		for(float[] f: centroids){
+			this.centroids.add(new Centroid(f,0));
+		}
 	}
 
 	@Override

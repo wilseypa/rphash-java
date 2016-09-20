@@ -26,7 +26,7 @@ public class RPHashStream implements StreamClusterer {
 	public KHHCentroidCounter is;
 	private LSH[] lshfuncs;
 //	private StatTests vartracker;
-	private List<float[]> centroids = null;
+	private List<Centroid> centroids = null;
 	private RPHashObject so;
 	ExecutorService executor;
 	private final int processors;
@@ -117,7 +117,7 @@ public class RPHashStream implements StreamClusterer {
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		if (centroids == null) {
 			init();
 			run();
@@ -126,7 +126,7 @@ public class RPHashStream implements StreamClusterer {
 		return centroids;
 	}
 
-	public List<float[]> getCentroidsOfflineStep() {
+	public List<Centroid> getCentroidsOfflineStep() {
 		if (so.getParallel()) {
 			executor.shutdown();
 			try {
@@ -137,19 +137,17 @@ public class RPHashStream implements StreamClusterer {
 			executor = Executors.newFixedThreadPool(getProcessors());
 		}
 
-		centroids = new ArrayList<float[]>();
+		centroids = new ArrayList<Centroid>();
 		List<Integer> projIDs = new ArrayList<Integer>();
 		List<Centroid> cents = is.getTop();
 		List<Float> counts = is.getCounts();
-		
-//		System.out.println(counts);
 		
 		int i =  0;
 		//get rid of size one clusters that are there just because they were added to the list at the end
 		for (; i < cents.size() ; i++) {
 			if(counts.get(i)==1)break;
 			projIDs.add(cents.get(i).projectionID);
-			centroids.add(cents.get(i).centroid());
+			centroids.add(cents.get(i));
 		}
 		counts = counts.subList(0, i);
 		Clusterer offlineclusterer = so.getOfflineClusterer();
@@ -187,12 +185,25 @@ public class RPHashStream implements StreamClusterer {
 
 	@Override
 	public void setWeights(List<Float> counts) {
+		
 	}
 
 	@Override
-	public void setData(List<float[]> centroids) {
-
+	public void setRawData(List<float[]> data) 
+	{
+		this.centroids = new ArrayList<Centroid>(data.size());
+		for(float[] f: data){
+			this.centroids.add(new Centroid(f,0));
+		}
 	}
+	
+	@Override
+	public void setData(List<Centroid> centroids) {
+		ArrayList<float[]> data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids)data.add(c.centroid());
+		setRawData(data);	
+	}
+	
 
 	@Override
 	public void setK(int getk) {

@@ -3,6 +3,7 @@ package edu.uc.rphash.Readers;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.E8;
@@ -36,15 +37,15 @@ public interface RPHashObject {
 	int getNumBlur();
 	
 	Iterator<float[]> getVectorIterator();
-	List<float[]> getCentroids( );
+	List<Centroid> getCentroids( );
 	List<Float> getCounts( );
 	void setCounts(List<Float> counts);
 	
 	List<Long> getPreviousTopID();
 	void setPreviousTopID(List<Long> i);
 	
-	void addCentroid(float[] v);
-	void setCentroids(List<float[]> l);
+	void addCentroid(Centroid v);
+	void setCentroids(List<Centroid> l);
 	
 	void reset();//TODO rename to resetDataStream
 	int getNumProjections();
@@ -67,5 +68,6 @@ public interface RPHashObject {
 	void setOfflineClusterer(Clusterer agglomerative3);
 	Clusterer getOfflineClusterer();
 	List<float[]> getData();
+	void setK(int getk);
 
 }

@@ -2,6 +2,7 @@ package edu.uc.rphash.tests.clusterers;
 
 import java.util.List;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -248,8 +249,14 @@ public class Agglomerative3 implements Clusterer {
 		return data;
 	}
 
-	public void setData(List<float[]> data) {
-		this.data = data;
+	@Override
+	public void setData(List<Centroid> centroids) {
+		this.data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids) data.add(c.centroid());
+	}
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		this.data = centroids;
 	}
 	
 	public List<Float> getWeights() {
@@ -368,9 +375,11 @@ public class Agglomerative3 implements Clusterer {
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		run();
-		return this.means;
+		List<Centroid> cents = new ArrayList<>(means.size());
+		for(float[] v : this.means)cents.add(new Centroid(v,0));
+		return cents;
 	}
 
 	@Override
@@ -387,7 +396,7 @@ public class Agglomerative3 implements Clusterer {
 			weights.add(Math.abs(f[0]));
 		}
 		kk.setWeights(weights);
-		VectorUtil.prettyPrint(kk.getCentroids());
+//		VectorUtil.prettyPrint(kk.getCentroids());
 		System.out.println();
 		for(float[] f:gen.data()){
 			VectorUtil.prettyPrint(f);

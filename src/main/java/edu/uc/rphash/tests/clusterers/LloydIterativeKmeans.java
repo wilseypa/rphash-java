@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -28,9 +29,18 @@ public class LloydIterativeKmeans implements Clusterer {
 	public List<float[]> getData() {
 		return data;
 	}
-
-	public void setData(List<float[]> data) {
+	
+	
+	@Override
+	public void setRawData(List<float[]> data) {
 		this.data = data;
+	}
+	
+	@Override
+	public void setData(List<Centroid> centroids) {
+		ArrayList<float[]> data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids)data.add(c.centroid());
+		setRawData(data);	
 	}
 
 	public List<Float> getWeights() {
@@ -82,7 +92,7 @@ public class LloydIterativeKmeans implements Clusterer {
 		// TODO Auto-generated constructor stub
 	}
 
-	public float[] computerCentroid(List<Integer> vectors, List<float[]> data) {
+	public float[] computeCentroid(List<Integer> vectors, List<float[]> data) {
 		int d = data.get(0).length;
 		float[] centroid = new float[d];
 
@@ -110,10 +120,10 @@ public class LloydIterativeKmeans implements Clusterer {
 		if (means == null) {
 			means = new ArrayList<float[]>();
 			for (int i = 0; i < k; i++)
-				means.add(computerCentroid(clusters.get(i), data));
+				means.add(computeCentroid(clusters.get(i), data));
 		}
 		for (int i = 0; i < k; i++)
-			means.set(i, computerCentroid(clusters.get(i), data));
+			means.set(i, computeCentroid(clusters.get(i), data));
 	}
 
 	int assignClusters(List<float[]> data) {
@@ -205,16 +215,20 @@ public class LloydIterativeKmeans implements Clusterer {
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		if (means == null)
 			run();
-		return means;
+		List<Centroid> centroids = new ArrayList<>(means.size());
+		for(float[] f : means){
+			centroids.add(new Centroid(f,0));
+		}
+		return centroids;
 	}
 
 	public static void main(String[] args) {
 		GenerateData gen = new GenerateData(8, 100, 100);
 		LloydIterativeKmeans kk = new LloydIterativeKmeans(5, gen.data(), 24);
-		VectorUtil.prettyPrint(kk.getCentroids());
+//		VectorUtil.prettyPrint(kk.getCentroids());
 	}
 
 	@Override
@@ -222,5 +236,6 @@ public class LloydIterativeKmeans implements Clusterer {
 
 		return new SimpleArrayReader(this.data, k);
 	}
+
 
 }

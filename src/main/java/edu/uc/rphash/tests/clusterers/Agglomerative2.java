@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.TreeSet;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.StatTests;
@@ -272,8 +273,8 @@ public class Agglomerative2 implements Clusterer {
 				long timestart = System.currentTimeMillis();
 				Clusterer km1 = new LloydIterativeKmeans(10, data);
 				Clusterer ag1 = new Agglomerative2(10, data);
-				avgdistagg+=StatTests.WCSSE(ag1.getCentroids(), data);
-				avgdistkm+=StatTests.WCSSE(km1.getCentroids(), data);
+				avgdistagg+=StatTests.WCSSECentroidsFloat(ag1.getCentroids(), data);
+				avgdistkm+=StatTests.WCSSECentroidsFloat(km1.getCentroids(), data);
 				avgdistreal+=StatTests.WCSSE(gen.getMedoids(), data);
 				avgtime += (System.currentTimeMillis() - timestart);
 			}
@@ -286,11 +287,11 @@ public class Agglomerative2 implements Clusterer {
 	List<float[]> centroids;
 
 	@Override
-	public List<float[]> getCentroids() {
-
-		if (centroids == null)
-			run();
-		return centroids;
+	public List<Centroid> getCentroids() {
+		run();
+		List<Centroid> cents = new ArrayList<>(centroids.size());
+		for(float[] v : this.centroids)cents.add(new Centroid(v,0));
+		return cents;
 	}
 
 	@Override
@@ -343,9 +344,13 @@ public class Agglomerative2 implements Clusterer {
 	}
 
 	@Override
-	public void setData(List<float[]> centroids) {
+	public void setData(List<Centroid> centroids) {
+		this.data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids) data.add(c.centroid());
+	}
+	@Override
+	public void setRawData(List<float[]> centroids) {
 		this.data = centroids;
-		
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package edu.uc.rphash.tests.clusterers;
 import java.util.List; 
 import java.util.ArrayList; 
 import java.util.Collections;  
+
 import org.apache.commons.math3.distribution.NormalDistribution; 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D; 
 import org.apache.commons.math3.ml.clustering.CentroidCluster; 
@@ -21,6 +22,7 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.ml.distance.DistanceMeasure; 
 import org.apache.commons.math3.ml.distance.EuclideanDistance;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
 
 
@@ -73,7 +75,7 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 	   
 	 //List<float[]> getCentroids();
 	   
-	   public List<float[]> getCentroids() {   // to be completed
+	   public List<Centroid> getCentroids() {   // to be completed
 			return null ;
 		}
 		
@@ -95,7 +97,7 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 		//void setData(List<float[]> centroids);
 		
 		@Override
-		public void setData(List<float[]> data) {           // to be completed
+		public void setRawData(List<float[]> data) {           // to be completed
 		/*  this.data = data;
 			
 			this.n = data.get(0).length;
@@ -107,6 +109,12 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 			// weights = new Float[m];
 			// Collections.shuffle(data);
 
+		}
+		@Override
+		public void setData(List<Centroid> centroids) {
+			ArrayList<float[]> data = new ArrayList<float[]>(centroids.size());
+			for(Centroid c : centroids)data.add(c.centroid());
+			setRawData(data);
 		}
 
 		

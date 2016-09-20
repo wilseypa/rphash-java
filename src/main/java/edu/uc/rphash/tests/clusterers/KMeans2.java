@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.Readers.RPHashObject;
@@ -55,7 +56,7 @@ public class KMeans2 implements Clusterer {
 	private float MDL; // the minimum description length of the model
 	private int numIterations;
 
-	private List<float[]> centroids;
+	private List<Centroid> centroids;
 	private PointND[] data;
 
 	public KMeans2(int getk, List<float[]> data) {
@@ -329,15 +330,17 @@ public class KMeans2 implements Clusterer {
 		return MDL;
 	}
 
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		float epsilon = 0.01f;
-		if (centroids != null)
+		if (centroids != null){
+			
 			return centroids;
+		}
 		init(data, k);
 		run(data, d, epsilon);
-		centroids = new ArrayList<float[]>(k);
+		centroids = new ArrayList<Centroid>(k);
 		for (int i = 0; i < k; i++)
-			centroids.add(mu[i].coordinates);
+			centroids.add(new Centroid(mu[i].coordinates,0));
 
 		// compute sum of squares
 		double sigtotal = 0.0;
@@ -360,13 +363,20 @@ public class KMeans2 implements Clusterer {
 	}
 
 	@Override
-	public void setData(List<float[]> data) {
+	public void setData(List<Centroid> data) {
+		this.centroids = null;
+		this.data = new PointND[data.size()];
+		for (int i = 0; i < data.size(); i++) {
+			this.data[i] = new PointND(data.get(i).centroid());
+		}
+	}
+	@Override
+	public void setRawData(List<float[]> data) {
+		this.centroids = null;
 		this.data = new PointND[data.size()];
 		for (int i = 0; i < data.size(); i++) {
 			this.data[i] = new PointND(data.get(i));
 		}
-		this.centroids = null;
-
 	}
 
 	@Override
@@ -404,16 +414,16 @@ public class KMeans2 implements Clusterer {
 			}
 
 			timestart = System.nanoTime();
-			km2.setData(vecsAndNoiseInThisRound);
+			km2.setRawData(vecsAndNoiseInThisRound);
 			km2.setK(k);
 
-			List<float[]> cents = km2.getCentroids();
+			List<Centroid> cents = km2.getCentroids();
 			long time = System.nanoTime() - timestart;
 
 			rt.gc();
 			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-			double wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
+			double wcsse = StatTests.WCSSECentroidsFloat(cents, justvecsInThisRound);
 			double realwcsse = StatTests.WCSSE(gen1.medoids,
 					justvecsInThisRound);
 			System.out.printf("%d\t%d\t%.4f\t%.1f\t\t", i, usedkB,
@@ -423,7 +433,7 @@ public class KMeans2 implements Clusterer {
 					.getCentroids();
 			time = System.nanoTime() - timestart;
 			usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
-			wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
+			wcsse = StatTests.WCSSECentroidsFloat(cents, justvecsInThisRound);
 			System.out.printf("%.4f\t%.1f\t\t%.1f\n", time / 1000000000f,
 					wcsse, realwcsse);
 		}
