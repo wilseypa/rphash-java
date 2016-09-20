@@ -114,6 +114,19 @@ public class AdaptiveMeanShift implements Clusterer {
 		return mPoint;
 	}
 	
+	public void adaptH(List<float[]> data, int curPoint){
+		if(windowMode == 0){
+			return; //No adaptivity
+		}
+		if(windowMode == 1){
+			return; //Balloon estimator
+		}
+		if(windowMode == 2){
+			return; //KNN sample point estimator
+		}
+		
+	}
+	
 	
 	public void cluster(List<float[]> data){
 
@@ -133,6 +146,8 @@ public class AdaptiveMeanShift implements Clusterer {
 			
 			// Check for convergence, or we've hit max iterations before convergence
 			while((!converge) && (m < maxiters)){
+			
+				adaptH(data, i);
 				
 				m++;
 				bufWindow = curWindow.clone();
@@ -259,11 +274,15 @@ public class AdaptiveMeanShift implements Clusterer {
 
 	
 	void run(){		
-		GenerateData gen = new GenerateData(5,100,10);
+		GenerateData gen = new GenerateData(15,100,100);
 		List<float[]> data = gen.data;
 		
-		
+		long startTime = System.currentTimeMillis();
 		cluster(data);
+		
+		long endTime = System.currentTimeMillis();
+		
+		System.out.println("AMS Clustering completed in: " + (endTime - startTime)/1000.0 + " seconds\n");
 	}
 	
 	public void printDebug(String s){
@@ -274,9 +293,7 @@ public class AdaptiveMeanShift implements Clusterer {
 	public static void main(String[] args){
 		AdaptiveMeanShift ams = new AdaptiveMeanShift();
 		ams.run();
-		
-		System.out.println("Done!\n");
-		
+				
 		if(ams.printCentroids){
 			System.out.println("Printing Centroids:");
 				
@@ -291,6 +308,7 @@ public class AdaptiveMeanShift implements Clusterer {
 			System.out.println("h: " + ams.h);
 			System.out.println("Kernel Mode: " + ams.kernelMode);
 			System.out.println("Window Mode: " + ams.windowMode +"\n");
+			System.out.println("Number of Clusters: " + ams.cent.size() + "\n");
 			System.out.println(ams.cent.toString().replaceAll(", ", " "));
 			
 		}
