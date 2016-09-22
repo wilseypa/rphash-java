@@ -1,5 +1,6 @@
 package edu.uc.rphash.tests.clusterers;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -44,10 +45,10 @@ public class AdaptiveMeanShift implements Clusterer {
 	
 	int kernelMode = 1;		// mode (0:uniform; 1:gaussian) 
 	
-	int windowMode = 0;		// Determine how to perform the Adaptive Window
+	int windowMode = 1;		// Determine how to perform the Adaptive Window
 							// 		0 - No adaptivity; Basic Mean Shift
 							// 		1 - Balloon Estimator (TODO)
-							// 		2 - KNN (use N for number of points) (TODO)
+							// 		2 - Sample Point Estimator (TODO)
 
 	int n = 5; 				//Number of KNN points for adaptive window
 	
@@ -55,12 +56,16 @@ public class AdaptiveMeanShift implements Clusterer {
 	//TEST Parameters:
 	boolean debug = false;							//Control Debug Output
 	static int maxiters = 10000;					//Max iterations before breaking search for convergence
-	boolean minimalOutput = true;					//Print the minimal final output (pretty print)
+	boolean minimalOutput = false;					//Print the minimal final output (pretty print)
 	boolean printCentroids = false;					//Print out centroids (not pretty)
+	boolean csvOutput = true;
 	Set<String> cent = new HashSet<String>();		//Storage for grouping the clusters
 	float convergeValue = (float) 0.00001;			//maximum change in each dimension to 'converge'
-	float blurPercent = (float) 0.5;				//Amount to blur centroids to group similar Floats
-	
+	float blurPercent = (float) 2;				//Amount to blur centroids to group similar Floats
+	double knntime = 0;
+	double calcTime = 0;
+	double algTime = 0;
+	boolean testRun = true;
 		
 	public void setMode(int mode){ this.kernelMode = mode; }
 	
@@ -122,11 +127,89 @@ public class AdaptiveMeanShift implements Clusterer {
 			return; //No adaptivity
 		}
 		else if(windowMode == 1){
+
+			long startTime = System.currentTimeMillis();
+			
+			h = findKNN(data,curPoint,n);
+
+			long endTime = System.currentTimeMillis();
+			
+			knntime += endTime - startTime;
+			
+			//System.out.println("This KNN took: " + (endTime-startTime)/1000.0 + " seconds");
+			//System.out.println("Found KNN at: " );
+			//System.out.println(h + "\n\n");
+			
+			
 			return; //Balloon estimator
 		}
 		else if(windowMode == 2){
 			return; //KNN sample point estimator
 		}
+	}
+	
+	public float findKNN(List<float[]> data, int curPoint, int n){
+		//Find the nth instance to get h
+		List<Float> dataSet = new ArrayList<Float>();
+		float[] curData = data.get(curPoint);
+		float curMax = 10000; //TODO: fix logic to set this value
+		
+		for(int i = 0; i < data.size(); i++){
+			float euc = 0;
+			if(i != curPoint){
+				
+
+				long startTime = System.currentTimeMillis();
+				for(int y = 0; y < data.get(i).length; y++){
+					//Calculate the euc distance per axis
+					euc = (float) (euc + (Math.pow(curData[y] - data.get(i)[y],2)));
+				}
+				
+				//Take square root of total axis distances
+				euc = (float) Math.sqrt(euc);
+
+				
+				if(euc < curMax){
+					dataSet.add(euc);
+				}
+				if(dataSet.size() > n){
+					int maxI = 0;
+					float maxV = 0;
+					
+					for(int t = 0; t < dataSet.size(); t++){
+						if(dataSet.get(t) > maxV){
+							maxI = t;
+							maxV = dataSet.get(t);
+							//System.out.println("\t\t" + dataSet.get(t) + "\t" + maxV);
+						}
+					}
+					curMax = maxV;
+					//System.out.println("\t" + dataSet);
+					//System.out.println("Removing: " + dataSet.get(maxI));
+					dataSet.remove(maxI);
+					//System.out.println("\t" + dataSet);
+					
+				}
+				long endTime = System.currentTimeMillis();
+				
+
+				calcTime += endTime - startTime;
+				
+			}			
+		}
+		
+		//System.out.println(dataSet);
+		int maxI = 0;
+		float maxV = 0;
+		for(int t = 0; t < dataSet.size(); t++){
+			if(dataSet.get(t) > maxV){
+				maxI = t;
+				maxV = dataSet.get(t);
+			}
+		}
+		return dataSet.get(maxI);
+		
+		
 	}
 	
 	
@@ -145,11 +228,13 @@ public class AdaptiveMeanShift implements Clusterer {
 			for(int t = 0; t < data.get(0).length; t++){
 				curWindow = data.get(i).clone();
 			}
+
+			adaptH(data, i);
 			
 			// Check for convergence, or we've hit max iterations before convergence
 			while((!converge) && (m < maxiters)){
 			
-				adaptH(data, i);
+
 				
 				m++;
 				bufWindow = curWindow.clone();
@@ -260,10 +345,11 @@ public class AdaptiveMeanShift implements Clusterer {
 	}
 	
 	
-	public void reducedCentroids(){
-		System.out.println("h: " + h);
+	/*public void reducedCentroids(){
+		System.out.println("Final h: " + h);
 		System.out.println("Kernel Mode: " + kernelMode);
 		System.out.println("Window Mode:" + windowMode);
+		System.out.println("n (KNN): " + n);
 		
 		//Reduce the centroids
 		
@@ -274,19 +360,29 @@ public class AdaptiveMeanShift implements Clusterer {
 		
 		System.out.println(s.toString());
 		
-	}
+	}*/
 
 	
-	void run(){		
-		GenerateData gen = new GenerateData(15,100,100);
-		List<float[]> data = gen.data;
+	void run(int genClusters, int genRowsPerCluster, int genColumns){		
 		
+		if(this.data == null){
+			GenerateData gen;
+			if(genClusters == 0 || genRowsPerCluster == 0 || genColumns == 0)
+				gen = new GenerateData(10,100,500);
+			else
+				gen = new GenerateData(genClusters,genRowsPerCluster, genColumns);
+			
+			
+			this.data = gen.data;
+		}
 		long startTime = System.currentTimeMillis();
-		cluster(data);
+		cluster(this.data);
 		
 		long endTime = System.currentTimeMillis();
-		
-		System.out.println("AMS Clustering completed in: " + (endTime - startTime)/1000.0 + " seconds\n");
+		algTime = (endTime - startTime)/1000.0;
+		//System.out.println("AMS Clustering completed in: " + (endTime - startTime)/1000.0 + " seconds\n");
+		//System.out.println("KNN algorithm (Total) took: " + knntime/1000.0 + " seconds\n");
+		//System.out.println("KNN calculation (Point Method) took: " + calcTime/1000.0 + " seconds\n");
 	}
 	
 	
@@ -296,29 +392,94 @@ public class AdaptiveMeanShift implements Clusterer {
 	}
 
 	
+	public void runTests(int max_genClusters, int max_genRowsPerCluster, int max_genColumns){
+		try{
+			PrintWriter output = new PrintWriter("testOutput.csv","UTF-8");
+			
+			GenerateData genData;
+			
+			output.println("g_Clusters,g_Rows,g_Columns,h,kMode,wMode,n,count,completionTime");
+			
+			
+			for(int genClusters = 2; genClusters <= max_genClusters; genClusters++){
+				System.out.println(genClusters);
+				for(int genRowsPerCluster = 2; genRowsPerCluster <= max_genRowsPerCluster; genRowsPerCluster = genRowsPerCluster + 1){
+					for(int genColumns = 1; genColumns <= max_genColumns; genColumns = genColumns + 1){
+						for(int i = 0; i < 5; i++){
+							genData = new GenerateData(genClusters,genRowsPerCluster,genColumns);
+							for(int kMode = 0; kMode < 2; kMode++){
+								for(int wMode = 0; wMode < 2; wMode++){
+									for(int n = 2; n <= 30; n++){
+										AdaptiveMeanShift ams = new AdaptiveMeanShift();
+										ams.setMode(kMode);
+										ams.setN(n);
+										ams.setWinMode(wMode);
+										ams.data = genData.data;
+										
+										ams.run(genClusters,genRowsPerCluster,genColumns);
+									
+										if(ams.csvOutput){						
+											output.print(genClusters + "," + genRowsPerCluster + "," + genColumns + ",");
+											output.print(ams.h + "," + ams.kernelMode + "," + ams.windowMode + ",");
+											output.println(ams.n + "," + ams.cent.size() + "," + ams.algTime);
+											
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			output.close();
+		}
+		catch(Exception e){
+			System.out.println("Exception: " + e.toString());
+		}
+		
+		
+		
+	}
+	
+	
 	public static void main(String[] args){
+		int genClusters = 5;
+		int genRowsPerCluster = 20;
+		int genColumns = 20;
+		
+		
 		AdaptiveMeanShift ams = new AdaptiveMeanShift();
-		ams.run();
+		
+		if(ams.testRun){
+			ams.runTests(genClusters, genRowsPerCluster, genColumns);
+		}
+		else{
+			if(ams.printCentroids){
+				ams.run(genClusters,genRowsPerCluster,genColumns);
+				System.out.println("Printing Centroids:");
+					
+				for(int i = 0; i < ams.centroids.size(); i ++){
+					System.out.println("Centroid " + i);
+					for(int t = 0; t < ams.centroids.get(0).length; t++)
+						System.out.println("\t" + ams.centroids.get(i)[t]);
+				}
+			}
+			if(ams.minimalOutput){
 				
-		if(ams.printCentroids){
-			System.out.println("Printing Centroids:");
+				System.out.println("\n\nh: " + ams.h);
+				System.out.println("Kernel Mode: " + ams.kernelMode);
+				System.out.println("Window Mode: " + ams.windowMode);
+				System.out.println("n (KNN): " + ams.n + "\n");
+				System.out.println("Number of Clusters: " + ams.cent.size() + "\n");
+				System.out.println(ams.cent.toString().replaceAll(", ", " "));
 				
-			for(int i = 0; i < ams.centroids.size(); i ++){
-				System.out.println("Centroid " + i);
-				for(int t = 0; t < ams.centroids.get(0).length; t++)
-					System.out.println("\t" + ams.centroids.get(i)[t]);
 			}
 		}
 		
-		if(ams.minimalOutput){
-			System.out.println("h: " + ams.h);
-			System.out.println("Kernel Mode: " + ams.kernelMode);
-			System.out.println("Window Mode: " + ams.windowMode +"\n");
-			System.out.println("Number of Clusters: " + ams.cent.size() + "\n");
-			System.out.println(ams.cent.toString().replaceAll(", ", " "));
-			
-		}
+		System.out.println("\n\nDone!");
 	}
+	
 	
 
 	@Override
