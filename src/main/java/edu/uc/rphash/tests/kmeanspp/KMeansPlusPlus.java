@@ -647,5 +647,10 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 		random  =new Random(randomseed);
 		centroids = null;
 	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 
 }

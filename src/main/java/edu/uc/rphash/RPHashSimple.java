@@ -229,4 +229,9 @@ public class RPHashSimple implements Clusterer {
 		centroids = null;
 		so.setRandomSeed(randomseed);
 	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 }

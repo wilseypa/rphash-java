@@ -123,6 +123,9 @@ public class RPHashConsensusRP  implements Clusterer{
 		so.setRandomSeed(randomseed);
 	}
 	
-	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 	
 }

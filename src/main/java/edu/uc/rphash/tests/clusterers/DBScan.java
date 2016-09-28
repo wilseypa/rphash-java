@@ -165,8 +165,11 @@ public class DBScan implements Clusterer{
           
           CentroidDBScan m = new CentroidDBScan() ;
           System.out.println("The centroid in cluster1:" + m.centroidOf(cl1)); 
-          System.out.println("The centroid in cluster2:" + m.centroidOf(cl2)); 
-               
+          System.out.println("The centroid in cluster2:" + m.centroidOf(cl2));        
     }
     
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 }

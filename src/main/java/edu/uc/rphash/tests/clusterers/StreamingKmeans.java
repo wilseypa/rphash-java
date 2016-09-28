@@ -35,6 +35,12 @@ import edu.uc.rphash.util.VectorUtil;
  * </p>
  */
 
+
+
+//TODO wrapper around streamers to do the replication step for multiple runs, basically a meta class
+// wrapper that call add vector for each run->streamclusterer , getOfflineStep then reports wcss and
+// the min is returned
+
 public class StreamingKmeans implements StreamClusterer {
 	public boolean parallel = false;
 	public ExecutorService executor;
@@ -42,6 +48,8 @@ public class StreamingKmeans implements StreamClusterer {
 	final int processors;
 	List<float[]> data;
 	List<float[]> centroids;
+	
+	int runs = 1;
 
 	public class CentroidCluster {
 
@@ -746,6 +754,11 @@ public class StreamingKmeans implements StreamClusterer {
 	@Override
 	public void reset(int randomseed) {
 		centroids = null;
+	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return true;
 	}
 
 }

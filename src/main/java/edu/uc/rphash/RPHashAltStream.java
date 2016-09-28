@@ -139,5 +139,8 @@ public class RPHashAltStream implements Clusterer, Runnable {
 		centroids = null;
 		so.setRandomSeed(randomseed);
 	}
-
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 }

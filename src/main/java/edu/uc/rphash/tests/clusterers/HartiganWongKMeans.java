@@ -839,7 +839,11 @@ public class HartiganWongKMeans implements Clusterer {
 //			weights.add((float) 1);
 //		clu.setWeights(weights);
 		return clu;
-
+	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
 	}
 
 }

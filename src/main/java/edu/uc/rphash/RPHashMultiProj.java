@@ -194,8 +194,9 @@ public class RPHashMultiProj implements Clusterer {
 		reduce();
 
 		Clusterer offlineclusterer = so.getOfflineClusterer();
-		offlineclusterer.setWeights(so.getCounts());
+		offlineclusterer.setMultiRun(5);
 		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setWeights(so.getCounts());
 		offlineclusterer.setK(so.getk());
 		centroids = offlineclusterer.getCentroids();
 	}
@@ -259,6 +260,11 @@ public class RPHashMultiProj implements Clusterer {
 	public void reset(int randomseed) {
 		centroids = null;
 		so.setRandomSeed(randomseed);
+	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
 	}
 
 }

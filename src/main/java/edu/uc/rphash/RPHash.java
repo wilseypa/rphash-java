@@ -29,7 +29,7 @@ import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
-import edu.uc.rphash.tests.clusterers.HartiganWongKMeans;
+import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.tests.kmeanspp.DoublePoint;
@@ -115,22 +115,26 @@ public class RPHash {
 			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false);
 		}
 
+		
 		if (taggedArgs.containsKey("runs")) {
-			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false);
+			bestofruns = Integer.parseInt(taggedArgs.get("runs"));
 		}
 
 		if (taggedArgs.containsKey("streamduration")) {
 			runStreamForSetOfClusterers(runs, outputFile,
-					Integer.parseInt(taggedArgs.get("streamduration")), k, raw,bestofruns);
+					Integer.parseInt(taggedArgs.get("streamduration")), k, raw,
+					bestofruns);
 		} else {
 			// run remaining, read file into ram
 			data = VectorUtil.readFile(filename, raw);
-			runner(runs, outputFile, raw,bestofruns);
+			runner(runs, outputFile, raw, bestofruns);
 		}
 
 	}
 
-	/** Run the cluster and find the best clustering
+	/**
+	 * Run the cluster and find the best clustering
+	 * 
 	 * @param clu
 	 * @param raw
 	 * @param runs
@@ -139,27 +143,35 @@ public class RPHash {
 	public static List<Centroid> runclusterer(Clusterer clu, boolean raw,
 			int runs) {
 
-		List<Centroid> mincents = clu.getCentroids();
-		double minwcss = 0.0;
-		for (Centroid c : mincents) {
-			minwcss += c.getWCSS();
-		}
-
-		for (int i = 1; i < runs; i++) {
-			List<Centroid> tmpcents = clu.getCentroids();
-			double tmpwcss = 0.0;
-			for (Centroid c : tmpcents) {
-				tmpwcss += c.getWCSS();
+		//some clusterers can do multi runs in parallel
+		if (clu.setMultiRun(runs)) 
+		{
+			return clu.getCentroids();
+		} 
+		else 
+		{
+			List<Centroid> mincents = clu.getCentroids();
+			double minwcss = 0.0;
+			for (Centroid c : mincents) {
+				minwcss += c.getWCSS();
 			}
-			if (tmpwcss < minwcss) {
-				minwcss = tmpwcss;
-				mincents = tmpcents;
-			}
-			
-			clu.reset(new Random().nextInt());
-		}
 
-		return mincents;
+			for (int i = 1; i < runs; i++) {
+				
+				
+				List<Centroid> tmpcents = clu.getCentroids();
+				double tmpwcss = 0.0;
+				for (Centroid c : tmpcents) {
+					tmpwcss += c.getWCSS();
+				}
+				if (tmpwcss < minwcss) {
+					minwcss = tmpwcss;
+					mincents = tmpcents;
+				}
+				clu.reset(new Random().nextInt());
+			}
+			return mincents;
+		}
 
 	}
 
@@ -253,6 +265,7 @@ public class RPHash {
 	/**
 	 * Run a subset of a stream for the available clusterers print the results
 	 * NOTE this does not use the bestOfRuns parameter yet
+	 * 
 	 * @param outputFile
 	 * @param streamDuration
 	 * @param k
@@ -334,8 +347,9 @@ public class RPHash {
 	}
 
 	/**
-	 * Apply stream to set of clusterers, output results periodically according to
-	 * cmd parameter StreamDuration
+	 * Apply stream to set of clusterers, output results periodically according
+	 * to cmd parameter StreamDuration
+	 * 
 	 * @param runitems
 	 * @param outputFile
 	 * @param streamDuration
@@ -346,8 +360,8 @@ public class RPHash {
 	 * @throws InterruptedException
 	 */
 	public static void runStreamForSetOfClusterers(List<Clusterer> runitems,
-			String outputFile, Integer streamDuration, int k, boolean raw, int bestofruns)
-			throws IOException, InterruptedException {
+			String outputFile, Integer streamDuration, int k, boolean raw,
+			int bestofruns) throws IOException, InterruptedException {
 
 		Iterator<Clusterer> cluit = runitems.iterator();
 		// needs work, just use for both to be more accurate
@@ -356,6 +370,12 @@ public class RPHash {
 
 		while (cluit.hasNext()) {
 			Clusterer clu = cluit.next();
+			
+			//due to the memoryless nature of stream clusterers 
+			// all stream clusterers must run in multi clustering 
+			//in parallel
+			clu.setMultiRun(bestofruns);
+			
 			StreamObject streamer = (StreamObject) clu.getParam();
 			runStreamForAClusterer(outputFile, streamDuration, k, raw, clu,
 					avgtimeToRead, rt, streamer);
@@ -507,8 +527,8 @@ public class RPHash {
 			}
 			case "kmeans": {
 
-				o.setOfflineClusterer(new HartiganWongKMeans());
-				so.setOfflineClusterer(new HartiganWongKMeans());
+				o.setOfflineClusterer(new KMeans2());
+				so.setOfflineClusterer(new KMeans2());
 
 				break;
 			}

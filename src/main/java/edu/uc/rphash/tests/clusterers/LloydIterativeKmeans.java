@@ -242,5 +242,9 @@ public class LloydIterativeKmeans implements Clusterer {
 		return new SimpleArrayReader(this.data, k);
 	}
 
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 
 }

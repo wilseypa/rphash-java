@@ -171,6 +171,10 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 	         System.out.println("The centroid in cluster2:" + n.centroidOf(clkm2));  
 	    }
 	    
+		@Override
+		public boolean setMultiRun(int runs) {
+			return false;
+		}
 	}
 
 

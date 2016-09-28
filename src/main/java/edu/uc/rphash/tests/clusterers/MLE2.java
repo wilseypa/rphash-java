@@ -325,4 +325,9 @@ public class MLE2 implements Clusterer {
 		
 	}
 	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
+	
 }

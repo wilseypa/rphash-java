@@ -23,13 +23,15 @@ import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 
 public class RPHashStream implements StreamClusterer {
-	public KHHCentroidCounter is;
-	private LSH[] lshfuncs;
+	public List<KHHCentroidCounter> is;
+	private List<LSH[]> lshfuncs;
 //	private StatTests vartracker;
-	private List<Centroid> centroids = null;
+	private List<List<Centroid>> centroids = null;
+	private List<Centroid> bestcentroids = null;
 	private RPHashObject so;
 	ExecutorService executor;
 	private final int processors;
+	private int concurrentRuns;
 
 	public int getProcessors() {
 		return processors;
@@ -37,13 +39,23 @@ public class RPHashStream implements StreamClusterer {
 
 	@Override
 	public long addVectorOnlineStep(final float[] vec) {
-		if (so.getParallel()) {
-			VectorLevelConcurrency r = new VectorLevelConcurrency(vec,
-					lshfuncs,  is,so);
-			executor.execute(r);
-			return is.count;
+		for(int i = 0;i<this.concurrentRuns;i++){
+			
+			//execute as future
+			if (so.getParallel()) {
+				VectorLevelConcurrency r = new VectorLevelConcurrency(vec,
+						lshfuncs.get(i),  is.get(i),so);
+				executor.execute(r);
+				
+			}//execute sequentially
+			else
+			{
+				VectorLevelConcurrency.computeSequential(vec, lshfuncs.get(i), is.get(i), so);
+			}
 		}
-		return VectorLevelConcurrency.computeSequential(vec, lshfuncs, is, so);
+		//there will always be at least 1 concurrent run
+		return is.get(0).count;
+		
 	}
 
 	public void init() {
@@ -56,23 +68,31 @@ public class RPHashStream implements StreamClusterer {
 		// initialize our counter
 		float decayrate = so.getDecayRate();// 1f;// bottom number is window
 											// size
-		if(so.getDecayRate()==0.0){
-			is = new KHHCentroidCounter(k);
-		}else{
-			is = new KHHCentroidCounter(k, decayrate);
-		}
-		// create LSH Device
-		lshfuncs = new LSH[projections];
-		Decoder dec = so.getDecoderType();
-		HashAlgorithm hal = new MurmurHash(so.getHashmod());
-		// create projection matrices add to LSH Device
-		for (int i = 0; i < projections; i++) {
-			Projector p = new DBFriendlyProjection(so.getdim(),
-					dec.getDimensionality(), r.nextLong());
-			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
-					so.getNumBlur(), r, dec.getErrorRadius()
-							/ dec.getDimensionality());
-			lshfuncs[i] = new LSH(dec, p, hal, noise);
+		is = new ArrayList<>(concurrentRuns);
+		lshfuncs = new ArrayList<LSH[]>(concurrentRuns);
+		
+		for(int i = 0;i<this.concurrentRuns;i++){
+			if(so.getDecayRate()==0.0){
+					is.add(new KHHCentroidCounter(k));
+			}else{
+					is.add(new KHHCentroidCounter(k));
+			}
+			
+			// create LSH Device
+			LSH[] lshfunc = new LSH[projections];
+			Decoder dec = so.getDecoderType();
+			HashAlgorithm hal = new MurmurHash(so.getHashmod());
+			// create projection matrices add to LSH Device
+	
+				for (int projidx = 0; projidx < projections; projidx++) {
+					Projector p = new DBFriendlyProjection(so.getdim(),
+							dec.getDimensionality(), r.nextLong());
+					List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
+							so.getNumBlur(), r, dec.getErrorRadius()
+									/ dec.getDimensionality());
+					lshfunc[projidx] = new LSH(dec, p, hal, noise);
+				}
+			lshfuncs.add(lshfunc);
 		}
 	}
 
@@ -123,7 +143,7 @@ public class RPHashStream implements StreamClusterer {
 			run();
 			getCentroidsOfflineStep();
 		}
-		return centroids;
+		return bestcentroids;
 	}
 
 	public List<Centroid> getCentroidsOfflineStep() {
@@ -136,46 +156,47 @@ public class RPHashStream implements StreamClusterer {
 			}
 			executor = Executors.newFixedThreadPool(getProcessors());
 		}
-
-		centroids = new ArrayList<Centroid>();
-		List<Integer> projIDs = new ArrayList<Integer>();
-		List<Centroid> cents = is.getTop();
-		List<Float> counts = is.getCounts();
-		
-		int i =  0;
-		//get rid of size one clusters that are there just because they were added to the list at the end
-		for (; i < cents.size() ; i++) {
-			if(counts.get(i)==1)break;
-			projIDs.add(cents.get(i).projectionID);
-			centroids.add(cents.get(i));
-		}
-		counts = counts.subList(0, i);
-		Clusterer offlineclusterer = so.getOfflineClusterer();
-		offlineclusterer.setWeights(counts);
-		offlineclusterer.setData(centroids);
-		offlineclusterer.setK(so.getk());
-		centroids = offlineclusterer.getCentroids();
-		
-		while(centroids.size()<so.getk() && counts.size()>so.getk())centroids = offlineclusterer.getCentroids();
-		if(counts.size()<so.getk())System.out.println("WARNING: Failed to partition dataset into K clusters");
-		return centroids;
+//
+//		bestcentroids = new ArrayList<Centroid>();
+//		List<Integer> projIDs = new ArrayList<Integer>();
+//		List<Centroid> cents = is.getTop();
+//		List<Float> counts = is.getCounts();
+//		
+//		int i =  0;
+//		//get rid of size one clusters that are there just because they were added to the list at the end
+//		for (; i < cents.size() ; i++) {
+//			if(counts.get(i)==1)break;
+//			projIDs.add(cents.get(i).projectionID);
+//			centroids.add(cents.get(i));
+//		}
+//		counts = counts.subList(0, i);
+//		Clusterer offlineclusterer = so.getOfflineClusterer();
+//		offlineclusterer.setWeights(counts);
+//		offlineclusterer.setData(centroids);
+//		offlineclusterer.setK(so.getk());
+//		centroids = offlineclusterer.getCentroids();
+//		
+//		while(centroids.size()<so.getk() && counts.size()>so.getk())centroids = offlineclusterer.getCentroids();
+//		if(counts.size()<so.getk())System.out.println("WARNING: Failed to partition dataset into K clusters");
+		return bestcentroids;
 	}
 
 	public void run() {
-		// add to frequent itemset the hashed Decoded randomly projected vector
-		Iterator<float[]> vecs = so.getVectorIterator();
-		while (vecs.hasNext()) {
-			if (so.getParallel()) {
-				float[] vec = vecs.next();
-				executor.execute(new VectorLevelConcurrency(vec, lshfuncs,is,so));
-			} else {
-				addVectorOnlineStep(vecs.next());
-			}
-		}
+//		// add to frequent itemset the hashed Decoded randomly projected vector
+//		Iterator<float[]> vecs = so.getVectorIterator();
+//		while (vecs.hasNext()) {
+//			if (so.getParallel()) {
+//				float[] vec = vecs.next();
+//				executor.execute(new VectorLevelConcurrency(vec, lshfuncs,is,so));
+//			} else {
+//				addVectorOnlineStep(vecs.next());
+//			}
+//		}
 	}
 
 	public List<Float> getTopIdSizes() {
-		return is.getCounts();
+		return null;
+//		return is.getCounts();
 	}
 
 	@Override
@@ -191,10 +212,10 @@ public class RPHashStream implements StreamClusterer {
 	@Override
 	public void setRawData(List<float[]> data) 
 	{
-		this.centroids = new ArrayList<Centroid>(data.size());
-		for(float[] f: data){
-			this.centroids.add(new Centroid(f,0));
-		}
+//		this.centroids = new ArrayList<Centroid>(data.size());
+//		for(float[] f: data){
+//			this.data.add(new Centroid(f,0));
+//		}
 	}
 	
 	@Override
@@ -227,6 +248,10 @@ public class RPHashStream implements StreamClusterer {
 	public void reset(int randomseed) {
 		centroids = null;
 		so.setRandomSeed(randomseed);
+	}
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
 	}
 
 }

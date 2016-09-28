@@ -443,5 +443,9 @@ public class MaxLikelihoodKMeans2 implements Clusterer {
 					wcsse, realwcsse);
 		}
 	}
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 
 }

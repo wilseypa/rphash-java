@@ -407,8 +407,11 @@ public class Agglomerative3 implements Clusterer {
 			VectorUtil.prettyPrint(f);
 			System.out.println();
 		}
-		
-
 	}
 
+	@Override
+	public boolean setMultiRun(int runs) {
+		//agglomerative is deterministic running multiple times is moot
+		return true;
+	}
 }

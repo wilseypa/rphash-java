@@ -319,8 +319,12 @@ public class Kmeans implements Clusterer {
 
 	@Override
 	public RPHashObject getParam() {
-
 		return new SimpleArrayReader(this.data, k);
 	}
 
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
+	
 }

@@ -185,4 +185,9 @@ public class RPHashStreamingAK implements StreamClusterer {
 		so.setRandomSeed(randomseed);
 	}
 
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
+
 }

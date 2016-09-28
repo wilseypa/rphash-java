@@ -266,5 +266,8 @@ public class RPHash3Stage implements Clusterer {
 		so.setRandomSeed(randomseed);
 	}
 	
-	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 }
