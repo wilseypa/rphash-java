@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
@@ -22,7 +23,7 @@ import edu.uc.rphash.tests.generators.GenerateStreamData;
 public class HartiganWongKMeans implements Clusterer {
 
 
-	private List<float[]> cents;
+	private List<Centroid> cents;
 	private List<float[]> data;
 	private int k;
 
@@ -665,7 +666,7 @@ public class HartiganWongKMeans implements Clusterer {
 
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		if (cents != null)
 			return cents;
 		
@@ -732,7 +733,9 @@ public class HartiganWongKMeans implements Clusterer {
 			for (j = 0; j < n; j++) {
 				nv[j] = (float) c[i + j * k];
 			}
-			cents.add(nv);
+			Centroid cent = new Centroid(nv,0);
+			cent.setWCSS(wss[k]);
+			cents.add(cent);
 		}
 
 		return cents;
@@ -749,7 +752,7 @@ public class HartiganWongKMeans implements Clusterer {
 	}
 
 	@Override
-	public void setData(List<float[]> data) {
+	public void setRawData(List<float[]> data) {
 		this.data = data;
 //
 //		this.n = data.get(0).length;
@@ -761,6 +764,11 @@ public class HartiganWongKMeans implements Clusterer {
 //		// Collections.shuffle(data);
 
 	}
+	@Override
+	public void setData(List<Centroid> centroids) {
+		this.data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids) data.add(c.centroid());
+	}
 
 	@Override
 	public void setK(int k) {
@@ -768,6 +776,10 @@ public class HartiganWongKMeans implements Clusterer {
 		this.k = k;
 //		this.nc = new int[k];
 //		this.wss = new double[k];
+	}
+	@Override
+	public void reset(int randomseed) {
+		cents = null;
 	}
 
 	public static void main(String[] args) {
@@ -806,10 +818,10 @@ public class HartiganWongKMeans implements Clusterer {
 //			if (tmp < min) {
 //				System.out.println(i + "\t" + tmp + "\t" + min + "\t");
 //				min = tmp;
-			List<float[]> cents = clu.getCentroids();
+			List<Centroid> cents = clu.getCentroids();
 			System.out.printf("-------------------\n");
 				for (int j = 0; j < k; j++) {
-					float[] ff = cents.get(j);
+					float[] ff = cents.get(j).centroid();
 					for (float f : ff)
 						System.out.printf("%.3f,", f);
 					System.out.printf(" \n");
@@ -827,7 +839,11 @@ public class HartiganWongKMeans implements Clusterer {
 //			weights.add((float) 1);
 //		clu.setWeights(weights);
 		return clu;
-
+	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
 	}
 
 }

@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.MultiDecoder;
@@ -32,7 +33,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	int dim;
 	int randomseed;
 	long hashmod;
-	List<float[]> centroids;
+	List<Centroid> centroids;
 	List<Long> topIDs;
 	int multiDim;
 	Decoder dec;
@@ -68,7 +69,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.numBlur = DEFAULT_NUM_BLUR;
 		this.k = k;
 		this.data = null;
-		this.centroids = new ArrayList<float[]>();
+		this.centroids = new ArrayList<Centroid>();
 		this.topIDs = new ArrayList<Long>();
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
@@ -116,7 +117,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.numBlur = DEFAULT_NUM_BLUR;
 		this.k = k;
 		this.data = null;
-		this.centroids = new ArrayList<float[]>();
+		this.centroids = new ArrayList<Centroid>();
 		this.topIDs = new ArrayList<Long>();
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
@@ -156,12 +157,12 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	}
 
 	@Override
-	public void addCentroid(float[] v) {
+	public void addCentroid(Centroid v) {
 		centroids.add(v);
 	}
 
 	@Override
-	public void setCentroids(List<float[]> l) {
+	public void setCentroids(List<Centroid> l) {
 		centroids = l;
 	}
 
@@ -186,7 +187,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		return centroids;
 	}
 
@@ -363,6 +364,12 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	@Override
 	public void forEachRemaining(Consumer<? super float[]> action) {
 		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setK(int getk) {
+		this.k = getk;
 		
 	}
 }

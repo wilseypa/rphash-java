@@ -1,9 +1,11 @@
 package edu.uc.rphash.tests.clusterers;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -286,7 +288,7 @@ public class MLE2 implements Clusterer {
 
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		
 		// TODO Auto-generated method stub
 		return null;
@@ -303,13 +305,29 @@ public class MLE2 implements Clusterer {
 	}
 
 	@Override
-	public void setData(List<float[]> centroids) {
-		this.data = centroids;
-		
+	public void setRawData(List<float[]> data) {
+		this.data = data;
+	}
+	
+	@Override
+	public void setData(List<Centroid> centroids) {
+		ArrayList<float[]> data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids)data.add(c.centroid());
+		setRawData(data);	
 	}
 
 	@Override
 	public void setK(int getk) {
+	}
+	
+	@Override
+	public void reset(int randomseed) {
+		
+	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
 	}
 	
 }

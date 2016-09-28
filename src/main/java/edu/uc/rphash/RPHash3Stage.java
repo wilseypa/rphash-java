@@ -133,7 +133,7 @@ public class RPHash3Stage implements Clusterer {
 			
 		}
 		for (Long id : centroids.keySet()) {
-			so.addCentroid(centroids.get(id).centroid());
+			so.addCentroid(centroids.get(id));
 
 		}
 		
@@ -153,19 +153,16 @@ public class RPHash3Stage implements Clusterer {
 		float[] vec = vecs.next();
 		while (vecs.hasNext()) {
 
-			int nn = VectorUtil.findNearestDistance(p[0].project(vec),
+			int nn = VectorUtil.findNearestDistance(new Centroid(p[0].project(vec),0),
 					so.getCentroids());
 			centroids.get(nn).updateVec(vec);
 			vec = vecs.next();
 		}
-		so.setCentroids(new ArrayList<float[]>());
-		for (Centroid cent : centroids) {
-			so.addCentroid(cent.centroid());
-		}
+		so.setCentroids(centroids);
 		return so;
 	}
 
-	private List<float[]> centroids = null;
+	private List<Centroid> centroids = null;
 
 	public RPHash3Stage(List<float[]> data, int k) {
 		variance = StatTests.varianceAll(data);
@@ -181,14 +178,14 @@ public class RPHash3Stage implements Clusterer {
 		so = new SimpleArrayReader(data, k, rseed, 25000000);
 	}
 
-	public List<float[]> getCentroids(RPHashObject so) {
+	public List<Centroid> getCentroids(RPHashObject so) {
 		if (centroids == null)
 			run(so);
 		return centroids;
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 
 		if (centroids == null)
 			run(so);
@@ -222,12 +219,12 @@ public class RPHash3Stage implements Clusterer {
 
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
-				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = VectorUtil.alignCentroids(
-						rphit.getCentroids(), gen.medoids());
-				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
-						+ StatTests.WCSSE(aligned, gen.data()) + ":" + duration
-						/ 1000000000f);
+//				long duration = (System.nanoTime() - startTime);
+//				List<float[]> aligned = VectorUtil.alignCentroids(
+//						rphit.getCentroids(), gen.medoids());
+//				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
+//						+ StatTests.WCSSE(aligned, gen.data()) + ":" + duration
+//						/ 1000000000f);
 				System.gc();
 			}
 		}
@@ -242,19 +239,35 @@ public class RPHash3Stage implements Clusterer {
 
 	@Override
 	public void setWeights(List<Float> counts) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void setData(List<float[]> centroids) {
-		// TODO Auto-generated method stub
+	public void setData(List<Centroid> centroids) {
+		this.centroids = centroids;
 		
+	}
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		if(this.centroids == null) this.centroids = new ArrayList<>(centroids.size());
+		for(float[] f: centroids){
+			this.centroids.add(new Centroid(f,0));
+		}
 	}
 
 	@Override
 	public void setK(int getk) {
-		// TODO Auto-generated method stub
-		
+		this.so.setK(getk);
+	}
+
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+		so.setRandomSeed(randomseed);
+	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
 	}
 }

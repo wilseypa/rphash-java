@@ -312,6 +312,43 @@ public class VectorUtil {
 	 * @param output
 	 *            - file
 	 */
+	public static void writeCentroidsToFile(File output, List<Centroid> data, boolean raw) {
+		try {
+			if (!raw) {
+				BufferedWriter out = new BufferedWriter(new FileWriter(output));
+				out.write(String.valueOf(data.size()) + "\n");
+				out.write(String.valueOf(data.get(0).centroid().length) + "\n");
+				for (Centroid vector : data) {
+					for (float v : vector.centroid())
+						out.write(String.valueOf(v) + "\n");
+				}
+				out.close();
+			} else {
+				DataOutputStream out = new DataOutputStream(
+						new BufferedOutputStream(new FileOutputStream(output)));
+				out.writeInt(data.size());
+				out.writeInt(data.get(0).centroid().length);
+				for (Centroid vector : data) {
+					for (float v : vector.centroid())
+						out.writeFloat(v);
+				}
+				out.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	/**
+	 * write a simple matrix format of row[newline] col[newline]
+	 * data_1_1[newline] ...[newline] data_||row||_||col||
+	 * 
+	 * @param data
+	 *            - list of float arrays
+	 * @param output
+	 *            - file
+	 */
 	public static void writeFile(File output, List<float[]> data, boolean raw) {
 
 		try {

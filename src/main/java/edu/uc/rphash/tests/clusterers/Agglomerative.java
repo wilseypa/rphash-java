@@ -3,6 +3,7 @@ package edu.uc.rphash.tests.clusterers;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.generators.GenerateData;
@@ -74,7 +75,6 @@ public class Agglomerative implements Clusterer{
 	void run()
 	{
 		this.distances = distanceArray(data);
-		
 		while(data.size()>k)
 			merge();
 	}
@@ -97,18 +97,26 @@ public class Agglomerative implements Clusterer{
 		}
 		System.out.println("computed");
 		
-		for(float[] cent: agl.getCentroids()){
-			for(float f : cent)System.out.print(f+" ");
+		for(Centroid cent: agl.getCentroids()){
+			for(float f : cent.centroid())System.out.print(f+" ");
 			System.out.println();
 		}
 
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
-		run();
-		return data;
+	public List<Centroid> getCentroids() {
+		if(clusters==null)run();
+		List<Centroid> cents = new ArrayList<>(clusters.size());
+		for(float[] v : this.clusters)cents.add(new Centroid(v,0));
+		return cents;
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		clusters = null;
+	}
+
 
 	@Override
 	public RPHashObject getParam() {
@@ -121,19 +129,23 @@ public class Agglomerative implements Clusterer{
 		//this.counts = counts;
 		counts = new ArrayList<Float>();
 	}
-
-	@Override
-	public void setData(List<float[]> centroids) {
-		this.data = centroids;
-		
-	}
-
 	@Override
 	public void setK(int getk) {
 		this.k = getk;
 	}
+	@Override
+	public void setData(List<Centroid> centroids) {
+		this.data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids) data.add(c.centroid());
+	}
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		this.data = centroids;
+	}
 	
-	
-	
-
+	@Override
+	public boolean setMultiRun(int runs) {
+		//agglomerative is deterministic running multiple times is moot
+		return true;
+	}
 }

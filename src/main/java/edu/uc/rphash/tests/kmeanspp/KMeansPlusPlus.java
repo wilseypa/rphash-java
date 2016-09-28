@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -515,9 +516,9 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
         return minCluster;
     }
 	
-	  final Collection<T> points;
+	  Collection<T> points;
 	  final int maxIterations;
-	  final int k;
+	  int k;
 	  List<float[]> centroids;//
 //    /** Build a clusterer.
 //    * <p>
@@ -540,7 +541,7 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 //       this.random        = random;
 //       this.emptyStrategy = emptyStrategy;
 //   }
-	  final private List<float[]> data;
+//	  final private List<float[]> data;
 	  
     @SuppressWarnings("unchecked")
 	public KMeansPlusPlus(List<float[]> data,int k) {
@@ -549,7 +550,7 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 		this.k = k;
 		maxIterations = 10000;
 		points = new ArrayList<>();
-		this.data = data;
+//		this.data = data;
 		this.dim = data.get(0).length;
 		for(float[] f: data)
 		{
@@ -562,9 +563,9 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		
-		ArrayList<float[]> ret = new ArrayList<>();
+		ArrayList<Centroid> ret = new ArrayList<>();
 		List<Cluster<T>> clusters = null;
 		if(centroids == null)
 		{
@@ -585,7 +586,7 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 			}
 			float sclr = 1f/((float)c.getPoints().size()+1);
 			for(int i = 0;i<dim;i++)retret[i]*=sclr;
-			ret.add(retret);
+			ret.add(new Centroid(retret,0));
 		}
 		
 		return ret;
@@ -593,30 +594,63 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 
 	@Override
 	public RPHashObject getParam() {
-		
-		return new SimpleArrayReader(data, k);
+		return null;
 	}
 	public static void main(String[] args){
 		GenerateData gen = new GenerateData(3,5000,2,.1f);
 		KMeansPlusPlus<DoublePoint> kk = new KMeansPlusPlus<>(gen.data(),3);
-
 		
-		List<float[]> aligned = VectorUtil.alignCentroids(
-				kk.getCentroids(), gen.medoids());
-		
-		System.out.println( StatTests.PR(aligned, gen) + ":"+StatTests.WCSSE(aligned, gen.getData()));
+		System.out.println(StatTests.WCSSECentroidsFloat(kk.getCentroids(), gen.getData()));
 		System.gc();
 	}
 	
 	@Override
 	public void setWeights(List<Float> counts) {
 	}
-
-	@Override
-	public void setData(List<float[]> centroids) {
-	}
+	
 	@Override
 	public void setK(int getk) {
+		this.k = getk;
+	}
+
+	@Override
+	public void setRawData(List<float[]> centroids) {
+    	random  =new Random();
+		points = new ArrayList<>();
+
+		for(float[] f: centroids)
+		{
+			DoublePoint p = new DoublePoint(f);
+			points.add((T)p);
+		}
+		
+		centroids = null;
+	}
+
+	@Override
+	public void setData(List<Centroid> centroids) {
+    	random  =new Random();
+		points = new ArrayList<>();
+
+		for(Centroid f: centroids)
+		{
+			DoublePoint p = new DoublePoint(f.centroid());
+			points.add((T)p);
+		}
+		
+		centroids = null;
+		
+	}
+
+	@Override
+	public void reset(int randomseed) {
+		random  =new Random(randomseed);
+		centroids = null;
+	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
 	}
 
 }
