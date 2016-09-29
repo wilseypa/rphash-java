@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.Random;
 
 import edu.uc.rphash.decoders.Decoder;
+import edu.uc.rphash.decoders.Leech;
+import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
+import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.SamplingVarianceTracker;
 
 public class LSH {
@@ -31,6 +34,14 @@ public class LSH {
 		radius = dec.getErrorRadius() / dec.getDimensionality();
 		this.noise = noise;
 		if(!dec.selfScaling())vtrack = new SamplingVarianceTracker();
+	}
+	
+	public LSH(int dim, long randseed) {
+		this.projectionMatrix = new DBFriendlyProjection(dim, 24, randseed);
+		this.standardHashAlgorithm = new MurmurHash(100000);
+		this.lshDecoder = new Leech();
+		rand = new Random();
+		this.noise = new ArrayList<>();//size=0 no noise
 	}
 
 	/*
