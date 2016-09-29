@@ -5,6 +5,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.TreeSet;
+
+import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 /** LSH-kNN , uses leech lattice decoder by default
  * Next Steps:
@@ -135,19 +139,32 @@ public class LSHkNN {
 				}
 			};
 			
-			List<DistAndVec> qlist = new ArrayList<>();
+			TreeSet<DistAndVec> qlist = new TreeSet<>();
 			for(float[] q : db){
 				qlist.add(new DistAndVec(q));
 			}
-			Collections.sort(qlist);
+			
 			
 			List<float[]> ret = new ArrayList<>(k);
 			for(int i = 0;i<k && i<qlist.size();i++){
-				ret.add(qlist.get(i).q);
+				DistAndVec dv = qlist.pollFirst();
+				ret.add(dv.q);
 			}
 			return ret;
 		}
 
+		
+		public static void main(String[] args){
+			GenerateData g = new GenerateData(10,1000,100);
+			LSHkNN querier = new LSHkNN(100, 5);
+			querier.createDB(g.data);
+			
+			VectorUtil.prettyPrint(querier.knn(10, g.data.get(new Random().nextInt(g.data.size()))));
+			
+			
+			
+			
+		}
 
 
 }

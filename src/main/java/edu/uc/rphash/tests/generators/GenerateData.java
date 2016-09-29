@@ -29,6 +29,11 @@ public class GenerateData implements ClusterGenerator {
 	boolean shuffle;
 	float sparseness;
 
+	/**
+	 * @param numClusters
+	 * @param numVectorsPerCluster
+	 * @param dimension
+	 */
 	public GenerateData(int numClusters, int numVectorsPerCluster, int dimension) {
 		r = new Random();
 		this.numClusters = numClusters;
@@ -50,6 +55,12 @@ public class GenerateData implements ClusterGenerator {
 		generateMem();
 	}
 
+	/**
+	 * @param numClusters
+	 * @param numVectorsPerCluster
+	 * @param dimension
+	 * @param shuffle
+	 */
 	public GenerateData(int numClusters, int numVectorsPerCluster,
 			int dimension, boolean shuffle) {
 		r = new Random();
@@ -72,6 +83,12 @@ public class GenerateData implements ClusterGenerator {
 		generateMem();
 	}
 
+	/**
+	 * @param numClusters
+	 * @param numVectorsPerCluster
+	 * @param dimension
+	 * @param variance
+	 */
 	public GenerateData(int numClusters, int numVectorsPerCluster,
 			int dimension, float variance) {
 		r = new Random();
@@ -97,6 +114,13 @@ public class GenerateData implements ClusterGenerator {
 		generateMem();
 	}
 
+	/**
+	 * @param numClusters
+	 * @param numVectorsPerCluster
+	 * @param dimension
+	 * @param variance
+	 * @param shuffle
+	 */
 	public GenerateData(int numClusters, int numVectorsPerCluster,
 			int dimension, float variance, boolean shuffle) {
 		r = new Random();
@@ -123,6 +147,14 @@ public class GenerateData implements ClusterGenerator {
 		generateMem();
 	}
 
+	/**
+	 * @param numClusters
+	 * @param numVectorsPerCluster
+	 * @param dimension
+	 * @param variance
+	 * @param shuffle
+	 * @param sparseness
+	 */
 	public GenerateData(int numClusters, int numVectorsPerCluster,
 			int dimension, float variance, boolean shuffle, float sparseness) {
 		r = new Random();
@@ -150,6 +182,12 @@ public class GenerateData implements ClusterGenerator {
 		generateMem();
 	}
 
+	/**
+	 * @param numClusters
+	 * @param numVectorsPerCluster
+	 * @param dimension
+	 * @param genvariate
+	 */
 	public GenerateData(int numClusters, int numVectorsPerCluster,
 			int dimension, RandomDistributionFnc genvariate) {
 		r = new Random();
@@ -165,6 +203,17 @@ public class GenerateData implements ClusterGenerator {
 		generateMem();
 	}
 
+	/**
+	 * @param numClusters
+	 * @param numVectorsPerCluster
+	 * @param dimension
+	 * @param variance
+	 * @param shuffle
+	 * @param sparseness
+	 * @param f
+	 * @param lblFile
+	 * @param raw
+	 */
 	public GenerateData(int numClusters, int numVectorsPerCluster,
 			int dimension, float variance, boolean shuffle, float sparseness,
 			File f,File lblFile,boolean raw) {
@@ -189,6 +238,15 @@ public class GenerateData implements ClusterGenerator {
 			generateDiskRaw(f,lblFile);
 	}
 
+	/**
+	 * @param numClusters
+	 * @param numVectorsPerCluster
+	 * @param dimension
+	 * @param f
+	 * @param lblFile
+	 * @param genvariate
+	 * @param raw
+	 */
 	public GenerateData(int numClusters, int numVectorsPerCluster,
 			int dimension, File f,File lblFile, RandomDistributionFnc genvariate,boolean raw) {
 		r = new Random();
