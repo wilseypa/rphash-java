@@ -6,6 +6,7 @@ import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
 import java.util.List; 
 import java.util.ArrayList; 
 import java.util.Collections;  
+
 import org.apache.commons.math3.distribution.NormalDistribution; 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D; 
 //import org.apache.commons.math3.ml.clustering.CentroidCluster; 
@@ -20,24 +21,13 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well19937c; 
 //import org.apache.commons.math3.userguide.ExampleUtils.ExampleFrame; 
 import org.apache.commons.math3.util.FastMath; 
-import org.apache.commons.math3.util.Pair; 
 
-<<<<<<< HEAD
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
-=======
-import org.apache.commons.math3.ml.distance.DistanceMeasure; 
-import org.apache.commons.math3.ml.distance.EuclideanDistance;
->>>>>>> refs/remotes/origin/rphash-java-branch-deysn
 
-import edu.uc.rphash.Readers.RPHashObject;
-
-
-<<<<<<< HEAD
 public class DBScan implements Clusterer{
-=======
-public class DBScan implements edu.uc.rphash.Clusterer{
->>>>>>> refs/remotes/origin/rphash-java-branch-deysn
+
 
     
       public static Vector2D generateNoiseVector(NormalDistribution distribution) { 
@@ -83,15 +73,10 @@ public class DBScan implements edu.uc.rphash.Clusterer{
         
         
    }
-<<<<<<< HEAD
-  
-   
-=======
->>>>>>> refs/remotes/origin/rphash-java-branch-deysn
    
 	//List<float[]> getCentroids();
    
-   public List<float[]> getCentroids() {   // to be completed
+   public List<Centroid> getCentroids() {   // to be completed
 		return null ;
 	}
 	
@@ -112,8 +97,16 @@ public class DBScan implements edu.uc.rphash.Clusterer{
 	
 	//void setData(List<float[]> centroids);
 	
+	
 	@Override
-	public void setData(List<float[]> data) {           // to be completed
+	public void setData(List<Centroid> centroids) {
+		ArrayList<float[]> data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids) data.add(c.centroid());
+		setRawData(data);
+	}
+	
+	@Override
+	public void setRawData(List<float[]> data) {
 	/*  this.data = data;
 		
 		this.n = data.get(0).length;
@@ -124,20 +117,18 @@ public class DBScan implements edu.uc.rphash.Clusterer{
 		this.wss = new double[k];      */
 		// weights = new Float[m];
 		// Collections.shuffle(data);
-
 	}
 
+	@Override
+	public void reset(int randomseed) {
+		
+	}
 	
 	
 	public void setK(int k) {                         // not needed
 		return;
 	}
-	
-	
-<<<<<<< HEAD
-   
-=======
->>>>>>> refs/remotes/origin/rphash-java-branch-deysn
+
     public static void main(String[] args) {
       
     int nSamples = 2000;
@@ -174,8 +165,11 @@ public class DBScan implements edu.uc.rphash.Clusterer{
           
           CentroidDBScan m = new CentroidDBScan() ;
           System.out.println("The centroid in cluster1:" + m.centroidOf(cl1)); 
-          System.out.println("The centroid in cluster2:" + m.centroidOf(cl2)); 
-               
+          System.out.println("The centroid in cluster2:" + m.centroidOf(cl2));        
     }
     
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 }

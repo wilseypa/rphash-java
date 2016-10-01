@@ -29,7 +29,7 @@ public class RPHashStreamingAK implements StreamClusterer {
 	public KHHCentroidCounterPush is;
 	private LSH[] lshfuncs;
 	private StatTests vartracker;
-	private List<float[]> centroids = null;
+	private List<Centroid> centroids = null;
 	private RPHashObject so;
 
 
@@ -101,7 +101,7 @@ public class RPHashStreamingAK implements StreamClusterer {
 
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		if (centroids == null) {
 			init();
 			run();
@@ -110,14 +110,17 @@ public class RPHashStreamingAK implements StreamClusterer {
 		return centroids;
 	}
 
-	public List<float[]> getCentroidsOfflineStep() {
-		centroids = new ArrayList<float[]>();
-		List<Centroid> cents = is.getTop();
-		List<Float> counts = is.getCounts();
-
-		for (int i = 0; i < cents.size(); i++) {
-			centroids.add(cents.get(i).centroid());
-		}
+	public List<Centroid> getCentroidsOfflineStep() {
+		
+		centroids = is.getTop();
+		
+		
+//		centroids = new ArrayList<Centroid>();
+//		List<Float> counts = is.getCounts();
+//
+//		for (int i = 0; i < cents.size(); i++) {
+//			centroids.add(cents.get(i).centroid());
+//		}
 
 		Clusterer offlineclusterer = so.getOfflineClusterer();
 		offlineclusterer.setWeights(so.getCounts());
@@ -153,9 +156,15 @@ public class RPHashStreamingAK implements StreamClusterer {
 	}
 
 	@Override
-	public void setData(List<float[]> centroids) {
-		// TODO Auto-generated method stub
-		
+	public void setRawData(List<float[]> data) {
+//		this.data = data;
+	}
+	
+	@Override
+	public void setData(List<Centroid> centroids) {
+		ArrayList<float[]> data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids)data.add(c.centroid());
+		setRawData(data);	
 	}
 
 	@Override
@@ -168,6 +177,17 @@ public class RPHashStreamingAK implements StreamClusterer {
 	public void shutdown() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+		so.setRandomSeed(randomseed);
+	}
+
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
 	}
 
 }

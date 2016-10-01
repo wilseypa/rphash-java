@@ -41,7 +41,7 @@ public class RPHashAltStream implements Clusterer, Runnable {
 		return so;
 	}
 
-	private List<float[]> centroids = null;
+	private List<Centroid> centroids = null;
 	private RPHashObject so;
 
 	public RPHashAltStream(List<float[]> data, int k) {
@@ -58,13 +58,13 @@ public class RPHashAltStream implements Clusterer, Runnable {
 		this.so = so;
 	}
 
-	public List<float[]> getCentroids(RPHashObject so) {
+	public List<Centroid> getCentroids(RPHashObject so) {
 		this.so = so;
 		return getCentroids();
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 
 		if (centroids == null)
 			run();
@@ -73,10 +73,7 @@ public class RPHashAltStream implements Clusterer, Runnable {
 
 	public void run() {
 		so = processStream();
-		centroids = new ArrayList<float[]>();
-		for (Centroid c : is.getTop())
-			centroids.add(c.centroid());
-		
+		centroids= is.getTop();
 		Clusterer offlineclusterer = so.getOfflineClusterer();
 		offlineclusterer.setWeights(so.getCounts());
 		offlineclusterer.setData(so.getCentroids());
@@ -98,11 +95,11 @@ public class RPHashAltStream implements Clusterer, Runnable {
 				long startTime = System.nanoTime();
 				rphit.getCentroids();
 				long duration = (System.nanoTime() - startTime);
-				List<float[]> aligned = VectorUtil.alignCentroids(
-						rphit.getCentroids(), gen.medoids());
-				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
-						+ StatTests.WCSSE(aligned, gen.getData()) + ":"
-						+ duration / 1000000000f);
+//				List<float[]> aligned = VectorUtil.alignCentroids(
+//						rphit.getCentroids(), gen.medoids());
+//				System.out.println(f + ":" + StatTests.PR(aligned, gen) + ":"
+//						+ StatTests.WCSSE(aligned, gen.getData()) + ":"
+//						+ duration / 1000000000f);
 				System.gc();
 			}
 		}
@@ -120,15 +117,30 @@ public class RPHashAltStream implements Clusterer, Runnable {
 	}
 
 	@Override
-	public void setData(List<float[]> centroids) {
-		// TODO Auto-generated method stub
+	public void setData(List<Centroid> centroids) {
+		this.centroids = centroids;
 		
 	}
-
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		if(this.centroids == null) this.centroids = new ArrayList<>(centroids.size());
+		for(float[] f: centroids){
+			this.centroids.add(new Centroid(f,0));
+		}
+	}
 	@Override
 	public void setK(int getk) {
 		// TODO Auto-generated method stub
 		
 	}
-
+	
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+		so.setRandomSeed(randomseed);
+	}
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 }

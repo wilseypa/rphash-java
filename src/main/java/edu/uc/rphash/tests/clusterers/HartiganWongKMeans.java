@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
-
-
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 
 /**
@@ -23,48 +22,38 @@ import edu.uc.rphash.tests.generators.GenerateStreamData;
  */
 public class HartiganWongKMeans implements Clusterer {
 
-	private int k;
-	private final int iter;
-	private int n;
-	private int m;
-	private double[] a;
-	private double[] c;
 
-	public Float[] weights = null;
-	public double[] wss;
-	public int[] ic1;
-	public int[] nc;
-	private List<float[]> cents;
+	private List<Centroid> cents;
 	private List<float[]> data;
-	// public double[] vars;
+	private int k;
 
 	public HartiganWongKMeans() {
-		this.iter = 50;
+//		this.iter = 50;
 	}
 
 	public HartiganWongKMeans(int k, List<float[]> data) {
 		this.k = k;
-		this.iter = 50;
-		this.n = data.get(0).length;
-		this.m = data.size();
+//		this.iter = 50;
+//		this.n = data.get(0).length;
+//		this.m = data.size();
 		this.data = data;
 		// this.vars = new double[k];
 
 		// initialize cluster count and within cluster sum
-		this.a = new double[m * n];
-		this.c = new double[k * n];
-		this.ic1 = new int[m];
-		this.nc = new int[k];
-		this.wss = new double[k];
+//		this.a = new double[m * n];
+//		this.c = new double[k * n];
+//		this.ic1 = new int[m];
+//		this.nc = new int[k];
+//		this.wss = new double[k];
 		// weights = new Float[m];
 		// Collections.shuffle(data);
 
-		for (int i = 0; i < m; i++) {
-			// weights[i] = 1f;
-			for (int j = 0; j < n; j++) {
-				this.a[i + (j) * m] = data.get(i)[j];
-			}
-		}
+//		for (int i = 0; i < m; i++) {
+//			// weights[i] = 1f;
+//			for (int j = 0; j < n; j++) {
+//				this.a[i + (j) * m] = data.get(i)[j];
+//			}
+//		}
 	}
 
 	/**
@@ -94,276 +83,245 @@ public class HartiganWongKMeans implements Clusterer {
 	 *            iterations was exceeded. 3: K is less than or equal to 1, or
 	 *            greater than or equal to M.
 	 */
-	public int kmns() {
-		
-		// choose initial cluster centers
-		// needs to happen before duplications
-		// so we dont end up with an initial
-		// centroid set of all the same thing
-		
-		this.m = data.size();
-		this.a = new double[m*n];
-		this.ic1 = new int[m];
-		for (int i = 0; i < m; i++) {
-			for (int j = 0; j < n; j++) {
-				this.a[i + (j) * m] = data.get(i)[j];
+	void kmns(double a[], int m, int n, double c[], int k, int ic1[], int nc[],
+			int iter, double wss[], int[] ifault) {
+
+		{
+			double aa;
+			double[] an1;
+			double[] an2;
+			double[] d;
+			double da;
+			double db;
+			double dc;
+			double[] dt = new double[2];
+			int i;
+			int[] ic2;
+			int ii;
+			int ij;
+			int il;
+			int[] indx = new int[1];
+			int[] itran;
+			int j;
+			int l;
+			int[] live;
+			int[] ncp;
+			double temp;
+
+			ifault[0] = 0;
+
+			if (k <= 1 || m <= k) {
+				ifault[0] = 3;
+				return;
 			}
-		}
-//	}
-		c = new double[k * n];
-		for (int i = 0; i < k; i++) {
-			for (int j = 0; j < n; j++) {
-				c[i + j * k] = this.a[i + (j) * m];
-			}
-		}
-		
-		//convert to col X row matrix (fortran...)
-//		if(weights==null){
-			//no weights
+			ic2 = new int[m];
+			an1 = new double[k];
+			an2 = new double[k];
+			ncp = new int[k];
+			d = new double[m];
+			itran = new int[k];
+			live = new int[k];
+			//
+			// For each point I, find its two closest centers, IC1(I) and
+			// IC2(I). Assign the point to IC1(I).
+			//
+			for (i = 1; i <= m; i++) {
+				ic1[i - 1] = 1;
+				ic2[i - 1] = 2;
 
-//		else
-//		{
-//			//poor mans weights 10 is the resolution
-//			float weightsum = 0;
-//			for (int i = 0; i < m; i++)weightsum+=weights[i];
-//			for(int i = 0; i < m; i++)
-//			{
-//				for(int j = 0; j < 10*(weights[i]/weightsum); j++)
-//				{
-//					data.add(data.get(i));
-//				}
-//			}
-//			
-//			for (int i = 0; i < m; i++) {
-//				for (int j = 0; j < n; j++) {
-//					this.a[i + (j) * m] = this.data.get(i)[j];
-//				}
-//			}
-//			
-//		}
-		
-		
-
-		double aa;
-		double da;
-		double db;
-		double dc;
-		double[] dt = new double[2];
-		int indx;
-		double temp;
-
-		int ifault = 0;
-
-		if (k <= 1 || m <= k) {
-			ifault = 3;
-			return ifault;
-		}
-		int[] ic2 = new int[m];
-		double[] an1 = new double[k];
-		double[] an2 = new double[k];
-		int[] ncp = new int[k];
-		double[] d = new double[m];
-		int[] itran = new int[k];
-		int[] live = new int[k];
-
-		//
-		// For each point I, find its two closest centers, IC1(I) and
-		// IC2(I). Assign the point to IC1(I).
-		//
-		for (int i = 0; i < m; i++) {
-			ic1[i] = 1;
-			ic2[i] = 2;
-
-			for (int il = 0; il < 2; il++) {
-				dt[il] = 0.0;
-				for (int j = 0; j < n; j++) {
-					da = a[i + j * m] - c[il + j * k];
-					dt[il] = dt[il] + da * da;
-				}
-			}
-
-			if (dt[1] < dt[0]) {
-				ic1[i] = 2;
-				ic2[i] = 1;
-				temp = dt[0];
-				dt[0] = dt[1];
-				dt[1] = temp;
-			}
-
-			for (int l = 3; l <= k; l++) {
-				db = 0.0;
-				for (int j = 0; j < n; j++) {
-					dc = a[i + j * m] - c[l - 1 + j * k];
-					db = db + dc * dc;
+				for (il = 1; il <= 2; il++) {
+					dt[il - 1] = 0.0;
+					for (j = 1; j <= n; j++) {
+						da = a[i - 1 + (j - 1) * m] - c[il - 1 + (j - 1) * k];
+						dt[il - 1] = dt[il - 1] + da * da;
+					}
 				}
 
-				if (db < dt[1]) {
-					if (dt[0] <= db) {
-						dt[1] = db;
-						ic2[i] = l;
-					} else {
-						dt[1] = dt[0];
-						ic2[i] = ic1[i];
-						dt[0] = db;
-						ic1[i] = l;
+				if (dt[1] < dt[0]) {
+					ic1[i - 1] = 2;
+					ic2[i - 1] = 1;
+					temp = dt[0];
+					dt[0] = dt[1];
+					dt[1] = temp;
+				}
+
+				for (l = 3; l <= k; l++) {
+					db = 0.0;
+					for (j = 1; j <= n; j++) {
+						dc = a[i - 1 + (j - 1) * m] - c[l - 1 + (j - 1) * k];
+						db = db + dc * dc;
+					}
+
+					if (db < dt[1]) {
+						if (dt[0] <= db) {
+							dt[1] = db;
+							ic2[i - 1] = l;
+						} else {
+							dt[1] = dt[0];
+							ic2[i - 1] = ic1[i - 1];
+							dt[0] = db;
+							ic1[i - 1] = l;
+						}
 					}
 				}
 			}
-		}
-		//
-		// Update cluster centers to be the average of points contained within
-		// them.
-		//
-		for (int l = 0; l < k; l++) {
-			nc[l] = 0;
-			for (int j = 0; j < n; j++) {
-				c[l + j * k] = 0.0;
+			//
+			// Update cluster centers to be the average of points contained
+			// within them.
+			//
+			for (l = 1; l <= k; l++) {
+				nc[l - 1] = 0;
+				for (j = 1; j <= n; j++) {
+					c[l - 1 + (j - 1) * k] = 0.0;
+				}
+			}
+
+			for (i = 1; i <= m; i++) {
+				l = ic1[i - 1];
+				nc[l - 1] = nc[l - 1] + 1;
+				for (j = 1; j <= n; j++) {
+					c[l - 1 + (j - 1) * k] = c[l - 1 + (j - 1) * k]
+							+ a[i - 1 + (j - 1) * m];
+				}
+			}
+			//
+			// Check to see if there is any empty cluster at this stage.
+			//
+			ifault[0] = 1;
+
+			for (l = 1; l <= k; l++) {
+				if (nc[l - 1] == 0) {
+					ifault[0] = 1;
+					return;
+				}
+
+			}
+
+			ifault[0] = 0;
+
+			for (l = 1; l <= k; l++) {
+				aa = (double) (nc[l - 1]);
+
+				for (j = 1; j <= n; j++) {
+					c[l - 1 + (j - 1) * k] = c[l - 1 + (j - 1) * k] / aa;
+				}
+				//
+				// Initialize AN1, AN2, ITRAN and NCP.
+				//
+				// AN1(L) = NC(L) / (NC(L) - 1)
+				// AN2(L) = NC(L) / (NC(L) + 1)
+				// ITRAN(L) = 1 if cluster L is updated in the quick-transfer
+				// stage,
+				// = 0 otherwise
+				//
+				// In the optimal-transfer stage, NCP(L) stores the step at
+				// which
+				// cluster L is last updated.
+				//
+				// In the quick-transfer stage, NCP(L) stores the step at which
+				// cluster L is last updated plus M.
+				//
+				an2[l - 1] = aa / (aa + 1.0);
+
+				if (1.0 < aa) {
+					an1[l - 1] = aa / (aa - 1.0);
+				} else {
+					an1[l - 1] = Double.MAX_VALUE;
+				}
+				itran[l - 1] = 1;
+				ncp[l - 1] = -1;
+			}
+
+			indx[0] = 0;
+			ifault[0] = 2;
+
+			for (ij = 1; ij <= iter; ij++) {
+				//
+				// In this stage, there is only one pass through the data. Each
+				// point is re-allocated, if necessary, to the cluster that will
+				// induce the maximum reduction in within-cluster sum of
+				// squares.
+				//
+				optra(a, m, n, c, k, ic1, ic2, nc, an1, an2, ncp, d, itran,
+						live, indx);
+				
+				//
+				// Stop if no transfer took place in the last M optimal transfer
+				// steps.
+				//
+				if (indx[0] == m) {
+					ifault[0] = 0;
+					break;
+				}
+				//
+				// Each point is tested in turn to see if it should be
+				// re-allocated
+				// to the cluster to which it is most likely to be transferred,
+				// IC2(I), from its present cluster, IC1(I). Loop through the
+				// data until no further change is to take place.
+				//
+				qtran(a, m, n, c, k, ic1, ic2, nc, an1, an2, ncp, d, itran,
+						indx);
+				//
+				// If there are only two clusters, there is no need to re-enter
+				// the
+				// optimal transfer stage.
+				//
+				if (k == 2) {
+					ifault[0] = 0;
+					break;
+				}
+				//
+				// NCP has to be set to 0 before entering OPTRA.
+				//
+				for (l = 1; l <= k; l++) {
+					ncp[l - 1] = 0;
+				}
+
+			}
+			//
+			// If the maximum number of iterations was taken without
+			// convergence,
+			// IFAULT is 2 now. This may indicate unforeseen looping.
+			//
+			if (ifault[0] == 2) {
+				System.out.println("Maximum number of iterations reached");
+				// cout << "\n";
+				// cout << "KMNS - Warning!\n";
+				// cout << "  Maximum number of iterations reached\n";
+				// cout << "  without convergence.\n";
+			}
+			//
+			// Compute the within-cluster sum of squares for each cluster.
+			//
+			for (l = 1; l <= k; l++) {
+				wss[l - 1] = 0.0;
+				for (j = 1; j <= n; j++) {
+					c[l - 1 + (j - 1) * k] = 0.0;
+				}
+			}
+
+			for (i = 1; i <= m; i++) {
+				ii = ic1[i - 1];
+				for (j = 1; j <= n; j++) {
+					c[ii - 1 + (j - 1) * k] = c[ii - 1 + (j - 1) * k]
+							+ a[i - 1 + (j - 1) * m];
+				}
+			}
+
+			for (j = 1; j <= n; j++) {
+				for (l = 1; l <= k; l++) {
+					c[l - 1 + (j - 1) * k] = c[l - 1 + (j - 1) * k]
+							/ (double) (nc[l - 1]);
+				}
+				for (i = 1; i <= m; i++) {
+					ii = ic1[i - 1];
+					da = a[i - 1 + (j - 1) * m] - c[ii - 1 + (j - 1) * k];
+					wss[ii - 1] = wss[ii - 1] + da * da;
+				}
 			}
 		}
 
-		for (int i = 0; i < m; i++) {
-			int l = ic1[i];
-			int currentCount = nc[l - 1];
-			nc[l - 1] = nc[l - 1] + 1;// weights[i].intValue();//+ 1;
-			for (int j = 0; j < n; j++) {
-				c[l - 1 + j * k] = c[l - 1 + j * k] * currentCount
-						+ a[i + j * m];// *weights[i].intValue();
-			}
-		}
-		//
-		// Check to see if there is any empty cluster at this stage.
-		//
-		ifault = 1;
-
-		for (int l = 0; l < k; l++) {
-			if (nc[l] == 0) {
-				ifault = 1;
-				return ifault;
-			}
-		}
-
-		ifault = 0;
-
-		// normalize by the count
-		for (int l = 0; l < k; l++) {
-			aa = (double) (nc[l]);
-
-			for (int j = 0; j < n; j++) {
-				c[l + j * k] = c[l + j * k] / aa;
-			}
-			//
-			// Initialize AN1, AN2, ITRAN and NCP.
-			//
-			// AN1(L) = NC(L) / (NC(L) - 1)
-			// AN2(L) = NC(L) / (NC(L) + 1)
-			// ITRAN(L) = 1 if cluster L is updated in the quick-transfer stage,
-			// = 0 otherwise
-			//
-			// In the optimal-transfer stage, NCP(L) stores the step at which
-			// cluster L is last updated.
-			//
-			// In the quick-transfer stage, NCP(L) stores the step at which
-			// cluster L is last updated plus M.
-			//
-			an2[l] = aa / (aa + 1.0);
-
-			if (1.0 < aa) {
-				an1[l] = aa / (aa - 1.0);
-			} else {
-				an1[l] = Double.MAX_VALUE;
-			}
-			itran[l] = 1;
-			ncp[l] = -1;
-		}
-
-		indx = 0;
-		ifault = 2;
-
-		for (int ij = 0; ij < iter; ij++) {
-			//
-			// In this stage, there is only one pass through the data. Each
-			// point is re-allocated, if necessary, to the cluster that will
-			// induce the maximum reduction in within-cluster sum of squares.
-			//
-			indx = optra(ic2, an1, an2, ncp, d, itran, live, indx);
-			//
-			// Stop if no transfer took place in the last M optimal transfer
-			// steps.
-			//
-			if (indx == m) {
-				ifault = 0;
-				break;
-			}
-			//
-			// Each point is tested in turn to see if it should be re-allocated
-			// to the cluster to which it is most likely to be transferred,
-			// IC2(I), from its present cluster, IC1(I). Loop through the
-			// data until no further change is to take place.
-			//
-			indx = qtran(ic2, an1, an2, ncp, d, itran, indx);
-			//
-			// If there are only two clusters, there is no need to re-enter the
-			// optimal transfer stage.
-			//
-			if (k == 2) {
-				ifault = 0;
-				break;
-			}
-			//
-			// NCP has to be set to 0 before entering OPTRA.
-			//
-			for (int l = 0; l < k; l++) {
-				ncp[l] = 0;
-			}
-
-		}
-		//
-		// If the maximum number of iterations was taken without convergence,
-		// IFAULT is 2 now. This may indicate unforeseen looping.
-		//
-		if (ifault == 2) {
-			System.out.println("KMNS - Warning!\n"
-					+ "  Maximum number of iterations reached\n"
-					+ "  without convergence.");
-		}
-		//
-		// Compute the within-cluster sum of squares for each cluster.
-		//
-
-		// initialize wcss
-		for (int l = 0; l < k; l++) {
-			wss[l] = 0.0;
-			for (int j = 0; j < n; j++) {
-				c[l + j * k] = 0.0;
-			}
-		}
-
-		// sum wcss over all vectors
-		for (int i = 0; i < m; i++) {
-			int ii = ic1[i] - 1;
-			for (int j = 0; j < n; j++) {
-				c[ii + j * k] = c[ii + j * k] + a[i + j * m];
-			}
-		}
-
-		// iterate over dimensions
-		for (int j = 0; j < n; j++) {
-			// compute cluster centroids
-			for (int l = 0; l < k; l++) {
-				c[l + j * k] = c[l + j * k] / (double) (nc[l]);
-			}
-			// compute wss from cluster deltas
-			for (int i = 0; i < m; i++) {
-				int ii = ic1[i] - 1;
-				da = a[i + j * m] - c[ii + j * k];
-				wss[ii] = wss[ii] + da * da;
-			}
-		}
-
-		// for ( int i = 0; i < k; i++ )
-		// this.vars[i] = Math.sqrt(wss[i])/(double)nc[i];
-
-		return ifault;
 	}
 
 	/**
@@ -398,8 +356,9 @@ public class HartiganWongKMeans implements Clusterer {
 	 *            int[k]
 	 * @return indx - the number of steps since a transfer took place.
 	 */
-	int optra(int[] ic2, double[] an1, double[] an2, int[] ncp, double[] d,
-			int[] itran, int[] live, int indx) {
+	void optra(double a[], int m, int n, double c[], int k, int ic1[],
+			int ic2[], int nc[], double an1[], double an2[], int ncp[],
+			double d[], int itran[], int live[], int[] indx) {
 		double al1;
 		double al2;
 		double alt;
@@ -410,6 +369,9 @@ public class HartiganWongKMeans implements Clusterer {
 		double dd;
 		double de;
 		double df;
+		int i;
+		int j;
+		int l;
 		int l1;
 		int l2;
 		int ll;
@@ -421,14 +383,14 @@ public class HartiganWongKMeans implements Clusterer {
 		// each step, it is not in the live set if it has not been updated
 		// in the last M optimal transfer steps.
 		//
-		for (int l = 0; l < k; l++) {
-			if (itran[l] == 1) {
-				live[l] = m + 1;
+		for (l = 1; l <= k; l++) {
+			if (itran[l - 1] == 1) {
+				live[l - 1] = m + 1;
 			}
 		}
 
-		for (int i = 1; i <= m; i++) {
-			indx = indx + 1;
+		for (i = 1; i <= m; i++) {
+			indx[0] = indx[0] + 1;
 			l1 = ic1[i - 1];
 			l2 = ic2[i - 1];
 			ll = l2;
@@ -442,8 +404,8 @@ public class HartiganWongKMeans implements Clusterer {
 				//
 				if (ncp[l1 - 1] != 0) {
 					de = 0.0;
-					for (int j = 0; j < n; j++) {
-						df = a[i - 1 + j * m] - c[l1 - 1 + j * k];
+					for (j = 1; j <= n; j++) {
+						df = a[i - 1 + (j - 1) * m] - c[l1 - 1 + (j - 1) * k];
 						de = de + df * df;
 					}
 					d[i - 1] = de * an1[l1 - 1];
@@ -452,13 +414,13 @@ public class HartiganWongKMeans implements Clusterer {
 				// Find the cluster with minimum R2.
 				//
 				da = 0.0;
-				for (int j = 0; j < n; j++) {
-					db = a[i - 1 + j * m] - c[l2 - 1 + j * k];
+				for (j = 1; j <= n; j++) {
+					db = a[i - 1 + (j - 1) * m] - c[l2 - 1 + (j - 1) * k];
 					da = da + db * db;
 				}
 				r2 = da * an2[l2 - 1];
 
-				for (int l = 1; l <= k; l++) {
+				for (l = 1; l <= k; l++) {
 					//
 					// If LIVE(L1) <= I, then L1 is not in the live set. If this
 					// is
@@ -473,8 +435,9 @@ public class HartiganWongKMeans implements Clusterer {
 						rr = r2 / an2[l - 1];
 
 						dc = 0.0;
-						for (int j = 0; j < n; j++) {
-							dd = a[i - 1 + j * m] - c[l - 1 + j * k];
+						for (j = 1; j <= n; j++) {
+							dd = a[i - 1 + (j - 1) * m]
+									- c[l - 1 + (j - 1) * k];
 							dc = dc + dd * dd;
 						}
 
@@ -496,7 +459,7 @@ public class HartiganWongKMeans implements Clusterer {
 				// L2, and update IC1(I) and IC2(I).
 				//
 				else {
-					indx = 0;
+					indx[0] = 0;
 					live[l1 - 1] = m + i;
 					live[l2 - 1] = m + i;
 					ncp[l1 - 1] = i;
@@ -505,18 +468,16 @@ public class HartiganWongKMeans implements Clusterer {
 					alw = al1 - 1.0;
 					al2 = (double) (nc[l2 - 1]);
 					alt = al2 + 1.0;
-					for (int j = 0; j < n; j++) {
-						c[l1 - 1 + j * k] = (c[l1 - 1 + j * k] * al1 - a[i - 1
-								+ j * m])
+					for (j = 1; j <= n; j++) {
+						c[l1 - 1 + (j - 1) * k] = (c[l1 - 1 + (j - 1) * k]
+								* al1 - a[i - 1 + (j - 1) * m])
 								/ alw;
-						c[l2 - 1 + j * k] = (c[l2 - 1 + j * k] * al2 + a[i - 1
-								+ j * m])
+						c[l2 - 1 + (j - 1) * k] = (c[l2 - 1 + (j - 1) * k]
+								* al2 + a[i - 1 + (j - 1) * m])
 								/ alt;
 					}
-					nc[l1 - 1] = nc[l1 - 1] - 1;// weights[i-1].intValue(); //-
-												// 1;
-					nc[l2 - 1] = nc[l2 - 1] + 1;// weights[i-1].intValue(); //+
-												// 1;
+					nc[l1 - 1] = nc[l1 - 1] - 1;
+					nc[l2 - 1] = nc[l2 - 1] + 1;
 					an2[l1 - 1] = alw / al1;
 					if (1.0 < alw) {
 						an1[l1 - 1] = alw / (alw - 1.0);
@@ -530,20 +491,20 @@ public class HartiganWongKMeans implements Clusterer {
 				}
 			}
 
-			if (indx == m) {
-				return indx;
+			if (indx[0] == m) {
+				return;
 			}
 		}
 		//
 		// ITRAN(L) = 0 before entering QTRAN. Also, LIVE(L) has to be
 		// decreased by M before re-entering OPTRA.
 		//
-		for (int l = 0; l < k; l++) {
-			itran[l] = 0;
-			live[l] = live[l] - m;
+		for (l = 1; l <= k; l++) {
+			itran[l - 1] = 0;
+			live[l - 1] = live[l - 1] - m;
 		}
 
-		return indx;
+		return;
 	}
 
 	/**
@@ -553,6 +514,16 @@ public class HartiganWongKMeans implements Clusterer {
 	 * I, IC1(I) and IC2(I) are switched, if necessary, to reduce within-cluster
 	 * sum of squares. The cluster centers are updated after each step.
 	 * 
+	 * @param a
+	 *            double[M][N], the points.
+	 * @param m
+	 *            int M, the number of points.
+	 * @param n
+	 *            int N, the number of spatial dimensions.
+	 * @param c
+	 *            double[K][N], the cluster centers.
+	 * @param k
+	 *            int K, the number of clusters.
 	 * @param ic1
 	 *            int[M], the cluster to which each point is assigned.
 	 * @param ic2
@@ -572,8 +543,9 @@ public class HartiganWongKMeans implements Clusterer {
 	 *            int[k]
 	 * @returns indx the number of steps since a transfer took place.
 	 */
-	int qtran(int[] ic2, double[] an1, double[] an2, int[] ncp, double[] d,
-			int[] itran, int indx) {
+	void qtran(double a[], int m, int n, double c[], int k, int ic1[],
+			int ic2[], int nc[], double an1[], double an2[], int ncp[],
+			double d[], int itran[], int[] indx) {
 		double al1;
 		double al2;
 		double alt;
@@ -582,8 +554,10 @@ public class HartiganWongKMeans implements Clusterer {
 		double db;
 		double dd;
 		double de;
+		int i;
 		int icoun;
 		int istep;
+		int j;
 		int l1;
 		int l2;
 		double r2;
@@ -596,11 +570,11 @@ public class HartiganWongKMeans implements Clusterer {
 		istep = 0;
 
 		for (;;) {
-			for (int i = 0; i < m; i++) {
+			for (i = 1; i <= m; i++) {
 				icoun = icoun + 1;
 				istep = istep + 1;
-				l1 = ic1[i];
-				l2 = ic2[i];
+				l1 = ic1[i - 1];
+				l2 = ic2[i - 1];
 				//
 				// If point I is the only member of cluster L1, no transfer.
 				//
@@ -616,11 +590,12 @@ public class HartiganWongKMeans implements Clusterer {
 					//
 					if (istep <= ncp[l1 - 1]) {
 						da = 0.0;
-						for (int j = 0; j < n; j++) {
-							db = a[i + j * m] - c[l1 - 1 + j * k];
+						for (j = 1; j <= n; j++) {
+							db = a[i - 1 + (j - 1) * m]
+									- c[l1 - 1 + (j - 1) * k];
 							da = da + db * db;
 						}
-						d[i] = da * an1[l1 - 1];
+						d[i - 1] = da * an1[l1 - 1];
 					}
 					//
 					// If NCP(L1) <= ISTEP and NCP(L2) <= ISTEP, there will be
@@ -628,11 +603,12 @@ public class HartiganWongKMeans implements Clusterer {
 					// point I at this step.
 					//
 					if (istep < ncp[l1 - 1] || istep < ncp[l2 - 1]) {
-						r2 = d[i] / an2[l2 - 1];
+						r2 = d[i - 1] / an2[l2 - 1];
 
 						dd = 0.0;
-						for (int j = 1; j <= n; j++) {
-							de = a[i + (j - 1) * m] - c[l2 - 1 + (j - 1) * k];
+						for (j = 1; j <= n; j++) {
+							de = a[i - 1 + (j - 1) * m]
+									- c[l2 - 1 + (j - 1) * k];
 							dd = dd + de * de;
 						}
 						//
@@ -644,7 +620,7 @@ public class HartiganWongKMeans implements Clusterer {
 						//
 						if (dd < r2) {
 							icoun = 0;
-							indx = 0;
+							indx[0] = 0;
 							itran[l1 - 1] = 1;
 							itran[l2 - 1] = 1;
 							ncp[l1 - 1] = istep + m;
@@ -653,20 +629,18 @@ public class HartiganWongKMeans implements Clusterer {
 							alw = al1 - 1.0;
 							al2 = (double) (nc[l2 - 1]);
 							alt = al2 + 1.0;
-							for (int j = 1; j <= n; j++) {
+							for (j = 1; j <= n; j++) {
 								c[l1 - 1 + (j - 1) * k] = (c[l1 - 1 + (j - 1)
 										* k]
-										* al1 - a[i + (j - 1) * m])
+										* al1 - a[i - 1 + (j - 1) * m])
 										/ alw;
 								c[l2 - 1 + (j - 1) * k] = (c[l2 - 1 + (j - 1)
 										* k]
-										* al2 + a[i + (j - 1) * m])
+										* al2 + a[i - 1 + (j - 1) * m])
 										/ alt;
 							}
-							nc[l1 - 1] = nc[l1 - 1] - 1;// weights[i].intValue();//-
-														// 1;
-							nc[l2 - 1] = nc[l2 - 1] + 1;// weights[i].intValue();//+
-														// 1;
+							nc[l1 - 1] = nc[l1 - 1] - 1;
+							nc[l2 - 1] = nc[l2 - 1] + 1;
 							an2[l1 - 1] = alw / al1;
 							if (1.0 < alw) {
 								an1[l1 - 1] = alw / (alw - 1.0);
@@ -675,8 +649,8 @@ public class HartiganWongKMeans implements Clusterer {
 							}
 							an1[l2 - 1] = alt / al2;
 							an2[l2 - 1] = alt / (alt + 1.0);
-							ic1[i] = l2;
-							ic2[i] = l1;
+							ic1[i - 1] = l2;
+							ic2[i - 1] = l1;
 						}
 					}
 				}
@@ -684,57 +658,84 @@ public class HartiganWongKMeans implements Clusterer {
 				// If no re-allocation took place in the last M steps, return.
 				//
 				if (icoun == m) {
-					return indx;
+					return;
 				}
 			}
 		}
 	}
 
-	
 
-	
-	int iterations = 10;
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		if (cents != null)
 			return cents;
-		//find minimum of kmeans iterations
+		
+		
+		int i,j;
+		int k = this.k;
+		int iter = 10;
+		int n = data.get(0).length;
+		int m= data.size();;
+		double[] a = new double[m*n];;
+		double[] c= new double[k*n];
+		double[] wss= new double[k];
+		int[] ic1 = new int[m];
+		int[] nc = new int[k];
+		int[] ifault = new int[1];
+		
+
+//		// find minimum of kmeans iterations
 		double mint_wcss = Double.MAX_VALUE;
-		
-//		int origm = m;
+
 		double[] cmin = new double[k * n];
-		for(int i =0;i<iterations;)
-		{
-			
-//			this.m = origm;
-			// this shuffle is broken if we assume weights
-			//TODO ^^^^^^^^^^^^^^^^
+		for (int b = 0; b < iter;b++) {
+
 			Collections.shuffle(data);
-			int err = kmns();
 			
+			  for ( i = 0; i < m; i++ )
+			  {
+			    for ( j = 0; j < n; j++ )
+			    {
+			       a[i+(j)*m] = data.get(i)[j];
+			    }
+			  }
+			
+			  //
+			//  Initialize the cluster centers.
+			//  Here, we arbitrarily make the first K data points cluster centers.
+			//
+			  for ( i = 1; i <= k; i++ )
+			  {
+			    for ( j = 1; j <= n; j++ )
+			    {
+			      c[i-1+(j-1)*k] = a[i-1+(j-1)*m];
+			    }
+			  }
+			  
+			kmns ( a, m, n, c, k, ic1, nc, iter, wss, ifault );
+
 			double t_wcss = 0.0;
-			if(err==0){
-				for(int j =0;j<this.k;j++)
-				{
-					t_wcss += wss[j];
-				}
-				if(t_wcss<mint_wcss){
-					System.arraycopy(this.c, 0, cmin, 0, cmin.length);
-					mint_wcss = t_wcss;
-				}
-				i++;
+
+			for (j = 0; j < this.k; j++) {
+				t_wcss += wss[j];
 			}
-			// remove duplicated weight objects
-//			this.data = this.data.subList(0, m);
+			if (t_wcss < mint_wcss) {
+				System.arraycopy(c, 0, cmin, 0, cmin.length);
+				mint_wcss = t_wcss;
+			}
 		}
-		
+
+//		for (i = 0; i < c.length; i++) {System.out.println(c[i]);}
+		  
 		cents = new ArrayList<>();
-		for (int i = 0; i < k; i++) {
+		for (i = 0; i < k; i++) {
 			float[] nv = new float[n];
-			for (int j = 0; j < n; j++) {
-				nv[j] = (float) cmin[i + (j) * k];
+			for (j = 0; j < n; j++) {
+				nv[j] = (float) c[i + j * k];
 			}
-			cents.add(nv);
+			Centroid cent = new Centroid(nv,0);
+			cent.setWCSS(wss[k]);
+			cents.add(cent);
 		}
 
 		return cents;
@@ -747,35 +748,44 @@ public class HartiganWongKMeans implements Clusterer {
 
 	@Override
 	public void setWeights(List<Float> weights) {
-		this.weights = weights.toArray(new Float[0]);
+		// this.weights = weights.toArray(new Float[0]);
 	}
 
 	@Override
-	public void setData(List<float[]> data) {
+	public void setRawData(List<float[]> data) {
 		this.data = data;
-		
-		this.n = data.get(0).length;
-		this.m = data.size();
-		this.a = new double[m * n];
-		this.c = new double[k * n];
-		this.nc = new int[k];
-		this.wss = new double[k];
-		// weights = new Float[m];
-		// Collections.shuffle(data);
+//
+//		this.n = data.get(0).length;
+//		this.m = data.size();
+//		this.c = new double[k * n];
+//		this.nc = new int[k];
+//		this.wss = new double[k];
+//		// weights = new Float[m];
+//		// Collections.shuffle(data);
 
+	}
+	@Override
+	public void setData(List<Centroid> centroids) {
+		this.data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids) data.add(c.centroid());
 	}
 
 	@Override
 	public void setK(int k) {
-		this.c = new double[k * n];
-		this.k = k;		this.nc = new int[k];
-		this.wss = new double[k];
+//		this.c = new double[k * n];
+		this.k = k;
+//		this.nc = new int[k];
+//		this.wss = new double[k];
 	}
-	
+	@Override
+	public void reset(int randomseed) {
+		cents = null;
+	}
+
 	public static void main(String[] args) {
 		int k = 3;
-		int n = 5000;
-		int d = 10;
+		int n = 1000;
+		int d = 4;
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, 1f,
 				System.currentTimeMillis());
 
@@ -791,46 +801,49 @@ public class HartiganWongKMeans implements Clusterer {
 		}
 
 		double min = Double.MAX_VALUE;
-		
-		for (int i = 0; i < 1000; i++) {
+
+		for (int i = 0; i < 1; i++) {
 			Collections.shuffle(data);
-			HartiganWongKMeans clu = runtests(data, k);
+//			HartiganWongKMeans clu = runtests(data, k);
+			HartiganWongKMeans clu = new HartiganWongKMeans(k,data);
 			double nc_sum = 0;
 			double wss_sum = 0.0;
 
-			for (int j = 0; j < k; j++) {
-				nc_sum = nc_sum + clu.nc[j];
-				wss_sum = wss_sum + clu.wss[j];
-			}
-			double tmp = wss_sum;
-
-			if (tmp < min) {
-				System.out.println(i + "\t" + tmp + "\t" + min + "\t");
-				min = tmp;
+//			for (int j = 0; j < k; j++) {
+//				nc_sum = nc_sum + clu.nc[j];
+//				wss_sum = wss_sum + clu.wss[j];
+//			}
+//			double tmp = wss_sum;
+//
+//			if (tmp < min) {
+//				System.out.println(i + "\t" + tmp + "\t" + min + "\t");
+//				min = tmp;
+			List<Centroid> cents = clu.getCentroids();
+			System.out.printf("-------------------\n");
 				for (int j = 0; j < k; j++) {
-					float[] ff = clu.getCentroids().get(j);
+					float[] ff = cents.get(j).centroid();
 					for (float f : ff)
 						System.out.printf("%.3f,", f);
-					System.out.printf(" @%.5f \n", clu.wss[j]);
+					System.out.printf(" \n");
+//					System.out.printf(" @%.5f \n", clu.wss[j]);
 				}
-			}
+//			}
 		}
 	}
 
 	public static HartiganWongKMeans runtests(ArrayList<float[]> data, int k) {
 
 		HartiganWongKMeans clu = new HartiganWongKMeans(k, data);
-		ArrayList<Float> weights = new ArrayList<Float>();
-		for (int i = 0; i < data.size(); i++)
-			weights.add((float) 1);
-		clu.setWeights(weights);
-		if (clu.kmns() != 0)
-			System.out.println("breaks sometimes!");
-
-
-
+//		ArrayList<Float> weights = new ArrayList<Float>();
+//		for (int i = 0; i < data.size(); i++)
+//			weights.add((float) 1);
+//		clu.setWeights(weights);
 		return clu;
-
+	}
+	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
 	}
 
 }

@@ -12,7 +12,7 @@ import edu.uc.rphash.util.VectorUtil;
 
 public class RPHashConsensusRP  implements Clusterer{
 
-	private List<float[]> centroids=null;
+	private List<Centroid> centroids=null;
 	int k;
 	int d;
 	RPHashObject so;
@@ -35,7 +35,7 @@ public class RPHashConsensusRP  implements Clusterer{
 
 
 	@Override
-	public List<float[]> getCentroids(){
+	public List<Centroid> getCentroids(){
 		
 		if(centroids == null)run();
 		return centroids;
@@ -55,7 +55,7 @@ public class RPHashConsensusRP  implements Clusterer{
 //			prevCentroids.add(initCentroids);
 //		}
 		
-		ArrayList<float[]> manyCentroids = new ArrayList<float[]> (k);
+		ArrayList<Centroid> manyCentroids = new ArrayList<Centroid> (k);
 		manyCentroids.addAll(new RPHashSimple (so).getCentroids());
 		manyCentroids.addAll(new RPHash3Stage (so).getCentroids());
 		manyCentroids.addAll(new RPHashIterativeRedux(so).getCentroids());
@@ -81,9 +81,9 @@ public class RPHashConsensusRP  implements Clusterer{
 		long startTime = System.nanoTime();
 		rphit.getCentroids();
 		long duration = (System.nanoTime() - startTime);
-		List<float[]> aligned  = VectorUtil.alignCentroids(rphit.getCentroids(),gen.medoids());
-		System.out.println(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
-		System.out.print("\n");
+//		List<float[]> aligned  = VectorUtil.alignCentroids(rphit.getCentroids(),gen.medoids());
+//		System.out.println(StatTests.PR(aligned,gen)+":"+duration/1000000000f);
+//		System.out.print("\n");
 		System.gc();
 		
 	}
@@ -100,20 +100,32 @@ public class RPHashConsensusRP  implements Clusterer{
 	}
 
 	@Override
-	public void setData(List<float[]> centroids) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void setK(int getk) {
 		// TODO Auto-generated method stub
 		
 	}
 	
+	@Override
+	public void setData(List<Centroid> centroids) {
+		this.centroids = centroids;
+		
+	}
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		if(this.centroids == null) this.centroids = new ArrayList<>(centroids.size());
+		for(float[] f: centroids){
+			this.centroids.add(new Centroid(f,0));
+		}
+	}
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+		so.setRandomSeed(randomseed);
+	}
 	
-	
-	
-	
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
 	
 }

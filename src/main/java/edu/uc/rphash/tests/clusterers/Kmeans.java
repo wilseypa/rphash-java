@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -34,8 +35,14 @@ public class Kmeans implements Clusterer {
 		return data;
 	}
 
-	public void setData(List<float[]> data) {
-		this.data = data;
+	@Override
+	public void setData(List<Centroid> centroids) {
+		this.data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids) data.add(c.centroid());
+	}
+	@Override
+	public void setRawData(List<float[]> centroids) {
+		this.data = centroids;
 	}
 
 	public List<Float> getWeights() {
@@ -225,7 +232,7 @@ public class Kmeans implements Clusterer {
 	}
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
 		// if (means == null) {
 		// run();
 
@@ -279,7 +286,10 @@ public class Kmeans implements Clusterer {
 //		}
 //		re.end();
 		// }
-		return kmeansCentroids;
+		List<Centroid> l = new ArrayList<>();
+		for(float[] f : kmeansCentroids)
+			l.add(new Centroid(f,0));
+		return l;
 	}
 
 	// Convert a 2D array to a 1D double array
@@ -295,17 +305,26 @@ public class Kmeans implements Clusterer {
 
 		return d;
 	}
+	
+	@Override
+	public void reset(int randomseed) {
+		
+	}
 
 	public static void main(String[] args) {
 		GenerateData gen = new GenerateData(8, 100, 100);
 		Kmeans kk = new Kmeans(5, gen.data(), 24);
-		VectorUtil.prettyPrint(kk.getCentroids());
+//		VectorUtil.prettyPrint(kk.getCentroids());
 	}
 
 	@Override
 	public RPHashObject getParam() {
-
 		return new SimpleArrayReader(this.data, k);
 	}
 
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
+	
 }

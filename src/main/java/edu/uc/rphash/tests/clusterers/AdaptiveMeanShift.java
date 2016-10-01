@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.generators.GenerateData;
@@ -93,7 +94,7 @@ public class AdaptiveMeanShift implements Clusterer {
 
 	public List<float[]> getData() { return data; }
 
-	public void setData(List<float[]> data){ this.data = data; }
+	public void setRawData(List<float[]> data){ this.data = data; }
 	
 	
 	public AdaptiveMeanShift(){ 
@@ -453,25 +454,45 @@ public class AdaptiveMeanShift implements Clusterer {
 	
 
 	@Override
-	public List<float[]> getCentroids() {
+	public List<Centroid> getCentroids() {
+		List<Centroid> centroids = new ArrayList<>();
+		for(float[] cent : this.centroids){
+			centroids.add(new Centroid(cent,0));
+		}
 		return centroids;
 	}
 
 	@Override
 	public RPHashObject getParam() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public void setK(int getk) {
-		// TODO Auto-generated method stub
+		System.out.println("Adaptive Mean Shift Does not have a fixed number of clusters");
 	}
 
 	@Override
 	public void setWeights(List<Float> counts) {
 		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void setData(List<Centroid> centroids) {
+		for(Centroid c : centroids)this.data.add(c.centroid());
 		
+	}
+
+	@Override
+	public void reset(int randomseed) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean setMultiRun(int runs) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

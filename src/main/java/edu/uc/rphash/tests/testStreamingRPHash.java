@@ -3,6 +3,7 @@ package edu.uc.rphash.tests;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uc.rphash.Centroid;
 import edu.uc.rphash.RPHashMultiProj;
 import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
@@ -41,13 +42,13 @@ public class testStreamingRPHash {
 			rphit.addVectorOnlineStep(data.get(i));
 
 			if (i % interval == 0) {
-				List<float[]> cents = rphit.getCentroidsOfflineStep();
+				List<Centroid> cents = rphit.getCentroidsOfflineStep();
 				long time = System.nanoTime() - timestart;
 
 				rt.gc();
 				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-				double wcsse = StatTests.WCSSE(cents, data);
+				double wcsse = StatTests.WCSSECentroidsFloat(cents, data);
 
 				System.gc();
 				System.out.printf("%d\t%d\t%.4f\t%.0f\n", i, usedkB,
@@ -89,13 +90,13 @@ public class testStreamingRPHash {
 			for (float[] f : vecsAndNoiseInThisRound) {
 				rphit.addVectorOnlineStep(f);
 			}
-			List<float[]> cents = rphit.getCentroidsOfflineStep();
+			List<Centroid> cents = rphit.getCentroidsOfflineStep();
 			long time = System.nanoTime() - timestart;
 
 			rt.gc();
 			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-			double wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
+			double wcsse = StatTests.WCSSECentroidsFloat(cents, justvecsInThisRound);
 			double realwcsse = StatTests.WCSSE(gen1.medoids, justvecsInThisRound);
 			
 			System.out.printf("%d\t%d\t%.4f\t%.1f\t\t", i, usedkB,
@@ -115,7 +116,7 @@ public class testStreamingRPHash {
 			rt.gc();
 			usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
-			wcsse = StatTests.WCSSE(cents, justvecsInThisRound);
+			wcsse = StatTests.WCSSECentroidsFloat(cents, justvecsInThisRound);
 			// recreate vectors at execution time to check average
 			rt.gc();
 			Thread.sleep(1000);

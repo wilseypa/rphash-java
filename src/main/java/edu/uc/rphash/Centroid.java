@@ -103,6 +103,11 @@ public class Centroid {
 		}
 		return false;
 	}
+
+	public void setWCSS(double d) {
+		this.wcss = (float) d;
+		
+	}
 	
 
 }
