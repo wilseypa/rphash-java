@@ -34,6 +34,14 @@ import edu.uc.rphash.tests.generators.GenerateData;
  * 
  */
 
+
+//TODO: Add labels to points for centroids
+//TODO: Compute ARI (R)
+//TODO: Remove testing options
+//TODO: Merge branch to Master
+//TODO: Add KNN / KNN-LSH / KD-TREE
+
+
 public class AdaptiveMeanShift implements Clusterer {
 
 	List<float[]> data;			//global data storage
@@ -50,21 +58,30 @@ public class AdaptiveMeanShift implements Clusterer {
 							// 		1 - Balloon Estimator
 							// 		2 - Sample Point Estimator (TODO)
 
+	int knnAlg = 0; 		//Determine what KNN algorithm to use
+							//		0 - KNN EUC (TODO)
+							//		1 - KNN LSH (TODO)
+							//		2 - KD-TREE (TODO)
+	
 	int n = 5; 				//Number of KNN points for adaptive window
 	
 	
+	
+	
+	
+	static int maxiters = 10000;			//Max iterations before breaking search for convergence
+	float convergeValue = (float) 0.00001;	//maximum change in each dimension to 'converge'
+	float blurPercent = (float) 2;				//Amount to blur centroids to group similar Floats
+	
 	//TEST Parameters:
 	boolean debug = false;							//Control Debug Output
-	static int maxiters = 10000;					//Max iterations before breaking search for convergence
-	boolean minimalOutput = false;					//Print the minimal final output (pretty print)
+	boolean minimalOutput = true;					//Print the minimal final output (pretty print)
 	boolean printCentroids = false;					//Print out centroids (not pretty)
 	Set<String> cent = new HashSet<String>();		//Storage for grouping the clusters
-	float convergeValue = (float) 0.00001;			//maximum change in each dimension to 'converge'
-	float blurPercent = (float) 2;				//Amount to blur centroids to group similar Floats
 	double knntime = 0;
 	double calcTime = 0;
 	double algTime = 0;
-	boolean testRun = true;
+	boolean testRun = false;
 		
 	public void setMode(int mode){ this.kernelMode = mode; }
 	
@@ -99,13 +116,12 @@ public class AdaptiveMeanShift implements Clusterer {
 		float kern = 0;
 		float c = (float) (1.0/Math.pow(h,2));
 		
-		//Mode 0 is uniform -> each point weighed equally
+		//Mode 0 is uniform
 		if (kernelMode == 0){
-			//#In uniform, add the coordinates to a cumulative buffer
 			mPoint = workingData;
 		}
 		
-		//Mode 1 is Gaussian -> NEEDS VALIDATION
+		//Mode 1 is Gaussian
 		else if (kernelMode == 1){
 			kern = (float) Math.exp(-c * Math.pow(workingData - curWindow, 2));
 			mPoint = (float) kern * (workingData - curWindow);
@@ -168,21 +184,15 @@ public class AdaptiveMeanShift implements Clusterer {
 						if(dataSet.get(t) > maxV){
 							maxI = t;
 							maxV = dataSet.get(t);
-							//System.out.println("\t\t" + dataSet.get(t) + "\t" + maxV);
 						}
 					}
 					curMax = maxV;
-					//System.out.println("\t" + dataSet);
-					//System.out.println("Removing: " + dataSet.get(maxI));
 					dataSet.remove(maxI);
-					//System.out.println("\t" + dataSet);
 					
 				}
 				long endTime = System.currentTimeMillis();
 				
-
 				calcTime += endTime - startTime;
-				
 			}			
 		}
 		
@@ -196,8 +206,6 @@ public class AdaptiveMeanShift implements Clusterer {
 			}
 		}
 		return dataSet.get(maxI);
-		
-		
 	}
 	
 	
@@ -259,7 +267,6 @@ public class AdaptiveMeanShift implements Clusterer {
 						if(curWindow[y] >= convergeValue)
 							convergeTest = false;
 					}
-					printDebug("Converge? " + convergeTest);
 					
 					if(kernelMode == 0){
 						for(int y = 0; y < curWindow.length; y++){
@@ -310,17 +317,12 @@ public class AdaptiveMeanShift implements Clusterer {
 			double percentDiff = 0;
 			
 			for(int z = 0; z < centroid.length; z++){
-				printDebug("\t\t" + centroid[z]);
-				printDebug("\t\t" + window[z]);
 				percentDiff = percentDiff + Math.abs(1-(centroid[z] / window[z]));
-				printDebug("\t\tPD: " + Math.abs(1-(centroid[z]/window[z])));
 			}
 			
 			percentDiff = percentDiff / centroid.length;
 
-			printDebug("\tPercentDiff = " + percentDiff);
 			if(percentDiff < blurPercent){
-				printDebug("Returning false, found centroid");
 				return false;
 			}
 			
@@ -330,7 +332,7 @@ public class AdaptiveMeanShift implements Clusterer {
 
 	
 	void run(int genClusters, int genRowsPerCluster, int genColumns){		
-		
+
 		if(this.data == null){
 			GenerateData gen = new GenerateData(genClusters,genRowsPerCluster, genColumns);
 			this.data = gen.data;
@@ -359,12 +361,11 @@ public class AdaptiveMeanShift implements Clusterer {
 			
 			output.println("g_Clusters,g_Rows,g_Columns,h,kMode,wMode,n,count,completionTime");
 			
-			
 			for(int genClusters = 2; genClusters <= max_genClusters; genClusters = genClusters + incr_genClusters){
 				System.out.println(genClusters);
 				for(int genRowsPerCluster = 2; genRowsPerCluster <= max_genRowsPerCluster; genRowsPerCluster = genRowsPerCluster + incr_genRowsPerCluster){
 					for(int genColumns = 1; genColumns <= max_genColumns; genColumns = genColumns + incr_genColumns){
-						for(int i = 0; i < 2; i++){
+						for(int i = 0; i < 1; i++){
 							genData = new GenerateData(genClusters,genRowsPerCluster,genColumns);
 							for(int kMode = 0; kMode < 2; kMode++){
 								for(int wMode = 0; wMode < 2; wMode++){
@@ -385,7 +386,7 @@ public class AdaptiveMeanShift implements Clusterer {
 										}
 									}
 									else{
-										for(int n = 2; n <= 30 && n <= genClusters * genRowsPerCluster; n++){
+										for(int n = 2; n <= 10 && n <= genClusters * genRowsPerCluster; n = n+2){
 											AdaptiveMeanShift ams = new AdaptiveMeanShift();
 											ams.setMode(kMode);
 											ams.setN(n);
@@ -416,14 +417,14 @@ public class AdaptiveMeanShift implements Clusterer {
 	
 	
 	public static void main(String[] args){
-		int genClusters = 5;
-		int genRowsPerCluster = 52;
-		int genColumns = 51;
+		int genClusters = 3;
+		int genRowsPerCluster = 10;
+		int genColumns = 100;
 		
 		AdaptiveMeanShift ams = new AdaptiveMeanShift();
 		
 		if(ams.testRun){
-			ams.runTests(genClusters, genRowsPerCluster, genColumns, 1,15,15);
+			ams.runTests(genClusters, genRowsPerCluster, genColumns, 1,100,1000);
 		}
 		else{
 			ams.run(genClusters,genRowsPerCluster,genColumns);
