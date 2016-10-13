@@ -29,7 +29,7 @@ import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.generators.GenerateData;
 
-
+import java.util.Arrays;
 public class DBScan implements edu.uc.rphash.Clusterer{
 
     
@@ -169,7 +169,7 @@ public class DBScan implements edu.uc.rphash.Clusterer{
     
     
     
-    DBSCANClusterer db= new DBSCANClusterer<DoublePoint>(0.1,3);// TODO code application logic here . have to convert this to list of float arrays : List<float[]> getCentroids()
+    DBSCANClusterer db= new DBSCANClusterer<DoublePoint>(0.2,4);// TODO code application logic here . have to convert this to list of float arrays : List<float[]> getCentroids()
           
     
        double eps = db.getEps();
@@ -184,10 +184,10 @@ public class DBScan implements edu.uc.rphash.Clusterer{
         int a = abc.size();
         System.out.println("The size of the list is :" + a);
         
-        System.out.println(abc.getClass());
+   //     System.out.println(abc.getClass());
         
-         System.out.println("The cluster id 1 :" + abc.get(0));
-         System.out.println("The cluster id 2 :" + abc.get(1));
+   //      System.out.println("The cluster id 1 :" + abc.get(0));
+   //      System.out.println("The cluster id 2 :" + abc.get(1));
           Cluster cl1 = abc.get(0);
           Cluster cl2 = abc.get(1);
           List<?> cluster1 = cl1.getPoints();
@@ -198,10 +198,11 @@ public class DBScan implements edu.uc.rphash.Clusterer{
           
           CentroidDBScan m = new CentroidDBScan() ;
 //          System.out.println("The centroid in cluster1:" + m.centroidOf(cl1)); 
-          System.out.println("The centroid in cluster2:" + m.centroidOf(cl2));
-          
           System.out.println("The centroid in cluster1:" + m.centroidOf(abc.get(0)));
+          System.out.println("The centroid in cluster2:" + m.centroidOf(cl2));
+      
           
+                   
          
           List<DoublePoint>CentroidDBScan1  = new ArrayList<DoublePoint>();
           
@@ -216,19 +217,38 @@ public class DBScan implements edu.uc.rphash.Clusterer{
         	  Clusterable cent =  n.centroidOf(abc.get(i));        	        	  
         	  Centroids.add(cent); 								// convert to List<Centroid> getCentroids();
         	  
-        	  
-  //       	  CentroidDBScan1.add(new Clusterable (cent));
+  
           }
+                  
           
-   
-          
-          
+          System.out.println("The whole  list of  the centroids are :" + Centroids); 
+         
           List<Centroid>C =  new ArrayList<Centroid>(); 
           
-//           for (float[] c:)
+          
+           for ( Clusterable c: Centroids )
            { 
+           	   double[] temp =	c.getPoint()	;									// from clusterable to centroid
+        	  
+           	float[] floatArray = new float[temp.length];
+           	for (int i = 0 ; i < temp.length; i++)
+           	{
+           	    floatArray[i] = (float) temp[i];
+           	}
+           	   
+           	   
+        	  C.add(new Centroid(floatArray,0)) ;    // setting  the projection id = 0
+           
            	
            } 
+           
+           
+ //          System.out.println("The whole  list of  the centroid ids are :" + C); 
+           
+           for (Centroid k:C) { 
+        	  float[] toprint= k.centroid();         
+        	  System.out.println(Arrays.toString(toprint)); }
+           
                
     }
 
