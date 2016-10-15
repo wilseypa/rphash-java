@@ -64,7 +64,7 @@ public class CentroidDBScan<T extends Clusterable> {
         for (int i = 0; i < centroid.length; i++) { 
             centroid[i] /= points.size(); 
         } 
-        return new DoublePoint(centroid); 
+        return new DoublePoint(centroid);   // have to convert this to list of float arrays : List<float[]> getCentroids()
     } 
  
 }
