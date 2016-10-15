@@ -146,6 +146,15 @@ public class RPHash {
 		//some clusterers can do multi runs in parallel
 		if (clu.setMultiRun(runs)) 
 		{
+			
+			List<Centroid> tmpcents = clu.getCentroids();
+			double tmpwcss = 0.0;
+			for (Centroid c : tmpcents) {
+				for(int m = 0;m<c.getWCSS().length;m++)
+					tmpwcss += c.getWCSS()[m];
+			}
+			System.out.print("\t"+tmpwcss+"\t");
+			
 			return clu.getCentroids();
 		} 
 		else 
@@ -153,21 +162,26 @@ public class RPHash {
 			List<Centroid> mincents = clu.getCentroids();
 			double minwcss = 0.0;
 			for (Centroid c : mincents) {
-				minwcss += c.getWCSS();
+				for(int m = 0;m<c.getWCSS().length;m++)
+					minwcss += c.getWCSS()[m];
 			}
-
+			System.out.print("\t"+minwcss+"\t");
 			for (int i = 1; i < runs; i++) {
 				
 				
 				List<Centroid> tmpcents = clu.getCentroids();
 				double tmpwcss = 0.0;
 				for (Centroid c : tmpcents) {
-					tmpwcss += c.getWCSS();
+					for(int m = 0;m<c.getWCSS().length;m++)
+						tmpwcss += c.getWCSS()[m];
 				}
 				if (tmpwcss < minwcss) {
 					minwcss = tmpwcss;
 					mincents = tmpcents;
 				}
+				
+				System.out.print("\t"+tmpwcss+"\t");
+				
 				clu.reset(new Random().nextInt());
 			}
 			return mincents;

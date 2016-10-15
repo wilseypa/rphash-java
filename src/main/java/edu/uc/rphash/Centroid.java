@@ -11,9 +11,9 @@ public class Centroid {
 	public long id;
 	public int projectionID;
 	private float[] M2;
-	private float wcss;
-	
-	public Centroid(int dim, long id,int projectionID) {
+	private float[] wcss;
+
+	public Centroid(int dim, long id, int projectionID) {
 		this.centroid = new float[dim];
 		this.M2 = new float[dim];
 		this.count = 0;
@@ -23,7 +23,7 @@ public class Centroid {
 		ids.add(id);
 	}
 
-	public Centroid(float[] data,int projectionID) {
+	public Centroid(float[] data, int projectionID) {
 		this.centroid = data;
 		this.M2 = new float[this.centroid.length];
 		this.ids = new ConcurrentSkipListSet<Long>();
@@ -31,7 +31,7 @@ public class Centroid {
 		this.count = 1;
 	}
 
-	public Centroid(float[] data, long id,int projectionID) {
+	public Centroid(float[] data, long id, int projectionID) {
 		this.centroid = data;
 		this.M2 = new float[this.centroid.length];
 		this.ids = new ConcurrentSkipListSet<Long>();
@@ -39,20 +39,20 @@ public class Centroid {
 		this.id = id;
 		this.projectionID = projectionID;
 		this.count = 1;
-		
+
 	}
 
 	private void updateCentroidVector(float[] data) {
-		float delta;
-		count++;
-		float tmpsum = 0.0f;
-		for (int i = 0; i < data.length; i++) {
-			delta = data[i] - centroid[i];
-			centroid[i] = centroid[i] + delta / (float)count;
-			M2[i] = M2[i]+delta*data[i]-centroid[i];
-			tmpsum+=M2[i];
-		}
-		this.wcss = tmpsum/(float)count;
+			float delta;
+			count++;
+			float tmpsum = 0.0f;
+			for (int i = 0; i < data.length; i++) {
+				delta = data[i] - centroid[i];
+				centroid[i] = centroid[i] + delta / (float) count;
+				M2[i] = M2[i] + delta * data[i] - centroid[i];
+				tmpsum += M2[i];
+			}
+			this.wcss = M2;//tmpsum / (float) count;
 	}
 
 	public float[] centroid() {
@@ -62,21 +62,20 @@ public class Centroid {
 	public void updateVec(Centroid rp) {
 		ids.addAll(rp.ids);
 		float delta;
-		count= count+rp.count;
+		count = count + rp.count;
 		float tmpsum = 0.0f;
 		for (int i = 0; i < rp.centroid.length; i++) {
 			delta = rp.centroid[i] - centroid[i];
-			centroid[i] = centroid[i] + (rp.count*delta) / (float)count;
-			M2[i] = M2[i]+rp.count*delta*rp.centroid[i]-centroid[i];
-			tmpsum+=M2[i];
+			centroid[i] = centroid[i] + (rp.count * delta) / (float) count;
+			M2[i] = M2[i] + rp.count * delta * rp.centroid[i] - centroid[i];
+			tmpsum += M2[i];
 		}
-		this.wcss = tmpsum/(float)count;
+		this.wcss = M2;//tmpsum / (float) count;
 	}
-	
-	public float getWCSS() {
+
+	public float[] getWCSS() {
 		return this.wcss;
 	}
-	
 
 	public void updateVec(float[] rp) {
 		updateCentroidVector(rp);
@@ -85,7 +84,7 @@ public class Centroid {
 	public Long getCount() {
 		return count;
 	}
-	
+
 	public void setCount(long count) {
 		this.count = count;
 	}
@@ -98,16 +97,20 @@ public class Centroid {
 
 	@Override
 	public boolean equals(Object obj) {
-		if(obj instanceof Centroid){
-			return ((Centroid)obj).id == id;
+		if (obj instanceof Centroid) {
+			return ((Centroid) obj).id == id;
 		}
 		return false;
 	}
 
-	public void setWCSS(double d) {
-		this.wcss = (float) d;
-		
+	public void setWCSS(double[] d) {	
+		if(this.wcss==null)this.wcss = new float[d.length];
+		for(int i = 0;i<d.length;i++)
+			this.wcss[i] = (float) d[i];
 	}
 	
+	public void setWCSS(float[] d) {	
+		this.wcss =  d;
+	}
 
 }

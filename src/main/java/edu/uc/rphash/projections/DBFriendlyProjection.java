@@ -78,7 +78,7 @@ public class DBFriendlyProjection implements Projector {
 	// M: the size [t x n/6] set of vector indices that should incur negative
 	// -sqrt(3/t)
 	// n: original dimension
-	// t: target/projected dimension
+	// t: target OR projected dimension
 	static float[] projectN(float[] v, int[][] P, int[][] M, int n, int t) {
 		float[] r = new float[t];
 		float sum;
@@ -87,11 +87,8 @@ public class DBFriendlyProjection implements Projector {
 
 		for (int i = 0; i < t; i++) {
 			sum = 0.0f;
-			
 			for (int col :  M[i]) sum -= v[col] ;
-			
-			for(int col :  P[i]) sum += v[col] ;
-			
+			for (int col :  P[i]) sum += v[col] ;
 			r[i] = sum* scale;
 		}
 		return r;

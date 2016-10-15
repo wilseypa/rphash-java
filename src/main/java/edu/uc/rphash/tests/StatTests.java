@@ -40,6 +40,52 @@ public class StatTests {
 		return (float)count/(float)data.size();
 	}
 	
+	/** Naive sum of square errors, nothing fancy, baseline from the definition
+	 * @param data
+	 * @return
+	 */
+	public static double[] WCSS(List<double[]> data){
+		
+		double d = data.get(0).length;
+		double[] ret = new double[(int)d];
+		double[] mean = mean(data);
+		
+		//compute the squared distance from mean
+		for(double[] vec : data)
+		{
+			for(int i = 0;i<d;i++){
+				ret[i] += ((vec[i]-mean[i])*(vec[i]-mean[i]));
+			}
+		}
+		for(int i = 0;i<d;i++){
+			ret[i] = ret[i]/(double)(data.size());
+		}
+
+		return ret;
+	}
+	/** Naive vector set mean, nothing fancy, baseline from the definition
+	 * @param data
+	 * @return
+	 */
+	public static double[] mean(List<double[]> data){
+		int d = data.get(0).length;
+		double[] mean = new double[d];
+		//sum up all the vectors per dimension
+		for(double[] vec : data)
+		{
+			for(int i = 0;i<d;i++){
+				mean[i]+= vec[i];
+			}
+		}
+		
+		//divide by set size, by the book
+		for(int i = 0;i<d;i++){
+			mean[i]/= (double)data.size() ;
+		}
+		return mean;
+	}
+	
+	
 	
 	public static double WCSSE(List<float[]> estCentroids, List<float[]> data){
 		double count = 0.0 ;

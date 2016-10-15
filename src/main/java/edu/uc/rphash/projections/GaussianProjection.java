@@ -47,7 +47,7 @@ public class GaussianProjection implements Projector {
 			sum = 0.0f;
 			for (j = 0; j < n; j++)
 				sum += v[i] * M[i * n + j];
-			r[i] = sum * ((float) Math.sqrt((float) t / (float) n));// scaled
+			r[i] = sum * ((float) Math.sqrt((float) n / (float) t));// scaled
 		}
 		return r;
 	}
