@@ -161,9 +161,12 @@ public class RPHash {
 		{
 			List<Centroid> mincents = clu.getCentroids();
 			double minwcss = 0.0;
+			
 			for (Centroid c : mincents) {
+				if(c.getWCSS()!=null){
 				for(int m = 0;m<c.getWCSS().length;m++)
 					minwcss += c.getWCSS()[m];
+				}
 			}
 			System.out.print("\t"+minwcss+"\t");
 			for (int i = 1; i < runs; i++) {
@@ -172,15 +175,16 @@ public class RPHash {
 				List<Centroid> tmpcents = clu.getCentroids();
 				double tmpwcss = 0.0;
 				for (Centroid c : tmpcents) {
+					if(c.getWCSS()!=null){
 					for(int m = 0;m<c.getWCSS().length;m++)
 						tmpwcss += c.getWCSS()[m];
-				}
+				}}
 				if (tmpwcss < minwcss) {
 					minwcss = tmpwcss;
 					mincents = tmpcents;
 				}
 				
-				System.out.print("\t"+tmpwcss+"\t");
+				System.out.print("\t"+tmpwcss+"\n");
 				
 				clu.reset(new Random().nextInt());
 			}

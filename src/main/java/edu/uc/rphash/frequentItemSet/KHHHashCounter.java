@@ -109,7 +109,7 @@ public class KHHHashCounter {
 			p.remove(e);
 			addLong(e.hashCode(), 1);
 			p.add((long) e.hashCode());
-			items.get(e.hashCode()).updateVec(e.centroid());
+			items.get(e.hashCode()).mergeCentroids(e);
 		}
 
 		if (p.size() > k) {

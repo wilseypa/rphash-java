@@ -42,43 +42,67 @@ public class Centroid {
 
 	}
 
-	private void updateCentroidVector(float[] data) {
-			float delta;
-			count++;
-			float tmpsum = 0.0f;
-			for (int i = 0; i < data.length; i++) {
-				delta = data[i] - centroid[i];
-				centroid[i] = centroid[i] + delta / (float) count;
-				M2[i] = M2[i] + delta * data[i] - centroid[i];
-				tmpsum += M2[i];
-			}
-			this.wcss = M2;//tmpsum / (float) count;
-	}
-
 	public float[] centroid() {
 		return centroid;
-	}
-
-	public void updateVec(Centroid rp) {
-		ids.addAll(rp.ids);
-		float delta;
-		count = count + rp.count;
-		float tmpsum = 0.0f;
-		for (int i = 0; i < rp.centroid.length; i++) {
-			delta = rp.centroid[i] - centroid[i];
-			centroid[i] = centroid[i] + (rp.count * delta) / (float) count;
-			M2[i] = M2[i] + rp.count * delta * rp.centroid[i] - centroid[i];
-			tmpsum += M2[i];
-		}
-		this.wcss = M2;//tmpsum / (float) count;
 	}
 
 	public float[] getWCSS() {
 		return this.wcss;
 	}
+	
+	
+	/** This is the merge function tested in python and found to be the most stable for randomly distributed and
+	 * skewed data. Previous attempts to merge wcss had issues,
+	 * @param cnt_1
+	 * @param x_1
+	 * @param var_1
+	 * @param cnt_2
+	 * @param x_2
+	 * @param var_2
+	 * @return
+	 */
+	public static float[][] merge(float cnt_1, float[] x_1, float[] var_1,
+			float cnt_2, float[] x_2, float[] var_2) {
+		float cnt_r = cnt_1 + cnt_2;
+		float[] x_r = new float[x_1.length];
+		float[] var_r = new float[x_1.length];
+		for (int i = 0; i < x_1.length; i++) {
+			x_r[i] = (cnt_1 * x_1[i] + cnt_2 * x_2[i]) / cnt_r;
+			var_r[i] += cnt_1
+					* ((x_r[i] - x_1[i]) * (x_r[i] - x_1[i]) + var_1[i])
+					+ cnt_2
+					* ((x_r[i] - x_2[i]) * (x_r[i] - x_2[i]) + var_2[i]);
+			var_r[i] = var_r[i] / cnt_r;
+		}
 
-	public void updateVec(float[] rp) {
-		updateCentroidVector(rp);
+		float[][] ret = new float[3][];
+		ret[0] = new float[1];
+		ret[0][0] = cnt_r;
+		ret[1] = x_r;
+		ret[2] = var_r;
+		return ret;
+	}
+	
+	public void mergeCentroids(Centroid rp) {
+		ids.addAll(rp.ids);
+		float[][] ret = merge(this.count, this.centroid, this.wcss, rp.count, rp.centroid,
+				rp.wcss);
+		this.count = (long) ret[0][0];
+		this.centroid =  ret[1];
+		this.wcss = ret[2];
+	}
+
+	public void updateVec(float[] data) {
+	float delta;
+	count++;
+//	float tmpsum = 0.0f;
+	for (int i = 0; i < data.length; i++) {
+		delta = data[i] - centroid[i];
+		centroid[i] = centroid[i] + delta / (float) count;
+		M2[i] = M2[i] + delta * data[i] - centroid[i];
+//		tmpsum += M2[i];
+	}
+	this.wcss = M2;//tmpsum / (float) count;
 	}
 
 	public Long getCount() {

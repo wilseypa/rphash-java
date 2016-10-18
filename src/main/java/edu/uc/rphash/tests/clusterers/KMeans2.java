@@ -1,9 +1,9 @@
+
 package edu.uc.rphash.tests.clusterers;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.Vector;
 
 import edu.uc.rphash.Centroid;
@@ -12,7 +12,6 @@ import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
-import edu.uc.rphash.util.VectorUtil;
 
 public class KMeans2 implements Clusterer {
 
@@ -21,19 +20,19 @@ public class KMeans2 implements Clusterer {
 		private int dimension; // number of coordinates of a point
 		private float[] coordinates; // the coordinates of a point
 		private int count; // the coordinates of a point
-		private float[] wcss;
+		private float wcss;
 
 		/**
 		 * Create a point centered at the origin of the specific dimension
 		 **/
 		public PointND(int dimension) {
 			this.count = 0;
-			this.wcss = new float[dimension];
+			this.wcss = 0f;
 			this.dimension = dimension;
 			coordinates = new float[dimension];
 		}
 
-		public PointND(float[] data, int count, float[] wcss) {
+		public PointND(float[] data, int count, float wcss) {
 			this.dimension = data.length;
 			this.coordinates = data;
 			this.count = count;
@@ -54,7 +53,7 @@ public class KMeans2 implements Clusterer {
 
 		public PointND(Centroid p) {
 			this.count = p.getCount().intValue();
-			this.wcss = p.getWCSS();
+			this.wcss = 0;//p.getWCSS();
 			this.dimension = p.centroid().length;
 			this.coordinates = new float[dimension];
 			for (int i = 0; i < dimension; i++)
@@ -73,7 +72,7 @@ public class KMeans2 implements Clusterer {
 	// private float logLikelihood; // holds the log likelihood of each of the k
 	// Gaussians
 	private float MDL; // the minimum description length of the model
-	private int numIterations;
+	private int numIterations = 100;
 
 	private List<Centroid> centroids;
 	private PointND[] data;
@@ -81,7 +80,7 @@ public class KMeans2 implements Clusterer {
 	public KMeans2(int getk, List<float[]> data) {
 		this.data = new PointND[data.size()];
 		for (int i = 0; i < data.size(); i++) {
-			this.data[i] = new PointND(data.get(i), 1, new float[data.get(0).length]);
+			this.data[i] = new PointND(data.get(i), 1, 0f);
 		}
 		this.centroids = null;
 		init(this.data, getk);
@@ -100,10 +99,9 @@ public class KMeans2 implements Clusterer {
 		this.k = k;
 		this.mu = new PointND[k];
 		this.w = new Vector[k];
-		this.numIterations = 0;
 		this.sigma = new PointND[k];
 		this.prior = new float[k];
-
+		
 		// randomly assign a point in x to each mean mu[j]
 		PointND randomPoint;
 		for (int j = 0; j < k; j++) {
@@ -124,8 +122,8 @@ public class KMeans2 implements Clusterer {
 		PointND[] oldMeans = new PointND[k];
 		// initialize n,k,mu[j]
 		init(x, k);
-		// iterate until there is no change in mu[j]
 		int iter = 0;
+		// iterate until there is no change in mu[j]
 		while (maxDeltaMeans > epsilon && iter++ < numIterations) {
 			// remember old values of the each mean
 			for (int j = 0; j < k; j++) {
@@ -147,8 +145,8 @@ public class KMeans2 implements Clusterer {
 			computeMeans();
 			// compute the largest change in mu[j]
 			maxDeltaMeans = maxDeltaMeans(oldMeans);
-			numIterations++;
 		}
+		if(iter==numIterations)System.out.println("Max Iterations Reached");
 	}
 
 	/**
@@ -193,10 +191,10 @@ public class KMeans2 implements Clusterer {
 			return null;
 
 		for (int i = 0; i < x.length; i++) {
-			ret[i] = (x[i] - y[i]);
+			ret[i] = (x[i]  - y[i] ) ;
 		}
 
-		return new PointND(ret, 1, new float[x.length]);
+		return new PointND(ret,1, 0f);
 	}
 
 	PointND add(PointND px, PointND py) {
@@ -214,7 +212,7 @@ public class KMeans2 implements Clusterer {
 		for (int i = 0; i < x.length; i++) {
 			ret[i] = (x[i] * px.count + y[i] * py.count) / total;
 		}
-		return new PointND(ret, 1, new float[x.length]);
+		return new PointND(ret, 1, 0f);
 	}
 
 	public float max(float[] coordinates) {
@@ -245,18 +243,17 @@ public class KMeans2 implements Clusterer {
 				instance = w[j].get(i);
 				mu[j] = add(mu[j], instance);
 			}
-//			double wcss = 0.0;
-//			// recompute the wcss of each cluster
-//			for (int i = 0; i < numInstances; i++) {
-//				instance = w[j].get(i);
-//				for (float f : subtract(mu[j], instance).coordinates) {
-//					wcss += f * f;
-//				}
-//			}
-//			mu[j].wcss = (float) Math.sqrt(wcss) / (float) numInstances;
-			
+			double wcss = 0.0;
+			// recompute the wcss of each cluster
+			for (int i = 0; i < numInstances; i++) {
+				instance = w[j].get(i);
+				for(float f : subtract(mu[j], instance).coordinates){
+					wcss += f*f;
+				}
+			}
+			mu[j].wcss = (float) Math.sqrt(wcss)/(float)numInstances;
 			mu[j].count = numInstances;
-
+			
 		}
 	}
 
@@ -282,29 +279,31 @@ public class KMeans2 implements Clusterer {
 	}
 
 	public List<Centroid> getCentroids() {
-
+		
+		
+		
 		float epsilon = 0.001f;
 		if (centroids != null) {
 			return centroids;
 		}
-
+		
 		double minwcss = Double.MAX_VALUE;
 		List<Centroid> mincentroids = new ArrayList<>();
-
-		for (int j = 0; j < runs; j++) {
-
+		
+		for(int j = 0;j<runs;j++){
+		
 			init(data, k);
 			run(data, k, epsilon);
 			centroids = new ArrayList<Centroid>(k);
 			double twcss = 0.0;
 			for (int i = 0; i < k; i++) {
 				Centroid c = new Centroid(mu[i].coordinates, 0);
-				c.setWCSS(mu[i].wcss);
+				c.setWCSS(new double[]{mu[i].wcss});
 				c.setCount(mu[i].count);
 				centroids.add(c);
-//				twcss += (mu[i].wcss);
+				twcss+=(mu[i].wcss);
 			}
-			if (twcss < minwcss) {
+			if(twcss<minwcss){
 				minwcss = twcss;
 				mincentroids = centroids;
 			}
@@ -343,7 +342,7 @@ public class KMeans2 implements Clusterer {
 		this.centroids = null;
 		this.data = new PointND[data.size()];
 		for (int i = 0; i < data.size(); i++) {
-			this.data[i] = new PointND(data.get(i), 1, new float[data.get(0).length]);
+			this.data[i] = new PointND(data.get(i), 1, 0f);
 		}
 	}
 
@@ -352,132 +351,10 @@ public class KMeans2 implements Clusterer {
 		this.k = getk;
 	}
 
-	@Override
-	public void reset(int randomseed) {
-		centroids = null;
-	}
-
-	int runs = 1;
-
-	@Override
-	public boolean setMultiRun(int runs) {
-		this.runs = runs;
-		return true;
-	}
-
-	//TODO this merge is working
-	public static float[][] merge(float cnt_1, float[] x_1, float[] var_1, float cnt_2,
-			float[] x_2, float[] var_2) {
-	    float cnt_r = cnt_1+cnt_2;
-	    float[] x_r = new float[x_1.length];
-	    float[] var_r = new float[x_1.length];
-	    for(int i = 0;i<x_1.length;i++){
-	        x_r[i] = (cnt_1*x_1[i] + cnt_2*x_2[i] ) / cnt_r;
-	        var_r[i] +=  cnt_1*( (x_r[i]-x_1[i])*(x_r[i]-x_1[i]) +var_1[i]) 
-	        		+  cnt_2*( (x_r[i]-x_2[i])*(x_r[i]-x_2[i]) + var_2[i]);
-	        var_r[i] = var_r[i]/cnt_r;
-	    }
-	    
-		float[][] ret = new float[3][];
-	    ret[0] = new float[1];
-	    ret[0][0] = cnt_r;
-	    ret[1] = x_r;
-	    ret[2] = var_r;
-		return ret;
-	}
-
-//	public static float[][] merge(Centroid x_1, Centroid x_2) {
-//		
-//		int d = x_1.centroid().length;
-//		double[] x1 = new double[d];
-//		for(int i = 0; i< d;i++)x1[i] = x_1.centroid()[i];
-//		double[] x2 = new double[d];
-//		for(int i = 0; i< d;i++)x2[i] = x_2.centroid()[i];
-//		
-//		return merge(x1, x_1.getWCSS() , x_1.getCount(),
-//					 x2, x_2.getWCSS()  , x_2.getCount());
-//	}
-
-	/**
-	 * This method computes the mean and wcss of a weighted set of centroids The
-	 * first index contains the mean vector of dimension d, the second index
-	 * contains the wcss. and the third index contains the new merged count
-	 * 
-	 * @param c
-	 * @return multi attribute array
-	 */
-	public static float[][] computemeanAndWCSS(List<Centroid> cs) {
-		float[][] ret = new float[3][];
-		int d = cs.get(0).centroid().length;
-		Centroid c1 = cs.get(0);
-		Centroid c2 = cs.get(1);
-		ret = merge(c1.getCount(),c1.centroid(),new float[d],c2.getCount(), c2.centroid(),new float[d]);
-		for (int i = 1; i < cs.size(); i++) {
-			c2 = cs.get(i);
-			ret = merge(ret[0][0],ret[1],ret[2], c2.getCount(),c2.centroid(),new float[d]);
-		}
-
-		return ret;
-	}
-
 	public static void main(String[] args) {
-
 		
-		float[] x_1 = {55.085215700553867f, 57.422460638012225f, 57.572855373777195f, 56.483903938427062f, 58.427244931281827f} ;
-		float[] var_1 ={890.10853249058232f, 739.96201001558484f, 825.3038578897914f, 875.91938138515559f, 830.95191282523501f};
-		float cnt_1 = 4611;
-		float[] x_2 = {28.24013827f,  28.41069007f,  25.01421101f,  18.6368656f,   33.49266143f} ;
-		float[] var_2 ={0,0,0,0,0};
-		float cnt_2 = 15;
-	
-
-		
-		float[][] ret = merge(cnt_1, x_1, var_1,  cnt_2,  
-				x_2, var_2);
-		VectorUtil.prettyPrint(ret[0]);System.out.println();
-		VectorUtil.prettyPrint(ret[1]);System.out.println();
-		VectorUtil.prettyPrint(ret[2]);System.out.println();
-		
-		
-		for(int k = 0;k<500;k++){
-		List<Centroid> cs = new ArrayList<Centroid>();
-		List<double[]> csfull = new ArrayList<double[]>();
-
-		Random r = new Random();
-		int n = 200;
-		int d = 8;
-		for (int i = 0; i < n; i++) {
-			double[] randvecd = new double[d];
-			float[] randvecf = new float[d];
-
-			for (int j = 0; j < d; j++) {
-				randvecf[j] = (float)r.nextFloat()*(float)r.nextGaussian()+r.nextInt(20);
-				randvecd[j] = randvecf[j];
-			}
-
-			int ct = new Random().nextInt(10) + 1;
-			Centroid tmp = new Centroid(randvecf, 0);
-			tmp.setCount(ct);
-			cs.add(tmp);
-
-			// add a bunch of times
-			for (int j = 0; j < ct; j++)
-				csfull.add(randvecd);
-		}
-		float wcsstot = 0.0f;
-		float[] wcss = KMeans2.computemeanAndWCSS(cs)[2];
-		for(int i = 0;i<wcss.length;i++ )wcsstot+=wcss[i];
-		System.out.print(wcsstot + "\t");
-		wcsstot = 0.0f;
-		double[] wcss2 = StatTests.WCSS(csfull);
-		for(int i = 0;i<wcss2.length;i++ )wcsstot+=wcss2[i];
-		System.out.print(wcsstot + "\n");
-		}
-
-	}
-
-	private static void testkm2() {
-
+		testkm2();
+		/*
 		int k = 5;
 		int d = 100;
 		float var = 2.1f;
@@ -521,8 +398,8 @@ public class KMeans2 implements Clusterer {
 					justvecsInThisRound);
 			double realwcsse = StatTests.WCSSE(gen1.medoids,
 					justvecsInThisRound);
-			// System.out.printf("%d\t%d\t%.4f\t%.1f\t\t", i, usedkB,
-			// time / 1000000000f, wcsse);
+//			System.out.printf("%d\t%d\t%.4f\t%.1f\t\t", i, usedkB,
+//					time / 1000000000f, wcsse);
 
 			// cents = new HartiganWongKMeans(k, vecsAndNoiseInThisRound)
 			// .getCentroids();
@@ -531,8 +408,83 @@ public class KMeans2 implements Clusterer {
 			// wcsse = StatTests.WCSSECentroidsFloat(cents,
 			// justvecsInThisRound);
 			System.out.println(wcsse);
-			// System.out.printf("%.4f\t%.1f\t\t%.1f\n", time / 1000000000f,
-			// wcsse, realwcsse);
+//			System.out.printf("%.4f\t%.1f\t\t%.1f\n", time / 1000000000f,
+//					wcsse, realwcsse);
+		}*/
+	}
+
+	@Override
+	public void reset(int randomseed) {
+		centroids = null;
+	}
+
+	int runs = 1;
+	@Override
+	public boolean setMultiRun(int runs) {
+		this.runs = runs;
+		return true;
+	
+	}
+
+	private static void testkm2() {
+
+		int k = 5;
+		int d = 100;
+		float var = 2.1f;
+		int interval = 1000;
+		Runtime rt = Runtime.getRuntime();
+
+		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
+		GenerateStreamData noise = new GenerateStreamData(1, d, var * 10,
+				11331313);
+		KMeans2 km2 = new KMeans2();
+		// HartiganWongKMeans hwkm = new HartiganWongKMeans();
+
+		System.out.printf("\tKMeans\t\t\tNull\t\tReal\n");
+		System.out
+				.printf("Vecs\tMem(KB)\tTime\tWCSSE\t\tTime\tWCSSE\t\tWCSSE\n");
+
+		long timestart = System.nanoTime();
+		for (int i = 0; i < 2500000;) {
+			ArrayList<float[]> vecsAndNoiseInThisRound = new ArrayList<float[]>();
+			ArrayList<float[]> justvecsInThisRound = new ArrayList<float[]>();
+
+			for (int j = 1; j < interval && i < 2500000; i++, j++) {
+				float[] vec = gen1.generateNext();
+				vecsAndNoiseInThisRound.add(vec);
+				justvecsInThisRound.add(vec);
+				vecsAndNoiseInThisRound.add(noise.generateNext());
+			}
+
+			timestart = System.nanoTime();
+			km2.setRawData(justvecsInThisRound);
+			km2.setK(k);
+			km2.setMultiRun(10);
+
+			List<Centroid> cents = km2.getCentroids();
+			long time = System.nanoTime() - timestart;
+
+			rt.gc();
+			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+
+			double wcsse = StatTests.WCSSECentroidsFloat(cents,
+					justvecsInThisRound);
+			double realwcsse = StatTests.WCSSE(gen1.medoids,
+					justvecsInThisRound);
+			 System.out.printf("%d\t%d\t%.4f\t%.1f\t\t", i, usedkB,
+			 time / 1000000000f, wcsse);
+
+//			 cents = new HartiganWongKMeans(k, vecsAndNoiseInThisRound)
+//			 .getCentroids();
+//			 time = System.nanoTime() - timestart;
+//			 usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
+//			 wcsse = StatTests.WCSSECentroidsFloat(cents,
+//			 justvecsInThisRound);
+			 
+			 
+			System.out.println(realwcsse);
+			 //System.out.printf("%.4f\t%.1f\t\t%.1f\n", time / 1000000000f,
+			 //wcsse, realwcsse);
 		}
 	}
 
