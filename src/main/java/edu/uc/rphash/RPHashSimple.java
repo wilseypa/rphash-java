@@ -99,16 +99,14 @@ public class RPHashSimple implements Clusterer {
 		}
 
 		
-		for (Centroid c: centroids) so.addCentroid(c);
-		
+//		for (Centroid c: centroids) so.addCentroid(c);
 		
 		Clusterer offlineclusterer = so.getOfflineClusterer();
 		offlineclusterer.setWeights(so.getCounts());
-		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setData(centroids);
 		offlineclusterer.setK(so.getk());
 		this.centroids = offlineclusterer.getCentroids();
 		so.setCentroids(centroids);
-		
 		
 		return so;
 	}
@@ -117,15 +115,11 @@ public class RPHashSimple implements Clusterer {
 	private RPHashObject so;
 
 	public RPHashSimple(List<float[]> data, int k) {
-//		variance = StatTests.varianceSample(data, .01f);
 		so = new SimpleArrayReader(data, k);
-
 	}
 
 	public RPHashSimple(List<float[]> data, int k, int times, int rseed) {
-//		variance = StatTests.varianceSample(data, .001f);
 		so = new SimpleArrayReader(data, k);
-
 	}
 
 	public RPHashSimple(RPHashObject so) {

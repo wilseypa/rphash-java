@@ -295,11 +295,6 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		return readFloat;
 	}
 
-	@Override
-	public void setVariance(List<float[]> data) {
-		dec.setVariance(StatTests.varianceSample(data, .01f));
-	}
-
 	public void setDecayRate(float parseFloat) {
 		this.decayrate = parseFloat;
 	}
@@ -351,7 +346,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	}
 
 	@Override
-	public List<float[]> getData() {
+	public List<float[]> getRawData() {
 		return this.data;
 	}
 
@@ -371,5 +366,16 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public void setK(int getk) {
 		this.k = getk;
 		
+	}
+
+	@Override
+	public void setRawData(List<float[]> c) {
+		this.data = c;
+	}
+
+	@Override
+	public void addRawData(float[] centroid) {
+		if(data==null)data=new ArrayList<>();
+		data.add(centroid);
 	}
 }

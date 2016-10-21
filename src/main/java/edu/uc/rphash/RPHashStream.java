@@ -19,13 +19,14 @@ import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
+import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 
 public class RPHashStream implements StreamClusterer {
 	public List<KHHCentroidCounter> is;
 	private List<LSH[]> lshfuncs;
-//	private StatTests vartracker;
+	private StatTests vartracker;
 	private List<List<Centroid>> centroids = null;
 	private List<Centroid> bestcentroids = null;
 	private RPHashObject so;
@@ -39,12 +40,12 @@ public class RPHashStream implements StreamClusterer {
 
 	@Override
 	public long addVectorOnlineStep(final float[] vec) {
+		
 		for(int i = 0;i<this.concurrentRuns;i++){
-			
 			//execute as future
 			if (so.getParallel()) {
 				VectorLevelConcurrency r = new VectorLevelConcurrency(vec,
-						lshfuncs.get(i),  is.get(i),so);
+						lshfuncs.get(i),is.get(i),so);
 				executor.execute(r);
 				
 			}//execute sequentially
@@ -61,10 +62,13 @@ public class RPHashStream implements StreamClusterer {
 	public void init() {
 //		System.out.println("init rphash machine");
 		Random r = new Random(so.getRandomSeed());
-//		this.vartracker = new StatTests(.01f);
+		this.vartracker = new StatTests(.01f);
 		
+		
+		if(this.concurrentRuns<1)this.concurrentRuns=1;
 		int projections = so.getNumProjections();
 		int k = (int) (so.getk()*Math.log(so.getk()));
+		
 		// initialize our counter
 		float decayrate = so.getDecayRate();// 1f;// bottom number is window
 											// size
@@ -72,6 +76,7 @@ public class RPHashStream implements StreamClusterer {
 		lshfuncs = new ArrayList<LSH[]>(concurrentRuns);
 		
 		for(int i = 0;i<this.concurrentRuns;i++){
+			
 			if(so.getDecayRate()==0.0){
 					is.add(new KHHCentroidCounter(k));
 			}else{
@@ -156,28 +161,30 @@ public class RPHashStream implements StreamClusterer {
 			}
 			executor = Executors.newFixedThreadPool(getProcessors());
 		}
-//
-//		bestcentroids = new ArrayList<Centroid>();
+
+		bestcentroids = new ArrayList<Centroid>();
 //		List<Integer> projIDs = new ArrayList<Integer>();
 //		List<Centroid> cents = is.getTop();
 //		List<Float> counts = is.getCounts();
 //		
-//		int i =  0;
-//		//get rid of size one clusters that are there just because they were added to the list at the end
-//		for (; i < cents.size() ; i++) {
-//			if(counts.get(i)==1)break;
-//			projIDs.add(cents.get(i).projectionID);
-//			centroids.add(cents.get(i));
-//		}
+		List<Centroid> cents = new ArrayList<Centroid>();
+		int i =  0;
+		//get rid of size one clusters that are there just because they were added to the list at the end
+		for (; i < is.size() ; i++) {
+//			if(is.get(i).count==1)break;
+			cents.addAll(is.get(i).getTop());
+		}
+		
 //		counts = counts.subList(0, i);
-//		Clusterer offlineclusterer = so.getOfflineClusterer();
-//		offlineclusterer.setWeights(counts);
-//		offlineclusterer.setData(centroids);
-//		offlineclusterer.setK(so.getk());
-//		centroids = offlineclusterer.getCentroids();
-//		
-//		while(centroids.size()<so.getk() && counts.size()>so.getk())centroids = offlineclusterer.getCentroids();
-//		if(counts.size()<so.getk())System.out.println("WARNING: Failed to partition dataset into K clusters");
+		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setData(cents);
+		offlineclusterer.setK(so.getk());
+		cents = offlineclusterer.getCentroids();
+		
+		while(centroids.size()<so.getk() && cents.size()>so.getk())cents = offlineclusterer.getCentroids();
+		if(cents.size()<so.getk())System.out.println("WARNING: Failed to partition dataset into K clusters");
+		
+		
 		return bestcentroids;
 	}
 

@@ -164,6 +164,8 @@ public class VectorUtil {
 			tmp.add(m);
 		prettyPrint(tmp);
 	}
+	
+
 
 	public static void prettyPrint(int[][] mat) {
 		ArrayList<float[]> tmp = new ArrayList<float[]>();

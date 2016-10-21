@@ -233,7 +233,7 @@ public class RPHash {
 			RPHashObject reader = clu.getParam();
 
 			double wcsse = StatTests.WCSSECentroidsFloat(cents,
-					reader.getData());
+					reader.getRawData());
 
 			System.out.println(timed + ", used(KB): " + usedkB + ", wcsse: "
 					+ wcsse);
@@ -478,15 +478,15 @@ public class RPHash {
 				break;
 			}
 			case "leech": {
-				o.setDecoderType(new Leech(2f));
-				so.setDecoderType(new Leech(2f));
+				o.setDecoderType(new Leech());
+				so.setDecoderType(new Leech());
 				break;
 			}
 			case "multileech": {
 				o.setDecoderType(new MultiDecoder(
-						o.getInnerDecoderMultiplier() * 24, new Leech(2f)));
+						o.getInnerDecoderMultiplier() * 24, new Leech()));
 				so.setDecoderType(new MultiDecoder(so
-						.getInnerDecoderMultiplier() * 24, new Leech(2f)));
+						.getInnerDecoderMultiplier() * 24, new Leech()));
 				break;
 			}
 			case "levypstable": {

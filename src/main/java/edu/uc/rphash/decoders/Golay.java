@@ -256,7 +256,7 @@ public class Golay implements Decoder{
 	        return err <= 0 ? decodeWord(word) : decodeWord(word ^ err);
 	    }
 
-		private Float variance;
+		private float[] variance;
 	 
 	    // constructor
 	    
@@ -301,20 +301,24 @@ public class Golay implements Decoder{
 						/ testResolution);
 			}
 	}
+	    
+//	    float varTot = 1.0f;
 	    @Override
 		public long[] decode(float[] p1) {
 			int codeword = 0;
 			for(int i=0;i<24;i++){
-				if(p1[i]/variance>0)codeword+=1;
+				if(p1[i]>0)codeword+=1;
 				codeword<<=1;
 			}
 			return new long[]{codeword};
 		}
 
-		@Override
-		public void setVariance(Float parameterObject) {
-			variance = parameterObject;
-		}
+//		@Override
+//		public void setVariance(float[] parameterObject) {
+//			variance = parameterObject;
+//			for(int i = 0 ; i<this.getDimensionality();i++)varTot+=this.variance[i];
+//			varTot/=(float)this.getDimensionality();
+//		}
 
 		@Override
 		public int getDimensionality() {
@@ -336,10 +340,10 @@ public class Golay implements Decoder{
 			return false;
 		}
 		
-		@Override
-		public float getVariance(){
-			return variance;
-		}
+//		@Override
+//		public float[] getVariance(){
+//			return variance;
+//		}
 
 	    
 }

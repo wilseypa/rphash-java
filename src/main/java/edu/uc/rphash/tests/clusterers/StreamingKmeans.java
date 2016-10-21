@@ -308,7 +308,7 @@ public class StreamingKmeans implements StreamClusterer {
 			this.processors = 1;
 		executor = Executors.newFixedThreadPool(processors);
 
-		this.data = streamObject.getData();
+		this.data = streamObject.getRawData();
 
 		this.so = streamObject;
 		centroids = null;

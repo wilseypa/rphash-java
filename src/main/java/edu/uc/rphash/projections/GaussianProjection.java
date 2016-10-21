@@ -9,7 +9,7 @@ public class GaussianProjection implements Projector {
 	int n;
 	int t;
 	Random r;
-	float randn;
+//	float randn;
 
 	public GaussianProjection(int n, int t, int randomseed) {
 		this.n = n;
@@ -17,19 +17,28 @@ public class GaussianProjection implements Projector {
 		r = new Random(randomseed);
 		GenGauss(n, t);
 
-		randn = quicksqrt(n);
+//		randn = quicksqrt(n);
+	}
+	
+	public GaussianProjection(int n, int t) {
+		this.n = n;
+		this.t = t;
+		r = new Random();
+		GenGauss(n, t);
+
+//		randn = quicksqrt(n);
 	}
 
-	float quicksqrt(float b) {
-		float x = 1.1f;
-		char i = 0;
-
-		for (; i < 16; i++) {
-			x = (x + (b / x)) / 2.0f;
-		}
-
-		return x;
-	}
+//	float quicksqrt(float b) {
+//		float x = 1.1f;
+//		char i = 0;
+//
+//		for (; i < 16; i++) {
+//			x = (x + (b / x)) / 2.0f;
+//		}
+//
+//		return x;
+//	}
 
 	@Override
 	public float[] project(float[] s) {
@@ -47,7 +56,7 @@ public class GaussianProjection implements Projector {
 			sum = 0.0f;
 			for (j = 0; j < n; j++)
 				sum += v[i] * M[i * n + j];
-			r[i] = sum * ((float) Math.sqrt((float) n / (float) t));// scaled
+			r[i] = sum * ((float) Math.sqrt((float) 1 / (float) t));// scaled
 		}
 		return r;
 	}
@@ -56,13 +65,13 @@ public class GaussianProjection implements Projector {
 	 * Generate a 'good enough' gaussian random variate. based on central limit
 	 * thm , this is used if better than achipolis projection is needed
 	 */
-	float sampleNormal() {
-		int i;
-		float s = 0.0f;
-		for (i = 0; i < 6; i++)
-			s += ((float) r.nextInt()) / RAND_MAX;
-		return s - 3.0f;
-	}
+//	float sampleNormal() {
+//		int i;
+//		float s = 0.0f;
+//		for (i = 0; i < 6; i++)
+//			s += ((float) r.nextInt()) / RAND_MAX;
+//		return s - 3.0f;
+//	}
 
 	void GenGauss(int n, int t) {
 		M = new float[n * t];

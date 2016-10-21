@@ -22,10 +22,11 @@ import org.apache.commons.math3.distribution.LevyDistribution;
  * Proceedings of the twentieth annual symposium on Computational geometry, June
  * 08-11, 2004, Brooklyn, New York, USA.
  */
-public class PsdLSH  implements Decoder {
-	public static int LEVY = 0;	
+public class PsdLSH implements Decoder {
+	public static int LEVY = 0;
 	public static int CAUCHY = 1;
 	public static int GAUSSIAN = 2;
+	float[] variance = null;
 
 	int M;// Hash table size
 	int L;// Number of hash tables
@@ -51,7 +52,7 @@ public class PsdLSH  implements Decoder {
 		stableArray = new float[L][D];
 		initialize();
 	}
-	
+
 	public PsdLSH() {
 		M = 256;
 		L = 4;
@@ -60,7 +61,8 @@ public class PsdLSH  implements Decoder {
 		D = 32;
 		bits = (int) Math.ceil(Math.log(M) / Math.log(2));
 		rndBs = new float[L];
-		stableArray = new float[L][D];;
+		stableArray = new float[L][D];
+		;
 		initialize();
 	}
 
@@ -68,14 +70,18 @@ public class PsdLSH  implements Decoder {
 		M = 256;
 		L = 4;
 		T = psdtype;
-		if(psdtype==LEVY)W = 2f;
-		if(psdtype==GAUSSIAN)W = 1f;
-		if(psdtype==CAUCHY)W = 2f;
+		if (psdtype == LEVY)
+			W = 2f;
+		if (psdtype == GAUSSIAN)
+			W = 1f;
+		if (psdtype == CAUCHY)
+			W = 2f;
 		D = innerDecoderMultiplier;
 
 		bits = (int) Math.ceil(Math.log(M) / Math.log(2));
 		rndBs = new float[L];
-		stableArray = new float[L][D];;
+		stableArray = new float[L][D];
+		;
 		initialize();
 	}
 
@@ -83,16 +89,14 @@ public class PsdLSH  implements Decoder {
 
 		Random rng = new Random();
 
-
-
 		switch (T) {
-		case 0:{
-			LevyDistribution ld = new LevyDistribution(0,1) ;
+		case 0: {
+			LevyDistribution ld = new LevyDistribution(0, 1);
 			for (int l = 0; l < L; l++) {
 				int d = 0;
 				while (d < D) {
 					stableArray[l][d] = (float) ld.sample();
-					if(stableArray[l][d]<3f&& stableArray[l][d]>-3f){
+					if (stableArray[l][d] < 3f && stableArray[l][d] > -3f) {
 						d++;
 					}
 				}
@@ -100,7 +104,7 @@ public class PsdLSH  implements Decoder {
 			}
 			return;
 		}
-		
+
 		case 1: {
 			CauchyDistribution cd = new CauchyDistribution();
 
@@ -108,7 +112,7 @@ public class PsdLSH  implements Decoder {
 				int d = 0;
 				while (d < D) {
 					stableArray[l][d] = (float) cd.sample();
-					if(stableArray[l][d]<3f && stableArray[l][d]>-3f){
+					if (stableArray[l][d] < 3f && stableArray[l][d] > -3f) {
 						d++;
 					}
 				}
@@ -134,35 +138,34 @@ public class PsdLSH  implements Decoder {
 
 	long[] hash(float[] v) {
 
-			long[] hashVal = new long[1];
-//			long hashVal = 0;
-			int tmp;
-			for (int l = 0; l < L; l++) {
-				// dot product with stable distribution
-				float sum = rndBs[l];
-				for (int d = 0; d < D; d++) {
-					sum += v[d] * stableArray[l][d];
-				}
-				tmp = ((int) ((sum) / W)); 
-				tmp%= M;
-				// shift negative number to the other side
-				hashVal[0] += tmp;
-				hashVal[0] <<= this.bits;
+		long[] hashVal = new long[1];
+		// long hashVal = 0;
+		int tmp;
+		for (int l = 0; l < L; l++) {
+			// dot product with stable distribution
+			float sum = rndBs[l];
+			for (int d = 0; d < D; d++) {
+				sum += v[d] * stableArray[l][d];
 			}
-			return hashVal;
+			tmp = ((int) ((sum) / W));
+			tmp %= M;
+			// shift negative number to the other side
+			hashVal[0] += tmp;
+			hashVal[0] <<= this.bits;
+		}
+		return hashVal;
 	}
 
 	public static void main(String[] args) {
 		Random r = new Random();
-//		int M = 256;
-//		int L = 8;
-//		int T = LEVY;
-//		float W = 1f;
+		// int M = 256;
+		// int L = 8;
+		// int T = LEVY;
+		// float W = 1f;
 		int d = 24;
 
-		
 		PsdLSH sp = new PsdLSH();
-		
+
 		// MultiDecoder sp = new MultiDecoder( d, e8);
 		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
 		float testResolution = 10000f;
@@ -200,13 +203,14 @@ public class PsdLSH  implements Decoder {
 			}
 
 			System.out.println(distavg / testResolution + "\t" + (float) ct
-			/ testResolution);
+					/ testResolution);
 		}
 	}
 
-	@Override
-	public void setVariance(Float parameterObject) {
-	}
+//	@Override
+//	public void setVariance(float[] parameterObject) {
+//		this.variance = parameterObject;
+//	}
 
 	@Override
 	public int getDimensionality() {
@@ -232,9 +236,10 @@ public class PsdLSH  implements Decoder {
 	public boolean selfScaling() {
 		return true;
 	}
-	@Override
-	public float getVariance(){
-		return 1.0f;
-	}
+
+//	@Override
+//	public float[] getVariance() {
+//		return this.variance;
+//	}
 
 }

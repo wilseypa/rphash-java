@@ -43,7 +43,7 @@ public class RPHash3Stage implements Clusterer {
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[probes];
 		
-		Decoder dec = new Leech(variance);
+		Decoder dec = so.getDecoderType();
 		//Decoder dec = new MultiDecoder(1, innerdec);
 		
 		
@@ -91,7 +91,7 @@ public class RPHash3Stage implements Clusterer {
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[probes];
 		
-		Decoder dec = new Leech(variance);
+		Decoder dec = so.getDecoderType();
 		//Decoder dec = new MultiDecoder(1, innerdec);
 		
 		
