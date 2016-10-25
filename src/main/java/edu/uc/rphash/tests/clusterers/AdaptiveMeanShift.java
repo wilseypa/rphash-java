@@ -1,6 +1,5 @@
 package edu.uc.rphash.tests.clusterers;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -10,9 +9,11 @@ import java.util.Set;
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.kdtree.KDTreeNN;
+import edu.uc.rphash.kdtree.naiveNN;
+import edu.uc.rphash.lsh.LSHkNN;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
-import edu.uc.rphash.lsh.LSHkNN;
 
 /*	Adaptive Mean Shift (AMS) Algorithm
  * 
@@ -40,7 +41,7 @@ import edu.uc.rphash.lsh.LSHkNN;
 
 //TODO: Add labels to points for centroids
 //TODO: Compute ARI (R)
-//TODO: Add KNN / KNN-LSH / KD-TREE
+//TODO: add weights to centroid merging -> rphash (cardinality)
 
 
 public class AdaptiveMeanShift implements Clusterer {
@@ -59,10 +60,10 @@ public class AdaptiveMeanShift implements Clusterer {
 							// 		1 - Balloon Estimator
 							// 		2 - Sample Point Estimator (TODO)
 
-	int knnAlg = 0; 		//Determine what KNN algorithm to use
-							//		0 - KNN EUC (TODO)
-							//		1 - KNN LSH (TODO)
-							//		2 - KD-TREE (TODO)
+	int knnAlg = 2; 		//Determine what KNN algorithm to use
+							//		0 - KNN Naive
+							//		1 - KNN LSH
+							//		2 - KD-TREE
 	
 	int k = 5; 				//Number of KNN points for adaptive window
 	
@@ -123,13 +124,24 @@ public class AdaptiveMeanShift implements Clusterer {
 	}
 	
 	
-	public void adaptH(List<float[]> data, int curPoint, LSHkNN knnHandle){
+	public void adaptH(List<float[]> data, int curPoint, LSHkNN knnHandle, KDTreeNN kdHandle, naiveNN naiveHandle){
 		if(windowMode == 0){
 			return; //No adaptivity
 		}
 		else if(windowMode == 1){
-			List<float[]> retData = knnHandle.knn(k, data.get(curPoint));
-			h = VectorUtil.distance(retData.get(retData.size() - 1),data.get(curPoint));
+			if(knnAlg == 0){
+				h = Math.sqrt(naiveHandle.getNN(k, data.get(curPoint)));
+				printDebug("naiveH: " + h);
+			}
+			if(knnAlg == 1){
+				List<float[]> retData = knnHandle.knn(k, data.get(curPoint));
+				h = VectorUtil.distance(retData.get(retData.size() - 1),data.get(curPoint));
+				printDebug("LSHH: " + h);
+			}
+			if(knnAlg == 2){
+				h = Math.sqrt(kdHandle.treeNN(k, data.get(curPoint)));
+				printDebug("KDH: " + h + "\n");
+			}
 
 			return; //Balloon estimator
 		}
@@ -142,9 +154,20 @@ public class AdaptiveMeanShift implements Clusterer {
 	
 	public void cluster(List<float[]> data){
 		LSHkNN knnHandle = null;
+		KDTreeNN kdHandle = null;
+		naiveNN naiveHandle = null;
 		if(windowMode == 1){
-			knnHandle = new LSHkNN(data.get(0).length,5);
-			knnHandle.createDB(data);
+			if(knnAlg == 0){
+				naiveHandle = new naiveNN(data);
+			}
+			if(knnAlg == 1){
+				knnHandle = new LSHkNN(data.get(0).length,5);
+				knnHandle.createDB(data);
+			}
+			if(knnAlg == 2){
+				kdHandle = new KDTreeNN();
+				kdHandle.createTree(data);
+			}
 		}
 
 		//Loop through each row to test each point
@@ -160,7 +183,7 @@ public class AdaptiveMeanShift implements Clusterer {
 				curWindow = data.get(i).clone();
 			}
 
-			adaptH(data, i, knnHandle);
+			adaptH(data, i, knnHandle, kdHandle, naiveHandle);
 			
 			// Check for convergence, or we've hit max iterations before convergence
 			while((!converge) && (m < maxiters)){			
@@ -276,8 +299,8 @@ public class AdaptiveMeanShift implements Clusterer {
 	
 	public static void main(String[] args){
 		int genClusters = 3;
-		int genRowsPerCluster = 50;
-		int genColumns = 50;
+		int genRowsPerCluster =100;
+		int genColumns = 100;
 		
 		AdaptiveMeanShift ams = new AdaptiveMeanShift();
 		
