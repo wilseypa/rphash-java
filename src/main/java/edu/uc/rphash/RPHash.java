@@ -46,7 +46,7 @@ public class RPHash {
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
 			"raw", "decayrate", "dimparameter", "decodertype",
-			"offlineclusterer", "runs" };
+			"offlineclusterer", "runs" , "normalize"};
 	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
 			"multileech", "sphere", "levypstable", "cauchypstable",
 			"gaussianpstable" };
@@ -452,6 +452,11 @@ public class RPHash {
 		if (taggedArgs.containsKey("dimparameter")) {
 			o.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
 			so.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
+		}
+		
+		if (taggedArgs.containsKey("normalize")) {
+			o.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
+			so.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
 		}
 		if (taggedArgs.containsKey("decodertype")) {
 			switch (taggedArgs.get("decodertype").toLowerCase()) {

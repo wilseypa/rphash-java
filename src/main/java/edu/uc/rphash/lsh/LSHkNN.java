@@ -38,7 +38,7 @@ public class LSHkNN {
 		for(int i = 0;i<this.l;i++)
 		{
 			bins[i] =  new HashMap<Long,List<float[]>>();
-			this.hasher[i] = new LSH(d,r.nextLong());
+			this.hasher[i] = new LSH(d,r.nextLong(),false);
 		}
 	}
 		

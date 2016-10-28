@@ -95,7 +95,7 @@ public class RPHashStream implements StreamClusterer {
 					List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
 							so.getNumBlur(), r, dec.getErrorRadius()
 									/ dec.getDimensionality());
-					lshfunc[projidx] = new LSH(dec, p, hal, noise);
+					lshfunc[projidx] = new LSH(dec, p, hal, noise,so.getNormalize());
 				}
 			lshfuncs.add(lshfunc);
 		}

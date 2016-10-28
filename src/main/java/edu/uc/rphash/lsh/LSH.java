@@ -16,7 +16,7 @@ public class LSH {
 	public Projector projectionMatrix;
 	HashAlgorithm standardHashAlgorithm;
 	public Decoder lshDecoder;
-	SamplingVarianceTracker vtrack;
+	final SamplingVarianceTracker vtrack;
 //	int times;
 	Random rand;
 	float radius;
@@ -24,7 +24,7 @@ public class LSH {
 
 	List<float[]> noise;
 
-	public LSH(Decoder dec, Projector p, HashAlgorithm hal, List<float[]> noise) {
+	public LSH(Decoder dec, Projector p, HashAlgorithm hal, List<float[]> noise,boolean normalize) {
 		this.projectionMatrix = p;// new Projector[1];
 		// this.projectionMatrices[0] = p;
 		this.standardHashAlgorithm = hal;
@@ -33,14 +33,20 @@ public class LSH {
 		rand = new Random();
 		radius = dec.getErrorRadius() / dec.getDimensionality();
 		this.noise = noise;
-		if(!dec.selfScaling())vtrack = new SamplingVarianceTracker();
+		if(!lshDecoder.selfScaling() && normalize)
+			vtrack = new SamplingVarianceTracker();
+		else
+			vtrack = null;
 	}
 	
-	public LSH(int dim, long randseed) {
+	public LSH(int dim, long randseed,boolean normalize) {
 		this.projectionMatrix = new DBFriendlyProjection(dim, 24, randseed);
-		this.standardHashAlgorithm = new MurmurHash(100000);
+		this.standardHashAlgorithm = new MurmurHash(2<<24);
 		this.lshDecoder = new Leech();
-		if(!lshDecoder.selfScaling())vtrack = new SamplingVarianceTracker();
+		if(!lshDecoder.selfScaling() && normalize)
+			vtrack = new SamplingVarianceTracker();
+		else
+			vtrack = null;
 		rand = new Random();
 		this.noise = new ArrayList<>();//size=0 no noise
 	}

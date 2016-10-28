@@ -68,7 +68,7 @@ public class RPHashMultiProj implements Clusterer {
 					so.getNumBlur(), r,
 					dec.getErrorRadius() / dec.getDimensionality());
 
-			lshfuncs[i] = new LSH(dec, p, hal, noise);
+			lshfuncs[i] = new LSH(dec, p, hal, noise,so.getNormalize());
 		}
 
 		// add to frequent itemset the hashed Decoded randomly projected vector
@@ -125,7 +125,7 @@ public class RPHashMultiProj implements Clusterer {
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
 					so.getNumBlur(), r,
 					dec.getErrorRadius() / dec.getDimensionality());
-			lshfuncs[i] = new LSH(dec, p, hal, noise);
+			lshfuncs[i] = new LSH(dec, p, hal, noise,so.getNormalize());
 		}
 
 		while (vecs.hasNext()) {

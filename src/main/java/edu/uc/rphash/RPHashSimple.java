@@ -37,7 +37,7 @@ public class RPHashSimple implements Clusterer {
 		//no noise to start with
 		List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
 		
-		LSH lshfunc = new LSH(dec, p, hal,noise);
+		LSH lshfunc = new LSH(dec, p, hal,noise,so.getNormalize());
 		long hash;
 		int logk = (int) (.5+Math.log(so.getk())/Math.log(2));//log k and round to integer
 		int k = so.getk()*logk;
@@ -76,7 +76,7 @@ public class RPHashSimple implements Clusterer {
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
 		List<float[]> noise = LSH.genNoiseTable(so.getdim(),so.getNumBlur(), new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
-		LSH lshfunc = new LSH(dec, p, hal,noise);
+		LSH lshfunc = new LSH(dec, p, hal,noise,so.getNormalize());
 		long hash[];
 		
 		List<Centroid> centroids = new ArrayList<Centroid>();

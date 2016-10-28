@@ -38,8 +38,7 @@ public class SamplingVarianceTracker {
 	}
 	
 	public float[] normailize(float[] in){
-		VectorUtil.prettyPrint(in);
-		System.out.println();
+
 		n++;
 		if(M2==null){
 			M2 = new float[in.length];

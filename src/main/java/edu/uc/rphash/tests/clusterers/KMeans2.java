@@ -256,9 +256,36 @@ public class KMeans2 implements Clusterer {
 				failedruns++;
 			}
 		}
-		if (failedruns == max_failed_runs)
-			System.out
-					.println("Maximum Failed Runs, try dropping epsilon change value in kmeanswcss");
+		if (failedruns == max_failed_runs){// try without weighting
+			for(Centroid c : data){
+				c.setCount(1);
+				c.setWCSS(new float[c.dimensions]);
+			}
+			init(data, k);
+			
+			if (run(data, k, epsilon)) {
+				centroids = new ArrayList<Centroid>(k);
+				double twcss = 0.0;
+				for (int i = 0; i < k; i++) {
+					Centroid c = new Centroid(mu[i].centroid, 0);
+					c.setWCSS(mu[i].wcss);
+					c.setCount(mu[i].count);
+					centroids.add(c);
+				}
+				if (twcss < minwcss) {
+					minwcss = twcss;
+					mincentroids = centroids;
+				}
+			}
+			else
+			{
+				System.out
+				.println("Maximum Failed Runs, try dropping epsilon change value in kmeanswcss");
+			}
+				
+			
+		}
+			
 
 		return mincentroids;
 	}

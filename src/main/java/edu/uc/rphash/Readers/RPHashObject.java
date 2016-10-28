@@ -82,5 +82,7 @@ public interface RPHashObject {
 	String toString();
 	void reset();//TODO rename to resetDataStream
 
+	void setNormalize(boolean parseBoolean);
+	boolean getNormalize();
 
 }

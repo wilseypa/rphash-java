@@ -29,6 +29,7 @@ public class SimpleArrayReader implements RPHashObject {
 	private int dimparameter;
 	List<Float> counts;
 	private Clusterer clusterer;
+	private boolean normalize = false;
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -364,4 +365,14 @@ public class SimpleArrayReader implements RPHashObject {
 		if(data==null)data=new ArrayList<>();
 		data.add(centroid);
 	}
+
+	@Override
+	public void setNormalize(boolean parseBoolean) {
+		this.normalize = parseBoolean;		
+	}
+	
+	public boolean getNormalize() {
+		return this.normalize;		
+	}
+	
 }

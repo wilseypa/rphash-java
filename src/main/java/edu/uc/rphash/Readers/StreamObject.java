@@ -79,6 +79,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	private int dimparameter;
 	private List<Float> counts;
 	private Clusterer clusterer;
+	private boolean normalize;
 
 	public StreamObject(String f, int k, boolean raw) throws IOException {
 		this.f = f;
@@ -350,17 +351,17 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		return this.data;
 	}
 
-	@Override
-	public void remove() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void forEachRemaining(Consumer<? super float[]> action) {
-		// TODO Auto-generated method stub
-		
-	}
+//	@Override
+//	public void remove() {
+//		// TODO Auto-generated method stub
+//		
+//	}
+//
+//	@Override
+//	public void forEachRemaining(Consumer<? super float[]> action) {
+//		// TODO Auto-generated method stub
+//		
+//	}
 
 	@Override
 	public void setK(int getk) {
@@ -377,5 +378,14 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public void addRawData(float[] centroid) {
 		if(data==null)data=new ArrayList<>();
 		data.add(centroid);
+	}
+	
+	@Override
+	public void setNormalize(boolean parseBoolean) {
+		this.normalize = parseBoolean;		
+	}
+	
+	public boolean getNormalize() {
+		return this.normalize;		
 	}
 }
