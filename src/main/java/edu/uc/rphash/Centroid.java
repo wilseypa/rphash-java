@@ -6,7 +6,7 @@ import edu.uc.rphash.Readers.RPVector;
 
 public class Centroid {
 	public float[] centroid;
-	public long count;
+	public float count;
 	public int dimensions;
 	public ConcurrentSkipListSet<Long> ids;
 	public long id;
@@ -177,7 +177,7 @@ public class Centroid {
 //	this.wcss = M2;//tmpsum / (float) count;
 	}
 
-	public Long getCount() {
+	public float getCount() {
 		return count;
 	}
 

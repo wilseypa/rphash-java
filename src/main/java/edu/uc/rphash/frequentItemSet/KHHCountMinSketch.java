@@ -9,7 +9,7 @@ import java.util.Random;
 
 import edu.uc.rphash.Centroid;
 
-public class KHHCountMinSketch<E> implements ItemSet<E> {
+public class KHHCountMinSketch<E> implements ItemSet<E>,Countable {
 	public static final long PRIME_MODULUS = (1L << 31) - 1;
 	private int depth;
 	private int width;
@@ -142,6 +142,18 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		size += count;
 		return min;
 	}
+	
+	
+	public float count(long item) {
+		int min = (int) table[0][hash(item, 0)];
+		for (int i = 1; i < depth; ++i) {
+			if (table[i][hash(item, i)] < min)
+				min = (int) table[i][hash(item, i)];
+		}
+		return min;
+	}
+	
+	
 	
 	List<E> topcent = null;
 	List<Long> counts = null;

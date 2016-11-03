@@ -223,8 +223,8 @@ public class RPHashMultiProj implements Clusterer {
 //				}
 				
 //				System.out.println(wcssinternal +"\t" + StatTests.WCSSECentroidsFloat(cents, gen.getData())/(float)n);
-				System.out.println(StatTests.WCSSE(gen.medoids(), gen.getData()) + 
-						"\t"+ StatTests.WCSSECentroidsFloat(cents, gen.getData()));
+//				System.out.println(StatTests.WCSSE(gen.medoids(), gen.getData()) + 
+//						"\t"+ StatTests.WCSSECentroidsFloat(cents, gen.getData()));
 			}
 		}
 	}

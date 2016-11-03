@@ -51,7 +51,7 @@ public class KMeans2NoWCSS implements Clusterer {
 		}
 
 		public PointND(Centroid p) {
-			this.count = p.getCount().intValue();
+			this.count = (int) p.getCount();
 			this.wcss = 0;//p.getWCSS();
 			this.dimension = p.centroid().length;
 			this.coordinates = new float[dimension];

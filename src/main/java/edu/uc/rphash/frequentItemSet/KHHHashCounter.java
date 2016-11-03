@@ -15,7 +15,7 @@ import edu.uc.rphash.Centroid;
  *Note: this class has a natural ordering that is inconsistent with
  equals.
 */
-public class KHHHashCounter {
+public class KHHHashCounter implements Countable{
 
 	public static final long PRIME_MODULUS = (1L << 31) - 1;
 	private int depth;
@@ -39,8 +39,8 @@ public class KHHHashCounter {
 		Comparator<Long> cmp = new Comparator<Long>() {
 			@Override
 			public int compare(Long n1, Long n2) {
-				long cn1 = count(n1.hashCode());
-				long cn2 = count(n2.hashCode());
+				long cn1 = (long) count(n1.hashCode());
+				long cn2 = (long) count(n2.hashCode());
 				if (cn1 > cn2)
 					return +1;
 				else if (cn1 < cn2)
@@ -126,7 +126,7 @@ public class KHHHashCounter {
 		return ((int) hash) % width;
 	}
 
-	private long count(long item) {
+	public float count(long item) {
 		int min = (int) table[0][hash(item, 0)];
 		for (int i = 1; i < depth; ++i) {
 			if (table[i][hash(item, i)] < min)

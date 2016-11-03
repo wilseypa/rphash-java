@@ -153,7 +153,6 @@ public class RPHash {
 				for(int m = 0;m<c.getWCSS().length;m++)
 					tmpwcss += c.getWCSS()[m];
 			}
-			System.out.print("\t"+tmpwcss+"\t");
 			
 			return clu.getCentroids();
 		} 
@@ -168,7 +167,6 @@ public class RPHash {
 					minwcss += c.getWCSS()[m];
 				}
 			}
-			System.out.print("\t"+minwcss+"\t");
 			for (int i = 1; i < runs; i++) {
 				
 				
@@ -183,8 +181,6 @@ public class RPHash {
 					minwcss = tmpwcss;
 					mincents = tmpcents;
 				}
-				
-				System.out.print("\t"+tmpwcss+"\n");
 				
 				clu.reset(new Random().nextInt());
 			}
