@@ -103,8 +103,8 @@ public class RPHashSimple implements Clusterer {
 		
 		
 		Clusterer offlineclusterer = so.getOfflineClusterer();
-		offlineclusterer.setWeights(so.getCounts());
 		offlineclusterer.setData(so.getCentroids());
+		offlineclusterer.setWeights(so.getCounts());
 		offlineclusterer.setK(so.getk());
 		this.centroids = offlineclusterer.getCentroids();
 		so.setCentroids(centroids);

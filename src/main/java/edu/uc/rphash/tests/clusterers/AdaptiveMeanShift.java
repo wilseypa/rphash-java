@@ -9,6 +9,7 @@ import java.util.Set;
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.kdtree.KDTreeNN;
 import edu.uc.rphash.kdtree.naiveNN;
 import edu.uc.rphash.lsh.LSHkNN;
@@ -40,18 +41,49 @@ import edu.uc.rphash.util.VectorUtil;
 
 
 //TODO: Add labels to points for centroids
-//TODO: Compute ARI (R)
 //TODO: add weights to centroid merging -> rphash (cardinality)
+//TODO: windowMode -> Sample Point Estimator
+
+final class cStore{
+	public int count;
+	public float[] centroid;
+	public float wcsse = 0;
+	public Centroid cent;
+	
+	public void addPoint(float[] point){		
+		this.count++;
+		this.wcsse += VectorUtil.distance(point, centroid);
+		this.cent.setCount(this.count);
+		this.cent.setWCSS(this.wcsse);
+	}
+	
+	public cStore(float[] centroid){
+		this.count = 0;
+		this.cent = new Centroid(centroid,0);
+		this.centroid = centroid;
+		this.wcsse = 0;
+	}
+
+	public cStore(float[] window, float[] point) {
+		// TODO Auto-generated constructor stub
+		this.count = 0;
+		this.cent = new Centroid(window,0);
+		this.centroid = window;
+		this.wcsse = VectorUtil.distance(point, window);
+	}
+	
+}
 
 
 public class AdaptiveMeanShift implements Clusterer {
 
 	List<float[]> data;			//global data storage
-	List<float[]> centroids;	//global centroid storage
-	
+	List<Centroid> centroids;	//global centroid storage
+	private RPHashObject so;
+	private List<cStore> cs;
 
 	//Parameters
-	double h =1;			// bandwidth
+	double h = 1;			// bandwidth
 	
 	int kernelMode = 0;		// mode (0:uniform; 1:gaussian) 
 	
@@ -61,21 +93,23 @@ public class AdaptiveMeanShift implements Clusterer {
 							// 		2 - Sample Point Estimator (TODO)
 
 	int knnAlg = 2; 		//Determine what KNN algorithm to use
-							//		0 - KNN Naive
-							//		1 - KNN LSH
-							//		2 - KD-TREE
+							//		0 - kNN Naive
+							//		1 - kNN LSH
+							//		2 - KD-TREE kNN
 	
 	int k = 5; 				//Number of KNN points for adaptive window
 	
+	Clusterer weightClusters = null;
 	
-	static int maxiters = 10000;			//Max iterations before breaking search for convergence
-	float convergeValue = (float) 0.00001;	//maximum change in each dimension to 'converge'
+	
+	static int maxiters = 10000;				//Max iterations before breaking search for convergence
+	float convergeValue = (float) 0.00001;		//maximum change in each dimension to 'converge'
 	float blurPercent = (float) 2;				//Amount to blur centroids to group similar Floats
 	
 	//TEST Parameters:
 	boolean debug = false;							//Control Debug Output
 	boolean minimalOutput = true;					//Print the minimal final output (pretty print)
-	boolean printCentroids = false;					//Print out centroids (not pretty)
+	boolean printCentroids = true;					//Print out centroids (not pretty)
 	Set<String> cent = new HashSet<String>();		//Storage for grouping the clusters
 		
 	public void setMode(int mode){ this.kernelMode = mode; }
@@ -90,9 +124,15 @@ public class AdaptiveMeanShift implements Clusterer {
 	
 	
 	public AdaptiveMeanShift(){ 
-		this.centroids = new ArrayList<float[]>(); 
+		this.centroids = new ArrayList<Centroid>(); 
+		this.cs = new ArrayList<cStore>();
 	}
-
+	
+	public AdaptiveMeanShift(int k, List<float[]> data){
+		this.k = k;
+		this.data = data;
+		this.centroids = new ArrayList<Centroid>();
+	}
 	
 	public AdaptiveMeanShift(int h, int windowMode, int kernelMode, int k, List<float[]> data){
 		this.h = h;
@@ -100,22 +140,29 @@ public class AdaptiveMeanShift implements Clusterer {
 		this.kernelMode = kernelMode;
 		this.k = k;
 		this.data = data;
-		this.centroids = new ArrayList<float[]>();
+		this.centroids = new ArrayList<Centroid>();
+		this.cs = new ArrayList<cStore>();
 	}
-
+	
+	public AdaptiveMeanShift(int h, int windowMode, int kernelMode, int k, List<float[]> data, Clusterer c){
+		this.h = h;
+		this.weightClusters = c;
+		this.windowMode = windowMode;
+		this.kernelMode = kernelMode;
+		this.k = k;
+		this.data = data;
+		this.centroids = new ArrayList<Centroid>();
+		this.cs = new ArrayList<cStore>();
+	}
 	
 	public float calcMode(float curWindow, float workingData){
 		float mPoint = 0;
 		float kern = 0;
-		float c = (float) (1.0/Math.pow(h,2));
 		
-		//Mode 0 is uniform
-		if (kernelMode == 0){
+		if (kernelMode == 0)	//Uniform
 			mPoint = workingData;
-		}
-		
-		//Mode 1 is Gaussian
-		else if (kernelMode == 1){
+		else if (kernelMode == 1){	//Gaussian
+			float c = (float) (1.0/Math.pow(h,2));
 			kern = (float) Math.exp(-c * Math.pow(workingData - curWindow, 2));
 			mPoint = (float) kern * (workingData - curWindow);
 		}
@@ -123,14 +170,12 @@ public class AdaptiveMeanShift implements Clusterer {
 		return mPoint;
 	}
 	
-	
 	public void adaptH(List<float[]> data, int curPoint, LSHkNN knnHandle, KDTreeNN kdHandle, naiveNN naiveHandle){
-		if(windowMode == 0){
-			return; //No adaptivity
-		}
-		else if(windowMode == 1){
+		if(windowMode == 0)	//No adaptivity
+			return; 
+		else if(windowMode == 1){	//Balloon
 			if(knnAlg == 0){
-				h = Math.sqrt(naiveHandle.getNN(k, data.get(curPoint)));
+				h = Math.sqrt(naiveHandle.getNNEuc(k, data.get(curPoint)));
 				printDebug("naiveH: " + h);
 			}
 			if(knnAlg == 1){
@@ -139,14 +184,14 @@ public class AdaptiveMeanShift implements Clusterer {
 				printDebug("LSHH: " + h);
 			}
 			if(knnAlg == 2){
-				h = Math.sqrt(kdHandle.treeNN(k, data.get(curPoint)));
+				h = Math.sqrt(kdHandle.treeNNEuc(k, data.get(curPoint)));
 				printDebug("KDH: " + h + "\n");
 			}
 
-			return; //Balloon estimator
+			return; 
 		}
-		else if(windowMode == 2){
-			return; //KNN sample point estimator
+		else if(windowMode == 2){	//KNN sample point estimator
+			return; 
 		}
 	}
 	
@@ -170,7 +215,7 @@ public class AdaptiveMeanShift implements Clusterer {
 			}
 		}
 
-		//Loop through each row to test each point
+		
 		for(int i = 0; i < data.size(); i++){
 			
 			float[] curWindow = new float[data.get(0).length];
@@ -185,7 +230,6 @@ public class AdaptiveMeanShift implements Clusterer {
 
 			adaptH(data, i, knnHandle, kdHandle, naiveHandle);
 			
-			// Check for convergence, or we've hit max iterations before convergence
 			while((!converge) && (m < maxiters)){			
 				m++;
 				bufWindow = curWindow.clone();
@@ -194,14 +238,11 @@ public class AdaptiveMeanShift implements Clusterer {
 					curWindow[t] = (float) 0;
 				}
 				
-				// Loop through each point in the data set
 				for(int x = 0; x < data.size(); x++){
 
-					// Is the test point in the window?
 					if(VectorUtil.distance(bufWindow, data.get(x)) <= h){
 						winCount++;
 
-						//Traverse each dimension
 						for(int n = 0; n < data.get(x).length; n++){
 							curWindow[n] = curWindow[n] + calcMode(bufWindow[n], data.get(x)[n]);
 						}
@@ -209,7 +250,6 @@ public class AdaptiveMeanShift implements Clusterer {
 				}
 				
 				if(winCount > 0){
-					//If we used Mode 0 or ..., take the average
 					boolean convergeTest = true;
 					
 					for(int y = 0; y < curWindow.length; y++){
@@ -230,19 +270,20 @@ public class AdaptiveMeanShift implements Clusterer {
 						}
 						printDebug("_______________________________________");
 					}
+					
+					
 					//Check for convergence
 					if(Arrays.equals(curWindow,bufWindow) || convergeTest){
 						boolean add = true;
 						if(centroids.indexOf(curWindow) >= 0){
 							add = false;
 						}
-						add = checkAllCentroids(curWindow);
+						add = checkAllCentroids(curWindow, data.get(i));
 						
 						if(add){
 							String str = "";
 							for(int j = 0; j < curWindow.length; j++){str += Float.toString(curWindow[j]) + ",";}
 							cent.add(str + "\n");
-							centroids.add(curWindow.clone());
 						}
 						
 						converge = true;
@@ -250,18 +291,25 @@ public class AdaptiveMeanShift implements Clusterer {
 					bufWindow = curWindow.clone();
 				}
 
-				//Reset values for next iteration
 				m = 0;
 				winCount = 0;	
 			}	
 		}
+		
+		for(cStore cen: cs){
+			Centroid it = new Centroid(cen.centroid, 0);
+			it.setCount(cen.count);
+			it.setWCSS(cen.wcsse);
+			centroids.add(it);
+			
+		}
 	}
 	
 	
-	public boolean checkAllCentroids(float[] window){
+	public boolean checkAllCentroids(float[] window, float[] point){
 		float[] centroid;
-		for(int i = 0; i < centroids.size(); i++){
-			centroid = centroids.get(i);
+		for(cStore cz : cs){
+			centroid = cz.centroid;
 			double percentDiff = 0;
 			
 			for(int z = 0; z < centroid.length; z++){
@@ -271,23 +319,23 @@ public class AdaptiveMeanShift implements Clusterer {
 			percentDiff = percentDiff / centroid.length;
 
 			if(percentDiff < blurPercent){
+				cz.addPoint(point);
 				return false;
 			}
 			
 		}
+		
+		cs.add(new cStore(window, point));
 		return true;
 	}
 
 	
-	void run(int genClusters, int genRowsPerCluster, int genColumns){		
-
-		if(this.data == null){
-			GenerateData gen = new GenerateData(genClusters,genRowsPerCluster, genColumns);
-			this.data = gen.data;
+	void run(){		
+		if(this.weightClusters != null){
+			//this.weightClusters.setData(this.data);
 		}
 		
 		cluster(this.data);
-		
 	}
 	
 	
@@ -304,14 +352,20 @@ public class AdaptiveMeanShift implements Clusterer {
 		
 		AdaptiveMeanShift ams = new AdaptiveMeanShift();
 		
-		ams.run(genClusters,genRowsPerCluster,genColumns);
+		if(ams.data == null){
+			GenerateData gen = new GenerateData(genClusters,genRowsPerCluster, genColumns);
+			ams.data = gen.data;
+		}
+		
+		ams.run();
 		if(ams.printCentroids){
-			System.out.println("Printing Centroids:");
-			
-			for(int i = 0; i < ams.centroids.size(); i ++){
-				System.out.println("Centroid " + i);
-				for(int t = 0; t < ams.centroids.get(0).length; t++)
-					System.out.println("\t" + ams.centroids.get(i)[t]);
+			System.out.println("Centroid Count: " + ams.centroids.size());
+			for(Centroid c: ams.centroids){
+				System.out.println("WCSS = " + c.getWCSS());
+				System.out.print("Cent = ");
+				for(int z = 0; z < c.centroid().length; z++)
+					System.out.print(c.centroid()[z] + ",");
+				System.out.println("\n\n");
 			}
 		}
 		if(ams.minimalOutput){
@@ -329,16 +383,15 @@ public class AdaptiveMeanShift implements Clusterer {
 
 	@Override
 	public List<Centroid> getCentroids() {
-		List<Centroid> centroids = new ArrayList<>();
-		for(float[] cent : this.centroids){
-			centroids.add(new Centroid(cent,0));
-		}
-		return centroids;
+		if(this.centroids.size() == 0)
+			run();		
+		return this.centroids;
 	}
 
 	@Override
 	public RPHashObject getParam() {
-		return null;
+		so = new SimpleArrayReader(this.data, k);
+		return so;
 	}
 
 	@Override
@@ -349,24 +402,31 @@ public class AdaptiveMeanShift implements Clusterer {
 	@Override
 	public void setWeights(List<Float> counts) {
 		// TODO Auto-generated method stub
+		if(data != null) {
+			
+		}
+		
+		
 	}
-
+	
 	@Override
 	public void setData(List<Centroid> centroids) {
-		for(Centroid c : centroids)this.data.add(c.centroid());
-		
+		ArrayList<float[]> data = new ArrayList<float[]>(centroids.size());
+		for(Centroid c : centroids)data.add(c.centroid());
+		setRawData(data);
 	}
 
 	@Override
 	public void reset(int randomseed) {
 		// TODO Auto-generated method stub
+		this.centroids = null;
 		
 	}
 
 	@Override
 	public boolean setMultiRun(int runs) {
-		// TODO Auto-generated method stub
-		return false;
+		// Return true to ignore multi-run (deterministic)
+		return true;
 	}
 
 }

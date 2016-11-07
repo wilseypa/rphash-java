@@ -2,9 +2,7 @@ package edu.uc.rphash.kdtree;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.TreeSet;
 
 import edu.uc.rphash.lsh.LSHkNN;
@@ -12,14 +10,13 @@ import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
 final class treeElem{
-	treeElem left;			//Left branch of tree
-	treeElem right;			//Right branch of tree
-	treeElem parent;
+	treeElem left;				//Left branch of tree
+	treeElem right;				//Right branch of tree
+	treeElem parent;			//Hold the parent for traversal up
 	float[] point = null;		//Point value of leaf
 	int splitDim;				//Dimension of the axis split
-	
-	public treeElem(){}
 }
+
 	
 final class sortTree{
 	TreeSet<float[]> points;
@@ -27,30 +24,20 @@ final class sortTree{
 	
 	class fComp implements Comparator<float[]>{
 		public int compare(float[] f1, float[] f2){
-					
-			if(f1[splitDim]-f2[splitDim] < 0){
+			if(f1[splitDim]-f2[splitDim] < 0)
 				return -1;
-			}
-			if(f1[splitDim]-f2[splitDim] == 0){
+			if(f1[splitDim]-f2[splitDim] == 0)
 				return 0;
-			}
-			if(f1[splitDim]-f2[splitDim] > 0){
+			if(f1[splitDim]-f2[splitDim] > 0)
 				return 1;
-			}
 			return 0;
 		}
 	}
 	
-	public sortTree(int splitDim){
-		points = new TreeSet<float[]>(new fComp());
-		this.splitDim = splitDim;
-	}
-	
-	public void createTree(List<float[]> points){		
-		for(int i = 0; i < points.size(); i++){
-			this.points.add(points.get(i));
-		}
-		return;
+	public sortTree(int splitDim, List<float[]> points){
+		this.points = new TreeSet<float[]>(new fComp());
+		this.splitDim = splitDim;		
+		this.points.addAll(points);
 	}
 	
 	public float[] get(int i){
@@ -66,12 +53,10 @@ final class sortTree{
 
 
 public class KDTreeNN {
-	List<Float> KNNSet = new ArrayList<Float>();
+	List<float[]> KNNSet = new ArrayList<float[]>();
 	float curMax = 10000;
 	int k = 3;
-	int countLeaves = 0;
 	treeElem head = null;
-	int kWorst = 0;
 	boolean isDebug = false;
 	
 	public void debug(String s){
@@ -79,26 +64,10 @@ public class KDTreeNN {
 			System.out.println(s);
 	}
 	
-	public KDTreeNN(){
-		//TODO: Constructor (may not need anything)
-	}
-
-	
 	public float[] getMedian(int dimension, List<float[]> points){
-		//TODO: get median of point set by sorting and finding median values
-		debug("Dim: " + dimension);
+		sortTree tempTree = new sortTree(dimension,points);
 		
-		sortTree tempTree = new sortTree(dimension);
-		tempTree.createTree(points);
-			
-		debug("Created new tree for: " + dimension);
-		debug("Treesize: " + tempTree.points.size());
-		
-		float[] retValue = tempTree.get((int) (tempTree.points.size()+1) / 2);
-		
-		debug("retValue = " + retValue[0] + "\t" + retValue[1]);
-		return retValue;
-		
+		return tempTree.get((int) (tempTree.points.size()+1) / 2);
 	}
 	
 	public void addToTree(List<float[]> points, treeElem current, int axis){
@@ -106,23 +75,15 @@ public class KDTreeNN {
 		List<float[]> rightPoints = new ArrayList<float[]>();
 		
 		current.splitDim = axis % points.get(0).length;
-		debug("len: " + points.get(0).length);
-		debug("\n\nAxis: " + current.splitDim);
-		
 		current.point = getMedian(current.splitDim, points);
 		
 		for(int i = 0; i < points.size(); i++){
-			if(points.get(i)[current.splitDim] - current.point[current.splitDim] < 0) {
-				//debug("Left");
+			if(points.get(i)[current.splitDim] - current.point[current.splitDim] < 0)
 				leftPoints.add(points.get(i));
-			}
-			if(points.get(i)[current.splitDim] - current.point[current.splitDim] > 0) {
-				//debug("right");
+			if(points.get(i)[current.splitDim] - current.point[current.splitDim] > 0) 
 				rightPoints.add(points.get(i));
-			}
 			if(points.get(i)[current.splitDim] - current.point[current.splitDim] == 0) {
 				current.point = points.get(i);
-				countLeaves++;
 			}
 		}
 		
@@ -155,44 +116,30 @@ public class KDTreeNN {
 				return current;
 			}
 			else if(point[current.splitDim] < current.point[current.splitDim]){
-				debug("L");
-				if(current.left == null){
-						debug("found optimal left");
+				if(current.left == null)
 						return current;
-				}
 				current = current.left;
 				depth ++;
 			}
 			else if(point[current.splitDim] >= current.point[current.splitDim]){
-				debug("R");
-				if(current.right == null){
-					debug("found optimal left");
+				if(current.right == null)
 					return current;
-				}
 				current = current.right;
 				depth ++;
-			}
-			else{
-				System.out.print("\nCan't find point...");
-			}
-			
-		}
-		
+			}			
+		}		
 		return null;
-		
 	}
 	
 	public float addToKNNBuffer(float[] startPoint, float[] entryPoint){
 		float euc = 0;
-		
+				
 		debug("Adding to KNN Buffer; current size: " + KNNSet.size());
 		
-		for(int y = 0; y < entryPoint.length; y++){
-			euc = (float) (euc + (Math.pow(entryPoint[y] - startPoint[y],2)));
-		}
+		euc = (float) VectorUtil.distance(startPoint, entryPoint);;
 		
 		if(euc < curMax){
-			KNNSet.add(euc);
+			KNNSet.add(entryPoint);
 		}
 		else
 			return 0;
@@ -202,9 +149,9 @@ public class KDTreeNN {
 			float maxV = 0;
 			
 			for(int t = 0; t < KNNSet.size(); t++){
-				if(KNNSet.get(t) > maxV){
+				if(VectorUtil.distance(startPoint, KNNSet.get(t)) > maxV){
 					maxI = t;
-					maxV = KNNSet.get(t);
+					maxV = VectorUtil.distance(startPoint, KNNSet.get(t));
 				}
 			}
 			curMax = maxV;
@@ -216,59 +163,35 @@ public class KDTreeNN {
 	
 	
 	public void tSubtree(float[] point, treeElem current){
-		debug("\n\nT'ing...");
 		printPoint(current);
 		
 		if(current.point != null){
-			//Found leaf;
-			debug("Leaf");
 			addToKNNBuffer(point, current.point);
 		}
 		if(current.right != null)
 			tSubtree(point, current.right);
-
-		debug("T Right Completed");
-			
 		
 		if(current.left != null)
 			tSubtree(point,current.left);
-		debug("T Left Completed");
-			
-		
-		
 	}
 	
 	
 	public void traverseSubtree(float[] point, treeElem current){
-
-		debug("\n\nTraversing...");
 		printPoint(current);
 		
 		if(current.point != null){
-			//Found leaf;
-			debug("Leaf");
 			addToKNNBuffer(point, current.point);
 		}
 		if(point[current.splitDim] < current.point[current.splitDim]){
 			//Traverse right subtree
-			debug("Traverse Right");
 			if(current.right != null)
-				tSubtree(point, current.right);
-
-			debug("Traverse Right Completed");
-			
+				tSubtree(point, current.right);			
 		}
 		if(point[current.splitDim] >= current.point[current.splitDim]){
-			//Traverse left subtree
-			debug("Traverse Left");
 			if(current.left != null)
 				tSubtree(point,current.left);
-			debug("Traverse Left Completed");
-			
 		}
 	}
-	
-	
 	
 	public void printPoint(treeElem a){
 		debug("\n***********************");
@@ -280,9 +203,7 @@ public class KDTreeNN {
 		debug("***********************\n");
 	}
 	
-	public treeElem searchTree(float[] point){
-		debug("Searching Tree for: " + point.toString());
-		
+	public treeElem searchTree(float[] point){		
 		treeElem d = findPath(point);
 		printPoint(d);
 		
@@ -295,67 +216,65 @@ public class KDTreeNN {
 		head = new treeElem();
 		
 		addToTree(points, head, 0);
-		debug("Leaves: " + countLeaves);
 		return;
 	}
 	
 	
-	public float treeNN(int k, float[] p){
+	public List<float[]> treeNN(int k, float[] p){
 		curMax = 10000;
 		KNNSet.clear();
-		//TODO: Return nearest neighbors
+
 		this.k = k;
 		treeElem d = searchTree(p);
-		//d = d.parent;
+		
+		while(boundsCheck(d, p)){
+			printPoint(d);
+			
+			traverseSubtree(p,d);
+					
+			if(d.parent == null)
+				return KNNSet;
+			d = d.parent;
+		}		
+		return KNNSet;	
+	}
+	
+	public float treeNNEuc(int k, float[] p){
+		curMax = 10000;
+		KNNSet.clear();
+		
+		this.k = k;
+		treeElem d = searchTree(p);
 		
 		while(boundsCheck(d, p)){
 			printPoint(d);
 			
 			traverseSubtree(p,d);
 			
-			
-			
 			if(d.parent == null)
 				return curMax;
 			d = d.parent;
 		}
-		
 		return curMax;
 	}
 	
 	public boolean boundsCheck(treeElem current, float[] point){
-		
 		float bound = (float) (Math.pow(current.point[current.splitDim] - point[current.splitDim],2));
-		debug("Bound Check:  " + bound + " < " + curMax);
 		if(bound < curMax)
 			return true;
 		
 		return false;
 	}
 	
-	
 	public static void main(String[] args){
 		GenerateData g = new GenerateData(20,100,100);
-		KDTreeNN tree = new KDTreeNN();
-		
-		ArrayList<float[]> testPoints = new ArrayList<float[]>();
-		testPoints.add(new float[] {(float) 1.0, (float) 2.0});
-		testPoints.add(new float[] {(float) 3.0, (float) 5.0});
-		testPoints.add(new float[] {(float) 8.0, (float) 8.0});
-		testPoints.add(new float[] {(float) 9.0, (float) 1.0});
-		testPoints.add(new float[] {(float) 2.0, (float) 3.0});
-		testPoints.add(new float[] {(float) 0.0, (float) 7.0});
-		testPoints.add(new float[] {(float) 9.1, (float) 4.0});
-		testPoints.add(new float[] {(float) 4.0, (float) 10.0});
-		
+		KDTreeNN tree = new KDTreeNN();		
 		
 		tree.createTree(g.data);
-		//tree.createTree(testPoints);
-		System.out.println("Created tree...");
 		
-		//System.out.println("Traversing subtree for: " + g.data.get(1).toString());
-		//tree.traverseSubtree(g.data.get(1),tree.head);
-		//System.out.println("Output: " + tree.treeNN(2, new float[] {(float) 5.0, (float) 6.0}));
+		List<float[]> testOutput = tree.treeNN(2, g.data.get(1));
+		VectorUtil.prettyPrint(testOutput);
+		
 		System.out.println("Output: " + tree.treeNN(2, g.data.get(1)));
 		LSHkNN querier = new LSHkNN(g.data.get(0).length, 2);
 		querier.createDB(g.data);
