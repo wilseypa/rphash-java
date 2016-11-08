@@ -246,17 +246,17 @@ public class Spherical implements Decoder {
 		}
 	}
 
-	float variance = 1f;
+	float[] variance;
 
-	@Override
-	public void setVariance(Float parameterObject) {
-		variance = parameterObject;
-	}
-	
-	@Override
-	public float getVariance(){
-		return variance;
-	}
+//	@Override
+//	public void setVariance(float[] parameterObject) {
+//		variance = parameterObject;
+//	}
+//	
+//	@Override
+//	public float[] getVariance(){
+//		return variance;
+//	}
 	
 	@Override
 	public boolean selfScaling() {

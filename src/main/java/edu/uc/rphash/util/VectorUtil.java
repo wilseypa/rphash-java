@@ -164,6 +164,8 @@ public class VectorUtil {
 			tmp.add(m);
 		prettyPrint(tmp);
 	}
+	
+
 
 	public static void prettyPrint(int[][] mat) {
 		ArrayList<float[]> tmp = new ArrayList<float[]>();
@@ -242,6 +244,36 @@ public class VectorUtil {
 	 * @param mat
 	 */
 	public static void prettyPrint(float[] mat) {
+		int n = mat.length;
+
+		boolean curtailm = n > 10;
+		if (curtailm) {
+			for (int i = 0; i < 4; i++) {
+				if (mat[i] > 0)
+					System.out.printf(" ");
+				System.out.printf("%.4f ", mat[i]);
+			}
+			System.out.print("\t ... \t");
+			for (int i = mat.length - 4; i < mat.length; i++) {
+				if (mat[i] > 0)
+					System.out.printf(" ");
+				System.out.printf("%.4f ", mat[i]);
+			}
+		} else {
+			for (int i = 0; i < mat.length; i++) {
+				if (mat[i] > 0)
+					System.out.printf(" ");
+				System.out.printf("%.4f ", mat[i]);
+			}
+		}
+	}
+	
+	/**
+	 * Print a vector, compress if the output is too big
+	 * 
+	 * @param mat
+	 */
+	public static void prettyPrint(double[] mat) {
 		int n = mat.length;
 
 		boolean curtailm = n > 10;

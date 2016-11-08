@@ -64,7 +64,7 @@ public class testStreamingRPHash {
 		int k = 10;
 		int d = 5000;
 		float var = 1f;
-		int interval = 10000;
+		int interval = 1000;
 		Runtime rt = Runtime.getRuntime();
 
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
@@ -96,6 +96,8 @@ public class testStreamingRPHash {
 			rt.gc();
 			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
 
+			prettyPrint(cents);
+			
 			double wcsse = StatTests.WCSSECentroidsFloat(cents, justvecsInThisRound);
 			double realwcsse = StatTests.WCSSE(gen1.medoids, justvecsInThisRound);
 			
@@ -153,6 +155,29 @@ public class testStreamingRPHash {
 //		readFileData(args);
 		generateAndStream();
 //		streamingPushtest();
+	}
+	
+	 static void prettyPrint(List<Centroid> cs){
+
+			int n = cs.get(0).centroid.length;
+			boolean curtailm = n > 10;
+			if (curtailm) {
+				for (int i = 0; i < 4; i++) {
+					VectorUtil.prettyPrint(cs.get(i).centroid);
+				}
+				for (int j = 0; j < n / 2; j++)
+					System.out.print("\t");
+				System.out.print(" ...\n");
+				for (int i = cs.size() - 4; i < cs.size(); i++) {
+					VectorUtil.prettyPrint(cs.get(i).centroid);
+				}
+			} else {
+				for (int i = 0; i < cs.size(); i++) {
+					VectorUtil.prettyPrint(cs.get(i).centroid);
+					System.out.print("\n");
+				}
+			}
+		
 	}
 
 }

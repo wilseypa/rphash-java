@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-public class KarpFrequentItemSet<E> implements ItemSet<E> {
+public class KarpFrequentItemSet<E> implements ItemSet<E>{
 
 	
 	HashMap<E,Integer> data;

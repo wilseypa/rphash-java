@@ -734,7 +734,7 @@ public class HartiganWongKMeans implements Clusterer {
 				nv[j] = (float) c[i + j * k];
 			}
 			Centroid cent = new Centroid(nv,0);
-			cent.setWCSS(wss[k]);
+			cent.setWCSS(wss);
 			cents.add(cent);
 		}
 

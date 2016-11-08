@@ -45,7 +45,7 @@ public class RPHash {
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
 			"raw", "decayrate", "dimparameter", "decodertype",
-			"offlineclusterer", "runs" };
+			"offlineclusterer", "runs" , "normalize"};
 	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
 			"multileech", "sphere", "levypstable", "cauchypstable",
 			"gaussianpstable" };
@@ -145,28 +145,42 @@ public class RPHash {
 		//some clusterers can do multi runs in parallel
 		if (clu.setMultiRun(runs)) 
 		{
+			
+			List<Centroid> tmpcents = clu.getCentroids();
+			double tmpwcss = 0.0;
+			for (Centroid c : tmpcents) {
+				for(int m = 0;m<c.getWCSS().length;m++)
+					tmpwcss += c.getWCSS()[m];
+			}
+			
 			return clu.getCentroids();
 		} 
 		else 
 		{
 			List<Centroid> mincents = clu.getCentroids();
 			double minwcss = 0.0;
+			
 			for (Centroid c : mincents) {
-				minwcss += c.getWCSS();
+				if(c.getWCSS()!=null){
+				for(int m = 0;m<c.getWCSS().length;m++)
+					minwcss += c.getWCSS()[m];
+				}
 			}
-
 			for (int i = 1; i < runs; i++) {
 				
 				
 				List<Centroid> tmpcents = clu.getCentroids();
 				double tmpwcss = 0.0;
 				for (Centroid c : tmpcents) {
-					tmpwcss += c.getWCSS();
-				}
+					if(c.getWCSS()!=null){
+					for(int m = 0;m<c.getWCSS().length;m++)
+						tmpwcss += c.getWCSS()[m];
+				}}
 				if (tmpwcss < minwcss) {
 					minwcss = tmpwcss;
 					mincents = tmpcents;
 				}
+				
 				clu.reset(new Random().nextInt());
 			}
 			return mincents;
@@ -214,7 +228,7 @@ public class RPHash {
 			RPHashObject reader = clu.getParam();
 
 			double wcsse = StatTests.WCSSECentroidsFloat(cents,
-					reader.getData());
+					reader.getRawData());
 
 			System.out.println(timed + ", used(KB): " + usedkB + ", wcsse: "
 					+ wcsse);
@@ -434,6 +448,11 @@ public class RPHash {
 			o.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
 			so.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
 		}
+		
+		if (taggedArgs.containsKey("normalize")) {
+			o.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
+			so.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
+		}
 		if (taggedArgs.containsKey("decodertype")) {
 			switch (taggedArgs.get("decodertype").toLowerCase()) {
 			case "dn": {
@@ -459,15 +478,15 @@ public class RPHash {
 				break;
 			}
 			case "leech": {
-				o.setDecoderType(new Leech(2f));
-				so.setDecoderType(new Leech(2f));
+				o.setDecoderType(new Leech());
+				so.setDecoderType(new Leech());
 				break;
 			}
 			case "multileech": {
 				o.setDecoderType(new MultiDecoder(
-						o.getInnerDecoderMultiplier() * 24, new Leech(2f)));
+						o.getInnerDecoderMultiplier() * 24, new Leech()));
 				so.setDecoderType(new MultiDecoder(so
-						.getInnerDecoderMultiplier() * 24, new Leech(2f)));
+						.getInnerDecoderMultiplier() * 24, new Leech()));
 				break;
 			}
 			case "levypstable": {

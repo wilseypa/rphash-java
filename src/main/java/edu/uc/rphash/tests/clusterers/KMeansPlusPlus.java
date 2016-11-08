@@ -3,6 +3,7 @@ package edu.uc.rphash.tests.clusterers;
 import java.util.List; 
 import java.util.ArrayList; 
 import java.util.Collections;  
+import java.util.Arrays;
 
 import org.apache.commons.math3.distribution.NormalDistribution; 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D; 
@@ -24,6 +25,8 @@ import org.apache.commons.math3.ml.distance.EuclideanDistance;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.tests.generators.GenerateData;
+
 
 
 public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
@@ -73,7 +76,6 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 	        
 	   }  
 	   
-	 //List<float[]> getCentroids();
 	   
 	   public List<Centroid> getCentroids() {   // to be completed
 			return null ;
@@ -127,55 +129,101 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 		public void reset(int randomseed) {
 			
 		}
+		
+		@Override
+		public boolean setMultiRun(int runs) {
+			return false;
+		}
 	
 // testing the algorithm :
 		
 	    public static void main(String[] args) {
   
-	    int nSamples = 1500;
-	   
-	    RandomGenerator rng = new Well19937c(0);
+//	    int nSamples = 1500;	   
+//	    RandomGenerator rng = new Well19937c(0);	    	     
+//	    List<Vector2D> datasets =  makeCircles(nSamples, true, 0.04, 0.5, rng);	    
+//	    List<DoublePoint> data = normalize(datasets, -1, 1, -1, 1);
 	    
-	     
-	    List<Vector2D> datasets =  makeCircles(nSamples, true, 0.04, 0.5, rng);
 	    
+	    GenerateData gen = new GenerateData(10,1000,8);         // the data generator of rhpash
+              
+        List<DoublePoint> gen1 = new ArrayList<DoublePoint>();         // converting the data generated to DoublePoint
+         for (float[] c:gen.data)
+         { 
+         	double[] tmp = new double[c.length];
+         	for(int i = 0 ;i<c.length;i++)tmp[i]=c[i];// for centroid type c.Centroid[i];
+         	gen1.add(new DoublePoint(tmp));
+       
+         }
+                    
+ //     System.out.println("The whole  list for the gen1 is :" + gen1);
 
-	    List<DoublePoint> data = normalize(datasets, -1, 1, -1, 1);
-	    
+         List<DoublePoint> data =gen1;    	        
 	         
-	       KMeansPlusPlusClusterer km = new KMeansPlusPlusClusterer<DoublePoint>(2);// TODO code application logic here
-	        
-	      
+	       KMeansPlusPlusClusterer km = new KMeansPlusPlusClusterer<DoublePoint>(10);// TODO code application logic here
+	        	      
 	       int k = km.getK();
 	       System.out.println("The Value of k is :" + k );
-	   	 
-	               
+	   	 	               
 	       List<Cluster> kmc   = km.cluster(data) ;
 	        int d = kmc.size();
-	        System.out.println("The size of the list is :" + d);
+	        System.out.println("The size of the list i.e no. of clusters are :" + d);
 	        
-	        System.out.println(kmc.getClass());
+//	        System.out.println(kmc.getClass());
 	        
-	         System.out.println("The cluster id 1 :" + kmc.get(0));
-	         System.out.println("The cluster id 2 :" + kmc.get(1));
+//	         System.out.println("The cluster id 1 :" + kmc.get(0));
+//	         System.out.println("The cluster id 2 :" + kmc.get(1));
 	          Cluster clkm1 = kmc.get(0);
 	          Cluster clkm2 = kmc.get(1);
 	          List<?> clusterkm1 = clkm1.getPoints();
 	          List<?> clusterkm2 = clkm2.getPoints();
-	          System.out.println("The points in clusterKM1:" + clusterkm1);
-	          System.out.println("The points in clusterKM2 :" + clusterkm2);
+//	          System.out.println("The points in clusterKM1:" + clusterkm1);
+//	          System.out.println("The points in clusterKM2 :" + clusterkm2); 
 	        
 	       
-	         CentroidDBScan n = new CentroidDBScan() ;                              // though the name is CentroidDBScan it is a general class that has the method to compute the centroid of a cluster.
-	         System.out.println("The centroid in cluster1:" + n.centroidOf(clkm1)); 
-	         System.out.println("The centroid in cluster2:" + n.centroidOf(clkm2));  
+	       CentroidDBScan n = new CentroidDBScan() ;                             // though the name is CentroidDBScan it is a general class that has the method to compute the centroid of a cluster.
+	       System.out.println("The centroid in cluster1:" + n.centroidOf(clkm1)); 
+	       System.out.println("The centroid in cluster2:" + n.centroidOf(clkm2));  
+	         
+	          
+	          List<Clusterable>CentroidsKmpp  = new ArrayList<Clusterable>();
+	          
+	          
+	          CentroidDBScan iter_obj = new CentroidDBScan() ; 					// creating the list of all centroids from the partions of kmpp . 
+	          for (int i=0;i < kmc.size();i++ )
+	          { 
+	        	         	          	          	  
+	        	  Clusterable cent =  iter_obj.centroidOf(kmc.get(i));        	        	  
+	        	  CentroidsKmpp.add(cent); 								
+	        	  
+	  
+	          }
+	                  
+	          
+	          System.out.println("The whole  list of  the centroids are :" + CentroidsKmpp);  // output centroids from apache func
+	         
+	          List<Centroid>C =  new ArrayList<Centroid>();                  // converting to List<Centroid> getCentroids() to match RPHash	          
+	          
+	           for ( Clusterable c: CentroidsKmpp )							// from Class clusterable to centroid
+	           { 
+	           	   double[] temp =	c.getPoint()	;									
+	        	  
+	           	float[] floatArray = new float[temp.length];
+	           	for (int i = 0 ; i < temp.length; i++)
+	           	{
+	           	    floatArray[i] = (float) temp[i];
+	           	}
+	           	   	           	   
+	        	  C.add(new Centroid(floatArray,0)) ;                                    // setting  the projection id = 0	           
+	           	
+	           } 
+	           	                      
+	           for (Centroid iter:C) {                                                  // output centroids after conversion to RPHash Centroid 
+	        	  float[] toprint= iter.centroid();         
+	        	  System.out.println(Arrays.toString(toprint)); }                           
+	             	        	         
 	    }
-	    
-		@Override
-		public boolean setMultiRun(int runs) {
-			return false;
-		}
+	    	     	    
+		
 	}
-
-
 

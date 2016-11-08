@@ -17,7 +17,7 @@ import edu.uc.rphash.Centroid;
 /*
  * @author lee
  */
-public class KHHCentroidCounter {
+public class KHHCentroidCounter implements Countable {
 	public static final long PRIME_MODULUS = (1L << 31) - 1;
 	private int depth;
 	private int width;
@@ -192,7 +192,7 @@ public class KHHCentroidCounter {
 		return min;
 	}
 
-	private float count(long item) {
+	public float count(long item) {
 		float min;
 		if (decayRate != null) {
 			int htmp = hash(item, 0);
@@ -214,6 +214,7 @@ public class KHHCentroidCounter {
 		}
 		return min;
 	}
+	
 	
 	List<Centroid> topcent = null;
 	List<Float> counts = null;

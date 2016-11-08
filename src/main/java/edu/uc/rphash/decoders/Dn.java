@@ -52,13 +52,13 @@ public class Dn implements Decoder {
 		return t;
 	}
 
-	 public float[] scale(float[] y) 
-	 {
-		 float[] ycopy = new float[y.length];
-		 for(int i = 0;i<ycopy.length;i++) 
-			 ycopy[i] = y[i]/variance;
-		 return ycopy;
-	 }
+//	 public float[] scale(float[] y) 
+//	 {
+//		 float[] ycopy = new float[y.length];
+//		 for(int i = 0;i<ycopy.length;i++) 
+//			 ycopy[i] = y[i];
+//		 return ycopy;
+//	 }
 	
 	    /** This function returns an e8 encoded vector scaled between -1:3
 	     * any comparisons will have to be rescaled
@@ -66,8 +66,8 @@ public class Dn implements Decoder {
 	     * @return e8 codeword
 	     */
 	    public float[] closestPoint(float[] y) {
-	    	
-	    	float[] ycopy =  scale(y);
+	    	float[] ycopy =  new float[y.length];
+	    	System.arraycopy(y, 0, ycopy, 0, y.length);
 	        if (n != ycopy.length) throw new RuntimeException("y is the wrong length");
 	        
 	        round(ycopy, u);
@@ -157,21 +157,25 @@ public class Dn implements Decoder {
 		}
 	}
 
-	float variance = 1.0f;
-	@Override
-	public void setVariance(Float parameterObject) {
-		variance = parameterObject;
-	}
+//	float [] variance;
+//	float varTot = 1;
+//	@Override
+//	public void setVariance(float[] parameterObject) {
+//		varTot = 0;
+//		for(int i = 0 ; i<this.getDimensionality();i++)varTot+=this.variance[i];
+//		varTot/=(float)this.getDimensionality();
+//		variance = parameterObject;
+//	}
 
 	@Override
 	public boolean selfScaling() {
 		return false;
 	}
 	
-	@Override
-	public float getVariance(){
-		return variance;
-	}
+//	@Override
+//	public float[] getVariance(){
+//		return variance;
+//	}
 	
 	
 

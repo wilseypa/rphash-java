@@ -29,6 +29,7 @@ public class SimpleArrayReader implements RPHashObject {
 	private int dimparameter;
 	List<Float> counts;
 	private Clusterer clusterer;
+	private boolean normalize = false;
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -167,6 +168,20 @@ public class SimpleArrayReader implements RPHashObject {
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
 	}
 
+	public SimpleArrayReader() {
+		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.hashmod = DEFAULT_HASH_MODULUS;
+		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
+		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
+		this.numProjections = DEFAULT_NUM_PROJECTIONS;
+		this.numBlur = DEFAULT_NUM_BLUR;
+		this.centroids = new ArrayList<Centroid>();
+		this.topIDs = new ArrayList<Long>();
+		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+	}
+
 	public Iterator<float[]> getVectorIterator() {
 		return data.iterator();
 	}
@@ -269,10 +284,6 @@ public class SimpleArrayReader implements RPHashObject {
 		return ret;
 	}
 
-	@Override
-	public void setVariance(List<float[]> data) {
-		dec.setVariance(StatTests.varianceSample(data, .01f));
-	}
 
 	@Override
 	public Decoder getDecoderType() {
@@ -333,7 +344,7 @@ public class SimpleArrayReader implements RPHashObject {
 		return this.clusterer;
 	}
 
-	public List<float[]> getData() {
+	public List<float[]> getRawData() {
 		return data;
 	}
 
@@ -343,4 +354,25 @@ public class SimpleArrayReader implements RPHashObject {
 		for (int i = 0; i < this.k; i++)
 			topIDs.add((long) 0);
 	}
+
+	@Override
+	public void setRawData(List<float[]> c) {
+		this.data = c;
+	}
+
+	@Override
+	public void addRawData(float[] centroid) {
+		if(data==null)data=new ArrayList<>();
+		data.add(centroid);
+	}
+
+	@Override
+	public void setNormalize(boolean parseBoolean) {
+		this.normalize = parseBoolean;		
+	}
+	
+	public boolean getNormalize() {
+		return this.normalize;		
+	}
+	
 }

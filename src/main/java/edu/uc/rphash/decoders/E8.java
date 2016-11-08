@@ -53,7 +53,7 @@ public class E8 implements Decoder {
 		return 8;
 	}
 
-	float variance;
+	float[] variance;
 
 	public E8(float var) {
 		int n = 8;
@@ -62,7 +62,7 @@ public class E8 implements Decoder {
 		v = new byte[n];
 		dn1 = new Dn(n);
 		dn2 = new Dn(n);
-		this.variance = 1.0f;// var;
+		this.variance = new float[]{1f,1f,1f,1f, 1f,1f,1f,1f};// var;
 	}
 
 	@Override
@@ -165,18 +165,18 @@ public class E8 implements Decoder {
 		}
 	}
 
-	@Override
-	public void setVariance(Float parameterObject) {
-		variance = parameterObject;
-	}
+//	@Override
+//	public void setVariance(float[] parameterObject) {
+//		variance = parameterObject;
+//	}
 
 	@Override
 	public boolean selfScaling() {
 		return false;
 	}
 	
-	@Override
-	public float getVariance(){
-		return variance;
-	}
+//	@Override
+//	public float[] getVariance(){
+//		return variance;
+//	}
 }
