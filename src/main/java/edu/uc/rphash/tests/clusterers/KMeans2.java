@@ -47,12 +47,12 @@ public class KMeans2 implements Clusterer {
 		this.means = new Centroid[k];
 		this.clustersOfVectorIndeces = new ArrayList[k];
 
-		List<Centroid> initcent = KMeansPlusPlusDecorator.chooseInitialCenters(x, k);
+		List<Integer> initcent = KMeansPlusPlusDecorator.chooseInitialCenters(x, k);
 		// randomly assign a point in x to each mean mu[j]		
 		for (int j = 0; j < k; j++) {
 			means[j] = new Centroid(new float[d]);
 			means[j].wcss = new float[d];
-			Centroid tmpptr =  initcent.get(j);
+			Centroid tmpptr =  x[initcent.get(j)];
 			System.arraycopy(tmpptr.centroid, 0, means[j].centroid, 0, d);
 			System.arraycopy(tmpptr.wcss, 0, means[j].wcss, 0, d);
 			means[j].count = tmpptr.count;

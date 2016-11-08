@@ -2,8 +2,6 @@ package edu.uc.rphash.tests.clusterers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -18,7 +16,7 @@ public class KMeansPlusPlusDecorator {
      * @param points the points to choose the initial centers from
      * @return the initial centers
      */
-    public static List<Centroid> chooseInitialCenters(Centroid[] points,int k) {
+    public static List<Integer> chooseInitialCenters(Centroid[] points,int k) {
 
     	Random random = new Random();
         // Convert to list for indexed access. Make it unmodifiable, since removal of items
@@ -33,14 +31,14 @@ public class KMeansPlusPlusDecorator {
         final boolean[] taken = new boolean[numPoints];
 
         // The resulting list of initial centers.
-        final List<Centroid> resultSet = new ArrayList<>();
+        final List<Integer> resultSet = new ArrayList<>();
 
         // Choose one center uniformly at random from among the data points.
         final int firstPointIndex = random.nextInt(numPoints);
 
         final Centroid firstPoint = pointList.get(firstPointIndex);
 
-        resultSet.add(firstPoint);
+        resultSet.add(firstPointIndex);
 
         // Must mark it as taken
         taken[firstPointIndex] = true;
@@ -107,7 +105,7 @@ public class KMeansPlusPlusDecorator {
 
                 final Centroid p = pointList.get(nextPointIndex);
 
-                resultSet.add(p);
+                resultSet.add(nextPointIndex);
 
                 // Mark it as taken.
                 taken[nextPointIndex] = true;
