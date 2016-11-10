@@ -220,19 +220,19 @@ public class VectorUtil {
 			for (int i = 0; i < 4; i++) {
 				if (mat[i] > 0)
 					System.out.printf(" ");
-				System.out.printf("%.4f ", mat[i]);
+				System.out.printf("%d ", mat[i]);
 			}
 			System.out.print("\t ... \t");
 			for (int i = mat.length - 4; i < mat.length; i++) {
 				if (mat[i] > 0)
 					System.out.printf(" ");
-				System.out.printf("%.4f ", mat[i]);
+				System.out.printf("%d ", mat[i]);
 			}
 		} else {
 			for (int i = 0; i < mat.length; i++) {
 				if (mat[i] > 0)
 					System.out.printf(" ");
-				System.out.printf("%.4f ", mat[i]);
+				System.out.printf("%d ", mat[i]);
 			}
 		}
 		System.out.printf("\n");

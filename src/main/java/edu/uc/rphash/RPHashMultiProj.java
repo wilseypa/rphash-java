@@ -160,6 +160,7 @@ public class RPHashMultiProj implements Clusterer {
 
 	private List<Centroid> centroids = null;
 	private RPHashObject so;
+	private int runs;
 
 	public RPHashMultiProj(int k, List<float[]> data) {
 		so = new SimpleArrayReader(data, k);
@@ -188,15 +189,35 @@ public class RPHashMultiProj implements Clusterer {
 	}
 
 	private void run() {
-		map();
-		reduce();
+		double minwcss = Double.MAX_VALUE;
+		List<Centroid> mincentroids = new ArrayList<>();
+		for(int currun = 0;currun<runs;currun++){
+			map();
+			reduce();
+	
+			Clusterer offlineclusterer = so.getOfflineClusterer();
+			offlineclusterer.setMultiRun(10);
+			offlineclusterer.setData(so.getCentroids());
+			offlineclusterer.setWeights(so.getCounts());
+			offlineclusterer.setK(so.getk());
+			centroids = offlineclusterer.getCentroids();
+			if(centroids.size()==so.getk()){//skip bad clusterings
+				double twcss = 0.0;
+				for (int clusterid = 0; clusterid < so.getk(); clusterid++) {
+			
+					for (int dims = 0; dims < so.getdim(); dims++)
+						twcss += centroids.get(clusterid).wcss[dims];
+				}
+				
+				if (twcss < minwcss) {
+					minwcss = twcss;
+					mincentroids = centroids;
+				}
+			}
+		}
+		centroids = mincentroids;
 
-		Clusterer offlineclusterer = so.getOfflineClusterer();
-		offlineclusterer.setMultiRun(5);
-		offlineclusterer.setData(so.getCentroids());
-		offlineclusterer.setWeights(so.getCounts());
-		offlineclusterer.setK(so.getk());
-		centroids = offlineclusterer.getCentroids();
+		
 	}
 
 	public static void main(String[] args) {
@@ -216,13 +237,13 @@ public class RPHashMultiProj implements Clusterer {
 				
 //				long startTime = System.nanoTime();
 				List<Centroid> cents = rphit.getCentroids();
-//				float wcssinternal = 0.0f;
-//				for(Centroid c : cents){
-//					for(float wcss : c.wcss)
-//					wcssinternal+=wcss;
-//				}
+				float wcssinternal = 0.0f;
+				for(Centroid c : cents){
+					for(float wcss : c.wcss)
+					wcssinternal+=wcss;
+				}
 				
-//				System.out.println(wcssinternal +"\t" + StatTests.WCSSECentroidsFloat(cents, gen.getData())/(float)n);
+				System.out.println(wcssinternal +"\t" + StatTests.WCSSECentroidsFloat(cents, gen.getData())/(float)n);
 //				System.out.println(StatTests.WCSSE(gen.medoids(), gen.getData()) + 
 //						"\t"+ StatTests.WCSSECentroidsFloat(cents, gen.getData()));
 			}
@@ -235,7 +256,8 @@ public class RPHashMultiProj implements Clusterer {
 	}
 
 	@Override
-	public void setWeights(List<Float> counts) {
+	public void setWeights(List<Float> counts) 
+	{
 	}
 
 	@Override
@@ -266,7 +288,8 @@ public class RPHashMultiProj implements Clusterer {
 
 	@Override
 	public boolean setMultiRun(int runs) {
-		return false;
+		this.runs = runs;
+		return true;
 	}
 
 }

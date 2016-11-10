@@ -15,6 +15,7 @@ import java.util.Random;
 //import org.rosuda.JRI.Rengine;
 
 
+
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.Readers.StreamObject;
@@ -145,14 +146,6 @@ public class RPHash {
 		//some clusterers can do multi runs in parallel
 		if (clu.setMultiRun(runs)) 
 		{
-			
-			List<Centroid> tmpcents = clu.getCentroids();
-			double tmpwcss = 0.0;
-			for (Centroid c : tmpcents) {
-				for(int m = 0;m<c.getWCSS().length;m++)
-					tmpwcss += c.getWCSS()[m];
-			}
-			
 			return clu.getCentroids();
 		} 
 		else 
@@ -167,7 +160,6 @@ public class RPHash {
 				}
 			}
 			for (int i = 1; i < runs; i++) {
-				
 				
 				List<Centroid> tmpcents = clu.getCentroids();
 				double tmpwcss = 0.0;

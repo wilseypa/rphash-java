@@ -64,9 +64,9 @@ public class KMeansTests {
 					csfull.add(randvecd);
 			}
 			float wcsstot = 0.0f;
-			float[] wcss = KMeans2.computemeanAndWCSS(cs)[2];
-			for (int i = 0; i < wcss.length; i++)
-				wcsstot += wcss[i];
+//			float[] wcss = KMeans2.computemeanAndWCSS(cs)[2];
+//			for (int i = 0; i < wcss.length; i++)
+//				wcsstot += wcss[i];
 			System.out.print(wcsstot + "\t");
 			wcsstot = 0.0f;
 			double[] wcss2 = StatTests.WCSS(csfull);

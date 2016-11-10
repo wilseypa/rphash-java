@@ -4,26 +4,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.Vector;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.util.VectorUtil;
 
 public class KMeans2 implements Clusterer {
 
 	private int n; // number of instances to classify
 	private int d; // number of coordinates of each point
 	private int k; // number of clusters
-	private Centroid[] mu; // coordinate of means mu[j] of each cluster j
-	private Vector<Centroid>[] w; // holds the points classified into each class
-								// w[j]
-	private Centroid[] sigma; // holds the standard deviation of each class i
-	private float[] prior; // holds the prior of each class i
-	// private float logLikelihood; // holds the log likelihood of each of the k
-	// Gaussians
-	private float MDL; // the minimum description length of the model
-	private int numIterations = 50;
+	private Centroid[] means; // coordinate of means mu[j] of each cluster j
+	private List<Integer>[] clustersOfVectorIndeces; // holds the points classified into each class
+	private int numIterations = 100;
 
 	private List<Centroid> centroids;
 	private Centroid[] data;
@@ -31,8 +25,9 @@ public class KMeans2 implements Clusterer {
 
 	public KMeans2(int getk, List<float[]> data) {
 		this.data = new Centroid[data.size()];
+		this.d = this.data[0].dimensions;
 		for (int i = 0; i < data.size(); i++) {
-			this.data[i] = new Centroid(data.get(i));
+			this.data[i] = new Centroid(1,data.get(i));
 		}
 		this.centroids = null;
 		init(this.data, getk);
@@ -49,20 +44,21 @@ public class KMeans2 implements Clusterer {
 		this.n = x.length;
 		this.d = x[0].dimensions;
 		this.k = k;
-		this.mu = new Centroid[k];
-		this.w = new Vector[k];
-		this.sigma = new Centroid[k];
-		this.prior = new float[k];
+		this.means = new Centroid[k];
+		this.clustersOfVectorIndeces = new ArrayList[k];
 
-		Random r = new Random();
-		// randomly assign a point in x to each mean mu[j]
-		Centroid randomPoint;
+		List<Integer> initcent = KMeansPlusPlusDecorator.chooseInitialCenters(x, k);
+		// randomly assign a point in x to each mean mu[j]		
 		for (int j = 0; j < k; j++) {
-			mu[j] = x[r.nextInt(n)];
-			sigma[j] = new Centroid(new float[d]);
-			prior[j] = 0;
+			means[j] = new Centroid(new float[d]);
+			means[j].wcss = new float[d];
+			Centroid tmpptr =  x[initcent.get(j)];
+			System.arraycopy(tmpptr.centroid, 0, means[j].centroid, 0, d);
+			System.arraycopy(tmpptr.wcss, 0, means[j].wcss, 0, d);
+			means[j].count = tmpptr.count;
 		}
 	}
+	
 
 	/**
 	 * Runs the k-means algorithm with k clusters on the set of instances x Then
@@ -71,54 +67,76 @@ public class KMeans2 implements Clusterer {
 	public boolean run(Centroid[] x, int k, float epsilon) {
 		float maxDeltaMeans = Float.MAX_VALUE;
 		Centroid[] oldMeans = new Centroid[k];
+		for(int i = 0;i<k;i++)
+			oldMeans[i] = new Centroid(new float[d]);
+		
 		// initialize n,k,mu[j]
 		init(x, k);
+		
 		// iterate until there is no change in mu[j]
 		int iter = 0;
+		
 		while (maxDeltaMeans > epsilon && iter++ < numIterations) {
-			// remember old values of the each mean
-			for (int j = 0; j < k; j++) {
-				oldMeans[j] = mu[j];
+			
+			// remember old values of each mean
+			for (int j = 0; j < k; j++) 
+			{
+				System.arraycopy(means[j].centroid, 0, oldMeans[j].centroid, 0, d);
 			}
 
 			// classify each instance x[i] to its nearest class
 			// first we need to clear the class array since we are reclassifying
 			for (int j = 0; j < k; j++) {
-				w[j] = new Vector<Centroid>(); // could use clear
+				clustersOfVectorIndeces[j] = new ArrayList<Integer>(); // could use clear
 			}
 
 			
-			Centroid[] furtherestOut = new Centroid[k];
-			double[] furtherestOutDist = new double[k];
-			int leastidx = 0;
+//			Centroid[] furtherestOut = new Centroid[k];
+//			double[] furtherestOutDist = new double[k];
+//			int leastidx = 0;
 			for (int i = 0; i < n; i++) 
 			{
-				double d = classify(x[i]);
+				//classify seems correct
+				double d = classify(i);
 				
-				if(d>furtherestOutDist[leastidx]){
-					furtherestOutDist[leastidx] = d;
-					furtherestOut[leastidx] = x[i];
-					for(int j = 0;j<k;j++)
-					{
-						if(furtherestOutDist[j]<furtherestOutDist[leastidx]){
-							leastidx = j;
-						}
-					}
-				}
+//				if(d>furtherestOutDist[leastidx]){
+//					furtherestOutDist[leastidx] = d;
+//					furtherestOut[leastidx] = x[i];
+//					for(int j = 0;j<k;j++)
+//					{
+//						if(furtherestOutDist[j]<furtherestOutDist[leastidx]){
+//							leastidx = j;
+//						}
+//					}
+//				}
 			}
 
 			// recompute each mean, and check for empty clusters
+			// note this is not sorted, the idea being that we don't
+			// want to pick outliers. however RPHash has filtered 
+			// outliers for us, so it's not a major problem
+			
 			List<Integer> emptyClusters = computeMeansForEachClassW();
-			if (emptyClusters.size()>0) {
-				//if empty clusters, replace with highest wcss vectors
-					for(int j = 0;j<emptyClusters.size();j++){
-						mu[j].centroid = furtherestOut[j].centroid;
-						mu[j].wcss = furtherestOut[j].wcss;
-						mu[j].count = furtherestOut[j].getCount();
-					}
+
+			if(emptyClusters.size()>0){
+				return false;
 			}
+//			if(emptyClusters.size()>0) {
+				//if empty clusters, replace with highest wcss vectors
+//					for(int j = 0;j<emptyClusters.size();j++){
+//						means[j].centroid = furtherestOut[j].centroid;
+//						means[j].wcss = furtherestOut[j].wcss;
+//						means[j].count = furtherestOut[j].getCount();
+//						
+//					}
+//			}
+			
+//			Arrays.asList(means).forEach(c->System.out.printf((int)c.count+","));
+//			System.out.println( ":"+iter);
+			
 			// compute the largest change in mu[j]
 			maxDeltaMeans = maxDeltaMeans(oldMeans);
+			
 		}
 		if (iter == numIterations) {
 			System.out.println("Max Iterations Reached");
@@ -130,25 +148,26 @@ public class KMeans2 implements Clusterer {
 	/**
 	 * Classifies the point x to the nearest class
 	 **/
-	private double classify(Centroid x) {
+	private double classify(int x) {
 		double dist = 0;
 		double smallestDist;
 		int nearestClass;
 
 		// compute the distance x is from mean mu[0]
-		smallestDist = distance(x.centroid, mu[0].centroid);
+		smallestDist = distance(data[x].centroid, means[0].centroid);
 		nearestClass = 0;
 
 		// compute the distance x is from the other classes
 		for (int j = 1; j < k; j++) {
-			dist = distance(x.centroid, mu[j].centroid);
+			dist = distance(data[x].centroid, means[j].centroid);
 			if (dist <= smallestDist) {
 				smallestDist = dist;
 				nearestClass = j;
 			}
 		}
 		// classify x into class its nearest class
-		w[nearestClass].add(x);
+		clustersOfVectorIndeces[nearestClass].add(x);
+		
 		return smallestDist;
 	}
 
@@ -161,37 +180,18 @@ public class KMeans2 implements Clusterer {
 		return (float) Math.sqrt(ret);
 	}
 
-	Centroid subtract(Centroid px, Centroid py) {
-		float[] x = px.centroid;
-		float[] y = py.centroid;
-
-		float[] ret = new float[x.length];
-		if (x.length != y.length)
-			return null;
-
-		for (int i = 0; i < x.length; i++) {
-			ret[i] = (x[i] - y[i]);
-		}
-
-		return new Centroid(1, ret);
-	}
-
-	Centroid add(Centroid px, Centroid py) {
-
-		if (px.dimensions != py.dimensions)
-			return null;
-
+	float[] subtract(Centroid px, Centroid py) {
 		float[] x = px.centroid;
 		float[] y = py.centroid;
 
 		float[] ret = new float[x.length];
 
-		float total = px.count + py.count;
-
 		for (int i = 0; i < x.length; i++) {
-			ret[i] = (x[i] * px.count + y[i] * py.count) / total;
+			ret[i] = (x[i]*px.count - y[i]*py.count)/(px.count+py.count);
 		}
-		return new Centroid(1, ret);
+		
+		Centroid c = new Centroid((int)(px.getCount()+py.getCount()), ret);
+		return c.centroid;
 	}
 
 	public float max(float[] coordinates) {
@@ -208,146 +208,182 @@ public class KMeans2 implements Clusterer {
 	/**
 	 * Recompute mu[j] as the average of all points classified to the class w[j]
 	 **/
-	private List computeMeansForEachClassW() {
+	private List<Integer> computeMeansForEachClassW() {
 		List<Integer> ret = new ArrayList<>();
-		// init the means to zero
-		for (int j = 0; j < k; j++)
-			mu[j] = new Centroid(0, new float[mu[j].dimensions]);
+
 
 		// recompute the means of each cluster
-		for (int j = 0; j < k; j++) {
-			float[][] cwcss = computemeanAndWCSS(w[j]);
-
+		for (int j = 0; j < k; j++) 
+		{
+			CentroidTuple cwcss = computemeanAndWCSS(clustersOfVectorIndeces[j]);
+			
 			if (cwcss == null) {
 				ret.add(j);
-			} else {
-				mu[j].centroid = cwcss[1];
-				mu[j].wcss = cwcss[2];
-				mu[j].count = (int) cwcss[0][0];
+			} 
+			else 
+			{
+				means[j].centroid = cwcss.mean;
+				means[j].wcss = cwcss.wcss;
+				means[j].count = cwcss.count;
 			}
 		}
 		return ret;
 	}
 
-	// /**
-	// * Recompute mu[j] as the average of all points classified to the class
-	// w[j]
-	// **/
-	// private boolean computeMeansForEachClassW() {
-	// int numInstances; // number of instances in each class w[j]
-	// Centroid instance;
-	// // init the means to zero
-	// for (int j = 0; j < k; j++)
-	// mu[j] = new Centroid(new float[mu[j].dimensions]);
-	// // recompute the means of each cluster
-	// for (int j = 0; j < k; j++) {
-	// // recompute the means of each cluster
-	// numInstances = w[j].size();
-	// for (int i = 0; i < numInstances; i++) {
-	// instance = w[j].get(i);
-	// mu[j] = add(mu[j], instance);
-	// }
-	// if(numInstances<2){
-	// System.out.println("does this happen");
-	// // return false;
-	// }
-	// double wcss = 0.0;
-	// // recompute the wcss of each cluster
-	// for (int i = 0; i < numInstances; i++) {
-	// instance = w[j].get(i);
-	// for(float f : subtract(mu[j], instance).centroid){
-	// wcss += f*f;
-	// }
-	// }
-	// float scaled = (float)(
-	// Math.sqrt(wcss)/(float)numInstances)/(float)mu[j].dimensions;
-	// mu[j].wcss = new float[mu[j].dimensions];
-	// for(int m = 0;m<mu[j].dimensions;m++)mu[j].wcss[m] = scaled;
-	// mu[j].count = numInstances;
-	//
-	// }
-	// return true;
-	// }
-
 	/**
 	 * Compute the maximum change over each mean mu[j]
 	 **/
 	private float maxDeltaMeans(Centroid[] oldMeans) {
+		
+		float[][] oldmeans =new float[oldMeans.length][];
 		float delta;
-		oldMeans[0] = subtract(oldMeans[0], mu[0]);
+		oldmeans[0] = subtract(oldMeans[0], means[0]);
 
-		float maxDelta = max(oldMeans[0].centroid);
+		float maxDelta = max(oldmeans[0]);
+		
 		for (int j = 1; j < k; j++) {
-			oldMeans[j] = subtract(oldMeans[j], mu[j]);
-			delta = max(oldMeans[j].centroid);
+			oldmeans[j] = subtract(oldMeans[j], means[j]);
+			delta = max(oldmeans[j]);
 			if (delta > maxDelta)
 				maxDelta = delta;
 		}
 		return maxDelta;
 	}
-
-	public float getMDL() {
-		return MDL;
+	
+	class CentroidTuple{
+		public CentroidTuple() 
+		{
+		}
+		int count;
+		float[] wcss;
+		float[] mean;
 	}
 
+	public CentroidTuple merge(int cnt_1, float[] x_1, float[] var_1,
+			int cnt_2, float[] x_2, float[] var_2) 
+	{
+		int cnt_r = cnt_1 + cnt_2;
+		float[] x_r = new float[d];
+		float[] var_r = new float[d];
+		
+		for (int i = 0; i < d; i++) {
+			x_r[i] = (cnt_1 * x_1[i] + cnt_2 * x_2[i]);
+			x_r[i] = x_r[i] /(float)cnt_r;
+			
+			var_r[i] = cnt_1*
+					((x_r[i] - x_1[i]) * (x_r[i] - x_1[i]) + var_1[i])
+					+ cnt_2 *
+					 ((x_r[i] - x_2[i]) * (x_r[i] - x_2[i]) + var_2[i]);
+			var_r[i] = var_r[i] / (float)cnt_r;
+		}
+
+		CentroidTuple cent = new CentroidTuple();
+		cent.count = cnt_r;
+		cent.mean = x_r;
+		cent.wcss = var_r;
+		return cent;
+	}
+
+	/**
+	 * This method computes the mean and wcss of a weighted set of centroids The
+	 * first index contains the new merged count the second index
+	 * contains the mean vector of dimension d,  the third index contains the wcss.
+	 * @param c
+	 * @return multi attribute array
+	 */
+	public CentroidTuple computemeanAndWCSS(List<Integer> cs) {
+		CentroidTuple ret;
+		
+		if (cs.size() == 0){
+			return null;
+		}
+		
+		Centroid c1 = data[cs.get(0)];
+		
+		if (cs.size() == 1){
+			CentroidTuple cent = new CentroidTuple();
+			cent.count = (int)c1.count;
+			cent.wcss = c1.wcss;
+			cent.mean = c1.centroid;
+			return cent;
+		}
+
+		Centroid c2 = data[cs.get(1)];
+		
+		ret = merge((int)c1.getCount(), c1.centroid,c1.wcss, (int)c2.getCount(),
+				c2.centroid,c2.wcss);
+		
+		for (int i = 1; i < cs.size(); i++) 
+		{
+			c2 = data[cs.get(i)];
+			ret = merge(ret.count, ret.mean, ret.wcss, (int)c2.getCount(),
+					c2.centroid, c2.wcss);
+		}
+		return ret;
+	}
+	
 	public List<Centroid> getCentroids() {
 
-		float epsilon = .001f;
-		if (centroids != null) {
-			return centroids;
-		}
+		float epsilon = .00001f;
 
 		double minwcss = Double.MAX_VALUE;
 		List<Centroid> mincentroids = new ArrayList<>();
 		int failedruns = 0;
+		
 		for (int j = 0; j < runs && failedruns < max_failed_runs;) {
 			init(data, k);
-			if (run(data, k, epsilon)) {
+			if (run(data, k, epsilon)) 
+			{
 				centroids = new ArrayList<Centroid>(k);
 				double twcss = 0.0;
-				for (int i = 0; i < k; i++) {
-					Centroid c = new Centroid(mu[i].centroid, 0);
-					c.setWCSS(mu[i].wcss);
-					c.setCount((long) mu[i].count);
+				for (int clusterid = 0; clusterid < k; clusterid++) 
+				{
+					Centroid c = new Centroid(means[clusterid].centroid, 0);
+					c.wcss = means[clusterid].wcss;
+					c.count = (long) means[clusterid].count;
 					centroids.add(c);
-					for (int k = 0; k < mu[i].wcss.length; k++)
-						twcss += mu[i].wcss[k];
+					
+					for (int dims = 0; dims < d; dims++)
+						twcss += means[clusterid].wcss[dims];
 				}
 				if (twcss < minwcss) {
 					minwcss = twcss;
 					mincentroids = centroids;
 				}
 				j++;
-			} else {
+			}
+			else 
+			{
 				failedruns++;
 			}
-			// Arrays.asList(data).forEach(c->System.out.print(c.count+","));
+			
 		}
-		if (failedruns == max_failed_runs) {// try without weighting
-			for (Centroid c : data) {
-				c.setCount(1);
-				c.setWCSS(new float[c.dimensions]);
-			}
-			init(data, k);
 
-			if (run(data, k, epsilon)) {
-				centroids = new ArrayList<Centroid>(k);
-				double twcss = 0.0;
-				for (int i = 0; i < k; i++) {
-					Centroid c = new Centroid(mu[i].centroid, 0);
-					c.setWCSS(mu[i].wcss);
-					c.setCount((long) mu[i].count);
-					centroids.add(c);
-				}
-				if (twcss < minwcss) {
-					minwcss = twcss;
-					mincentroids = centroids;
-				}
-			} else {
-				System.out
-						.println("Maximum Failed Runs, try dropping epsilon change value in kmeanswcss");
-			}
-		}
+//		if (failedruns == max_failed_runs) {// try without weighting
+//			for (Centroid c : data) {
+//				c.setCount(1);
+//				c.setWCSS(new float[c.dimensions]);
+//			}
+//			init(data, k);
+//
+//			if (run(data, k, epsilon)) {
+//				centroids = new ArrayList<Centroid>(k);
+//				double twcss = 0.0;
+//				for (int i = 0; i < k; i++) {
+//					Centroid c = new Centroid(means[i].centroid, 0);
+//					c.setWCSS(means[i].wcss);
+//					c.setCount((long) means[i].count);
+//					centroids.add(c);
+//				}
+//				if (twcss < minwcss) {
+//					minwcss = twcss;
+//					mincentroids = centroids;
+//				}
+//			} else {
+//				System.out
+//						.println("Maximum Failed Runs, try dropping epsilon change value in kmeanswcss");
+//			}
+//		}
 		return mincentroids;
 	}
 
@@ -395,63 +431,11 @@ public class KMeans2 implements Clusterer {
 		centroids = null;
 	}
 
-	int runs = 1;
+	int runs = 10;
 
 	@Override
 	public boolean setMultiRun(int runs) {
 		this.runs = runs;
 		return true;
-	}
-
-	public static float[][] merge(float cnt_1, float[] x_1, float[] var_1,
-			float cnt_2, float[] x_2, float[] var_2) {
-		float cnt_r = cnt_1 + cnt_2;
-		float[] x_r = new float[x_1.length];
-		float[] var_r = new float[x_1.length];
-		for (int i = 0; i < x_1.length; i++) {
-			x_r[i] = (cnt_1 * x_1[i] + cnt_2 * x_2[i]) / cnt_r;
-			var_r[i] += cnt_1
-					* ((x_r[i] - x_1[i]) * (x_r[i] - x_1[i]) + var_1[i])
-					+ cnt_2
-					* ((x_r[i] - x_2[i]) * (x_r[i] - x_2[i]) + var_2[i]);
-			var_r[i] = var_r[i] / cnt_r;
-		}
-
-		float[][] ret = new float[3][];
-		ret[0] = new float[1];
-		ret[0][0] = cnt_r;
-		ret[1] = x_r;
-		ret[2] = var_r;
-		return ret;
-	}
-
-	/**
-	 * This method computes the mean and wcss of a weighted set of centroids The
-	 * first index contains the mean vector of dimension d, the second index
-	 * contains the wcss. and the third index contains the new merged count
-	 * 
-	 * @param c
-	 * @return multi attribute array
-	 */
-	public static float[][] computemeanAndWCSS(List<Centroid> cs) {
-		float[][] ret = new float[3][];
-		if (cs.size() == 0)
-			return null;
-		int d = cs.get(0).centroid().length;
-		if (cs.size() == 1)
-			return new float[][] { cs.get(0).centroid, new float[d],
-					new float[] { cs.get(0).count } };
-
-		Centroid c1 = cs.get(0);
-		Centroid c2 = cs.get(1);
-		ret = merge(c1.getCount(), c1.centroid(), new float[d], c2.getCount(),
-				c2.centroid(), new float[d]);
-		for (int i = 1; i < cs.size(); i++) {
-			c2 = cs.get(i);
-			ret = merge(ret[0][0], ret[1], ret[2], c2.getCount(),
-					c2.centroid(), new float[d]);
-		}
-
-		return ret;
 	}
 }
