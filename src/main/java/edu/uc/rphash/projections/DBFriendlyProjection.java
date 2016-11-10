@@ -188,11 +188,11 @@ public class DBFriendlyProjection implements Projector {
 		int trials = 100;
 		int d = 10000;
 		int t1 = 100;
-//		int t2 = 24;
+		// int t2 = 24;
 		// GaussianProjection proj = new GaussianProjection(d, t);
 		DBFriendlyProjection proj1 = new DBFriendlyProjection(d, t1);
-//		DBFriendlyProjection proj2 = new DBFriendlyProjection(t1,t2);
-		
+		// DBFriendlyProjection proj2 = new DBFriendlyProjection(t1,t2);
+
 		for (int i = 0; i < trials; i++) {
 
 			for (int k = 0; k < 10; k++) {
@@ -210,13 +210,16 @@ public class DBFriendlyProjection implements Projector {
 				// vec2) -
 				// VectorUtil.distance(
 				// proj.project(vec1),proj.project(vec2))));
-				System.out.printf("%f\n", VectorUtil.distance(vec1, vec2)/VectorUtil.distance(proj1.project(vec1),
-						proj1.project(vec2)));
-//				System.out.printf("%f\t", VectorUtil.distance(vec1, vec2));
-//				System.out.printf(
-//						"%f\n",
-//						VectorUtil.distance(proj2.project(proj1.project(vec1)),
-//								proj2.project(proj1.project(vec2))));
+				System.out.printf(
+						"%f\n",
+						VectorUtil.distance(vec1, vec2)
+								/ VectorUtil.distance(proj1.project(vec1),
+										proj1.project(vec2)));
+				// System.out.printf("%f\t", VectorUtil.distance(vec1, vec2));
+				// System.out.printf(
+				// "%f\n",
+				// VectorUtil.distance(proj2.project(proj1.project(vec1)),
+				// proj2.project(proj1.project(vec2))));
 			}
 
 		}

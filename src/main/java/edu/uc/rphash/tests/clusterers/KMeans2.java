@@ -8,6 +8,8 @@ import java.util.Random;
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
 public class KMeans2 implements Clusterer {
@@ -17,7 +19,7 @@ public class KMeans2 implements Clusterer {
 	private int k; // number of clusters
 	private Centroid[] means; // coordinate of means mu[j] of each cluster j
 	private List<Integer>[] clustersOfVectorIndeces; // holds the points classified into each class
-	private int numIterations = 100;
+	private int numIterations = 50;
 
 	private List<Centroid> centroids;
 	private Centroid[] data;
@@ -47,8 +49,8 @@ public class KMeans2 implements Clusterer {
 		this.means = new Centroid[k];
 		this.clustersOfVectorIndeces = new ArrayList[k];
 
-		List<Integer> initcent = KMeansPlusPlusDecorator.chooseInitialCenters(x, k);
-		// randomly assign a point in x to each mean mu[j]		
+		
+		List<Integer> initcent = KMeansPlusPlusDecorator.chooseInitialCenters(x, k);	
 		for (int j = 0; j < k; j++) {
 			means[j] = new Centroid(new float[d]);
 			means[j].wcss = new float[d];
@@ -90,25 +92,10 @@ public class KMeans2 implements Clusterer {
 				clustersOfVectorIndeces[j] = new ArrayList<Integer>(); // could use clear
 			}
 
-			
-//			Centroid[] furtherestOut = new Centroid[k];
-//			double[] furtherestOutDist = new double[k];
-//			int leastidx = 0;
 			for (int i = 0; i < n; i++) 
 			{
 				//classify seems correct
 				double d = classify(i);
-				
-//				if(d>furtherestOutDist[leastidx]){
-//					furtherestOutDist[leastidx] = d;
-//					furtherestOut[leastidx] = x[i];
-//					for(int j = 0;j<k;j++)
-//					{
-//						if(furtherestOutDist[j]<furtherestOutDist[leastidx]){
-//							leastidx = j;
-//						}
-//					}
-//				}
 			}
 
 			// recompute each mean, and check for empty clusters
@@ -121,19 +108,6 @@ public class KMeans2 implements Clusterer {
 			if(emptyClusters.size()>0){
 				return false;
 			}
-//			if(emptyClusters.size()>0) {
-				//if empty clusters, replace with highest wcss vectors
-//					for(int j = 0;j<emptyClusters.size();j++){
-//						means[j].centroid = furtherestOut[j].centroid;
-//						means[j].wcss = furtherestOut[j].wcss;
-//						means[j].count = furtherestOut[j].getCount();
-//						
-//					}
-//			}
-			
-//			Arrays.asList(means).forEach(c->System.out.printf((int)c.count+","));
-//			System.out.println( ":"+iter);
-			
 			// compute the largest change in mu[j]
 			maxDeltaMeans = maxDeltaMeans(oldMeans);
 			
@@ -359,31 +333,6 @@ public class KMeans2 implements Clusterer {
 			
 		}
 
-//		if (failedruns == max_failed_runs) {// try without weighting
-//			for (Centroid c : data) {
-//				c.setCount(1);
-//				c.setWCSS(new float[c.dimensions]);
-//			}
-//			init(data, k);
-//
-//			if (run(data, k, epsilon)) {
-//				centroids = new ArrayList<Centroid>(k);
-//				double twcss = 0.0;
-//				for (int i = 0; i < k; i++) {
-//					Centroid c = new Centroid(means[i].centroid, 0);
-//					c.setWCSS(means[i].wcss);
-//					c.setCount((long) means[i].count);
-//					centroids.add(c);
-//				}
-//				if (twcss < minwcss) {
-//					minwcss = twcss;
-//					mincentroids = centroids;
-//				}
-//			} else {
-//				System.out
-//						.println("Maximum Failed Runs, try dropping epsilon change value in kmeanswcss");
-//			}
-//		}
 		return mincentroids;
 	}
 
@@ -438,4 +387,50 @@ public class KMeans2 implements Clusterer {
 		this.runs = runs;
 		return true;
 	}
+	
+	public static void main(String[] args){
+		int k = 10;
+		int vecper = 1000;
+		int d = 20;
+		GenerateData datagen = new GenerateData(k, vecper, d);
+		Random r = new Random();
+		
+		List<Centroid> clus = new ArrayList<>();
+		for(float[] dat : datagen.data){
+			Centroid clu = new Centroid(dat);
+			clu.setCount(r.nextInt(100));
+			float[] wcss = new float[d];
+			for(int i = 0;i<d;i++)wcss[i] = r.nextFloat();
+			clus.add(clu);
+		}
+		
+		System.out.println(StatTests.WCSSEFloatCentroid(datagen.getMedoids(), clus));
+		
+		KMeans2 clusterer = new KMeans2();
+		clusterer.setData(clus);
+		clusterer.setK(k);
+		clusterer.setMultiRun(1);
+		clusterer.getCentroids();
+		System.out.println(StatTests.WCSSE(clusterer.getCentroids(), clus, false));
+		
+		clusterer = new KMeans2();
+		clusterer.setData(clus);
+		clusterer.setK(k);
+		clusterer.setMultiRun(1);
+		clusterer.getCentroids();
+		System.out.println(StatTests.WCSSE(clusterer.getCentroids(), clus, false));
+		
+		for(int i = 1;i<11;i++){
+			clusterer = new KMeans2();
+			clusterer.setData(clus);
+			clusterer.setK(k);
+			clusterer.setMultiRun(i);
+			clusterer.getCentroids();
+			System.out.println(StatTests.WCSSE(clusterer.getCentroids(), clus, false));
+		}
+		
+	}
+	
+	
+	
 }

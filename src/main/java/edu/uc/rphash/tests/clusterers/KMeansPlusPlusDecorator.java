@@ -18,6 +18,15 @@ public class KMeansPlusPlusDecorator {
      */
     public static List<Integer> chooseInitialCenters(Centroid[] points,int k) {
 
+    	
+		int firstPointIndex = 0;
+		for(int i = 1;i<points.length;i++){
+			if(points[i].count > points[firstPointIndex].count){
+				firstPointIndex = i;
+			}
+		}
+    	
+    	
     	Random random = new Random();
         // Convert to list for indexed access. Make it unmodifiable, since removal of items
         // would screw up the logic of this method.
@@ -34,7 +43,7 @@ public class KMeansPlusPlusDecorator {
         final List<Integer> resultSet = new ArrayList<>();
 
         // Choose one center uniformly at random from among the data points.
-        final int firstPointIndex = random.nextInt(numPoints);
+        //final int firstPointIndex = random.nextInt(numPoints);
 
         final Centroid firstPoint = pointList.get(firstPointIndex);
 

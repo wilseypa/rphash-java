@@ -128,7 +128,7 @@ public class RPHash {
 		} else {
 			// run remaining, read file into ram
 			data = VectorUtil.readFile(filename, raw);
-			runner(runs, outputFile, raw, bestofruns);
+			runner(runs, outputFile, raw, bestofruns, data);
 		}
 
 	}
@@ -142,7 +142,7 @@ public class RPHash {
 	 * @return the minimum wcss centroid set
 	 */
 	public static List<Centroid> runclusterer(Clusterer clu, boolean raw,
-			int runs) {
+			int runs, List<float[]> data) {
 
 		//some clusterers can do multi runs in parallel
 		if (clu.setMultiRun(runs)) 
@@ -152,29 +152,17 @@ public class RPHash {
 		else 
 		{
 			List<Centroid> mincents = clu.getCentroids();
-			double minwcss = 0.0;
+			double minwcss = StatTests.WCSSECentroidsFloat(mincents, data);
 			
-			for (Centroid c : mincents) {
-				if(c.getWCSS()!=null){
-				for(int m = 0;m<c.getWCSS().length;m++)
-					minwcss += c.getWCSS()[m];
-				}
-			}
 			for (int i = 1; i < runs; i++) {
-				
-				List<Centroid> tmpcents = clu.getCentroids();
-				double tmpwcss = 0.0;
-				for (Centroid c : tmpcents) {
-					if(c.getWCSS()!=null){
-					for(int m = 0;m<c.getWCSS().length;m++)
-						tmpwcss += c.getWCSS()[m];
-				}}
-				if (tmpwcss < minwcss) {
-					minwcss = tmpwcss;
-					mincents = tmpcents;
-				}
-				
 				clu.reset(new Random().nextInt());
+				List<Centroid> tmpcents = clu.getCentroids();
+				double tmpwcss = StatTests.WCSSECentroidsFloat(tmpcents, data);
+				
+				if(tmpwcss<minwcss){
+					mincents = tmpcents;
+					minwcss = tmpwcss;
+				}
 			}
 			return mincents;
 		}
@@ -192,7 +180,7 @@ public class RPHash {
 	 * @throws InterruptedException
 	 */
 	public static void runner(List<Clusterer> runitems, String outputFile,
-			boolean raw, int runs) throws InterruptedException {
+			boolean raw, int runs,List<float[]> data) throws InterruptedException {
 		for (Clusterer clu : runitems) {
 			String[] ClusterHashName = clu.getClass().getName().split("\\.");
 			// String[] DecoderHashName =
@@ -210,7 +198,7 @@ public class RPHash {
 			long startmemory = rt.totalMemory() - rt.freeMemory();
 			long startTime = System.nanoTime();
 
-			List<Centroid> cents = runclusterer(clu, raw, runs);
+			List<Centroid> cents = runclusterer(clu, raw, runs,data);
 
 			float timed = (System.nanoTime() - startTime) / 1000000000f;
 			rt.gc();

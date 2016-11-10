@@ -54,6 +54,7 @@ public class RPHashMultiProj implements Clusterer {
 		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
 		// create our LSH Device
 		// create same LSH Device as before
+		
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
@@ -67,7 +68,7 @@ public class RPHashMultiProj implements Clusterer {
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
 					so.getNumBlur(), r,
 					dec.getErrorRadius() / dec.getDimensionality());
-
+			
 			lshfuncs[i] = new LSH(dec, p, hal, noise,so.getNormalize());
 		}
 
@@ -83,10 +84,8 @@ public class RPHashMultiProj implements Clusterer {
 				}
 			}
 		}
-
 		so.setPreviousTopID(is.getTop());
 		List<Float> countsAsFloats = new ArrayList<Float>();
-
 		for (long ct : is.getCounts())
 			countsAsFloats.add((float) ct);
 		so.setCounts(countsAsFloats);
@@ -183,41 +182,51 @@ public class RPHashMultiProj implements Clusterer {
 
 	@Override
 	public List<Centroid> getCentroids() {
-		if (centroids == null)
+		if (centroids == null){
 			run();
+		}
 		return centroids;
 	}
 
-	private void run() {
+	private void run() 
+	{
 		double minwcss = Double.MAX_VALUE;
 		List<Centroid> mincentroids = new ArrayList<>();
-		for(int currun = 0;currun<runs;currun++){
+		for(int currun = 0;currun<runs;){
+
 			map();
+
 			reduce();
 	
 			Clusterer offlineclusterer = so.getOfflineClusterer();
-			offlineclusterer.setMultiRun(10);
+			offlineclusterer.setMultiRun(1);//is deterministic
 			offlineclusterer.setData(so.getCentroids());
 			offlineclusterer.setWeights(so.getCounts());
 			offlineclusterer.setK(so.getk());
-			centroids = offlineclusterer.getCentroids();
-			if(centroids.size()==so.getk()){//skip bad clusterings
-				double twcss = 0.0;
-				for (int clusterid = 0; clusterid < so.getk(); clusterid++) {
+			List<Centroid> curcentroids = offlineclusterer.getCentroids();
 			
-					for (int dims = 0; dims < so.getdim(); dims++)
-						twcss += centroids.get(clusterid).wcss[dims];
-				}
-				
-				if (twcss < minwcss) {
-					minwcss = twcss;
-					mincentroids = centroids;
-				}
+			if(curcentroids.size()==so.getk()){//skip bad clusterings
+//				double twcss = 0.0;
+//				for (int clusterid = 0; clusterid < so.getk(); clusterid++) {
+//					float[] tmp = curcentroids.get(clusterid).wcss;
+//					for (int dims = 0; dims < so.getdim(); dims++)
+//						twcss += tmp[dims];
+//				}
+//				if (twcss < minwcss) {
+//					minwcss = twcss;
+					mincentroids = curcentroids;
+					
+					
+//
+//				}
+				currun++;
+				//System.out.println(currun + ":" + minwcss +":"+ twcss);
+			}
+			else{
+				System.out.println("MISSING CLUSTERS");
 			}
 		}
-		centroids = mincentroids;
-
-		
+		this.centroids = mincentroids;
 	}
 
 	public static void main(String[] args) {
@@ -288,8 +297,8 @@ public class RPHashMultiProj implements Clusterer {
 
 	@Override
 	public boolean setMultiRun(int runs) {
-		this.runs = runs;
-		return true;
+		this.runs = 1;//runs;
+		return false;
 	}
 
 }

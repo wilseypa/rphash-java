@@ -96,6 +96,7 @@ public class StatTests {
 		return count;
 	}
 	
+	
 	public static double WCSSE(List<Centroid> estCentroids, List<Centroid> data,boolean skip){
 		double count = 0.0 ;
 		for(int i = 0; i< data.size();i++)
@@ -110,6 +111,16 @@ public class StatTests {
 		for(int i = 0; i< data.size();i++)
 		{
 			count+=VectorUtil.distance(data.get(i),estCentroids.get(VectorUtil.findNearestDistance(new Centroid(data.get(i),0), estCentroids)).centroid()) ;
+		}
+		return count;
+	}
+	
+	public static double WCSSEFloatCentroid(List<float[]> estCentroids, List<Centroid> data){
+		double count = 0.0 ;
+		for(int i = 0; i< data.size();i++)
+		{
+			
+			count+=VectorUtil.distance(data.get(i).centroid,estCentroids.get(VectorUtil.findNearestDistance(data.get(i).centroid, estCentroids))) ;
 		}
 		return count;
 	}
