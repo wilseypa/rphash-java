@@ -54,7 +54,7 @@ final class cStore{
 		this.count++;
 		this.wcsse += VectorUtil.distance(point, centroid);
 		this.cent.setCount(this.count);
-		this.cent.setWCSS(this.wcsse);
+		//TODO: this.cent.setWCSS(this.wcsse);
 	}
 	
 	public cStore(float[] centroid){
@@ -299,7 +299,7 @@ public class AdaptiveMeanShift implements Clusterer {
 		for(cStore cen: cs){
 			Centroid it = new Centroid(cen.centroid, 0);
 			it.setCount(cen.count);
-			it.setWCSS(cen.wcsse);
+			//TODO: it.setWCSS(cen.wcsse);
 			centroids.add(it);
 			
 		}
