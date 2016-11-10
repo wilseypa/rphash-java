@@ -47,7 +47,7 @@ public class LSHkNN {
 		/** Create the tables necessary for an LSH accelerated k - nearest neighbor search
 		 * @param points
 		 */
-		void createDB(List<float[]> points) {
+		public void createDB(List<float[]> points) {
 			int nPoints = points.size();
 			
 			for (int j = 0; j < nPoints; j++) {
