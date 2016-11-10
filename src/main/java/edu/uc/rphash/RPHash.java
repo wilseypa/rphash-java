@@ -11,8 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 //import org.rosuda.JRI.Rengine;
 
@@ -29,6 +27,7 @@ import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.clusterers.AdaptiveMeanShift;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
@@ -43,7 +42,7 @@ public class RPHash {
 			"multiproj", "consensus", "redux", "kmeans", "pkmeans",
 			"kmeansplusplus", "streamingkmeans" };
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
-			"averagelink", "kmeans" };
+			"averagelink", "kmeans", "adaptivemeanshift" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
 			"raw", "decayrate", "dimparameter", "decodertype",
@@ -531,6 +530,13 @@ public class RPHash {
 
 				break;
 			}
+			case "adaptivemeanshift":{
+				
+				o.setOfflineClusterer(new AdaptiveMeanShift());
+				so.setOfflineClusterer(new AdaptiveMeanShift());
+				
+				break;
+			}
 			default: {
 				System.out.println(taggedArgs.get("clustering type")
 						+ "does not exist, using defaults");
@@ -577,6 +583,10 @@ public class RPHash {
 					runitems.add(new StreamingKmeans(so));
 				else
 					runitems.add(new StreamingKmeans(o));
+				break;
+			}
+			case "adaptivemeanshift": {
+				runitems.add(new AdaptiveMeanShift());
 				break;
 			}
 			default:
