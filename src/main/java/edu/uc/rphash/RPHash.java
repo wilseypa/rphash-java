@@ -162,6 +162,7 @@ public class RPHash {
 					mincents = tmpcents;
 					minwcss = tmpwcss;
 				}
+//				System.out.println(tmpwcss+":"+minwcss);
 			}
 			return mincents;
 		}
@@ -184,7 +185,8 @@ public class RPHash {
 			String[] ClusterHashName = clu.getClass().getName().split("\\.");
 			// String[] DecoderHashName =
 			// clu.getParam().toString().split("\\.");
-			System.out.print(ClusterHashName[ClusterHashName.length - 1]
+			if(clu.getParam()!=null)
+				System.out.print(ClusterHashName[ClusterHashName.length - 1]
 					+ " { " + clu.getParam().toString()
 					// ClusterHashName[ClusterHashName.length - 1] + "{"
 					// + DecoderHashName[DecoderHashName.length - 2]
@@ -205,10 +207,9 @@ public class RPHash {
 			rt.gc();
 			long usedkB = ((rt.totalMemory() - rt.freeMemory()) - startmemory) / 1024;
 
-			RPHashObject reader = clu.getParam();
+//			RPHashObject reader = clu.getParam();
 
-			double wcsse = StatTests.WCSSECentroidsFloat(cents,
-					reader.getRawData());
+			double wcsse = StatTests.WCSSECentroidsFloat(cents,data);
 
 			System.out.println(timed + ", used(KB): " + usedkB + ", wcsse: "
 					+ wcsse);
@@ -568,9 +569,10 @@ public class RPHash {
 			case "redux":
 				runitems.add(new RPHashIterativeRedux(o));
 				break;
-			case "kmeans":
-				runitems.add(new LloydIterativeKmeans(k, data));
+			case "kmeans":{
+				runitems.add(new KMeans2(k, data));
 				break;
+			}
 			case "pkmeans":
 				runitems.add(new LloydIterativeKmeans(k, data, o
 						.getNumProjections()));

@@ -16,18 +16,20 @@ public class KMeansPlusPlusDecorator {
      * @param points the points to choose the initial centers from
      * @return the initial centers
      */
-    public static List<Integer> chooseInitialCenters(Centroid[] points,int k) {
-
-    	
-		int firstPointIndex = 0;
-		for(int i = 1;i<points.length;i++){
-			if(points[i].count > points[firstPointIndex].count){
-				firstPointIndex = i;
-			}
-		}
-    	
-    	
+    public static List<Integer> chooseInitialCenters(Centroid[] points,int k,boolean weightedClusters) {
     	Random random = new Random();
+    	int firstPointIndex  = random.nextInt(points.length);
+    	if(weightedClusters){
+			firstPointIndex = 0;
+			for(int i = 1;i<points.length;i++){
+				if(points[i].count > points[firstPointIndex].count){
+					firstPointIndex = i;
+				}
+			}
+    	}
+    	
+    	
+    	
         // Convert to list for indexed access. Make it unmodifiable, since removal of items
         // would screw up the logic of this method.
         final List<Centroid> pointList = Arrays.asList(points);

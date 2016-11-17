@@ -24,14 +24,16 @@ public class KMeans2 implements Clusterer {
 	private List<Centroid> centroids;
 	private Centroid[] data;
 	private int max_failed_runs = 10;
+	private boolean weightedclusters = true;
 
 	public KMeans2(int getk, List<float[]> data) {
 		this.data = new Centroid[data.size()];
-		this.d = this.data[0].dimensions;
+		this.d = data.get(0).length;
 		for (int i = 0; i < data.size(); i++) {
 			this.data[i] = new Centroid(1,data.get(i));
 		}
 		this.centroids = null;
+		weightedclusters = false;
 		init(this.data, getk);
 	}
 
@@ -50,7 +52,7 @@ public class KMeans2 implements Clusterer {
 		this.clustersOfVectorIndeces = new ArrayList[k];
 
 		
-		List<Integer> initcent = KMeansPlusPlusDecorator.chooseInitialCenters(x, k);	
+		List<Integer> initcent = KMeansPlusPlusDecorator.chooseInitialCenters(x, k,weightedclusters);	
 		for (int j = 0; j < k; j++) {
 			means[j] = new Centroid(new float[d]);
 			means[j].wcss = new float[d];
@@ -59,6 +61,8 @@ public class KMeans2 implements Clusterer {
 			System.arraycopy(tmpptr.wcss, 0, means[j].wcss, 0, d);
 			means[j].count = tmpptr.count;
 		}
+		
+		
 	}
 	
 
