@@ -21,6 +21,7 @@ import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative;
 import edu.uc.rphash.tests.clusterers.Agglomerative2;
+import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
@@ -195,7 +196,6 @@ public class RPHashMultiProj implements Clusterer {
 		for(int currun = 0;currun<runs;){
 
 			map();
-
 			reduce();
 	
 			Clusterer offlineclusterer = so.getOfflineClusterer();
@@ -203,28 +203,18 @@ public class RPHashMultiProj implements Clusterer {
 			offlineclusterer.setData(so.getCentroids());
 			offlineclusterer.setWeights(so.getCounts());
 			offlineclusterer.setK(so.getk());
-			List<Centroid> curcentroids = offlineclusterer.getCentroids();
+			List<Centroid> tmpcents = offlineclusterer.getCentroids();
 			
-			if(curcentroids.size()==so.getk()){//skip bad clusterings
-//				double twcss = 0.0;
-//				for (int clusterid = 0; clusterid < so.getk(); clusterid++) {
-//					float[] tmp = curcentroids.get(clusterid).wcss;
-//					for (int dims = 0; dims < so.getdim(); dims++)
-//						twcss += tmp[dims];
-//				}
-//				if (twcss < minwcss) {
-//					minwcss = twcss;
-					mincentroids = curcentroids;
-					
-					
-//
-//				}
+			if(tmpcents.size()==so.getk()){//skip bad clusterings
+				double tmpwcss = StatTests.WCSSECentroidsFloat(tmpcents, so.getRawData());
+				
+				if(tmpwcss<minwcss){
+					minwcss = tmpwcss;
+					mincentroids = tmpcents;
+				}
 				currun++;
-				//System.out.println(currun + ":" + minwcss +":"+ twcss);
 			}
-			else{
-				System.out.println("MISSING CLUSTERS");
-			}
+			this.reset(new Random().nextInt());
 		}
 		this.centroids = mincentroids;
 	}
@@ -232,31 +222,30 @@ public class RPHashMultiProj implements Clusterer {
 	public static void main(String[] args) {
 
 		int k = 10;
-		int d = 100;
+		int d = 500;
 		int n = 5000;
 
-		float var = 1.1f;
-		for (float f = var; f < 10.1; f += .03f) {
-			for (int i = 0; i < 1; i++) {
-				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
-				
-				SimpleArrayReader so = new SimpleArrayReader(gen.data, k);
+		float var = 1f;
+		GenerateData gen = new GenerateData(k, n / k, d, var, true, 1f);
+		SimpleArrayReader so = new SimpleArrayReader(gen.data, k);
+		for (int r = 1; r < 100; r++) {
+			double[] means = new double[10];
+			
+			for (int i = 0; i < 10; i++) {
+
 				RPHashMultiProj rphit = new RPHashMultiProj(so);
-				rphit.setMultiRun(10);
-				
-//				long startTime = System.nanoTime();
+				rphit.setMultiRun(r);
 				List<Centroid> cents = rphit.getCentroids();
-				float wcssinternal = 0.0f;
-				for(Centroid c : cents){
-					for(float wcss : c.wcss)
-					wcssinternal+=wcss;
-				}
-				
-				System.out.println(wcssinternal +"\t" + StatTests.WCSSECentroidsFloat(cents, gen.getData())/(float)n);
-//				System.out.println(StatTests.WCSSE(gen.medoids(), gen.getData()) + 
-//						"\t"+ StatTests.WCSSECentroidsFloat(cents, gen.getData()));
+
+//				KMeans2 km = new KMeans2(k,so.getRawData() );
+//				km.setMultiRun(r);
+//				List<Centroid> cents = km.getCentroids();
+				System.out.printf("%f ",StatTests.WCSSECentroidsFloat(cents, gen.getData()));
 			}
-		}
+			System.out.printf("\n");
+//			System.out.println( r+"\t"+StatTests.variance(means));
+			
+		}	
 	}
 
 	@Override
@@ -297,8 +286,8 @@ public class RPHashMultiProj implements Clusterer {
 
 	@Override
 	public boolean setMultiRun(int runs) {
-		this.runs = 1;//runs;
-		return false;
+		this.runs = runs;
+		return true;
 	}
 
 }

@@ -14,19 +14,20 @@ import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.clusterers.Agglomerative;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
+import edu.uc.rphash.tests.clusterers.Agglomerative3.ClusteringType;
 import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.KMeans2NoWCSS;
 import edu.uc.rphash.tests.clusterers.Kmeans;
 
 public interface RPHashObject {
-	final static int DEFAULT_NUM_PROJECTIONS = 1;
-	public final static int DEFAULT_NUM_BLUR = 2;
+	final static int DEFAULT_NUM_PROJECTIONS = 2;
+	public final static int DEFAULT_NUM_BLUR = 0;
 	final static long DEFAULT_NUM_RANDOM_SEED = 38006359550206753L;
 	final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
-	final static Decoder DEFAULT_INNER_DECODER = new Spherical(16,2,1);//new MultiDecoder(24, new E8(1f));//new Golay();//new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//
+	final static Decoder DEFAULT_INNER_DECODER = new Spherical(16,5,1);//new MultiDecoder(24, new E8(1f));//new Golay();//new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//
 	final static int DEFAULT_DIM_PARAMETER = DEFAULT_INNER_DECODER.getDimensionality();
-	final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new KMeans2();
+	final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new Agglomerative3(ClusteringType.AVG_LINKAGE);
 
 	int getdim();
 	

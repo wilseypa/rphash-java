@@ -80,6 +80,25 @@ public class RPHash {
 			System.exit(0);
 		}
 
+		List<String> unmatchedkeywords = new ArrayList<>();
+		for(int i = 3;i< args.length;i++){
+			args[i] = args[i].toLowerCase();
+			String arg  = args[i];
+			String keyword = arg.split("=")[0];//either just a keyword or keyword=value
+			boolean matched = false;
+			for(String match : clusteringmethods)matched |= keyword.equals(match);
+			for(String match : offlineclusteringmethods)matched |= keyword.equals(match);
+			for(String match : ops)matched |= keyword.equals(match);
+			for(String match : decoders)matched |= keyword.equals(match);
+			if(!matched)unmatchedkeywords.add(keyword);
+		}
+		if(unmatchedkeywords.size()>0)
+		{
+			System.out.println("ERROR Keyword(s) not found:");
+			System.out.println("\t"+unmatchedkeywords);
+			System.exit(0);
+		}
+		
 		List<float[]> data = null;
 
 		String filename = args[0];
@@ -487,9 +506,11 @@ public class RPHash {
 						.getDimparameter()));
 				break;
 			}
-			case "sphere": {
-				o.setDecoderType(new Spherical(o.getDimparameter(), 3, 2));
-				so.setDecoderType(new Spherical(o.getDimparameter(), 3, 2));
+			case "sphere": {//pad to ~32 bits
+				
+				int ctsofsphere = (int)(Math.log(o.getDimparameter()*2)/Math.log(2.0));
+				o.setDecoderType(new Spherical(o.getDimparameter(), 32/ctsofsphere, 1));
+				so.setDecoderType(new Spherical(o.getDimparameter(), 32/ctsofsphere, 1));
 				break;
 			}
 			default: {

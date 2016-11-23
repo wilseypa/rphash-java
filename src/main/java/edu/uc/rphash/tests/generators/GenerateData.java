@@ -312,7 +312,7 @@ public class GenerateData implements ClusterGenerator {
 			for (int k = 0; k < dimension; k++) {
 				if (r.nextInt() % (int) (1.0f / sparseness) == 0) {
 					medoid[k] = r.nextFloat() * 2.0f - 1.0f;
-					variances[k] = scaler * r.nextFloat();
+					variances[k] = scaler ;//* r.nextFloat();
 				}
 
 			}
@@ -321,7 +321,7 @@ public class GenerateData implements ClusterGenerator {
 			for (int j = 0; j < numVectorsPerCluster; j++) {
 				float[] dat = new float[dimension];
 				for (int k = 0; k < dimension; k++) {
-					if (r.nextInt() % (int) (1.0f / sparseness) == 0)
+					if (medoid[k] != 0)
 						dat[k] = (float) (medoid[k] + genfnc.genVariate()
 								* variances[k]);
 				}
