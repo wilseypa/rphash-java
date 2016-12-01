@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.math3.stat.inference.TestUtils;
+
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.projections.DBFriendlyProjection;
@@ -11,6 +13,7 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.SamplingVarianceTracker;
+import edu.uc.rphash.util.VectorUtil;
 
 public class LSH {
 	public Projector projectionMatrix;
@@ -144,12 +147,12 @@ public class LSH {
 			pr_r = vtrack.normailize(pr_r);
 		}
 		
-		long nonoise = standardHashAlgorithm.hash(lshDecoder.decode(pr_r));
+		long[] hasherret = lshDecoder.decode(pr_r);
+		long[] returnHashes = new long[times*hasherret.length];
 		
-		long[] returnHashes = new long[times];
-		// if(times>1){
-		returnHashes[0] = nonoise;
-//		System.arraycopy(nonoise, 0, returnHashes, 0, nonoise.length);
+		for(int h =0;h<hasherret.length;h++)
+			returnHashes[h]=standardHashAlgorithm.hash(hasherret[h]);
+
 		// add some blurring probes in addition to the unnoised decoding
 		float[] noisedProjectedVector = new float[pr_r.length];
 		float[] noiseVec;
@@ -159,15 +162,13 @@ public class LSH {
 			System.arraycopy(pr_r, 0, noisedProjectedVector, 0, pr_r.length);
 			noiseVec = noise.get(j);
 			for (int k = 0; k < pr_r.length; k++) {
-				noisedProjectedVector[k] = noisedProjectedVector[k]
-						+ noiseVec[k];
+				noisedProjectedVector[k] = noisedProjectedVector[k]+noiseVec[k];
 			}
-//			nonoise = standardHashAlgorithm.hash(lshDecoder.decode(noisedProjectedVector));
-			returnHashes[j] = standardHashAlgorithm.hash(lshDecoder.decode(noisedProjectedVector));
-//			System.arraycopy(nonoise, 0, returnHashes, j * nonoise.length,
-//					nonoise.length);
+			hasherret = lshDecoder.decode(noisedProjectedVector);
+			for(int h =0;h<hasherret.length;h++)
+				returnHashes[j*hasherret.length+h]=standardHashAlgorithm.hash(hasherret[h]);
 		}
-
+		
 		return returnHashes;
 	}
 

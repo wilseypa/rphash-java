@@ -8,6 +8,24 @@ public class ELFHash implements HashAlgorithm {
 	}
 	
 	@Override
+	public long hash(long d) {
+		// TODO Auto-generated method stub
+		byte[] s2 = new byte[8];
+		int ct = 0;
+	
+		s2[ct++] = (byte)(d >>> 56);
+		s2[ct++] = (byte)(d >>> 48);
+		s2[ct++] = (byte)(d >>> 40);
+		s2[ct++] = (byte)(d >>> 32);
+		s2[ct++] = (byte)(d >>> 24);
+		s2[ct++] = (byte)(d >>> 16);
+		s2[ct++] = (byte)(d >>> 8 );
+		s2[ct++] = (byte)(d       );
+		
+		return elfHash(s2) %tablesize;
+	}
+	
+	@Override
 	public long hash(long[] s) {
 		// TODO Auto-generated method stub
 		byte[] s2 = new byte[s.length*8];

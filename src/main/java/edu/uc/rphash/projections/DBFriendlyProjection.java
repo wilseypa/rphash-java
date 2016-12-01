@@ -73,7 +73,7 @@ public class DBFriendlyProjection implements Projector {
 
 	@Override
 	public float[] project(float[] v) {
-		return projectN(v, P, M, n, t);
+		return projectN(v, P, M, t);
 	}
 
 	// v: the input vector
@@ -83,7 +83,7 @@ public class DBFriendlyProjection implements Projector {
 	// -sqrt(3/t)
 	// n: original dimension
 	// t: target OR projected dimension
-	static float[] projectN(float[] v, int[][] P, int[][] M, int n, int t) {
+	static float[] projectN(float[] v, int[][] P, int[][] M, int t) {
 		float[] r = new float[t];
 		float sum;
 		float scale = (float) Math.sqrt(3.0f / ((float) t));

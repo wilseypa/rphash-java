@@ -1,32 +1,48 @@
 package edu.uc.rphash.standardhash;
 
-
 /*
  * 
  * CrapWow 32 Bit from https://github.com/sunnygleason/g414-hash
  */
 public class CrapWow implements HashAlgorithm {
 	int tablesize;
-	public CrapWow(int tablesize){
+
+	public CrapWow(int tablesize) {
 		this.tablesize = tablesize;
 	}
+
+	@Override
+	public long hash(long d) {
+		byte[] s2 = new byte[8];
+		int ct = 0;
+
+		s2[ct++] = (byte) (d >>> 56);
+		s2[ct++] = (byte) (d >>> 48);
+		s2[ct++] = (byte) (d >>> 40);
+		s2[ct++] = (byte) (d >>> 32);
+		s2[ct++] = (byte) (d >>> 24);
+		s2[ct++] = (byte) (d >>> 16);
+		s2[ct++] = (byte) (d >>> 8);
+		s2[ct++] = (byte) (d);
+
+		return computeCWowIntHash(s2, 0) % tablesize;
+	}
+
 	@Override
 	public long hash(long[] s) {
-		
-		
-		byte[] s2 = new byte[s.length*8];
+		byte[] s2 = new byte[s.length * 8];
 		int ct = 0;
-		for (long d:s) {
-			s2[ct++] = (byte)(d >>> 56);
-			s2[ct++] = (byte)(d >>> 48);
-			s2[ct++] = (byte)(d >>> 40);
-			s2[ct++] = (byte)(d >>> 32);
-			s2[ct++] = (byte)(d >>> 24);
-			s2[ct++] = (byte)(d >>> 16);
-			s2[ct++] = (byte)(d >>>  8);
-			s2[ct++] = (byte)(d       );
+		for (long d : s) {
+			s2[ct++] = (byte) (d >>> 56);
+			s2[ct++] = (byte) (d >>> 48);
+			s2[ct++] = (byte) (d >>> 40);
+			s2[ct++] = (byte) (d >>> 32);
+			s2[ct++] = (byte) (d >>> 24);
+			s2[ct++] = (byte) (d >>> 16);
+			s2[ct++] = (byte) (d >>> 8);
+			s2[ct++] = (byte) (d);
 		}
-		return computeCWowIntHash(s2, 0)%tablesize;
+		return computeCWowIntHash(s2, 0) % tablesize;
 	}
 
 	public final static int CWOW_32_M = 0x57559429;

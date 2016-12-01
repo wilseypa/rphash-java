@@ -90,6 +90,7 @@ public class RPHashMultiProj implements Clusterer {
 		for (long ct : is.getCounts())
 			countsAsFloats.add((float) ct);
 		so.setCounts(countsAsFloats);
+		
 		return so;
 	}
 
@@ -235,12 +236,13 @@ public class RPHashMultiProj implements Clusterer {
 
 				RPHashMultiProj rphit = new RPHashMultiProj(so);
 				rphit.setMultiRun(r);
-				List<Centroid> cents = rphit.getCentroids();
-
-//				KMeans2 km = new KMeans2(k,so.getRawData() );
-//				km.setMultiRun(r);
-//				List<Centroid> cents = km.getCentroids();
-				System.out.printf("%f ",StatTests.WCSSECentroidsFloat(cents, gen.getData()));
+				List<Centroid> centsr = rphit.getCentroids();
+				
+				
+				KMeans2 km = new KMeans2(k,so.getRawData() );
+				km.setMultiRun(r);
+				List<Centroid> centsk = km.getCentroids();
+				System.out.printf("%f ",StatTests.WCSSECentroidsFloat(centsk, gen.getData())/StatTests.WCSSECentroidsFloat(centsr, gen.getData()) );
 			}
 			System.out.printf("\n");
 //			System.out.println( r+"\t"+StatTests.variance(means));

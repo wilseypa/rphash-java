@@ -507,10 +507,11 @@ public class RPHash {
 				break;
 			}
 			case "sphere": {//pad to ~32 bits
-				
-				int ctsofsphere = (int)(Math.log(o.getDimparameter()*2)/Math.log(2.0));
-				o.setDecoderType(new Spherical(o.getDimparameter(), 32/ctsofsphere, 1));
-				so.setDecoderType(new Spherical(o.getDimparameter(), 32/ctsofsphere, 1));
+				//int ctsofsphere = (int)(Math.log(o.getDimparameter()*2)/Math.log(2.0)) /2;
+				o.setDecoderType(new Spherical(o.getDimparameter(), 2, 2));
+				so.setDecoderType(new Spherical(o.getDimparameter(), 2, 2));
+//				o.setDecoderType(new Spherical(o.getDimparameter(), ctsofsphere, o.getNumBlur()));
+//				so.setDecoderType(new Spherical(o.getDimparameter(), ctsofsphere, o.getNumBlur()));
 				break;
 			}
 			default: {
