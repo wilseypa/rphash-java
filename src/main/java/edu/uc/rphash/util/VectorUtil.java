@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import edu.uc.rphash.Centroid;
@@ -454,6 +455,18 @@ public class VectorUtil {
 		return s;
 	}
 
+	private static final Pattern DOUBLE_PATTERN = Pattern.compile(
+		    "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)" +
+		    "([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|" +
+		    "(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))" +
+		    "[pP][+-]?(\\p{Digit}+)))[fFdD]?))[\\x00-\\x20]*");
+	
+	
+	public static boolean isFloat(String s)
+	{
+	    return DOUBLE_PATTERN.matcher(s).matches();
+	}
+	
 	public static List<float[]> readASCIIFile(BufferedReader in)
 			throws FileNotFoundException, IOException {
 
@@ -465,7 +478,15 @@ public class VectorUtil {
 			for (int i = 0; i < m; i++) {
 				float[] vec = new float[n];
 				for (int j = 0; j < n; j++)
-					vec[j] = Float.parseFloat(in.readLine());
+				{
+					String s = in.readLine();
+					if(s!=null){
+						if(isFloat(s))
+							vec[j] = Float.parseFloat(s);
+						else
+							vec[j] = Integer.parseInt(s);
+					}
+				}
 				M.add(vec);
 			}
 		} catch (IOException e) {
