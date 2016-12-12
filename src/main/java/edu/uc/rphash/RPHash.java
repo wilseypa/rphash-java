@@ -40,7 +40,7 @@ public class RPHash {
 
 	static String[] clusteringmethods = { "simple", "streaming", "3stage",
 			"multiproj", "consensus", "redux", "kmeans", "pkmeans",
-			"kmeansplusplus", "streamingkmeans" };
+			"kmeansplusplus", "streamingkmeans" ,"none"};
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
 			"averagelink", "kmeans", "adaptivemeanshift" , "none" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",

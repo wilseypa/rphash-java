@@ -188,7 +188,7 @@ public class RPHashMultiProj implements Clusterer {
 			map();
 			reduce();
 
-			System.out.println(so.getCounts());
+//			System.out.println(so.getCounts());
 
 			Clusterer offlineclusterer = so.getOfflineClusterer();
 			List<Centroid> tmpcents;
@@ -205,7 +205,7 @@ public class RPHashMultiProj implements Clusterer {
 			if (tmpcents.size() == so.getk()) {// skip bad clusterings
 				double tmpwcss = StatTests.WCSSECentroidsFloat(tmpcents,
 						so.getRawData());
-				System.out.println(tmpwcss + ":" + so.getCounts());
+//				System.out.println(tmpwcss + ":" + so.getCounts());
 				if (tmpwcss < minwcss) {
 					minwcss = tmpwcss;
 					mincentroids = tmpcents;
