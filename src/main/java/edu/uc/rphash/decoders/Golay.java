@@ -3,6 +3,7 @@ package edu.uc.rphash.decoders;
 import java.util.Arrays;
 import java.util.Random;
 
+import edu.uc.rphash.frequentItemSet.Countable;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -306,11 +307,12 @@ public class Golay implements Decoder{
 	    @Override
 		public long[] decode(float[] p1) {
 			int codeword = 0;
-			for(int i=0;i<24;i++){
-				if(p1[i]>0)codeword+=1;
+			if(p1[0]>0)codeword+=1;
+			for(int i=1;i<24;i++){
 				codeword<<=1;
+				if(p1[i]>0)codeword+=1;
 			}
-			return new long[]{codeword};
+			return new long[]{correctAndDecode(codeword)};
 		}
 
 //		@Override
@@ -337,13 +339,12 @@ public class Golay implements Decoder{
 
 		@Override
 		public boolean selfScaling() {
-			return false;
+			return true;
 		}
-		
-//		@Override
-//		public float[] getVariance(){
-//			return variance;
-//		}
 
-	    
+		@Override
+		public void setCounter(Countable counter) {
+			// TODO Auto-generated method stub
+			
+		}
 }

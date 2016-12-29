@@ -1,5 +1,7 @@
 package edu.uc.rphash.decoders;
 
+import edu.uc.rphash.frequentItemSet.Countable;
+
 public interface Decoder {
 
 	abstract int getDimensionality();
@@ -10,4 +12,5 @@ public interface Decoder {
 	abstract boolean selfScaling();
 //	abstract float[] getVariance();
 //	abstract void setVariance(float[] parameterObject);
+	void setCounter(Countable counter);
 }

@@ -86,6 +86,7 @@ public class RPHashStream implements StreamClusterer {
 			// create LSH Device
 			LSH[] lshfunc = new LSH[projections];
 			Decoder dec = so.getDecoderType();
+			dec.setCounter(is.get(i));
 			HashAlgorithm hal = new MurmurHash(so.getHashmod());
 			// create projection matrices add to LSH Device
 	

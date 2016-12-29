@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import edu.uc.rphash.frequentItemSet.Countable;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -263,6 +264,12 @@ public class Spherical implements Decoder {
 	@Override
 	public boolean selfScaling() {
 		return true;
+	}
+
+	@Override
+	public void setCounter(Countable counter) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

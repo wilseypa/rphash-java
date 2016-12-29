@@ -66,7 +66,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E>,Countable {
 		return this;
 	}
 
-	@Override
+
 	public boolean add(E e) {
 		long count = addLong(e.hashCode(), 1);
 		if(e instanceof Centroid){
@@ -196,5 +196,11 @@ public class KHHCountMinSketch<E> implements ItemSet<E>,Countable {
 		System.out.println(System.currentTimeMillis() - ts);
 		System.out.println(khh.getTop());
 		System.out.println(khh.getCounts());
+	}
+
+	@Override
+	public boolean add(Long e) {
+		addLong(e,1);
+		return true;
 	}
 }

@@ -1,5 +1,7 @@
 package edu.uc.rphash.decoders;
 
+import edu.uc.rphash.frequentItemSet.Countable;
+
 
 
 
@@ -74,5 +76,11 @@ public class MultiDecoder implements Decoder {
 //	public float[] getVariance(){
 //		return innerDec.getVariance();
 //	}
+
+	@Override
+	public void setCounter(Countable counter) {
+		innerDec.setCounter(counter);
+		
+	}
 
 }

@@ -165,6 +165,12 @@ public class KHHHashCounter implements Countable{
 
 
 	}
+
+	@Override
+	public boolean add(Long e) {
+		this.addLong(e, 1);
+		return true;
+	}
 	
 	
 }

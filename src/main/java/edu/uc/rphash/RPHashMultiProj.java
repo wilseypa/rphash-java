@@ -49,7 +49,7 @@ public class RPHashMultiProj implements Clusterer {
 		long[] hash;
 		int projections = so.getNumProjections();
 
-		int k = (int) (so.getk() * projections) * 5;
+		int k = (int) (so.getk()*2);
 
 		// initialize our counter
 		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
@@ -59,7 +59,8 @@ public class RPHashMultiProj implements Clusterer {
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
-		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		dec.setCounter(is);
+		HashAlgorithm hal = new NoHash(so.getHashmod());
 
 		// create same projection matrices as before
 		for (int i = 0; i < projections; i++) {
@@ -90,7 +91,6 @@ public class RPHashMultiProj implements Clusterer {
 		for (long ct : is.getCounts())
 			countsAsFloats.add((float) ct);
 		so.setCounts(countsAsFloats);
-
 		return so;
 	}
 
@@ -117,7 +117,7 @@ public class RPHashMultiProj implements Clusterer {
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[projections];
 		Decoder dec = so.getDecoderType();
-		HashAlgorithm hal = new MurmurHash(so.getHashmod());
+		HashAlgorithm hal = new NoHash(so.getHashmod());
 
 		// create same projection matrices as before
 		for (int i = 0; i < projections; i++) {
@@ -184,11 +184,10 @@ public class RPHashMultiProj implements Clusterer {
 		double minwcss = Double.MAX_VALUE;
 		List<Centroid> mincentroids = new ArrayList<>();
 		for (int currun = 0; currun < runs;) {
+			
 
 			map();
 			reduce();
-
-//			System.out.println(so.getCounts());
 
 			Clusterer offlineclusterer = so.getOfflineClusterer();
 			List<Centroid> tmpcents;
@@ -238,13 +237,13 @@ public class RPHashMultiProj implements Clusterer {
 				rphit.setMultiRun(r);
 				List<Centroid> centsr = rphit.getCentroids();
 
-				KMeans2 km = new KMeans2(k, so.getRawData());
-				km.setMultiRun(r);
-				List<Centroid> centsk = km.getCentroids();
+//				KMeans2 km = new KMeans2(k, so.getRawData());
+//				km.setMultiRun(r);
+//				List<Centroid> centsk = km.getCentroids();
 				System.out.printf(
 						"%f ",
-						StatTests.WCSSECentroidsFloat(centsk, gen.getData())
-								/ StatTests.WCSSECentroidsFloat(centsr,
+						/*StatTests.WCSSECentroidsFloat(centsk, gen.getData())
+								,*/ StatTests.WCSSECentroidsFloat(centsr,
 										gen.getData()));
 			}
 			System.out.printf("\n");

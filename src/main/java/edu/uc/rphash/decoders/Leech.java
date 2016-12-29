@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.frequentItemSet.Countable;
 import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.standardhash.MurmurHash;
@@ -1194,6 +1195,12 @@ public class Leech implements Decoder {
 	@Override
 	public boolean selfScaling() {
 		return false;
+	}
+
+	@Override
+	public void setCounter(Countable counter) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 //	@Override

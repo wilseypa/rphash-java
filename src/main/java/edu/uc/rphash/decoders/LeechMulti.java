@@ -3,6 +3,8 @@ package edu.uc.rphash.decoders;
 import java.util.HashSet;
 import java.util.Random;
 
+import edu.uc.rphash.frequentItemSet.Countable;
+
 public class LeechMulti implements Decoder {
 
 	public static int Dim = 24;
@@ -1015,6 +1017,12 @@ public class LeechMulti implements Decoder {
 	@Override
 	public boolean selfScaling() {
 		return false;
+	}
+
+	@Override
+	public void setCounter(Countable counter) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 //	@Override

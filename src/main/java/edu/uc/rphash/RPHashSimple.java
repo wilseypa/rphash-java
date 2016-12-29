@@ -30,19 +30,24 @@ public class RPHashSimple implements Clusterer {
 		if (!vecs.hasNext())
 			return so;
 		
-		Decoder dec = so.getDecoderType();
+		
 
+	int logk = (int) (.5+Math.log(so.getk())/Math.log(2));//log k and round to integer
+		int k = so.getk()*logk;
+		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
+		Decoder dec = so.getDecoderType();
+		dec.setCounter(is);
 		Projector p = new DBFriendlyProjection(so.getdim(),
 				dec.getDimensionality(), so.getRandomSeed());
 		//no noise to start with
 		List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
 		
 		LSH lshfunc = new LSH(dec, p, hal,noise,so.getNormalize());
+		
 		long hash;
-		int logk = (int) (.5+Math.log(so.getk())/Math.log(2));//log k and round to integer
-		int k = so.getk()*logk;
 
-		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
+
+		
 		// add to frequent itemset the hashed Decoded randomly projected vector
 
 		while (vecs.hasNext()) {

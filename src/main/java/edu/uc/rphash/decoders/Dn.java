@@ -2,6 +2,7 @@ package edu.uc.rphash.decoders;
 
 import java.util.Random;
 
+import edu.uc.rphash.frequentItemSet.Countable;
 import edu.uc.rphash.util.VectorUtil;
 
 
@@ -170,6 +171,12 @@ public class Dn implements Decoder {
 	@Override
 	public boolean selfScaling() {
 		return false;
+	}
+
+	@Override
+	public void setCounter(Countable counter) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 //	@Override

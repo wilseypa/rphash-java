@@ -97,6 +97,8 @@ public class KHHCentroidCounter implements Countable {
 			hashA[i] = r.nextLong();
 		}
 	}
+	
+	
 
 	public void add(Centroid c) {
 		this.count++;
@@ -238,6 +240,12 @@ public class KHHCentroidCounter implements Countable {
 	public List<Float> getCounts() {
 		if(topcent==null)getTop();
 		return counts;
+	}
+
+	@Override
+	public boolean add(Long e) {
+		addLong(e,1);
+		return true;
 	}
 	
 

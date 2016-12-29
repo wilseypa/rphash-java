@@ -1,28 +1,24 @@
 package edu.uc.rphash.decoders;
 
 import edu.uc.rphash.frequentItemSet.Countable;
+import edu.uc.rphash.util.VectorUtil;
 
 public class DepthProbingLSH implements Decoder {
-	Countable counter;
-	Decoder decoder;
 	
-	public DepthProbingLSH(Countable counter, Decoder decoder){
+	int dim;
+	public DepthProbingLSH(int dim){
+		this.dim = dim;
+	}
+	
+	
+	public DepthProbingLSH(Countable counter, int dim){
 		this.counter = counter;
-		this.decoder = decoder;
+		this.dim = dim;
 	}
 
 	@Override
 	public int getDimensionality() {
-		return decoder.getDimensionality();
-	}
-
-	public int countbits(long b){
-		int i = 0 ;
-		while(b!=0){
-			b>>=1;
-			i++;
-		}
-		return i;
+		return dim;
 	}
 	
 
@@ -44,35 +40,46 @@ public class DepthProbingLSH implements Decoder {
 	
 	@Override
 	public long[] decode(float[] f) {
-		long totalhash = 0;
-		long previouscount = 0;
-		boolean godeeper = true;
-		while(godeeper){
-			long curhash = decoder.decode(f)[0];
-			totalhash^= (curhash);
-			long currentcount = (long) counter.count(totalhash);
-			godeeper = (previouscount >> countbits(curhash) < currentcount);
-			previouscount = currentcount;
+		
+		long  recursiveHash =0;
+		float parentCount = 0;
+		
+		if(f[0]>0)recursiveHash+=1;
+		counter.add(recursiveHash);
+		parentCount = counter.count(recursiveHash);
+		
+		for(int i = 1;i<f.length;i++){
+			recursiveHash<<=1;
+			if(f[i]>0)recursiveHash+=1;
+			counter.add(recursiveHash);
+			float curcount = counter.count(recursiveHash);
+			if((curcount+curcount)<parentCount)
+			{
+				return new long[]{recursiveHash};
+			}
+			parentCount = curcount;
 		}
-
-		return new long[]{totalhash};
+		return new long[]{recursiveHash};
+	}
+	
+	Countable counter;
+	@Override
+	public void setCounter(Countable counter) {
+		this.counter = counter;
 	}
 
 	@Override
 	public float getErrorRadius() {
-
 		return -1;
 	}
 
 	@Override
 	public float getDistance() {
-
 		return 0;
 	}
 
 	@Override
 	public boolean selfScaling() {
-
 		return true;
 	}
 

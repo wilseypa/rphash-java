@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
+import edu.uc.rphash.frequentItemSet.Countable;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -173,6 +174,12 @@ public class E8 implements Decoder {
 	@Override
 	public boolean selfScaling() {
 		return false;
+	}
+
+	@Override
+	public void setCounter(Countable counter) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 //	@Override

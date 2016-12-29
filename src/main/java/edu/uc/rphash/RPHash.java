@@ -16,14 +16,18 @@ import java.util.Random;
 
 
 
+
+
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.Readers.StreamObject;
+import edu.uc.rphash.decoders.DepthProbingLSH;
 import edu.uc.rphash.decoders.Dn;
 import edu.uc.rphash.decoders.E8;
 import edu.uc.rphash.decoders.Golay;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
+import edu.uc.rphash.decoders.OriginDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.tests.StatTests;
@@ -49,7 +53,7 @@ public class RPHash {
 			"offlineclusterer", "runs" , "normalize"};
 	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
 			"multileech", "sphere", "levypstable", "cauchypstable",
-			"gaussianpstable" };
+			"gaussianpstable","adaptive","origin" };
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException, InterruptedException {
@@ -514,6 +518,17 @@ public class RPHash {
 //				so.setDecoderType(new Spherical(o.getDimparameter(), ctsofsphere, o.getNumBlur()));
 				break;
 			}
+			case "origin": {
+				o.setDecoderType(new OriginDecoder(o.getDimparameter()));
+				so.setDecoderType(new OriginDecoder(o.getDimparameter()));
+				break;
+			}
+			case "adaptive": {
+				o.setDecoderType(new DepthProbingLSH(o.getDimparameter()));
+				so.setDecoderType(new DepthProbingLSH(o.getDimparameter()));
+				break;
+			}
+			
 			default: {
 				System.out.println(taggedArgs.get("decodertype")
 						+ " decoder does not exist, using defaults");
