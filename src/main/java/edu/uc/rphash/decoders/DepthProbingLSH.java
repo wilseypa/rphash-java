@@ -53,7 +53,7 @@ public class DepthProbingLSH implements Decoder {
 			if(f[i]>0)recursiveHash+=1;
 			counter.add(recursiveHash);
 			float curcount = counter.count(recursiveHash);
-			if((curcount+curcount)<parentCount)
+			if((curcount+curcount)<=parentCount)
 			{
 				return new long[]{recursiveHash};
 			}
