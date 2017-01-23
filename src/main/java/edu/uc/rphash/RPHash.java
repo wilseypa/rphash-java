@@ -44,7 +44,7 @@ public class RPHash {
 
 	static String[] clusteringmethods = { "simple", "streaming", "3stage",
 			"multiproj", "consensus", "redux", "kmeans", "pkmeans",
-			"kmeansplusplus", "streamingkmeans" ,"none"};
+			"kmeansplusplus", "streamingkmeans" ,"none","adaptive"};
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
 			"averagelink", "kmeans", "adaptivemeanshift" , "none" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
@@ -635,6 +635,11 @@ public class RPHash {
 				runitems.add(new AdaptiveMeanShift());
 				break;
 			}
+			case "adaptive": {
+				runitems.add(new RPHashAdaptive2Pass(o));
+				break;
+			}
+			
 			default:
 				System.out.println(untaggedArgs.get(i) + " does not exist");
 				break;

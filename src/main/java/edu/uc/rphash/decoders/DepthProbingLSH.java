@@ -6,6 +6,7 @@ import edu.uc.rphash.util.VectorUtil;
 public class DepthProbingLSH implements Decoder {
 	
 	int dim;
+	boolean full = false;
 	public DepthProbingLSH(int dim){
 		this.dim = dim;
 	}
@@ -40,28 +41,42 @@ public class DepthProbingLSH implements Decoder {
 	
 	@Override
 	public long[] decode(float[] f) {
-		
 		long  recursiveHash =0;
 		float parentCount = 0;
-		
 		if(f[0]>0)recursiveHash+=1;
 		counter.add(recursiveHash);
 		parentCount = counter.count(recursiveHash);
-		
+		int nodensitychange = 0;
+		long[] ret  = new long[f.length];
 		for(int i = 1;i<f.length;i++){
 			recursiveHash<<=1;
-			if(f[i]>0)recursiveHash+=1;
+			if(f[i]>0)
+				recursiveHash+=1;
+			ret[i]=recursiveHash;
 			counter.add(recursiveHash);
 			float curcount = counter.count(recursiveHash);
 			if((curcount+curcount)<=parentCount)
 			{
-				return new long[]{recursiveHash};
+				nodensitychange = i;
 			}
 			parentCount = curcount;
 		}
-		return new long[]{recursiveHash};
+		if(full)
+			return ret;
+		else
+			return new long[]{ret[nodensitychange]};
+
 	}
 	
+	public boolean isFull() {
+		return full;
+	}
+
+
+	public void setFull(boolean full) {
+		this.full = full;
+	}
+
 	Countable counter;
 	@Override
 	public void setCounter(Countable counter) {

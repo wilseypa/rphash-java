@@ -408,7 +408,7 @@ public class KMeans2 implements Clusterer {
 			clus.add(clu);
 		}
 		
-		System.out.println(StatTests.WCSSEFloatCentroid(datagen.getMedoids(), clus));
+//		System.out.println(StatTests.WCSSEFloatCentroid(datagen.getMedoids(), clus));
 		
 		KMeans2 clusterer = new KMeans2();
 		clusterer.setData(clus);

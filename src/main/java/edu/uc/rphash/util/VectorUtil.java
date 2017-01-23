@@ -267,6 +267,7 @@ public class VectorUtil {
 				System.out.printf("%.4f ", mat[i]);
 			}
 		}
+//		System.out.printf("\n");
 	}
 	
 	/**
@@ -689,6 +690,19 @@ public class VectorUtil {
 		return (float )ret;
 	}
 	
+	public static void simpleSave(int[][] M,String name){
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(name)));
+			for (int[] vector : M) {
+				for (int v : vector)
+						out.write(String.valueOf(v)+',');
+				out.write("\n");
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 
 }

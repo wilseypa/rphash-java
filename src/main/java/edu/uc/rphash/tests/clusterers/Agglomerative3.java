@@ -342,7 +342,6 @@ public class Agglomerative3 implements Clusterer {
 			for(int i = 0 ;i<this.data.size();i++)
 				l.add(new SimpleItem(this.data.get(i),this.weights.get(i)));
 		}else{
-			System.out.println("weights are null");
 			for(int i = 0 ;i<this.data.size();i++)
 				l.add(new SimpleItem(this.data.get(i),1f));
 		}

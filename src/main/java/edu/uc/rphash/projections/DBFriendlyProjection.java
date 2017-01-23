@@ -11,8 +11,8 @@ import edu.uc.rphash.util.VectorUtil;
 
 public class DBFriendlyProjection implements Projector {
 	int RAND_MAX = 2147483647;
-	int[][] M;// minus
-	int[][] P;// plus
+	public int[][] M;// minus
+	public int[][] P;// plus
 	int n;
 	int t;
 	Random rand;
@@ -87,7 +87,6 @@ public class DBFriendlyProjection implements Projector {
 		float[] r = new float[t];
 		float sum;
 		float scale = (float) Math.sqrt(3.0f / ((float) t));
-
 		for (int i = 0; i < t; i++) {
 			sum = 0.0f;
 			for (int col : M[i])
