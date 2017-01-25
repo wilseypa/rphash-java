@@ -66,7 +66,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 				s += 1;
 		}
 		
-		return (long)gol.golay_decode((int)s);
+		return s;//(long)gol.golay_decode((int)s);
 	}
 
 	/*
@@ -119,13 +119,15 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		for (Long h : new TreeSet<Long>(IDAndCent.keySet())) {
 			if (h > 1
 					&& 2 * IDAndCent.get(h).size() > IDAndCent.get(h >>> 1)
-							.size()) {
+							.size()) 
+			{
 				denseSetOfIDandCount.put(h, new Long(IDAndCent.get(h).size()));
 				// remove parent of denser child
 				denseSetOfIDandCount.remove(h >>> 1);
 			}
 		}
 
+		
 		ArrayList<float[]> estcents = new ArrayList<float[]>();
 		denseSetOfIDandCount
 				.entrySet()
@@ -139,9 +141,9 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 
 	public void run() {
 		List<float[]> rawcent = findDensityModes();
-		centroids = new ArrayList<>();
-		for (float[] f : rawcent)
-			centroids.add(new Centroid(f, 1));
+//		centroids = new ArrayList<>();
+//		for (float[] f : rawcent)
+//			centroids.add(new Centroid(f, 1));
 		centroids = new Agglomerative3(rawcent, so.getk()).getCentroids();
 	}
 
