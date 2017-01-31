@@ -586,15 +586,23 @@ public class VectorUtil {
 			b >>>= 8;
 			chnk = (byte) (b & 0xFF);
 		}
-		System.out.println();
+	}
+	
+	public static String getBin(long b,int l) {
+		String ret = "";
+		byte chnk = (byte) (b & 0xFF);
+		for (int i = 0; i < l; i++) {
+			ret=ret+" "+b2s(chnk);
+			b >>>= 8;
+			chnk = (byte) (b & 0xFF);
+		}
+		return ret;
 	}
 
 	public static void prettyPrint(char[] b) {
 		for (int i = 0; i < b.length; i++) {
 			System.out.print(b2s((byte) b[i]) + ",");
 		}
-		System.out.println();
-
 	}
 
 	/**
