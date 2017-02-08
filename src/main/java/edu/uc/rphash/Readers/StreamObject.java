@@ -19,6 +19,7 @@ import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.MultiDecoder;
+import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.StatTests;
 
 public class StreamObject implements RPHashObject, Iterator<float[]> {
@@ -46,6 +47,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	BufferedReader assin;
 	DataInputStream binin;
+	private Projector projector;
 
 	// input format
 	// per line
@@ -73,6 +75,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.topIDs = new ArrayList<Long>();
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+		this.projector = DEFAULT_PROJECTOR;
 	}
 
 	boolean filereader = false;
@@ -122,6 +125,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.topIDs = new ArrayList<Long>();
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+		this.projector = DEFAULT_PROJECTOR;
 		// dec = new MultiDecoder(
 		// getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
 	}
@@ -387,5 +391,16 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	
 	public boolean getNormalize() {
 		return this.normalize;		
+	}
+
+	@Override
+	public void setProjectionType(Projector dbFriendlyProjection) {
+		this.projector = dbFriendlyProjection;
+		
+	}
+
+	@Override
+	public Projector getProjectionType() {
+		return this.projector;
 	}
 }

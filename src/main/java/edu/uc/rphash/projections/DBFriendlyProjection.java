@@ -31,6 +31,31 @@ public class DBFriendlyProjection implements Projector {
 		GenRandom();
 	}
 
+	public DBFriendlyProjection() {
+		
+	}
+	
+	@Override
+	public void setOrigDim(int n) {
+		this.n = n;
+	}
+
+	@Override
+	public void setProjectedDim(int t) {
+		this.t = t;
+	}
+
+	@Override
+	public void setRandomSeed(long l) {
+		this.rand =new Random(l);
+		
+	}
+
+	@Override
+	public void init() {
+		GenRandom();
+	}
+
 	/*
 	 * from Achlioptas 01 and JL -THm r_ij = sqr(3/m)*| +1 Pr =1/6 | 0 Pr=2/3 |
 	 * - 1 Pr =1/6

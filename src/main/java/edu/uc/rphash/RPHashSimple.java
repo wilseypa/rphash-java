@@ -11,13 +11,11 @@ import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.lsh.LSH;
-import edu.uc.rphash.projections.DBFriendlyProjection;
+//import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.NoHash;
-import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
-import edu.uc.rphash.util.VectorUtil;
 
 public class RPHashSimple implements Clusterer {
 //	float variance;
@@ -37,8 +35,12 @@ public class RPHashSimple implements Clusterer {
 		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
 		Decoder dec = so.getDecoderType();
 		dec.setCounter(is);
-		Projector p = new DBFriendlyProjection(so.getdim(),
-				dec.getDimensionality(), so.getRandomSeed());
+		
+		Projector p = so.getProjectionType();
+		p.setOrigDim(so.getdim());
+		p.setProjectedDim(dec.getDimensionality());
+		p.setRandomSeed(so.getRandomSeed());
+		p.init();
 		//no noise to start with
 		List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
 		
@@ -78,8 +80,12 @@ public class RPHashSimple implements Clusterer {
 		HashAlgorithm hal = new NoHash(so.getHashmod());
 		Decoder dec = so.getDecoderType();
 		
-		Projector p = new DBFriendlyProjection(so.getdim(),
-				dec.getDimensionality(), so.getRandomSeed());
+		Projector p = so.getProjectionType();
+		p.setOrigDim(so.getdim());
+		p.setProjectedDim(dec.getDimensionality());
+		p.setRandomSeed(so.getRandomSeed());
+		p.init();
+		
 		List<float[]> noise = LSH.genNoiseTable(so.getdim(),so.getNumBlur(), new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
 		LSH lshfunc = new LSH(dec, p, hal,noise,so.getNormalize());
 		long hash[];

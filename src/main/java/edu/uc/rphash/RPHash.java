@@ -17,7 +17,6 @@ import java.util.Random;
 
 
 
-
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.Readers.StreamObject;
@@ -30,6 +29,9 @@ import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.OriginDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
+import edu.uc.rphash.projections.DBFriendlyProjection;
+import edu.uc.rphash.projections.GaussianProjection;
+import edu.uc.rphash.projections.SVDProjection;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.AdaptiveMeanShift;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
@@ -44,16 +46,16 @@ public class RPHash {
 
 	static String[] clusteringmethods = { "simple", "streaming", "3stage",
 			"multiproj", "consensus", "redux", "kmeans", "pkmeans",
-			"kmeansplusplus", "streamingkmeans" ,"none","adaptive"};
+			"kmeansplusplus", "streamingkmeans", "none", "adaptive" };
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
-			"averagelink", "kmeans", "adaptivemeanshift" , "none" };
+			"averagelink", "kmeans", "adaptivemeanshift", "none" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
 			"raw", "decayrate", "dimparameter", "decodertype",
-			"offlineclusterer", "runs" , "normalize"};
+			"offlineclusterer", "runs", "normalize" };
 	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
 			"multileech", "sphere", "levypstable", "cauchypstable",
-			"gaussianpstable","adaptive","origin" };
+			"gaussianpstable", "adaptive", "origin" };
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException, InterruptedException {
@@ -85,24 +87,29 @@ public class RPHash {
 		}
 
 		List<String> unmatchedkeywords = new ArrayList<>();
-		for(int i = 3;i< args.length;i++){
+		for (int i = 3; i < args.length; i++) {
 			args[i] = args[i].toLowerCase();
-			String arg  = args[i];
-			String keyword = arg.split("=")[0];//either just a keyword or keyword=value
+			String arg = args[i];
+			String keyword = arg.split("=")[0];// either just a keyword or
+												// keyword=value
 			boolean matched = false;
-			for(String match : clusteringmethods)matched |= keyword.equals(match);
-			for(String match : offlineclusteringmethods)matched |= keyword.equals(match);
-			for(String match : ops)matched |= keyword.equals(match);
-			for(String match : decoders)matched |= keyword.equals(match);
-			if(!matched)unmatchedkeywords.add(keyword);
+			for (String match : clusteringmethods)
+				matched |= keyword.equals(match);
+			for (String match : offlineclusteringmethods)
+				matched |= keyword.equals(match);
+			for (String match : ops)
+				matched |= keyword.equals(match);
+			for (String match : decoders)
+				matched |= keyword.equals(match);
+			if (!matched)
+				unmatchedkeywords.add(keyword);
 		}
-		if(unmatchedkeywords.size()>0)
-		{
+		if (unmatchedkeywords.size() > 0) {
 			System.out.println("ERROR Keyword(s) not found:");
-			System.out.println("\t"+unmatchedkeywords);
+			System.out.println("\t" + unmatchedkeywords);
 			System.exit(0);
 		}
-		
+
 		List<float[]> data = null;
 
 		String filename = args[0];
@@ -138,7 +145,6 @@ public class RPHash {
 			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false);
 		}
 
-		
 		if (taggedArgs.containsKey("runs")) {
 			bestofruns = Integer.parseInt(taggedArgs.get("runs"));
 		}
@@ -166,26 +172,23 @@ public class RPHash {
 	public static List<Centroid> runclusterer(Clusterer clu, boolean raw,
 			int runs, List<float[]> data) {
 
-		//some clusterers can do multi runs in parallel
-		if (clu.setMultiRun(runs)) 
-		{
+		// some clusterers can do multi runs in parallel
+		if (clu.setMultiRun(runs)) {
 			return clu.getCentroids();
-		} 
-		else 
-		{
+		} else {
 			List<Centroid> mincents = clu.getCentroids();
 			double minwcss = StatTests.WCSSECentroidsFloat(mincents, data);
-			
+
 			for (int i = 1; i < runs; i++) {
 				clu.reset(new Random().nextInt());
 				List<Centroid> tmpcents = clu.getCentroids();
 				double tmpwcss = StatTests.WCSSECentroidsFloat(tmpcents, data);
-				
-				if(tmpwcss<minwcss){
+
+				if (tmpwcss < minwcss) {
 					mincents = tmpcents;
 					minwcss = tmpwcss;
 				}
-//				System.out.println(tmpwcss+":"+minwcss);
+				// System.out.println(tmpwcss+":"+minwcss);
 			}
 			return mincents;
 		}
@@ -203,17 +206,18 @@ public class RPHash {
 	 * @throws InterruptedException
 	 */
 	public static void runner(List<Clusterer> runitems, String outputFile,
-			boolean raw, int runs,List<float[]> data) throws InterruptedException {
+			boolean raw, int runs, List<float[]> data)
+			throws InterruptedException {
 		for (Clusterer clu : runitems) {
 			String[] ClusterHashName = clu.getClass().getName().split("\\.");
 			// String[] DecoderHashName =
 			// clu.getParam().toString().split("\\.");
-			if(clu.getParam()!=null)
+			if (clu.getParam() != null)
 				System.out.print(ClusterHashName[ClusterHashName.length - 1]
-					+ " { " + clu.getParam().toString()
-					// ClusterHashName[ClusterHashName.length - 1] + "{"
-					// + DecoderHashName[DecoderHashName.length - 2]
-					+ "} processing time : ");
+						+ " { " + clu.getParam().toString()
+						// ClusterHashName[ClusterHashName.length - 1] + "{"
+						// + DecoderHashName[DecoderHashName.length - 2]
+						+ "} processing time : ");
 
 			Runtime rt = Runtime.getRuntime();
 			rt.gc();
@@ -222,7 +226,7 @@ public class RPHash {
 			long startmemory = rt.totalMemory() - rt.freeMemory();
 			long startTime = System.nanoTime();
 
-			List<Centroid> cents = runclusterer(clu, raw, runs,data);
+			List<Centroid> cents = runclusterer(clu, raw, runs, data);
 
 			float timed = (System.nanoTime() - startTime) / 1000000000f;
 			rt.gc();
@@ -230,9 +234,9 @@ public class RPHash {
 			rt.gc();
 			long usedkB = ((rt.totalMemory() - rt.freeMemory()) - startmemory) / 1024;
 
-//			RPHashObject reader = clu.getParam();
+			// RPHashObject reader = clu.getParam();
 
-			double wcsse = StatTests.WCSSECentroidsFloat(cents,data);
+			double wcsse = StatTests.WCSSECentroidsFloat(cents, data);
 
 			System.out.println(timed + ", used(KB): " + usedkB + ", wcsse: "
 					+ wcsse);
@@ -387,12 +391,12 @@ public class RPHash {
 
 		while (cluit.hasNext()) {
 			Clusterer clu = cluit.next();
-			
-			//due to the memoryless nature of stream clusterers 
-			// all stream clusterers must run in multi clustering 
-			//in parallel
+
+			// due to the memoryless nature of stream clusterers
+			// all stream clusterers must run in multi clustering
+			// in parallel
 			clu.setMultiRun(bestofruns);
-			
+
 			StreamObject streamer = (StreamObject) clu.getParam();
 			runStreamForAClusterer(outputFile, streamDuration, k, raw, clu,
 					avgtimeToRead, rt, streamer);
@@ -452,11 +456,37 @@ public class RPHash {
 			o.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
 			so.setDimparameter(Integer.parseInt(taggedArgs.get("dimparameter")));
 		}
-		
+
 		if (taggedArgs.containsKey("normalize")) {
 			o.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
 			so.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
 		}
+
+		if (taggedArgs.containsKey("projection")) {
+			switch (taggedArgs.get("projection")) {
+
+			case "dbf": {
+				o.setProjectionType(new DBFriendlyProjection());
+				so.setProjectionType(new DBFriendlyProjection());
+				break;
+			}
+			case "rp": {
+				o.setProjectionType(new GaussianProjection());
+				so.setProjectionType(new GaussianProjection());
+				break;
+			}
+			case "svd": {
+				o.setProjectionType(new SVDProjection(data));
+				so.setProjectionType(new SVDProjection(data));
+				break;
+			}
+			default: {
+				System.out.println("projection method does not exist");
+				System.exit(2);
+			}
+			}
+		}
+
 		if (taggedArgs.containsKey("decodertype")) {
 			switch (taggedArgs.get("decodertype").toLowerCase()) {
 			case "dn": {
@@ -510,12 +540,15 @@ public class RPHash {
 						.getDimparameter()));
 				break;
 			}
-			case "sphere": {//pad to ~32 bits
-				//int ctsofsphere = (int)(Math.log(o.getDimparameter()*2)/Math.log(2.0)) /2;
+			case "sphere": {// pad to ~32 bits
+				// int ctsofsphere =
+				// (int)(Math.log(o.getDimparameter()*2)/Math.log(2.0)) /2;
 				o.setDecoderType(new Spherical(o.getDimparameter(), 2, 2));
 				so.setDecoderType(new Spherical(o.getDimparameter(), 2, 2));
-//				o.setDecoderType(new Spherical(o.getDimparameter(), ctsofsphere, o.getNumBlur()));
-//				so.setDecoderType(new Spherical(o.getDimparameter(), ctsofsphere, o.getNumBlur()));
+				// o.setDecoderType(new Spherical(o.getDimparameter(),
+				// ctsofsphere, o.getNumBlur()));
+				// so.setDecoderType(new Spherical(o.getDimparameter(),
+				// ctsofsphere, o.getNumBlur()));
 				break;
 			}
 			case "origin": {
@@ -528,7 +561,7 @@ public class RPHash {
 				so.setDecoderType(new DepthProbingLSH(o.getDimparameter()));
 				break;
 			}
-			
+
 			default: {
 				System.out.println(taggedArgs.get("decodertype")
 						+ " decoder does not exist, using defaults");
@@ -568,18 +601,18 @@ public class RPHash {
 
 				break;
 			}
-			case "adaptivemeanshift":{
-				
+			case "adaptivemeanshift": {
+
 				o.setOfflineClusterer(new AdaptiveMeanShift());
 				so.setOfflineClusterer(new AdaptiveMeanShift());
-				
+
 				break;
 			}
-			case "none":{
-				
+			case "none": {
+
 				o.setOfflineClusterer(null);
 				so.setOfflineClusterer(null);
-				
+
 				break;
 			}
 			default: {
@@ -613,7 +646,7 @@ public class RPHash {
 			case "redux":
 				runitems.add(new RPHashIterativeRedux(o));
 				break;
-			case "kmeans":{
+			case "kmeans": {
 				runitems.add(new KMeans2(k, data));
 				break;
 			}
@@ -639,7 +672,7 @@ public class RPHash {
 				runitems.add(new RPHashAdaptive2Pass(o));
 				break;
 			}
-			
+
 			default:
 				System.out.println(untaggedArgs.get(i) + " does not exist");
 				break;

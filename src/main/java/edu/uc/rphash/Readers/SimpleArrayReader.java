@@ -8,6 +8,7 @@ import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.MultiDecoder;
+import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 
@@ -30,6 +31,7 @@ public class SimpleArrayReader implements RPHashObject {
 	List<Float> counts;
 	private Clusterer clusterer;
 	private boolean normalize = false;
+	private Projector projector;
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -59,6 +61,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+		this.projector = DEFAULT_PROJECTOR;
 	}
 	
 	
@@ -85,6 +88,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+		this.projector = DEFAULT_PROJECTOR;
 //		for (int i = 0; i < k; i++)
 //			topIDs.add((long) 0);
 	}
@@ -136,6 +140,7 @@ public class SimpleArrayReader implements RPHashObject {
 		for (int i = 0; i < k; i++)
 			topIDs.add((long) 0);
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+		this.projector = DEFAULT_PROJECTOR;
 	}
 
 	/**
@@ -186,6 +191,7 @@ public class SimpleArrayReader implements RPHashObject {
 		this.decayrate = 0;
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+		this.projector = DEFAULT_PROJECTOR;
 	}
 
 	public Iterator<float[]> getVectorIterator() {
@@ -381,5 +387,13 @@ public class SimpleArrayReader implements RPHashObject {
 	public boolean getNormalize() {
 		return this.normalize;		
 	}
-	
+
+	@Override
+	public void setProjectionType(Projector dbFriendlyProjection) {
+		this.projector = dbFriendlyProjection;
+	}
+	@Override
+	public Projector getProjectionType(){
+		return this.projector;
+	}
 }

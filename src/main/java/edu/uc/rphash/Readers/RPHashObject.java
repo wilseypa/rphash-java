@@ -13,6 +13,8 @@ import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
+import edu.uc.rphash.projections.DBFriendlyProjection;
+import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.clusterers.Agglomerative;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.clusterers.Agglomerative3.ClusteringType;
@@ -29,6 +31,7 @@ public interface RPHashObject {
 	final static Decoder DEFAULT_INNER_DECODER = new DepthProbingLSH(24);//new Spherical(16,2,2);//new MultiDecoder(24, new E8(1f));//new Golay();//new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//
 	final static int DEFAULT_DIM_PARAMETER = DEFAULT_INNER_DECODER.getDimensionality();
 	final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new Agglomerative3(ClusteringType.AVG_LINKAGE);
+	final static Projector DEFAULT_PROJECTOR = new DBFriendlyProjection();
 
 	int getdim();
 	
@@ -86,5 +89,9 @@ public interface RPHashObject {
 
 	void setNormalize(boolean parseBoolean);
 	boolean getNormalize();
+
+	void setProjectionType(Projector dbFriendlyProjection);
+
+	Projector getProjectionType();
 
 }

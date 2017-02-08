@@ -40,6 +40,9 @@ public class GaussianProjection implements Projector {
 //		return x;
 //	}
 
+	public GaussianProjection() {
+	}
+
 	@Override
 	public float[] project(float[] s) {
 		return projectGauss(s, M, n, t);
@@ -79,6 +82,27 @@ public class GaussianProjection implements Projector {
 		int elem = n * t; // vv see which is faster on you machine
 		while (i < elem)
 			M[i++] = (float) r.nextGaussian();// sampleNormal();
+	}
+
+	@Override
+	public void setOrigDim(int n) {
+		this.n = n;
+	}
+
+	@Override
+	public void setProjectedDim(int t) {
+		this.t = t;
+	}
+
+	@Override
+	public void setRandomSeed(long l) {
+		this.r =new Random(l);
+		
+	}
+
+	@Override
+	public void init() {
+		GenGauss(n, t);
 	}
 
 }

@@ -361,7 +361,28 @@ void randu(float []data, int m, int n) {
 	}
 	
 	
-	
+	@Override
+	public void setOrigDim(int n) {
+		this.n = n;
+	}
+
+	@Override
+	public void setProjectedDim(int t) {
+		this.k = t;
+	}
+
+	@Override
+	public void setRandomSeed(long l) {
+		this.r =new Random(l);
+		
+	}
+
+	@Override
+	public void init() {
+		float eps = (float) Math.sqrt(Math.log(n) / k);
+		D=  generated(d);
+		P = generatep(n, k, d, eps, 2);
+	}
 	
 	
 	
