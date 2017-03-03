@@ -17,6 +17,8 @@ import java.util.Random;
 
 
 
+
+
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.Readers.StreamObject;
@@ -30,7 +32,9 @@ import edu.uc.rphash.decoders.OriginDecoder;
 import edu.uc.rphash.decoders.PsdLSH;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.projections.DBFriendlyProjection;
+import edu.uc.rphash.projections.FJLTProjection;
 import edu.uc.rphash.projections.GaussianProjection;
+import edu.uc.rphash.projections.NoProjection;
 import edu.uc.rphash.projections.SVDProjection;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.AdaptiveMeanShift;
@@ -49,10 +53,11 @@ public class RPHash {
 			"kmeansplusplus", "streamingkmeans", "none", "adaptive" };
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
 			"averagelink", "kmeans", "adaptivemeanshift", "none" };
+	static String[] projectionmethods = { "dbf", "fjlt", "rp","svd","noproj" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
 			"raw", "decayrate", "dimparameter", "decodertype",
-			"offlineclusterer", "runs", "normalize" };
+			"offlineclusterer", "runs", "normalize","projection" };
 	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
 			"multileech", "sphere", "levypstable", "cauchypstable",
 			"gaussianpstable", "adaptive", "origin" };
@@ -80,6 +85,11 @@ public class RPHash {
 
 			System.out.print("\t\t" + ops[ops.length - 1] + "\t:[");
 			for (String s : offlineclusteringmethods)
+				System.out.print(s + " ,");
+			System.out.print("]\n");
+			
+			System.out.print("\t Projection_methods" + "\t:[");
+			for (String s : projectionmethods)
 				System.out.print(s + " ,");
 			System.out.print("]\n");
 
@@ -480,6 +490,17 @@ public class RPHash {
 				so.setProjectionType(new SVDProjection(data));
 				break;
 			}
+			case "noproj": {
+				o.setProjectionType(new NoProjection());
+				so.setProjectionType(new NoProjection());
+				break;
+			}
+			case "fjlt": {
+				o.setProjectionType(new FJLTProjection(1_000_000_000));
+				so.setProjectionType(new FJLTProjection(1_000_000_000));
+				break;
+			}
+			
 			default: {
 				System.out.println("projection method does not exist");
 				System.exit(2);

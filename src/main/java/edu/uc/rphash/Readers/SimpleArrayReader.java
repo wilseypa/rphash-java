@@ -148,7 +148,7 @@ public class SimpleArrayReader implements RPHashObject {
 	 * multi-projection clusterer
 	 * 
 	 * @param X
-	 * @param k
+	 * @param t
 	 * @param randomSeed
 	 * @param hashmod
 	 * @param blur

@@ -525,7 +525,7 @@ public class GenerateData implements ClusterGenerator {
 
 	@Override
 	public int getDimension() {
-		// TODO Auto-generated method stub
+		if(data!=null)return data.get(0).length;
 		return 0;
 	}
 

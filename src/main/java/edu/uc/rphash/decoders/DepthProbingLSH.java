@@ -41,7 +41,9 @@ public class DepthProbingLSH implements Decoder {
 	
 	@Override
 	public long[] decode(float[] f) {
-		long  recursiveHash =0;
+		// start at one so leading zeros do not collide
+		long  recursiveHash =1;
+		
 		float parentCount = 0;
 		if(f[0]>0)recursiveHash+=1;
 		counter.add(recursiveHash);

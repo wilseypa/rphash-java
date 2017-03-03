@@ -8,23 +8,14 @@ import java.util.Random;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.frequentItemSet.ItemSet;
-import edu.uc.rphash.frequentItemSet.KHHCountMinSketch;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.lsh.LSH;
-import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
-import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.clusterers.Agglomerative;
-import edu.uc.rphash.tests.clusterers.Agglomerative2;
-import edu.uc.rphash.tests.clusterers.KMeans2;
-import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.generators.GenerateData;
-import edu.uc.rphash.util.VectorUtil;
 
 /**
  * This is the correlated multi projections approach. In this RPHash variation
@@ -64,8 +55,11 @@ public class RPHashMultiProj implements Clusterer {
 
 		// create same projection matrices as before
 		for (int i = 0; i < projections; i++) {
-			Projector p = new DBFriendlyProjection(so.getdim(),
-					dec.getDimensionality(), r.nextLong());
+			Projector p = so.getProjectionType();
+			p.setOrigDim(so.getdim());
+			p.setProjectedDim(dec.getDimensionality());
+			p.setRandomSeed(r.nextLong());
+			p.init();
 
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
 					so.getNumBlur(), r,
@@ -121,8 +115,11 @@ public class RPHashMultiProj implements Clusterer {
 
 		// create same projection matrices as before
 		for (int i = 0; i < projections; i++) {
-			Projector p = new DBFriendlyProjection(so.getdim(),
-					dec.getDimensionality(), r.nextLong());
+			Projector p = so.getProjectionType();
+			p.setOrigDim(so.getdim());
+			p.setProjectedDim(dec.getDimensionality());
+			p.setRandomSeed(r.nextLong());
+			p.init();
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
 					so.getNumBlur(), r,
 					dec.getErrorRadius() / dec.getDimensionality());

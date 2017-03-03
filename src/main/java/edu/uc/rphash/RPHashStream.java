@@ -1,7 +1,6 @@
 package edu.uc.rphash;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -15,7 +14,7 @@ import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
 //import edu.uc.rphash.frequentItemSet.KHHCountMinSketch.Tuple;
 import edu.uc.rphash.lsh.LSH;
-import edu.uc.rphash.projections.DBFriendlyProjection;
+//import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
@@ -91,8 +90,13 @@ public class RPHashStream implements StreamClusterer {
 			// create projection matrices add to LSH Device
 	
 				for (int projidx = 0; projidx < projections; projidx++) {
-					Projector p = new DBFriendlyProjection(so.getdim(),
-							dec.getDimensionality(), r.nextLong());
+					Projector p = so.getProjectionType();
+					p.setOrigDim(so.getdim());
+					p.setProjectedDim(dec.getDimensionality());
+					p.setRandomSeed(r.nextLong());
+					p.init();
+					
+					
 					List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
 							so.getNumBlur(), r, dec.getErrorRadius()
 									/ dec.getDimensionality());
