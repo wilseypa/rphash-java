@@ -232,7 +232,7 @@ public class Agglomerative3 implements Clusterer {
 	}
 	
 	public Agglomerative3(List<float[]> data, int k) {
-		this.type = ClusteringType.SINGLE_LINKAGE;
+		this.type = ClusteringType.COMPLETE_LINKAGE;
 		this.data = data;
 		this.k = k;
 	}

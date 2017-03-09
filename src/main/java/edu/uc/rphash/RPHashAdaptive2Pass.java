@@ -127,7 +127,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	            long parent_id = cur_id>>>1;
 	            int parent_count = IDAndCent.get(parent_id).size();
 				
-				if(1.5 * cur_count > parent_count) {
+				if(2 * cur_count > parent_count) {
 					//int sibling_count = 0;
 	                //if (cur_count!=parent_count)
 	                //    sibling_count = IDAndCent.get(sibling_id).size();
@@ -195,7 +195,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		centroids = new ArrayList<>();
 //		for(int i=0;i<so.getk();i++)centroids.add(new
 //				Centroid(rawcent.get(i),1));
-		centroids = new KMeans2(so.getk(), rawcent).getCentroids();
+		centroids = new Agglomerative3(rawcent, so.getk()).getCentroids();
 	}
 
 	public static void main(String[] args) throws FileNotFoundException,
