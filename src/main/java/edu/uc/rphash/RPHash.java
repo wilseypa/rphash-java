@@ -52,7 +52,7 @@ public class RPHash {
 			"multiproj", "consensus", "redux", "kmeans", "pkmeans",
 			"kmeansplusplus", "streamingkmeans", "none", "adaptive" };
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
-			"averagelink", "kmeans", "adaptivemeanshift", "none" };
+			"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "none" };
 	static String[] projectionmethods = { "dbf", "fjlt", "rp","svd","noproj" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
@@ -629,6 +629,14 @@ public class RPHash {
 
 				break;
 			}
+			case "kmpp": {
+
+				o.setOfflineClusterer(new KMeansPlusPlus<>());
+				so.setOfflineClusterer(new KMeansPlusPlus<>());
+
+				break;
+			}
+			
 			case "none": {
 
 				o.setOfflineClusterer(null);

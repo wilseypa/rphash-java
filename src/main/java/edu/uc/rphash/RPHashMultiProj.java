@@ -1,5 +1,7 @@
 package edu.uc.rphash;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -8,6 +10,8 @@ import java.util.Random;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
+import edu.uc.rphash.decoders.Leech;
+import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.lsh.LSH;
@@ -40,7 +44,7 @@ public class RPHashMultiProj implements Clusterer {
 		long[] hash;
 		int projections = so.getNumProjections();
 
-		int k = (int) (so.getk()*2);
+		int k = (int) (so.getk() * 2);
 
 		// initialize our counter
 		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
@@ -93,7 +97,6 @@ public class RPHashMultiProj implements Clusterer {
 	 * aggregated
 	 */
 	public RPHashObject reduce() {
-
 		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
@@ -152,6 +155,7 @@ public class RPHashMultiProj implements Clusterer {
 
 	public RPHashMultiProj(int k, List<float[]> data) {
 		so = new SimpleArrayReader(data, k);
+		runs = 1;
 	}
 
 	public RPHashMultiProj(RPHashObject so) {
@@ -164,6 +168,7 @@ public class RPHashMultiProj implements Clusterer {
 
 	public List<Centroid> getCentroids(RPHashObject so) {
 		this.so = so;
+		
 		if (centroids == null)
 			run();
 		return centroids;
@@ -178,18 +183,18 @@ public class RPHashMultiProj implements Clusterer {
 	}
 
 	private void run() {
+		runs = 1;
 		double minwcss = Double.MAX_VALUE;
 		List<Centroid> mincentroids = new ArrayList<>();
 		for (int currun = 0; currun < runs;) {
 			
-
 			map();
 			reduce();
 
 			Clusterer offlineclusterer = so.getOfflineClusterer();
 			List<Centroid> tmpcents;
 			if (offlineclusterer != null) {
-				offlineclusterer.setMultiRun(5);// is deterministic
+				offlineclusterer.setMultiRun(1);// is deterministic
 				offlineclusterer.setData(so.getCentroids());
 				offlineclusterer.setWeights(so.getCounts());
 				offlineclusterer.setK(so.getk());
@@ -201,7 +206,7 @@ public class RPHashMultiProj implements Clusterer {
 			if (tmpcents.size() == so.getk()) {// skip bad clusterings
 				double tmpwcss = StatTests.WCSSECentroidsFloat(tmpcents,
 						so.getRawData());
-//				System.out.println(tmpwcss + ":" + so.getCounts());
+				// System.out.println(tmpwcss + ":" + so.getCounts());
 				if (tmpwcss < minwcss) {
 					minwcss = tmpwcss;
 					mincentroids = tmpcents;
@@ -219,33 +224,42 @@ public class RPHashMultiProj implements Clusterer {
 	public static void main(String[] args) {
 
 		int k = 10;
-		int d = 500;
-		int n = 5000;
+		int d = 1000;
+		int n = 10000;
+		float var = .6f;
+		int count = 5;
+		System.out.printf("Decoder: %s\n","Spherical");
+		System.out.printf("ClusterVar\t");
+		for (int i = 0; i < count; i++)
+			System.out.printf("Trial%d\t", i);
+		System.out.printf("RealWCSS\n");
+		
+		
 
-		float var = 1f;
-		GenerateData gen = new GenerateData(k, n / k, d, var, true, 1f);
-		SimpleArrayReader so = new SimpleArrayReader(gen.data, k);
-		for (int r = 1; r < 100; r++) {
-			double[] means = new double[10];
-
-			for (int i = 0; i < 10; i++) {
-
-				RPHashMultiProj rphit = new RPHashMultiProj(so);
-				rphit.setMultiRun(r);
+		for (float f = var; f < 3.01; f += .1f) {
+			float avgrealwcss = 0;
+			float avgtime = 0;
+			System.out.printf("%f\t", f);
+			for (int i = 0; i < count; i++) {
+				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
+				RPHashObject o = new SimpleArrayReader(gen.data, k);
+				o.setDecoderType(new Spherical(32,4,1));
+				o.setDimparameter(32);
+				RPHashMultiProj rphit = new RPHashMultiProj(o);
+				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
 
-//				KMeans2 km = new KMeans2(k, so.getRawData());
-//				km.setMultiRun(r);
-//				List<Centroid> centsk = km.getCentroids();
-				System.out.printf(
-						"%f ",
-						/*StatTests.WCSSECentroidsFloat(centsk, gen.getData())
-								,*/ StatTests.WCSSECentroidsFloat(centsr,
-										gen.getData()));
-			}
-			System.out.printf("\n");
-			// System.out.println( r+"\t"+StatTests.variance(means));
+				avgtime += (System.nanoTime() - startTime) / 100000000;
 
+				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),
+						gen.getData());
+
+				System.out.printf("%.0f\t",
+						StatTests.WCSSECentroidsFloat(centsr, gen.data));
+				System.gc();
+				
+			}
+			System.out.printf("%.0f\n", avgrealwcss / count);
 		}
 	}
 

@@ -122,11 +122,11 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		HashMap<Long, Long> denseSetOfIDandCount = new HashMap<Long, Long>();
 		for (Long cur_id : new TreeSet<Long>(IDAndCent.keySet())) 
 		{
-			if (cur_id > 3){
+			if (cur_id >3){
 	            int cur_count = IDAndCent.get(cur_id).size();
 	            long parent_id = cur_id>>>1;
 	            int parent_count = IDAndCent.get(parent_id).size();
-				
+				System.out.println(cur_count + ">?<"+parent_count);
 				if(2 * cur_count > parent_count) {
 					//int sibling_count = 0;
 	                //if (cur_count!=parent_count)
@@ -141,7 +141,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 
 		List<Long> sortedlist = new ArrayList<>();
 		// sort and limit the list
-		denseSetOfIDandCount.entrySet().stream().parallel()
+		denseSetOfIDandCount.entrySet().stream()
 				.sorted(Map.Entry.<Long, Long> comparingByValue().reversed())
 				.limit(so.getk()*3)
 				.forEachOrdered(x -> sortedlist.add(x.getKey()));
@@ -204,14 +204,14 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		int k = 10;
 		int d = 1000;
 		int n = 10000;
-		float var = .1f;
+		float var = .01f;
 		int count = 5;
 		System.out.printf("ClusterVar\t");
 		for (int i = 0; i < count; i++)
 			System.out.printf("Trial%d\t", i);
 		System.out.printf("RealWCSS\n");
 
-		for (float f = var; f < 3.01; f += .05f) {
+		for (float f = var; f < 3.01; f += .01f) {
 			float avgrealwcss = 0;
 			float avgtime = 0;
 			System.out.printf("%f\t", f);

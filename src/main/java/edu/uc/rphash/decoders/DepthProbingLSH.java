@@ -1,6 +1,7 @@
 package edu.uc.rphash.decoders;
 
 import edu.uc.rphash.frequentItemSet.Countable;
+import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.util.VectorUtil;
 
 public class DepthProbingLSH implements Decoder {
@@ -9,6 +10,7 @@ public class DepthProbingLSH implements Decoder {
 	boolean full = false;
 	public DepthProbingLSH(int dim){
 		this.dim = dim;
+		this.counter = new SimpleFrequentItemSet(10);
 	}
 	
 	
