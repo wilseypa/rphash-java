@@ -167,7 +167,7 @@ public class GenerateData implements ClusterGenerator {
 		this.shuffle = shuffle;
 		this.sparseness = sparseness;
 		if (variance > 0)
-			this.scaler = variance;// /(float)Math.sqrt(dimension);//normalize
+			this.scaler = (float)(variance/(Math.log(dimension)/Math.log(2)));//normalize
 									// dimension
 		else
 			this.scaler = .750f;
@@ -312,7 +312,7 @@ public class GenerateData implements ClusterGenerator {
 			for (int k = 0; k < dimension; k++) {
 				if (r.nextInt() % (int) (1.0f / sparseness) == 0) {
 					medoid[k] = r.nextFloat() * 2.0f - 1.0f;
-					variances[k] = scaler * r.nextFloat();
+					variances[k] = scaler ;//* r.nextFloat();
 				}
 
 			}
@@ -321,7 +321,7 @@ public class GenerateData implements ClusterGenerator {
 			for (int j = 0; j < numVectorsPerCluster; j++) {
 				float[] dat = new float[dimension];
 				for (int k = 0; k < dimension; k++) {
-					if (r.nextInt() % (int) (1.0f / sparseness) == 0)
+					if (medoid[k] != 0)
 						dat[k] = (float) (medoid[k] + genfnc.genVariate()
 								* variances[k]);
 				}
@@ -362,7 +362,29 @@ public class GenerateData implements ClusterGenerator {
 					l++;
 				}
 				bf.flush();
-
+			}
+			bf.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void writeCSVToFile(File f) {
+		try {
+			BufferedWriter bf = new BufferedWriter(new FileWriter(f));
+			int l = 0;
+			for (int i = 0; i < numClusters; i++) {
+				// gen data
+				for (int j = 0; j < numVectorsPerCluster; j++) {
+					float[] vec = data.get(l);
+					StringBuilder stb = new StringBuilder();
+					for (int k = 0; k < dimension; k++) {
+						stb.append(String.valueOf(vec[k]) + ",");
+					}
+					bf.write(stb.toString() +String.valueOf(i)+ '\n');
+					l++;
+				}
+				bf.flush();
 			}
 			bf.close();
 		} catch (IOException e) {
@@ -503,7 +525,7 @@ public class GenerateData implements ClusterGenerator {
 
 	@Override
 	public int getDimension() {
-		// TODO Auto-generated method stub
+		if(data!=null)return data.get(0).length;
 		return 0;
 	}
 

@@ -19,6 +19,7 @@ import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.MultiDecoder;
+import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.StatTests;
 
 public class StreamObject implements RPHashObject, Iterator<float[]> {
@@ -46,6 +47,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	BufferedReader assin;
 	DataInputStream binin;
+	private Projector projector;
 
 	// input format
 	// per line
@@ -73,12 +75,14 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.topIDs = new ArrayList<Long>();
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+		this.projector = DEFAULT_PROJECTOR;
 	}
 
 	boolean filereader = false;
 	private int dimparameter;
 	private List<Float> counts;
 	private Clusterer clusterer;
+	private boolean normalize;
 
 	public StreamObject(String f, int k, boolean raw) throws IOException {
 		this.f = f;
@@ -121,6 +125,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.topIDs = new ArrayList<Long>();
 		this.dimparameter = DEFAULT_DIM_PARAMETER;
 		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+		this.projector = DEFAULT_PROJECTOR;
 		// dec = new MultiDecoder(
 		// getInnerDecoderMultiplier()*inner.getDimensionality(), inner);
 	}
@@ -295,11 +300,6 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		return readFloat;
 	}
 
-	@Override
-	public void setVariance(List<float[]> data) {
-		dec.setVariance(StatTests.varianceSample(data, .01f));
-	}
-
 	public void setDecayRate(float parseFloat) {
 		this.decayrate = parseFloat;
 	}
@@ -351,25 +351,56 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	}
 
 	@Override
-	public List<float[]> getData() {
+	public List<float[]> getRawData() {
 		return this.data;
 	}
 
-	@Override
-	public void remove() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void forEachRemaining(Consumer<? super float[]> action) {
-		// TODO Auto-generated method stub
-		
-	}
+//	@Override
+//	public void remove() {
+//		// TODO Auto-generated method stub
+//		
+//	}
+//
+//	@Override
+//	public void forEachRemaining(Consumer<? super float[]> action) {
+//		// TODO Auto-generated method stub
+//		
+//	}
 
 	@Override
 	public void setK(int getk) {
 		this.k = getk;
 		
+	}
+
+	@Override
+	public void setRawData(List<float[]> c) {
+		this.data = c;
+	}
+
+	@Override
+	public void addRawData(float[] centroid) {
+		if(data==null)data=new ArrayList<>();
+		data.add(centroid);
+	}
+	
+	@Override
+	public void setNormalize(boolean parseBoolean) {
+		this.normalize = parseBoolean;		
+	}
+	
+	public boolean getNormalize() {
+		return this.normalize;		
+	}
+
+	@Override
+	public void setProjectionType(Projector dbFriendlyProjection) {
+		this.projector = dbFriendlyProjection;
+		
+	}
+
+	@Override
+	public Projector getProjectionType() {
+		return this.projector;
 	}
 }

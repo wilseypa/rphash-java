@@ -15,5 +15,10 @@ public class NoHash implements HashAlgorithm {
 		}
 		return ret%mod;
 	}
+	
+	@Override
+	public long hash(long s) {
+		return s%mod;
+	}
 
 }

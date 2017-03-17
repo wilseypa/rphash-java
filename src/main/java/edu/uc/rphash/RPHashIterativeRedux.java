@@ -50,7 +50,7 @@ public class RPHashIterativeRedux  implements Clusterer
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[probes];
 		
-		Decoder dec = new Leech(variance);
+		Decoder dec = so.getDecoderType();
 		//Decoder dec = new MultiDecoder(1, innerdec);
 		
 		
@@ -61,7 +61,7 @@ public class RPHashIterativeRedux  implements Clusterer
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), new Random(), dec.getErrorRadius()/dec.getDimensionality());
-			lshfuncs[i] = new LSH(dec, p, hal,noise);
+			lshfuncs[i] = new LSH(dec, p, hal,noise,so.getNormalize());
 		}
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {

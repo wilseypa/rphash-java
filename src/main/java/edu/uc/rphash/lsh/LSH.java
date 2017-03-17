@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.math3.stat.inference.TestUtils;
+
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.projections.DBFriendlyProjection;
@@ -11,12 +13,13 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.SamplingVarianceTracker;
+import edu.uc.rphash.util.VectorUtil;
 
 public class LSH {
 	public Projector projectionMatrix;
 	HashAlgorithm standardHashAlgorithm;
 	public Decoder lshDecoder;
-	SamplingVarianceTracker vtrack;
+	final SamplingVarianceTracker vtrack;
 //	int times;
 	Random rand;
 	float radius;
@@ -24,7 +27,7 @@ public class LSH {
 
 	List<float[]> noise;
 
-	public LSH(Decoder dec, Projector p, HashAlgorithm hal, List<float[]> noise) {
+	public LSH(Decoder dec, Projector p, HashAlgorithm hal, List<float[]> noise,boolean normalize) {
 		this.projectionMatrix = p;// new Projector[1];
 		// this.projectionMatrices[0] = p;
 		this.standardHashAlgorithm = hal;
@@ -33,13 +36,20 @@ public class LSH {
 		rand = new Random();
 		radius = dec.getErrorRadius() / dec.getDimensionality();
 		this.noise = noise;
-		if(!dec.selfScaling())vtrack = new SamplingVarianceTracker();
+		if(!lshDecoder.selfScaling() && normalize)
+			vtrack = new SamplingVarianceTracker();
+		else
+			vtrack = null;
 	}
 	
-	public LSH(int dim, long randseed) {
+	public LSH(int dim, long randseed,boolean normalize) {
 		this.projectionMatrix = new DBFriendlyProjection(dim, 24, randseed);
-		this.standardHashAlgorithm = new MurmurHash(100000);
+		this.standardHashAlgorithm = new MurmurHash(2<<24);
 		this.lshDecoder = new Leech();
+		if(!lshDecoder.selfScaling() && normalize)
+			vtrack = new SamplingVarianceTracker();
+		else
+			vtrack = null;
 		rand = new Random();
 		this.noise = new ArrayList<>();//size=0 no noise
 	}
@@ -49,21 +59,22 @@ public class LSH {
 	 * hash(fnv,elf, murmur) on whole vector decoding.
 	 */
 	public long lshHash(float[] r) {
+		
+		float[] pr_r = projectionMatrix.project(r);
 		if(vtrack!=null){
-			float newvar = vtrack.updateVarianceSample(r);
-			if(newvar!=lshDecoder.getVariance())lshDecoder.setVariance(newvar);
+			vtrack.updateVarianceSample(pr_r);
+			pr_r = vtrack.normailize(pr_r);
 		}
 		
-		long l = standardHashAlgorithm.hash(lshDecoder.decode(projectionMatrix
-				.project(r)));
+		long l = standardHashAlgorithm.hash(lshDecoder.decode(pr_r));
 		return l;
 
 	}
 	
 	public long lshHashAlreadyProjected(float[] r) {
 		if(vtrack!=null){
-			float newvar = vtrack.updateVarianceSample(r);
-			if(newvar!=lshDecoder.getVariance())lshDecoder.setVariance(newvar);
+			vtrack.updateVarianceSample(r);
+			r = vtrack.normailize(r);
 		}
 		long l = standardHashAlgorithm.hash(lshDecoder.decode(r));
 		return l;
@@ -130,21 +141,18 @@ public class LSH {
 	 * @return
 	 */
 	public long[] lshHashRadius(float[] r, int times) {
-
-
-		
 		float[] pr_r = projectionMatrix.project(r);
 		if(vtrack!=null){
-			float newvar = vtrack.updateVarianceSample(pr_r);
-			if(newvar!=lshDecoder.getVariance())lshDecoder.setVariance(newvar);
+			vtrack.updateVarianceSample(pr_r);
+			pr_r = vtrack.normailize(pr_r);
 		}
 		
-		long nonoise = standardHashAlgorithm.hash(lshDecoder.decode(pr_r));
+		long[] hasherret = lshDecoder.decode(pr_r);
+		long[] returnHashes = new long[times*hasherret.length];
 		
-		long[] returnHashes = new long[times];
-		// if(times>1){
-		returnHashes[0] = nonoise;
-//		System.arraycopy(nonoise, 0, returnHashes, 0, nonoise.length);
+		for(int h =0;h<hasherret.length;h++)
+			returnHashes[h]=standardHashAlgorithm.hash(hasherret[h]);
+
 		// add some blurring probes in addition to the unnoised decoding
 		float[] noisedProjectedVector = new float[pr_r.length];
 		float[] noiseVec;
@@ -154,15 +162,13 @@ public class LSH {
 			System.arraycopy(pr_r, 0, noisedProjectedVector, 0, pr_r.length);
 			noiseVec = noise.get(j);
 			for (int k = 0; k < pr_r.length; k++) {
-				noisedProjectedVector[k] = noisedProjectedVector[k]
-						+ noiseVec[k];
+				noisedProjectedVector[k] = noisedProjectedVector[k]+noiseVec[k];
 			}
-//			nonoise = standardHashAlgorithm.hash(lshDecoder.decode(noisedProjectedVector));
-			returnHashes[j] = standardHashAlgorithm.hash(lshDecoder.decode(noisedProjectedVector));
-//			System.arraycopy(nonoise, 0, returnHashes, j * nonoise.length,
-//					nonoise.length);
+			hasherret = lshDecoder.decode(noisedProjectedVector);
+			for(int h =0;h<hasherret.length;h++)
+				returnHashes[j*hasherret.length+h]=standardHashAlgorithm.hash(hasherret[h]);
 		}
-
+		
 		return returnHashes;
 	}
 
@@ -170,8 +176,8 @@ public class LSH {
 
 		float[] pr_r = projectionMatrix.project(r);
 		if(vtrack!=null){
-			float newvar = vtrack.updateVarianceSample(pr_r);
-			if(newvar!=lshDecoder.getVariance())lshDecoder.setVariance(newvar);
+			vtrack.updateVarianceSample(pr_r);
+			pr_r = vtrack.normailize(pr_r);
 		}
 		long ret = standardHashAlgorithm.hash(lshDecoder.decode(pr_r));
 		long minret = ret;
@@ -199,12 +205,10 @@ public class LSH {
 		long[] ret = new long[noise.size()];
 		
 		float[] pr_r = projectionMatrix.project(vec);
-
 		if(vtrack!=null){
-			float newvar = vtrack.updateVarianceSample(pr_r);
-			if(newvar!=lshDecoder.getVariance())lshDecoder.setVariance(newvar);
+			vtrack.updateVarianceSample(pr_r);
+			pr_r = vtrack.normailize(pr_r);
 		}
-		
 		float[] veccopy = new float[pr_r.length];
 
 		for(int i = 0; i< noise.size();i++)

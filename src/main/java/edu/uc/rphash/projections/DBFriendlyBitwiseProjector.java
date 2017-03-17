@@ -57,8 +57,29 @@ public class DBFriendlyBitwiseProjector implements Projector {
 	
 	@Override
 	public float[] project(float[] t) {
-		// TODO Auto-generated method stub
+		System.out.println("not implemented!");
 		return null;
+	}
+	
+	@Override
+	public void setOrigDim(int n) {
+		this.n = n;
+	}
+
+	@Override
+	public void setProjectedDim(int t) {
+		this.t = t;
+	}
+
+	@Override
+	public void setRandomSeed(long l) {
+		this.rand =new Random(l);
+		
+	}
+
+	@Override
+	public void init() {
+		System.out.println("not implemented!");
 	}
 
 }

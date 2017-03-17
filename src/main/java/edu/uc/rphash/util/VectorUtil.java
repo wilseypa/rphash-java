@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import edu.uc.rphash.Centroid;
@@ -164,6 +165,8 @@ public class VectorUtil {
 			tmp.add(m);
 		prettyPrint(tmp);
 	}
+	
+
 
 	public static void prettyPrint(int[][] mat) {
 		ArrayList<float[]> tmp = new ArrayList<float[]>();
@@ -218,19 +221,19 @@ public class VectorUtil {
 			for (int i = 0; i < 4; i++) {
 				if (mat[i] > 0)
 					System.out.printf(" ");
-				System.out.printf("%.4f ", mat[i]);
+				System.out.printf("%d ", mat[i]);
 			}
 			System.out.print("\t ... \t");
 			for (int i = mat.length - 4; i < mat.length; i++) {
 				if (mat[i] > 0)
 					System.out.printf(" ");
-				System.out.printf("%.4f ", mat[i]);
+				System.out.printf("%d ", mat[i]);
 			}
 		} else {
 			for (int i = 0; i < mat.length; i++) {
 				if (mat[i] > 0)
 					System.out.printf(" ");
-				System.out.printf("%.4f ", mat[i]);
+				System.out.printf("%d ", mat[i]);
 			}
 		}
 		System.out.printf("\n");
@@ -264,6 +267,7 @@ public class VectorUtil {
 				System.out.printf("%.4f ", mat[i]);
 			}
 		}
+//		System.out.printf("\n");
 	}
 	
 	/**
@@ -452,6 +456,18 @@ public class VectorUtil {
 		return s;
 	}
 
+	private static final Pattern DOUBLE_PATTERN = Pattern.compile(
+		    "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)" +
+		    "([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|" +
+		    "(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))" +
+		    "[pP][+-]?(\\p{Digit}+)))[fFdD]?))[\\x00-\\x20]*");
+	
+	
+	public static boolean isFloat(String s)
+	{
+	    return DOUBLE_PATTERN.matcher(s).matches();
+	}
+	
 	public static List<float[]> readASCIIFile(BufferedReader in)
 			throws FileNotFoundException, IOException {
 
@@ -463,7 +479,15 @@ public class VectorUtil {
 			for (int i = 0; i < m; i++) {
 				float[] vec = new float[n];
 				for (int j = 0; j < n; j++)
-					vec[j] = Float.parseFloat(in.readLine());
+				{
+					String s = in.readLine();
+					if(s!=null){
+						if(isFloat(s))
+							vec[j] = Float.parseFloat(s);
+						else
+							vec[j] = Integer.parseInt(s);
+					}
+				}
 				M.add(vec);
 			}
 		} catch (IOException e) {
@@ -562,15 +586,23 @@ public class VectorUtil {
 			b >>>= 8;
 			chnk = (byte) (b & 0xFF);
 		}
-		System.out.println();
+	}
+	
+	public static String getBin(long b,int l) {
+		String ret = "";
+		byte chnk = (byte) (b & 0xFF);
+		for (int i = 0; i < l; i++) {
+			ret=ret+" "+b2s(chnk);
+			b >>>= 8;
+			chnk = (byte) (b & 0xFF);
+		}
+		return ret;
 	}
 
 	public static void prettyPrint(char[] b) {
 		for (int i = 0; i < b.length; i++) {
 			System.out.print(b2s((byte) b[i]) + ",");
 		}
-		System.out.println();
-
 	}
 
 	/**
@@ -666,6 +698,19 @@ public class VectorUtil {
 		return (float )ret;
 	}
 	
+	public static void simpleSave(int[][] M,String name){
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(name)));
+			for (int[] vector : M) {
+				for (int v : vector)
+						out.write(String.valueOf(v)+',');
+				out.write("\n");
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 
 }

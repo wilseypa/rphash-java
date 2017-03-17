@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import edu.uc.rphash.util.VectorUtil;
+
 public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 
 	int setsize;
@@ -19,6 +21,20 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 	}
 
 	@Override
+	public boolean add(Long e) {
+		if(data.containsKey(e))
+		{
+			data.put((E)e,data.get(e)+1);
+		}else
+		{
+			data.put((E)e,1);
+		}
+		return true;
+		
+	}
+	
+	
+	
 	public boolean add(E e) {
 		if(data.containsKey(e))
 		{
@@ -64,6 +80,12 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 	public Object getBaseClass() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public float count(long item) {
+		Integer ct = data.get(item);
+		return ct==null?0:ct;
 	}
 
 }

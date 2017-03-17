@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.frequentItemSet.Countable;
 import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
 import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.standardhash.MurmurHash;
@@ -186,7 +187,7 @@ public class Leech implements Decoder {
 		this.oddAPts = oddAPts;
 		this.evenBPts = evenBPts;
 		this.oddBPts = oddBPts;
-		radius = (float) Math.sqrt(2);
+		this.radius = (DPT + CPT) ;
 	}
 /*	
  * rotate a square in a circle what do you get... just a different perspective of a circle in a
@@ -224,11 +225,28 @@ public class Leech implements Decoder {
 //		}
 //	}
 
-	public float variance;
+	public float[] variance;
 
-	public Leech(float scaler) {
+	public Leech(float[] scaler) {
 		
-		this.setVariance(scaler);
+		radius = (DPT + CPT) ;
+		APT = (float) (this.APT);
+		BPT = (float) (this.BPT);
+		CPT = (float) (this.CPT);
+		DPT = (float) (this.DPT);
+
+		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
+				{ APT, BPT } };
+		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
+				{ DPT, CPT } };
+		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
+				{ BPT, BPT } };
+		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
+				{ APT, CPT } };
+		this.evenAPts = evenAPts;
+		this.oddAPts = oddAPts;
+		this.evenBPts = evenBPts;
+		this.oddBPts = oddBPts;
 	}
 
 	/*
@@ -1007,7 +1025,7 @@ public class Leech implements Decoder {
 		Random r = new Random();
 		int d =  24;
 
-		Leech sp = new Leech(1f);
+		Leech sp = new Leech();
 		// MultiDecoder sp = new MultiDecoder( d, e8);
 		MurmurHash hash = new MurmurHash(Integer.MAX_VALUE);
 		float testResolution = 10000f;
@@ -1148,36 +1166,45 @@ public class Leech implements Decoder {
 	//
 	// }
 
-	@Override
-	public void setVariance(Float parameterObject) {
-		variance = parameterObject;
-		radius = radius * variance;
-		APT = (float) (this.APT * variance);
-		BPT = (float) (this.BPT * variance);
-		CPT = (float) (this.CPT * variance);
-		DPT = (float) (this.DPT * variance);
-
-		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
-				{ APT, BPT } };
-		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
-				{ DPT, CPT } };
-		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
-				{ BPT, BPT } };
-		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
-				{ APT, CPT } };
-		this.evenAPts = evenAPts;
-		this.oddAPts = oddAPts;
-		this.evenBPts = evenBPts;
-		this.oddBPts = oddBPts;
-	}
+//	@Override
+//	public void setVariance(float[] parameterObject) {
+//		this.variance = parameterObject;
+//		float vartot = 0f;
+//		for(int i = 0 ; i<this.getDimensionality();i++)vartot+=this.variance[i];
+//		vartot/=(float)this.getDimensionality();
+//		radius = (DPT + CPT) * vartot;
+//		APT = (float) (this.APT * vartot);
+//		BPT = (float) (this.BPT * vartot);
+//		CPT = (float) (this.CPT * vartot);
+//		DPT = (float) (this.DPT * vartot);
+//
+//		float[][] evenAPts = { { APT, DPT }, { CPT, DPT }, { CPT, BPT },
+//				{ APT, BPT } };
+//		float[][] oddAPts = { { BPT, CPT }, { BPT, APT }, { DPT, APT },
+//				{ DPT, CPT } };
+//		float[][] evenBPts = { { BPT, DPT }, { DPT, DPT }, { DPT, BPT },
+//				{ BPT, BPT } };
+//		float[][] oddBPts = { { CPT, CPT }, { CPT, APT }, { APT, APT },
+//				{ APT, CPT } };
+//		this.evenAPts = evenAPts;
+//		this.oddAPts = oddAPts;
+//		this.evenBPts = evenBPts;
+//		this.oddBPts = oddBPts;
+//	}
 	
 	@Override
 	public boolean selfScaling() {
 		return false;
 	}
-	
+
 	@Override
-	public float getVariance(){
-		return variance;
+	public void setCounter(Countable counter) {
+		// TODO Auto-generated method stub
+		
 	}
+	
+//	@Override
+//	public float[] getVariance(){
+//		return variance;
+//	}
 }

@@ -8,16 +8,19 @@ import java.util.Random;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
+import edu.uc.rphash.decoders.DepthProbingLSH;
+import edu.uc.rphash.decoders.Leech;
+import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.lsh.LSH;
-import edu.uc.rphash.projections.DBFriendlyProjection;
+//import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
-import edu.uc.rphash.util.VectorUtil;
 
 public class RPHashSimple implements Clusterer {
 //	float variance;
@@ -30,19 +33,28 @@ public class RPHashSimple implements Clusterer {
 		if (!vecs.hasNext())
 			return so;
 		
-		Decoder dec = so.getDecoderType();
+		
 
-		Projector p = new DBFriendlyProjection(so.getdim(),
-				dec.getDimensionality(), so.getRandomSeed());
+	int logk = (int) (.5+Math.log(so.getk())/Math.log(2));//log k and round to integer
+		int k = so.getk()*logk;
+		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
+		Decoder dec = so.getDecoderType();
+		dec.setCounter(is);
+		
+		Projector p = so.getProjectionType();
+		p.setOrigDim(so.getdim());
+		p.setProjectedDim(dec.getDimensionality());
+		p.setRandomSeed(so.getRandomSeed());
+		p.init();
 		//no noise to start with
 		List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
 		
-		LSH lshfunc = new LSH(dec, p, hal,noise);
+		LSH lshfunc = new LSH(dec, p, hal,noise,so.getNormalize());
+		
 		long hash;
-		int logk = (int) (.5+Math.log(so.getk())/Math.log(2));//log k and round to integer
-		int k = so.getk()*logk;
 
-		ItemSet<Long> is = new SimpleFrequentItemSet<Long>(k);
+
+		
 		// add to frequent itemset the hashed Decoded randomly projected vector
 
 		while (vecs.hasNext()) {
@@ -73,10 +85,14 @@ public class RPHashSimple implements Clusterer {
 		HashAlgorithm hal = new NoHash(so.getHashmod());
 		Decoder dec = so.getDecoderType();
 		
-		Projector p = new DBFriendlyProjection(so.getdim(),
-				dec.getDimensionality(), so.getRandomSeed());
+		Projector p = so.getProjectionType();
+		p.setOrigDim(so.getdim());
+		p.setProjectedDim(dec.getDimensionality());
+		p.setRandomSeed(so.getRandomSeed());
+		p.init();
+		
 		List<float[]> noise = LSH.genNoiseTable(so.getdim(),so.getNumBlur(), new Random(), dec.getErrorRadius()/(dec.getDimensionality()*dec.getDimensionality()));
-		LSH lshfunc = new LSH(dec, p, hal,noise);
+		LSH lshfunc = new LSH(dec, p, hal,noise,so.getNormalize());
 		long hash[];
 		
 		List<Centroid> centroids = new ArrayList<Centroid>();
@@ -99,16 +115,14 @@ public class RPHashSimple implements Clusterer {
 		}
 
 		
-		for (Centroid c: centroids) so.addCentroid(c);
-		
+//		for (Centroid c: centroids) so.addCentroid(c);
 		
 		Clusterer offlineclusterer = so.getOfflineClusterer();
+		offlineclusterer.setData(centroids);
 		offlineclusterer.setWeights(so.getCounts());
-		offlineclusterer.setData(so.getCentroids());
 		offlineclusterer.setK(so.getk());
 		this.centroids = offlineclusterer.getCentroids();
 		so.setCentroids(centroids);
-		
 		
 		return so;
 	}
@@ -117,15 +131,11 @@ public class RPHashSimple implements Clusterer {
 	private RPHashObject so;
 
 	public RPHashSimple(List<float[]> data, int k) {
-//		variance = StatTests.varianceSample(data, .01f);
 		so = new SimpleArrayReader(data, k);
-
 	}
 
 	public RPHashSimple(List<float[]> data, int k, int times, int rseed) {
-//		variance = StatTests.varianceSample(data, .001f);
 		so = new SimpleArrayReader(data, k);
-
 	}
 
 	public RPHashSimple(RPHashObject so) {
@@ -158,40 +168,41 @@ public class RPHashSimple implements Clusterer {
 		int k = 10;
 		int d = 1000;
 		int n = 10000;
-		float var = 3.5f;
-		for(float f = var;f<2*var;f+=.01f){
-			for (int i = 0; i < 5; i++) {
-				GenerateStreamData gen = new GenerateStreamData(k, d, var, 11331313,true);
-				GenerateStreamData noise = new GenerateStreamData(1, d, var*10, 11331313);
-				ArrayList<float[]> t = new ArrayList<float[]>();
-				
-				for(int j =0;j<n;j++){
-					t.add(gen.generateNext());
-					t.add(noise.generateNext());
-				}
-				
-				RPHashSimple rphit = new RPHashSimple(t, k);
-				long startTime = System.nanoTime();
-				rphit.getCentroids();
-				long duration = (System.nanoTime() - startTime);
-				
-//				List<float[]> aligned =  VectorUtil.alignCentroids(
-//						rphit.getCentroids(), gen.getMedoids());
-				
-				ArrayList<float[]> tNoiseRemoved = new ArrayList<float[]>();
-				for(int b =0;b<t.size();b++){
-					if(b%2==0)tNoiseRemoved.add(t.get(b));
-				}
-					
-				
-				
-				
-//				System.out.println(f+":"+StatTests.PR(aligned, gen.getLabels(),tNoiseRemoved) + ":" + duration
-//						/ 1000000000f);
-				System.gc();
-			}
-		}
+		float var = 2.1f;
+		int count = 5;
+		System.out.printf("Decoder: %s\n","Sphere");
+		System.out.printf("ClusterVar\t");
+		for (int i = 0; i < count; i++)
+			System.out.printf("Trial%d\t", i);
+		System.out.printf("RealWCSS\n");
+		
+		
 
+		for (float f = var; f < 3.01; f += .05f) {
+			float avgrealwcss = 0;
+			float avgtime = 0;
+			System.out.printf("%f\t", f);
+			for (int i = 0; i < count; i++) {
+				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
+				RPHashObject o = new SimpleArrayReader(gen.data, k);
+				o.setDecoderType(new Spherical(32,4,1));
+				o.setDimparameter(24);
+				RPHashSimple rphit = new RPHashSimple(o);
+				long startTime = System.nanoTime();
+				List<Centroid> centsr = rphit.getCentroids();
+
+				avgtime += (System.nanoTime() - startTime) / 100000000;
+
+				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),
+						gen.getData());
+
+				System.out.printf("%.0f\t",
+						StatTests.WCSSECentroidsFloat(centsr, gen.data));
+				System.gc();
+				
+			}
+			System.out.printf("%.0f\n", avgrealwcss / count);
+		}
 	}
 
 	@Override
@@ -232,6 +243,6 @@ public class RPHashSimple implements Clusterer {
 	
 	@Override
 	public boolean setMultiRun(int runs) {
-		return false;
+		return true;
 	}
 }

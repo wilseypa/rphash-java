@@ -3,6 +3,7 @@ package edu.uc.rphash.decoders;
 import java.util.Arrays;
 import java.util.Random;
 
+import edu.uc.rphash.frequentItemSet.Countable;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -256,7 +257,7 @@ public class Golay implements Decoder{
 	        return err <= 0 ? decodeWord(word) : decodeWord(word ^ err);
 	    }
 
-		private Float variance;
+		private float[] variance;
 	 
 	    // constructor
 	    
@@ -301,20 +302,25 @@ public class Golay implements Decoder{
 						/ testResolution);
 			}
 	}
+	    
+//	    float varTot = 1.0f;
 	    @Override
 		public long[] decode(float[] p1) {
 			int codeword = 0;
-			for(int i=0;i<24;i++){
-				if(p1[i]/variance>0)codeword+=1;
+			if(p1[0]>0)codeword+=1;
+			for(int i=1;i<24;i++){
 				codeword<<=1;
+				if(p1[i]>0)codeword+=1;
 			}
-			return new long[]{codeword};
+			return new long[]{correctAndDecode(codeword)};
 		}
 
-		@Override
-		public void setVariance(Float parameterObject) {
-			variance = parameterObject;
-		}
+//		@Override
+//		public void setVariance(float[] parameterObject) {
+//			variance = parameterObject;
+//			for(int i = 0 ; i<this.getDimensionality();i++)varTot+=this.variance[i];
+//			varTot/=(float)this.getDimensionality();
+//		}
 
 		@Override
 		public int getDimensionality() {
@@ -333,13 +339,12 @@ public class Golay implements Decoder{
 
 		@Override
 		public boolean selfScaling() {
-			return false;
-		}
-		
-		@Override
-		public float getVariance(){
-			return variance;
+			return true;
 		}
 
-	    
+		@Override
+		public void setCounter(Countable counter) {
+			// TODO Auto-generated method stub
+			
+		}
 }

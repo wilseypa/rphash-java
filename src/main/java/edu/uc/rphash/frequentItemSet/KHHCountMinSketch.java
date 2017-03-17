@@ -9,7 +9,7 @@ import java.util.Random;
 
 import edu.uc.rphash.Centroid;
 
-public class KHHCountMinSketch<E> implements ItemSet<E> {
+public class KHHCountMinSketch<E> implements ItemSet<E>,Countable {
 	public static final long PRIME_MODULUS = (1L << 31) - 1;
 	private int depth;
 	private int width;
@@ -66,7 +66,7 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		return this;
 	}
 
-	@Override
+
 	public boolean add(E e) {
 		long count = addLong(e.hashCode(), 1);
 		if(e instanceof Centroid){
@@ -143,6 +143,18 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		return min;
 	}
 	
+	
+	public float count(long item) {
+		int min = (int) table[0][hash(item, 0)];
+		for (int i = 1; i < depth; ++i) {
+			if (table[i][hash(item, i)] < min)
+				min = (int) table[i][hash(item, i)];
+		}
+		return min;
+	}
+	
+	
+	
 	List<E> topcent = null;
 	List<Long> counts = null;
 	@Override
@@ -184,5 +196,11 @@ public class KHHCountMinSketch<E> implements ItemSet<E> {
 		System.out.println(System.currentTimeMillis() - ts);
 		System.out.println(khh.getTop());
 		System.out.println(khh.getCounts());
+	}
+
+	@Override
+	public boolean add(Long e) {
+		addLong(e,1);
+		return true;
 	}
 }

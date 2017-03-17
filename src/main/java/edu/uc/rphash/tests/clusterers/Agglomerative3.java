@@ -232,7 +232,7 @@ public class Agglomerative3 implements Clusterer {
 	}
 	
 	public Agglomerative3(List<float[]> data, int k) {
-		this.type = ClusteringType.SINGLE_LINKAGE;
+		this.type = ClusteringType.COMPLETE_LINKAGE;
 		this.data = data;
 		this.k = k;
 	}
@@ -342,7 +342,6 @@ public class Agglomerative3 implements Clusterer {
 			for(int i = 0 ;i<this.data.size();i++)
 				l.add(new SimpleItem(this.data.get(i),this.weights.get(i)));
 		}else{
-			System.out.println("weights are null");
 			for(int i = 0 ;i<this.data.size();i++)
 				l.add(new SimpleItem(this.data.get(i),1f));
 		}

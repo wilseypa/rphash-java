@@ -43,7 +43,7 @@ public class RPHash3Stage implements Clusterer {
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[probes];
 		
-		Decoder dec = new Leech(variance);
+		Decoder dec = so.getDecoderType();
 		//Decoder dec = new MultiDecoder(1, innerdec);
 		
 		
@@ -55,7 +55,7 @@ public class RPHash3Stage implements Clusterer {
 					dec.getDimensionality(), r.nextLong());
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), r, dec.getErrorRadius()/dec.getDimensionality());
 			
-			lshfuncs[i] = new LSH(dec, p, hal,noise);
+			lshfuncs[i] = new LSH(dec, p, hal,noise,so.getNormalize());
 		}
 		// add to frequent itemset the hashed Decoded randomly projected vector
 		while (vecs.hasNext()) {
@@ -91,7 +91,7 @@ public class RPHash3Stage implements Clusterer {
 		Random r = new Random(so.getRandomSeed());
 		LSH[] lshfuncs = new LSH[probes];
 		
-		Decoder dec = new Leech(variance);
+		Decoder dec = so.getDecoderType();
 		//Decoder dec = new MultiDecoder(1, innerdec);
 		
 		
@@ -102,7 +102,7 @@ public class RPHash3Stage implements Clusterer {
 			Projector p = new DBFriendlyProjection(so.getdim(),
 					dec.getDimensionality(), r.nextLong());
 			List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),so.getNumBlur(), r, dec.getErrorRadius()/dec.getDimensionality());
-			lshfuncs[i] = new LSH(dec, p, hal,noise);
+			lshfuncs[i] = new LSH(dec, p, hal,noise,so.getNormalize());
 		}
 
 		
