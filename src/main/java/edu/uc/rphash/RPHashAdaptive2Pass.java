@@ -17,6 +17,9 @@ import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
+import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
+
+
 public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 
 	private List<Centroid> centroids = null;
@@ -193,9 +196,11 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 			rngvec[i] = 0;
 		List<float[]> rawcent = findDensityModes();
 		centroids = new ArrayList<>();
-//		for(int i=0;i<so.getk();i++)centroids.add(new
-//				Centroid(rawcent.get(i),1));
-		centroids = new Agglomerative3(rawcent, so.getk()).getCentroids();
+		for(int i=0;i<so.getk();i++)centroids.add(new
+				Centroid(rawcent.get(i),1));
+		
+//		centroids = new Agglomerative3(rawcent, so.getk()).getCentroids();
+		
 	}
 
 	public static void main(String[] args) throws FileNotFoundException,

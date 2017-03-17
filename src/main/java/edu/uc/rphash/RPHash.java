@@ -42,8 +42,12 @@ import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
+
 import edu.uc.rphash.tests.kmeanspp.DoublePoint;
-import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
+//import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
+
+import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
+
 import edu.uc.rphash.util.VectorUtil;
 
 public class RPHash {
@@ -631,8 +635,8 @@ public class RPHash {
 			}
 			case "kmpp": {
 
-				o.setOfflineClusterer(new KMeansPlusPlus<>());
-				so.setOfflineClusterer(new KMeansPlusPlus<>());
+				o.setOfflineClusterer(new KMeansPlusPlus());
+				so.setOfflineClusterer(new KMeansPlusPlus());
 
 				break;
 			}
@@ -683,9 +687,13 @@ public class RPHash {
 				runitems.add(new LloydIterativeKmeans(k, data, o
 						.getNumProjections()));
 				break;
-			case "kmeansplusplus":
-				runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
-				break;
+				
+				
+	//		case "kmeansplusplus":
+	//			runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
+	//			break;
+				
+				
 			case "streamingkmeans": {
 				if (taggedArgs.containsKey("streamduration"))
 					runitems.add(new StreamingKmeans(so));
