@@ -25,12 +25,15 @@ import org.apache.commons.math3.ml.distance.EuclideanDistance;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.generators.GenerateData;
 
 
 
 public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
-
+	public KMeansPlusPlus(){
+		
+	}
 	    
 	      public static Vector2D generateNoiseVector(NormalDistribution distribution) { 
 	        return new Vector2D(distribution.sample(), distribution.sample()); 
@@ -78,7 +81,54 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 	   
 	   
 	   public List<Centroid> getCentroids() {   // to be completed
-			return null ;
+		   
+	       KMeansPlusPlusClusterer km = new KMeansPlusPlusClusterer<DoublePoint>(3);// TODO code application logic here
+	        	      
+	       int k = km.getK();
+	       System.out.println("The Value of k is :" + k );
+	   	 	               
+	       List<Cluster> kmc   = km.cluster(gen1) ;
+	        int d = kmc.size();
+	        System.out.println("The size of the list i.e no. of clusters are :" + d);
+	        
+//	        System.out.println(kmc.getClass());
+	        
+//	         System.out.println("The cluster id 1 :" + kmc.get(0));
+//	         System.out.println("The cluster id 2 :" + kmc.get(1));
+	          Cluster clkm1 = kmc.get(0);
+	          Cluster clkm2 = kmc.get(1);
+	          List<?> clusterkm1 = clkm1.getPoints();
+	          List<?> clusterkm2 = clkm2.getPoints();
+//	          System.out.println("The points in clusterKM1:" + clusterkm1);
+//	          System.out.println("The points in clusterKM2 :" + clusterkm2); 
+	        
+	          List<Centroid>C =  new ArrayList<Centroid>();                  // converting to List<Centroid> getCentroids() to match RPHash	          
+	          
+	          List<Cluster>CentroidsKmpp  = new ArrayList<>();
+	          for (int i=0;i < kmc.size();i++ )
+	          { 
+	        	         	          	          	  
+	        	  Cluster cent =  kmc.get(i);        	        	  
+	        	  CentroidsKmpp.add(cent); 								
+	        	  
+	  
+	          }
+	          
+	           for ( Cluster c: CentroidsKmpp )							// from Class clusterable to centroid
+	           { 
+	           	   double[] temp =	StatTests.mean(c.getPoints())	;									
+	        	  
+	           	float[] floatArray = new float[temp.length];
+	           	for (int i = 0 ; i < temp.length; i++)
+	           	{
+	           	    floatArray[i] = (float) temp[i];
+	           	}
+	           	   	           	   
+	        	  C.add(new Centroid(floatArray,0)) ;                                    // setting  the projection id = 0	           
+	           	
+	           } 
+	           	 
+	          return C;
 		}
 		
 		
@@ -97,9 +147,19 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 
 		
 		//void setData(List<float[]> centroids);
-		
+		private List<DoublePoint> gen1;
 		@Override
-		public void setRawData(List<float[]> data) {           // to be completed
+		public void setRawData(List<float[]> data) {          
+			
+	        gen1 = new ArrayList<DoublePoint>();         // converting the data generated to DoublePoint
+	         for (float[] c:data)
+	         { 
+	         	double[] tmp = new double[c.length];
+	         	for(int i = 0 ;i<c.length;i++)tmp[i]=c[i];// for centroid type c.Centroid[i];
+	         	gen1.add(new DoublePoint(tmp));
+	       
+	         }
+			// to be completed
 		/*  this.data = data;
 			
 			this.n = data.get(0).length;
@@ -160,7 +220,7 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 
          List<DoublePoint> data =gen1;    	        
 	         
-	       KMeansPlusPlusClusterer km = new KMeansPlusPlusClusterer<DoublePoint>(10);// TODO code application logic here
+	       KMeansPlusPlusClusterer km = new KMeansPlusPlusClusterer<DoublePoint>(3);// TODO code application logic here
 	        	      
 	       int k = km.getK();
 	       System.out.println("The Value of k is :" + k );
@@ -226,4 +286,3 @@ public class KMeansPlusPlus  implements edu.uc.rphash.Clusterer{
 	    	     	    
 		
 	}
-
