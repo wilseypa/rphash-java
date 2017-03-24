@@ -670,7 +670,8 @@ public class RPHash {
 				runitems.add(new RPHashConsensusRP(o));
 				break;
 			case "multiproj":
-				runitems.add(new RPHashMultiProj(o));
+				runitems.add(new RPHashSimple(o));
+				//runitems.add(new RPHashMultiProj(o));
 				break;
 			case "redux":
 				runitems.add(new RPHashIterativeRedux(o));

@@ -44,7 +44,10 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 
 	
 	
-	
+	public KMeansPlusPlus(){
+		this.maxIterations = 1000;
+		this.dim = 0;
+	}
 	  /** Strategies to use for replacing an empty cluster. */
     public static enum EmptyClusterStrategy {
 
