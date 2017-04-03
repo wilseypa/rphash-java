@@ -711,6 +711,18 @@ public class VectorUtil {
 			e.printStackTrace();
 		}
 	}
+
+	public static String longToString(Long b) {
+		byte chnk = (byte) (b & 0xFF);
+		String s = "";
+		for (int i = 0; i < 8; i++) {
+			s+=b2s(chnk);
+			b >>>= 8;
+			chnk = (byte) (b & 0xFF);
+		}
+		return s;
+		
+	}
 	
 
 }

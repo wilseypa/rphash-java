@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -14,6 +16,7 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 
 public class RPHashAdaptive2Pass implements Clusterer, Runnable {
@@ -126,12 +129,14 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	            {
 		            if(cur_count == parent_count) {
 						denseSetOfIDandCount.put(parent_id, 0L);
+						IDAndCent.put(parent_id, new ArrayList<>());
 						denseSetOfIDandCount.put(cur_id, (long) cur_count);
 		            }
 		            else
 		            {
 						if(2 * cur_count > parent_count) {
 							denseSetOfIDandCount.remove(parent_id);
+							IDAndCent.put(parent_id, new ArrayList<>());
 							denseSetOfIDandCount.put(cur_id, (long) cur_count);
 						}
 		            }
@@ -140,20 +145,26 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		}
 		
 		//remove keys with support less than 1
-		denseSetOfIDandCount.entrySet().stream().filter(p -> p.getValue() > 1);
+		Stream<Entry<Long, Long>> stream = denseSetOfIDandCount.entrySet().stream().filter(p -> p.getValue() > 1);
+		stream = stream.filter(p -> p.getKey() > 64);
 
 		List<Long> sortedIDList= new ArrayList<>();
 		// sort and limit the list
-		denseSetOfIDandCount.entrySet().stream()
-				.sorted(Map.Entry.<Long, Long> comparingByValue().reversed())
-				.limit(so.getk()*4)
+		stream.sorted(Map.Entry.<Long, Long> comparingByValue().reversed()).limit(so.getk()*4)
 				.forEachOrdered(x -> sortedIDList.add(x.getKey()));
 		
 		// compute centroids
+
 		HashMap<Long, List<float[]>> estcents = new HashMap<>();
-		for (int i =0; i<sortedIDList.size();i++){
+		for (int i =0; i<sortedIDList.size();i++)
+		{
 			estcents.put(sortedIDList.get(i), IDAndCent.get(sortedIDList.get(i)));
 		}
+//		System.out.println();
+//		for (int i =0; i<sortedIDList.size();i++)
+//		{
+//			System.out.println(sortedIDList.get(i) + ":"+VectorUtil.longToString(sortedIDList.get(i))+":"+IDAndCent.get(sortedIDList.get(i)).size());
+//		}
 		
 		return new ArrayList<>(estcents.values());
 	}
@@ -181,7 +192,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		int k = 10;
 		int d = 1000;
 		int n = 10000;
-		float var = .01f;
+		float var = 1.8f;
 		int count = 5;
 		System.out.printf("ClusterVar\t");
 		for (int i = 0; i < count; i++)
@@ -197,7 +208,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 				// gen.writeCSVToFile(new
 				// File("/home/lee/Desktop/reclsh/in.csv"));
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
-				o.setDimparameter(32);
+				o.setDimparameter(24);
 				RPHashAdaptive2Pass rphit = new RPHashAdaptive2Pass(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
