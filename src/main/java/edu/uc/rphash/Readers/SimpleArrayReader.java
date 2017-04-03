@@ -3,6 +3,7 @@ package edu.uc.rphash.Readers;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
@@ -44,7 +45,7 @@ public class SimpleArrayReader implements RPHashObject {
 	public SimpleArrayReader(ClusterGenerator gen,int k) {
 
 		this.dim = gen.getDimension();
-		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.randomSeed = new Random().nextLong();
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
 		if(decoderMultiplier>1)
@@ -68,7 +69,7 @@ public class SimpleArrayReader implements RPHashObject {
 	
 	public SimpleArrayReader(List<float[]> X, int k) {
 
-		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.randomSeed = new Random().nextLong();
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
 		if(this.decoderMultiplier>1)
@@ -120,7 +121,7 @@ public class SimpleArrayReader implements RPHashObject {
 	public SimpleArrayReader(List<float[]> X, int k, int blur,
 			int decoderMultiplier) {
 
-		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.randomSeed = new Random().nextLong();
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
 		this.numProjections = DEFAULT_NUM_PROJECTIONS;
@@ -180,7 +181,7 @@ public class SimpleArrayReader implements RPHashObject {
 //	}
 
 	public SimpleArrayReader() {
-		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.randomSeed = new Random().nextLong();
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
 		this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);

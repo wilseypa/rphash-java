@@ -12,15 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-//import org.rosuda.JRI.Rengine;
-
-
-
-
-
-
-import edu.uc.rphash.Readers.RPHashObject;
-import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.Readers.StreamObject;
 import edu.uc.rphash.decoders.DepthProbingLSH;
 import edu.uc.rphash.decoders.Dn;
@@ -40,15 +31,15 @@ import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.AdaptiveMeanShift;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.clusterers.KMeans2;
+import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
 import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
-
-import edu.uc.rphash.tests.kmeanspp.DoublePoint;
-//import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
-
-import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
-
 import edu.uc.rphash.util.VectorUtil;
+//import org.rosuda.JRI.Rengine;
+import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.Readers.SimpleArrayReader;
+
+//import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
 
 public class RPHash {
 
@@ -57,11 +48,11 @@ public class RPHash {
 			"kmeansplusplus", "streamingkmeans", "none", "adaptive" };
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
 			"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "none" };
-	static String[] projectionmethods = { "dbf", "fjlt", "rp","svd","noproj" };
+	static String[] projectionmethods = { "dbf", "fjlt", "rp", "svd", "noproj" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
 			"raw", "decayrate", "dimparameter", "decodertype",
-			"offlineclusterer", "runs", "normalize","projection" };
+			"offlineclusterer", "runs", "normalize", "projection" };
 	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
 			"multileech", "sphere", "levypstable", "cauchypstable",
 			"gaussianpstable", "adaptive", "origin" };
@@ -91,7 +82,7 @@ public class RPHash {
 			for (String s : offlineclusteringmethods)
 				System.out.print(s + " ,");
 			System.out.print("]\n");
-			
+
 			System.out.print("\t Projection_methods" + "\t:[");
 			for (String s : projectionmethods)
 				System.out.print(s + " ,");
@@ -504,7 +495,7 @@ public class RPHash {
 				so.setProjectionType(new FJLTProjection(1_000_000_000));
 				break;
 			}
-			
+
 			default: {
 				System.out.println("projection method does not exist");
 				System.exit(2);
@@ -568,8 +559,8 @@ public class RPHash {
 			case "sphere": {// pad to ~32 bits
 				// int ctsofsphere =
 				// (int)(Math.log(o.getDimparameter()*2)/Math.log(2.0)) /2;
-				o.setDecoderType(new Spherical(o.getDimparameter(), 2, 2));
-				so.setDecoderType(new Spherical(o.getDimparameter(), 2, 2));
+				o.setDecoderType(new Spherical(o.getDimparameter(), 4, 1));
+				so.setDecoderType(new Spherical(o.getDimparameter(), 4, 1));
 				// o.setDecoderType(new Spherical(o.getDimparameter(),
 				// ctsofsphere, o.getNumBlur()));
 				// so.setDecoderType(new Spherical(o.getDimparameter(),
@@ -626,6 +617,10 @@ public class RPHash {
 
 				break;
 			}
+			case "kmeansplusplus":
+				o.setOfflineClusterer(new KMeansPlusPlus());
+				so.setOfflineClusterer(new KMeansPlusPlus());
+				break;
 			case "adaptivemeanshift": {
 
 				o.setOfflineClusterer(new AdaptiveMeanShift());
@@ -640,7 +635,7 @@ public class RPHash {
 
 				break;
 			}
-			
+
 			case "none": {
 
 				o.setOfflineClusterer(null);
@@ -675,7 +670,7 @@ public class RPHash {
 				break;
 			case "multiproj":
 				runitems.add(new RPHashSimple(o));
-				//runitems.add(new RPHashMultiProj(o));
+				// runitems.add(new RPHashMultiProj(o));
 				break;
 			case "redux":
 				runitems.add(new RPHashIterativeRedux(o));
@@ -688,13 +683,11 @@ public class RPHash {
 				runitems.add(new LloydIterativeKmeans(k, data, o
 						.getNumProjections()));
 				break;
-				
-				
-	//		case "kmeansplusplus":
-	//			runitems.add(new KMeansPlusPlus<DoublePoint>(data, k));
-	//			break;
-				
-				
+
+			case "kmeansplusplus":
+				runitems.add(new KMeansPlusPlus(data, k));
+				break;
+
 			case "streamingkmeans": {
 				if (taggedArgs.containsKey("streamduration"))
 					runitems.add(new StreamingKmeans(so));

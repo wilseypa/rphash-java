@@ -551,7 +551,7 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
     	random  =new Random();
     	emptyStrategy= EmptyClusterStrategy.LARGEST_POINTS_NUMBER;
 		this.k = k;
-		maxIterations = 10000;
+		maxIterations = 100;
 		points = new ArrayList<>();
 //		this.data = data;
 		this.dim = data.get(0).length;
@@ -620,13 +620,11 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 	public void setRawData(List<float[]> centroids) {
     	random  =new Random();
 		points = new ArrayList<>();
-
 		for(float[] f: centroids)
 		{
 			DoublePoint p = new DoublePoint(f);
 			points.add((T)p);
 		}
-		
 		centroids = null;
 	}
 
@@ -634,15 +632,12 @@ public class KMeansPlusPlus<T extends Clusterable<T>> implements Clusterer {
 	public void setData(List<Centroid> centroids) {
     	random  =new Random();
 		points = new ArrayList<>();
-
 		for(Centroid f: centroids)
 		{
 			DoublePoint p = new DoublePoint(f.centroid());
 			points.add((T)p);
 		}
-		
 		centroids = null;
-		
 	}
 
 	@Override

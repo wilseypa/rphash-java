@@ -11,6 +11,7 @@ import java.io.PipedInputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
@@ -61,7 +62,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.executor = executor;
 
 		this.dim = dim;
-		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.randomSeed = new Random().nextLong();
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
 		this.dec = new MultiDecoder(this.decoderMultiplier
@@ -111,7 +112,7 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 			binin.readInt();
 			dim = binin.readInt();
 		}
-		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;
+		this.randomSeed = new Random().nextLong();
 		this.hashmod = DEFAULT_HASH_MODULUS;
 		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
 		this.dec = new MultiDecoder(this.decoderMultiplier

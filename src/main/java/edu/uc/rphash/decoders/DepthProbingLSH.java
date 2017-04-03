@@ -2,7 +2,7 @@ package edu.uc.rphash.decoders;
 
 import edu.uc.rphash.frequentItemSet.Countable;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
-import edu.uc.rphash.util.VectorUtil;
+
 
 public class DepthProbingLSH implements Decoder {
 	
@@ -10,9 +10,8 @@ public class DepthProbingLSH implements Decoder {
 	boolean full = false;
 	public DepthProbingLSH(int dim){
 		this.dim = dim;
-		this.counter = new SimpleFrequentItemSet(10);
+		this.counter = new SimpleFrequentItemSet<>(2<<dim);
 	}
-	
 	
 	public DepthProbingLSH(Countable counter, int dim){
 		this.counter = counter;
@@ -23,8 +22,6 @@ public class DepthProbingLSH implements Decoder {
 	public int getDimensionality() {
 		return dim;
 	}
-	
-
 	
 	/*
 	 * foreseeable issues, cold start is broken
@@ -44,12 +41,15 @@ public class DepthProbingLSH implements Decoder {
 	@Override
 	public long[] decode(float[] f) {
 		// start at one so leading zeros do not collide
-		long  recursiveHash =1;
-		
-		float parentCount = 0;
+		long  recursiveHash = 1;
+		recursiveHash<<=1;
+		float parentCount;
+
 		if(f[0]>0)recursiveHash+=1;
+		
 		counter.add(recursiveHash);
 		parentCount = counter.count(recursiveHash);
+		
 		int nodensitychange = 0;
 		long[] ret  = new long[f.length];
 		for(int i = 1;i<f.length;i++){
@@ -59,23 +59,24 @@ public class DepthProbingLSH implements Decoder {
 			ret[i]=recursiveHash;
 			counter.add(recursiveHash);
 			float curcount = counter.count(recursiveHash);
-			if((curcount+curcount)<=parentCount)
+			if(curcount /(float)parentCount<0.5) 
 			{
-				nodensitychange = i;
+				nodensitychange = i-1;
 			}
 			parentCount = curcount;
 		}
 		if(full)
 			return ret;
-		else
-			return new long[]{ret[nodensitychange]};
-
+		else{
+			if(nodensitychange>2) 
+				return new long[]{ret[nodensitychange]};
+			return new long[]{recursiveHash};
+		}
 	}
 	
 	public boolean isFull() {
 		return full;
 	}
-
 
 	public void setFull(boolean full) {
 		this.full = full;

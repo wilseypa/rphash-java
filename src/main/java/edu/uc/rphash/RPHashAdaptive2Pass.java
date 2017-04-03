@@ -13,11 +13,7 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
-import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.generators.GenerateData;
-import edu.uc.rphash.util.VectorUtil;
-
-import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
 
 
 public class RPHashAdaptive2Pass implements Clusterer, Runnable {
@@ -57,7 +53,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		return ret;
 	}
 
-	float[] rngvec;
+	//float[] rngvec;
 
 	/*
 	 * super simple hash algorithm, reminiscient of pstable lsh
@@ -67,7 +63,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		long s = 1;//fixes leading 0's bug
 		for (int i = 0; i < xt.length; i++) {
 			s <<= 1;
-			if (xt[i] > rngvec[i])
+			if (xt[i] > 0)//rngvec[i])
 				s += 1;
 			if (IDAndCent.containsKey(s)) {
 				IDAndCent.get(s).add(x);
@@ -101,10 +97,11 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	 * X - data set k - canonical k in k-means l - clustering sub-space Compute
 	 * density mode via iterative deepening hash counting
 	 */
-	public List<float[]> findDensityModes() {
+	public List<List<float[]>> findDensityModes() {
 		// HashMap<Long, Long> IDAndCount = new HashMap<>();
 		HashMap<Long, List<float[]>> IDAndCent = new HashMap<>();
 
+		int n = so.getRawData().size();
 		// #create projector matrixs
 		Projector projector = so.getProjectionType();
 		projector.setOrigDim(so.getdim());
@@ -126,19 +123,28 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		for (Long cur_id : new TreeSet<Long>(IDAndCent.keySet())) 
 		{
 			if (cur_id >3){
+				
 	            int cur_count = IDAndCent.get(cur_id).size();
 	            long parent_id = cur_id>>>1;
 	            int parent_count = IDAndCent.get(parent_id).size();
-				System.out.println(cur_count + ">?<"+parent_count);
-				if(2 * cur_count > parent_count) {
-					//int sibling_count = 0;
-	                //if (cur_count!=parent_count)
-	                //    sibling_count = IDAndCent.get(sibling_id).size();
-	                //denseSetOfIDandCount.put(parent_id, (long) (parent_count-(cur_count+sibling_count)));
-					denseSetOfIDandCount.put(parent_id, 0L);
-					denseSetOfIDandCount.put(cur_id, (long) cur_count);
-
-				}
+	            
+	            if(cur_count!=0 && parent_count!=0)
+	            {
+		            if(cur_count == parent_count) {
+		            	denseSetOfIDandCount.remove(parent_id);
+						//denseSetOfIDandCount.put(parent_id, 0L);
+						denseSetOfIDandCount.put(cur_id, (long) cur_count);
+		            }
+		            else
+		            {
+						if(2 * cur_count > parent_count) {
+							denseSetOfIDandCount.remove(parent_id);
+							denseSetOfIDandCount.put(cur_id, (long) cur_count);
+							IDAndCent.put(cur_id^1,new ArrayList<>());//set sibling to zero
+							IDAndCent.put(parent_id,new ArrayList<>());//set parent to zero
+						}
+		            }
+	            }
 			}
 		}
 
@@ -146,16 +152,23 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		// sort and limit the list
 		denseSetOfIDandCount.entrySet().stream()
 				.sorted(Map.Entry.<Long, Long> comparingByValue().reversed())
-				.limit(so.getk()*3)
+				.limit(so.getk()*4)
 				.forEachOrdered(x -> sortedlist.add(x.getKey()));
+		//System.out.println(sortedlist);
+		
+		List<Long> valueslist = new ArrayList<>();
+		denseSetOfIDandCount.entrySet().stream()
+		.sorted(Map.Entry.<Long, Long> comparingByValue().reversed())
+		.limit(so.getk()*4)
+		.forEachOrdered(x -> valueslist.add(x.getValue()));
 
+		
 		// compute centroids
-		HashMap<Long, float[]> estcents = new HashMap<>();
-		for (Long x : sortedlist){
-			estcents.put(x, medoid(IDAndCent.get(x)));
+		HashMap<Long, List<float[]>> estcents = new HashMap<>();
+		for (int i =0; i<sortedlist.size();i++){
+			estcents.put(sortedlist.get(i), IDAndCent.get(sortedlist.get(i)));
 		}
-		
-		
+
 //		// merge nearby centroids based on binary diff
 //		HashMap<Long, long[]> unsortedmergelist = new HashMap<Long, long[]>();
 //		for (int i = 0; i < sortedlist.size(); i++) {
@@ -191,16 +204,20 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	}
 
 	public void run() {
-		rngvec = new float[so.getDimparameter()];
-		for (int i = 0; i < so.getDimparameter(); i++)
-			rngvec[i] = 0;
-		List<float[]> rawcent = findDensityModes();
-		centroids = new ArrayList<>();
-		for(int i=0;i<so.getk();i++)centroids.add(new
-				Centroid(rawcent.get(i),1));
+		//rngvec = new float[so.getDimparameter()];
+		//for (int i = 0; i < so.getDimparameter(); i++)
+		//	rngvec[i] = 0;
+		List<List<float[]>> clustermembers = findDensityModes();
+		List<float[]>centroids = new ArrayList<>();
 		
-//		centroids = new Agglomerative3(rawcent, so.getk()).getCentroids();
-		
+		List<Float> weights =new ArrayList<>();
+		for(int i=0;i<clustermembers.size();i++){
+			weights.add(new Float(clustermembers.get(i).size()));
+			centroids.add(medoid(clustermembers.get(i)));
+		}
+		Agglomerative3 aggloOffline =  new Agglomerative3(centroids, so.getk());
+		aggloOffline.setWeights(weights);
+		this.centroids = aggloOffline.getCentroids();
 	}
 
 	public static void main(String[] args) throws FileNotFoundException,
@@ -225,7 +242,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 				// gen.writeCSVToFile(new
 				// File("/home/lee/Desktop/reclsh/in.csv"));
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
-				o.setDimparameter(24);
+				o.setDimparameter(32);
 				RPHashAdaptive2Pass rphit = new RPHashAdaptive2Pass(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
@@ -271,8 +288,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 
 	@Override
 	public void setK(int getk) {
-		// TODO Auto-generated method stub
-
+		this.so.setK(getk);
 	}
 
 	@Override
