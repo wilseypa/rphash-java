@@ -98,19 +98,14 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	 * density mode via iterative deepening hash counting
 	 */
 	public List<List<float[]>> findDensityModes() {
-		// HashMap<Long, Long> IDAndCount = new HashMap<>();
 		HashMap<Long, List<float[]>> IDAndCent = new HashMap<>();
 
-		int n = so.getRawData().size();
 		// #create projector matrixs
 		Projector projector = so.getProjectionType();
 		projector.setOrigDim(so.getdim());
 		projector.setProjectedDim(so.getDimparameter());
 		projector.setRandomSeed(so.getRandomSeed());
 		projector.init();
-
-		// VectorUtil.simpleSave(projector.M,"/home/lee/Desktop/reclsh/M");
-		// VectorUtil.simpleSave(projector.P,"/home/lee/Desktop/reclsh/P");
 
 		// #process data by adding to the counter
 		for (float[] x : so.getRawData()) {
@@ -122,8 +117,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		HashMap<Long, Long> denseSetOfIDandCount = new HashMap<Long, Long>();
 		for (Long cur_id : new TreeSet<Long>(IDAndCent.keySet())) 
 		{
-			if (cur_id >3){
-				
+			if (cur_id >so.getk()){
 	            int cur_count = IDAndCent.get(cur_id).size();
 	            long parent_id = cur_id>>>1;
 	            int parent_count = IDAndCent.get(parent_id).size();
@@ -131,8 +125,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	            if(cur_count!=0 && parent_count!=0)
 	            {
 		            if(cur_count == parent_count) {
-		            	denseSetOfIDandCount.remove(parent_id);
-						//denseSetOfIDandCount.put(parent_id, 0L);
+						denseSetOfIDandCount.put(parent_id, 0L);
 						denseSetOfIDandCount.put(cur_id, (long) cur_count);
 		            }
 		            else
@@ -140,66 +133,28 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 						if(2 * cur_count > parent_count) {
 							denseSetOfIDandCount.remove(parent_id);
 							denseSetOfIDandCount.put(cur_id, (long) cur_count);
-							IDAndCent.put(cur_id^1,new ArrayList<>());//set sibling to zero
-							IDAndCent.put(parent_id,new ArrayList<>());//set parent to zero
 						}
 		            }
 	            }
 			}
 		}
+		
+		//remove keys with support less than 1
+		denseSetOfIDandCount.entrySet().stream().filter(p -> p.getValue() > 1);
 
-		List<Long> sortedlist = new ArrayList<>();
+		List<Long> sortedIDList= new ArrayList<>();
 		// sort and limit the list
 		denseSetOfIDandCount.entrySet().stream()
 				.sorted(Map.Entry.<Long, Long> comparingByValue().reversed())
 				.limit(so.getk()*4)
-				.forEachOrdered(x -> sortedlist.add(x.getKey()));
-		//System.out.println(sortedlist);
-		
-		List<Long> valueslist = new ArrayList<>();
-		denseSetOfIDandCount.entrySet().stream()
-		.sorted(Map.Entry.<Long, Long> comparingByValue().reversed())
-		.limit(so.getk()*4)
-		.forEachOrdered(x -> valueslist.add(x.getValue()));
-
+				.forEachOrdered(x -> sortedIDList.add(x.getKey()));
 		
 		// compute centroids
 		HashMap<Long, List<float[]>> estcents = new HashMap<>();
-		for (int i =0; i<sortedlist.size();i++){
-			estcents.put(sortedlist.get(i), IDAndCent.get(sortedlist.get(i)));
+		for (int i =0; i<sortedIDList.size();i++){
+			estcents.put(sortedIDList.get(i), IDAndCent.get(sortedIDList.get(i)));
 		}
-
-//		// merge nearby centroids based on binary diff
-//		HashMap<Long, long[]> unsortedmergelist = new HashMap<Long, long[]>();
-//		for (int i = 0; i < sortedlist.size(); i++) {
-//			long d = sortedlist.get(i);
-//			for (int ii = i + 1; ii < sortedlist.size(); ii++) {
-//				long dd = sortedlist.get(ii);
-//				if (isPowerOfTwo(d ^ dd))
-//					unsortedmergelist.put(d ^ dd, new long[] { d, dd });
-//			}
-//		}
-//
-//		List<long[]> sortedmergelist = new ArrayList<long[]>();
-//		unsortedmergelist.entrySet().stream()
-//				.sorted(Map.Entry.<Long, long[]> comparingByKey().reversed())
-//				.forEachOrdered(x -> sortedmergelist.add(x.getValue()));
-//
-//		for (long[] mergers : sortedmergelist) {
-//
-//			if (estcents.size() == so.getk())
-//				return new ArrayList<>(estcents.values());
-//			if (estcents.containsKey(mergers[1])
-//					&& estcents.containsKey(mergers[0])) {
-//				float[] v1 = estcents.get(mergers[0]);
-//				float[] v2 = estcents.get(mergers[1]);
-//				for (int i = 0; i < v1.length; i++)
-//					v1[i] = (v1[i] + v2[i]) / 2f;
-//				estcents.put(mergers[0], v1);
-//			}
-//			estcents.remove(mergers[1]);
-//		}
-
+		
 		return new ArrayList<>(estcents.values());
 	}
 
