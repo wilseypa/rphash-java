@@ -98,10 +98,11 @@ public class RPHashSimple implements Clusterer {
 		p.setProjectedDim(dec.getDimensionality());
 		p.setRandomSeed(so.getRandomSeed());
 		p.init();
-
+		
 		List<float[]> noise = LSH.genNoiseTable(so.getdim(), so.getNumBlur(),
-				new Random(), dec.getErrorRadius()
-						/ (dec.getDimensionality() * dec.getDimensionality()));
+				new Random(so.getRandomSeed()), (float)(dec.getErrorRadius())
+						/ (float)(dec.getDimensionality() * dec.getDimensionality()));
+		
 		LSH lshfunc = new LSH(dec, p, hal, noise, so.getNormalize());
 		long hash[];
 
@@ -109,7 +110,6 @@ public class RPHashSimple implements Clusterer {
 
 		for (long id : so.getPreviousTopID()) {
 			centroids.add(new Centroid(so.getdim(), id, -1));
-
 		}
 
 		while (vecs.hasNext()) {

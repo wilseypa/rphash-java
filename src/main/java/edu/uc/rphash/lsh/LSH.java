@@ -72,11 +72,11 @@ public class LSH {
 	}
 	
 	public long lshHashAlreadyProjected(float[] r) {
-		if(vtrack!=null){
-			vtrack.updateVarianceSample(r);
-			r = vtrack.normailize(r);
-		}
-		long l = standardHashAlgorithm.hash(lshDecoder.decode(r));
+//		if(vtrack!=null){
+//			vtrack.updateVarianceSample(r);
+//			r = vtrack.normailize(r);
+//		}
+		long l = /*standardHashAlgorithm.hash(*/lshDecoder.decode(r)[0];//);
 		return l;
 	}
 
@@ -118,17 +118,19 @@ public class LSH {
 	public static List<float[]> genNoiseTable(int len, int times, Random rand,
 			float radius) {
 		ArrayList<float[]> noise = new ArrayList<float[]>();
+		
 		for (int j = 0; j < times; j++) {
 			float[] tmp = new float[len];
-			for (int k = 0; k < len; k++)
+			for (int k = 0; k < len; k++){
 				tmp[k] = (float) rand.nextGaussian() * (radius);
+			}
 			noise.add(tmp);
 		}
 		
 		//add non-noised vector
-		float[] tmp = new float[len];
-		for (int k = 0; k < len; k++)tmp[k] = (float)1f;
-		noise.add(tmp);
+//		float[] tmp = new float[len];
+//		for (int k = 0; k < len; k++)tmp[k] = (float)1f;
+//		noise.add(tmp);
 		
 		return noise;
 	}
@@ -152,11 +154,13 @@ public class LSH {
 		
 		for(int h =0;h<hasherret.length;h++)
 			returnHashes[h]=standardHashAlgorithm.hash(hasherret[h]);
+		
 
 		// add some blurring probes in addition to the unnoised decoding
 		float[] noisedProjectedVector = new float[pr_r.length];
 		float[] noiseVec;
 
+		
 
 		for (int j = 1; j < times; j++) {
 			System.arraycopy(pr_r, 0, noisedProjectedVector, 0, pr_r.length);
@@ -164,6 +168,8 @@ public class LSH {
 			for (int k = 0; k < pr_r.length; k++) {
 				noisedProjectedVector[k] = noisedProjectedVector[k]+noiseVec[k];
 			}
+			
+			System.out.println("\t"+noisedProjectedVector[0]);
 			hasherret = lshDecoder.decode(noisedProjectedVector);
 			for(int h =0;h<hasherret.length;h++)
 				returnHashes[j*hasherret.length+h]=standardHashAlgorithm.hash(hasherret[h]);
@@ -209,12 +215,15 @@ public class LSH {
 			vtrack.updateVarianceSample(pr_r);
 			pr_r = vtrack.normailize(pr_r);
 		}
+		
 		float[] veccopy = new float[pr_r.length];
-
-		for(int i = 0; i< noise.size();i++)
+		ret[0] = lshHashAlreadyProjected(pr_r);
+		for(int i = 1; i< noise.size();i++)
 		{
 			System.arraycopy(pr_r, 0, veccopy, 0, pr_r.length);
-			for(int j = 0;j<pr_r.length;j++)veccopy[j]+=noise.get(i)[j];
+			float[] noisevec = noise.get(i);
+			for(int j = 0;j<pr_r.length;j++)
+				veccopy[j]+=noisevec[j];
 			ret[i] = lshHashAlreadyProjected(veccopy);
 		}
 		return ret;

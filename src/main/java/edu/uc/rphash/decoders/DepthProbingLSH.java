@@ -90,7 +90,7 @@ public class DepthProbingLSH implements Decoder {
 
 	@Override
 	public float getErrorRadius() {
-		return -1;
+		return 0;
 	}
 
 	@Override
