@@ -187,9 +187,7 @@ public class Spherical implements Decoder {
 		long[] h = new long[l];
 		float normp = norm(p);
 		p = scale(p, 1.0f / normp);
-		
 		for (int i = 0; i < this.l; i++) {
-			
 			for (int j = 0; j < this.k; j++) {
 				h[i] = h[i] | this.argmaxi(p, ri);
 				h[i] <<= this.hbits;

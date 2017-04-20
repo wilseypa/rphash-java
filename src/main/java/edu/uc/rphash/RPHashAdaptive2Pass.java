@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
@@ -67,18 +68,22 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	 * super simple hash algorithm, reminiscient of pstable lsh
 	 */
 	public long hashvec(float[] xt, float[] x,
-			HashMap<Long, List<float[]>> IDAndCent, int l) {
+			HashMap<Long, List<float[]>> IDAndCent, HashMap<Long, List<Integer>> IDAndLabel,int ct) {
 		long s = 1;//fixes leading 0's bug
 		for (int i = 0; i < xt.length; i++) {
 			s <<= 1;
-			if (xt[i] > 0)//rngvec[i])
+			if (xt[i] > rngvec[i])
 				s += 1;
 			if (IDAndCent.containsKey(s)) {
+				IDAndLabel.get(s).add(ct);
 				IDAndCent.get(s).add(x);
 			} else {
-				List<float[]> xlist = new ArrayList<float[]>();
+				List<float[]> xlist = new ArrayList<>();
 				xlist.add(x);
 				IDAndCent.put(s, xlist);
+				List<Integer> idlist = new ArrayList<>();
+				idlist.add(ct);
+				IDAndLabel.put(s, idlist);
 			}
 		}
 		return s;
@@ -93,7 +98,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	 * maps
 	 */
 	void addtocounter(float[] x, Projector p,
-			HashMap<Long, List<float[]>> IDAndCent, int l) {
+			HashMap<Long, List<float[]>> IDAndCent,HashMap<Long, List<Integer>> IDandID,int ct) {
 		float[] xt = p.project(x);
 		
 //		counter++;    
@@ -102,11 +107,12 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 //			rngvec[i] += delta/(float)counter;
 //		}
 		
-		hashvec(xt,x,IDAndCent,l);
+		hashvec(xt,x,IDAndCent, IDandID,ct);
 	}
 	
 	void addtocounter(float[] x, Projector p,
-			HashMap<Long, List<float[]>> IDAndCent, int l,float[] mean,float[] variance) {
+			HashMap<Long, List<float[]>> IDAndCent,HashMap<Long, List<Integer>> IDandID,int ct,float[] mean,float[] variance)
+	{
 		float[] xt = p.project(StatTests.znormvec(x, mean, variance));
 		
 //		counter++;    
@@ -115,7 +121,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 //			rngvec[i] += delta/(float)counter;
 //		}
 		
-		hashvec(xt,x,IDAndCent,l);
+		hashvec(xt,x,IDAndCent, IDandID,ct);
 	}
 
 	static boolean isPowerOfTwo(long num) {
@@ -128,7 +134,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	 */
 	public List<List<float[]>> findDensityModes() {
 		HashMap<Long, List<float[]>> IDAndCent = new HashMap<>();
-
+		HashMap<Long, List<Integer>> IDAndID = new HashMap<>();
 		// #create projector matrixs
 		Projector projector = so.getProjectionType();
 		projector.setOrigDim(so.getdim());
@@ -136,20 +142,22 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		projector.setRandomSeed(so.getRandomSeed());
 		projector.init();
 		
+		int ct = 0;
 		if(znorm == true){
 			float[] variance = StatTests.varianceCol(so.getRawData());
 			float[] mean = StatTests.meanCols(so.getRawData());
 			// #process data by adding to the counter
 			for (float[] x : so.getRawData()) 
 			{
-				addtocounter(x, projector, IDAndCent, so.getDimparameter(),mean,variance);
+				addtocounter(x, projector, IDAndCent,IDAndID,ct++,mean,variance);
 			}
 		}
 		else
 		{
+			
 			for (float[] x : so.getRawData()) 
 			{
-				addtocounter(x, projector, IDAndCent, so.getDimparameter());
+				addtocounter(x, projector, IDAndCent, IDAndID,ct++);
 			}
 		}
 		
@@ -184,7 +192,8 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		
 		//remove keys with support less than 1
 		Stream<Entry<Long, Long>> stream = denseSetOfIDandCount.entrySet().stream().filter(p -> p.getValue() > 1);
-		stream = stream.filter(p -> p.getKey() > 64);
+		//64 so 6 bits?
+		//stream = stream.filter(p -> p.getKey() > 64);
 
 		List<Long> sortedIDList= new ArrayList<>();
 		// sort and limit the list
@@ -204,19 +213,23 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 //			System.out.println(sortedIDList.get(i) + ":"+VectorUtil.longToString(sortedIDList.get(i))+":"+IDAndCent.get(sortedIDList.get(i)).size());
 //		}
 		
+		
+		
 		return new ArrayList<>(estcents.values());
 	}
 
 	public void run() {
 		rngvec = new float[so.getDimparameter()];
 		counter = 0;
+		Random r = new Random(so.getRandomSeed());
 		for (int i = 0; i < so.getDimparameter(); i++)
-			rngvec[i] = 0;
+			rngvec[i] = (float) r.nextGaussian();
+		
 		List<List<float[]>> clustermembers = findDensityModes();
 		List<float[]>centroids = new ArrayList<>();
 		
 		List<Float> weights =new ArrayList<>();
-		int k = clustermembers.size()>200?200:clustermembers.size();
+		int k = clustermembers.size()>200+so.getk()?200+so.getk():clustermembers.size();
 		for(int i=0;i<k;i++){
 			weights.add(new Float(clustermembers.get(i).size()));
 			centroids.add(medoid(clustermembers.get(i)));

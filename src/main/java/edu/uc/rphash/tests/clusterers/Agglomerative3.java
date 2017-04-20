@@ -1,27 +1,21 @@
 package edu.uc.rphash.tests.clusterers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
-import edu.uc.rphash.tests.clusterers.Agglomerative3.ClusteringType;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
-
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
-
 public class Agglomerative3 implements Clusterer {
 	/**
-	 * 
-	 * 
 	 * @author betorfs
 	 */
 	class SuperCluster extends Cluster {

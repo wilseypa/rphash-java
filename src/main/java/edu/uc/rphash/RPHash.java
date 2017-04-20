@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+//import org.rosuda.JRI.Rengine;
+import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.Readers.StreamObject;
 import edu.uc.rphash.decoders.DepthProbingLSH;
 import edu.uc.rphash.decoders.Dn;
@@ -35,24 +38,20 @@ import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
 import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.util.VectorUtil;
-//import org.rosuda.JRI.Rengine;
-import edu.uc.rphash.Readers.RPHashObject;
-import edu.uc.rphash.Readers.SimpleArrayReader;
 
 //import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
 
 public class RPHash {
 
-	static String[] clusteringmethods = { "simple", "streaming", "3stage",
-			"multiproj", "consensus", "redux", "kmeans", "pkmeans",
-			"kmeansplusplus", "streamingkmeans", "none", "adaptive" };
+	static String[] clusteringmethods = { "simple", "streaming", "multiproj", 
+		"kmeans", "pkmeans","kmeansplusplus", "streamingkmeans", "none", "adaptive" };
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
-			"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "none" };
+		"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "none" };
 	static String[] projectionmethods = { "dbf", "fjlt", "rp", "svd", "noproj" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
-			"numblur", "randomseed", "hashmod", "parallel", "streamduration",
-			"raw", "decayrate", "dimparameter", "decodertype",
-			"offlineclusterer", "runs", "normalize", "projection" };
+		"numblur", "randomseed", "hashmod", "parallel", "streamduration",
+		"raw", "decayrate", "dimparameter", "decodertype",
+		"offlineclusterer", "runs", "normalize", "projection" };
 	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
 			"multileech", "sphere", "levypstable", "cauchypstable",
 			"gaussianpstable", "adaptive", "origin" };
@@ -139,8 +138,10 @@ public class RPHash {
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
 
-		if (!taggedArgs.containsKey("streamduration"))
+		//non streaming data
+		if (!taggedArgs.containsKey("streamduration")){
 			data = VectorUtil.readFile(filename, raw);
+		}
 
 		List<Clusterer> runs;
 		if (taggedArgs.containsKey("raw")) {
@@ -160,7 +161,6 @@ public class RPHash {
 					bestofruns);
 		} else {
 			// run remaining, read file into ram
-			data = VectorUtil.readFile(filename, raw);
 			runner(runs, outputFile, raw, bestofruns, data);
 		}
 
@@ -180,7 +180,8 @@ public class RPHash {
 		// some clusterers can do multi runs in parallel
 		if (clu.setMultiRun(runs)) {
 			return clu.getCentroids();
-		} else {
+		} 
+		else {
 			List<Centroid> mincents = clu.getCentroids();
 			double minwcss = StatTests.WCSSECentroidsFloat(mincents, data);
 
@@ -257,6 +258,11 @@ public class RPHash {
 			VectorUtil.writeCentroidsToFile(new File(outputFile + "."
 					+ ClusterHashName[ClusterHashName.length - 1]),
 					clu.getCentroids(), raw);
+			
+			if(clu instanceof RPHashSimple){
+				VectorUtil.writeVectorFile(new File(outputFile + "."
+						+ ClusterHashName[ClusterHashName.length - 1]+".labels"), ((RPHashSimple)clu).getLabels());
+			}
 		}
 
 	}
@@ -423,8 +429,12 @@ public class RPHash {
 		int k = Integer.parseInt(untaggedArgs.get(1));
 
 		RPHashObject o = new SimpleArrayReader(data, k);
-		StreamObject so = new StreamObject(f, k, raw);
-
+		RPHashObject so = o;
+		if(data==null){
+			so = new StreamObject(f, k, raw);
+		}
+		
+		
 		if (taggedArgs.containsKey("numprojections")) {
 			so.setNumProjections(Integer.parseInt(taggedArgs
 					.get("numprojections")));
@@ -662,19 +672,11 @@ public class RPHash {
 					runitems.add(new RPHashStream(o));
 				break;
 			}
-			case "3stage":
-				runitems.add(new RPHash3Stage(o));
-				break;
-			case "concensus":
-				runitems.add(new RPHashConsensusRP(o));
-				break;
 			case "multiproj":
 				runitems.add(new RPHashSimple(o));
 				// runitems.add(new RPHashMultiProj(o));
 				break;
-			case "redux":
-				runitems.add(new RPHashIterativeRedux(o));
-				break;
+
 			case "kmeans": {
 				runitems.add(new KMeans2(k, data));
 				break;

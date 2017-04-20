@@ -1,6 +1,7 @@
 package edu.uc.rphash;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -23,12 +24,17 @@ import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
+import edu.uc.rphash.util.VectorUtil;
 
 public class RPHashSimple implements Clusterer {
 	// float variance;
 
 	
 	public ItemSet<Long> is;
+	
+	List<Long> labels;
+	HashMap<Long,Long> labelmap;
+	
 	public RPHashObject map() {
 
 		// create our LSH Machine
@@ -112,30 +118,53 @@ public class RPHashSimple implements Clusterer {
 			centroids.add(new Centroid(so.getdim(), id, -1));
 		}
 
-		while (vecs.hasNext()) {
+		this.labels = new ArrayList<>();
+		
+		while (vecs.hasNext()) 
+		{
 			hash = lshfunc.lshHashRadius(vec, noise);
+			labels.add(-1l);
+			//radius probe around the vector
 			for (Centroid cent : centroids) {
-				for (long h : hash) {
+				for (long h : hash) 
+				{
 					if (cent.ids.contains(h)) {
 						cent.updateVec(vec);
+						this.labels.set(labels.size()-1,cent.id);
 					}
 				}
 			}
 			vec = vecs.next();
 		}
 
-		// for (Centroid c: centroids) so.addCentroid(c);
-
 		Clusterer offlineclusterer = so.getOfflineClusterer();
 		offlineclusterer.setData(centroids);
 		offlineclusterer.setWeights(so.getCounts());
 		offlineclusterer.setK(so.getk());
 		this.centroids = offlineclusterer.getCentroids();
+		VectorUtil.prettyPrint(this.centroids.get(0).centroid);
+		this.labelmap = VectorUtil.generateIDMap(centroids,this.centroids);
 		so.setCentroids(centroids);
-
 		return so;
 	}
-
+	//271458
+	//264779.7
+	
+	public List<Long> getLabels()
+	{
+		for(int i = 0;i<labels.size();i++)
+		{
+			if(labelmap.containsKey(labels.get(i))){
+				labels.set(i,labelmap.get(labels.get(i)));
+			}
+			else
+			{
+				labels.set(i,-1l);
+			}	
+		}	
+		return this.labels;
+	}
+	
 	private List<Centroid> centroids = null;
 	private RPHashObject so;
 
@@ -169,7 +198,7 @@ public class RPHashSimple implements Clusterer {
 	private void run() {
 		map();
 		reduce();
-		centroids = so.getCentroids();
+		this.centroids = so.getCentroids();	
 	}
 
 	public static void main(String[] args) {
@@ -191,23 +220,20 @@ public class RPHashSimple implements Clusterer {
 			for (int i = 0; i < count; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
-
 				RPHashSimple rphit = new RPHashSimple(o);
-				o.setDecoderType(new DepthProbingLSH(rphit.is,31));
-				o.setDimparameter(31);
+				o.setDecoderType(new Spherical(32, 4, 1));
+				//o.setDimparameter(31);
+				o.setOfflineClusterer(new KMeans2());
 				long startTime = System.nanoTime();
-				
-				//List<Centroid> centsr = new KMeans2(k,gen.getData()).getCentroids();
 				List<Centroid> centsr = rphit.getCentroids();
-
 				avgtime += (System.nanoTime() - startTime) / 100000000;
 
-				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),
-						gen.getData());
+				//avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),
+				//		gen.getData());
 
-				System.out.printf("%.0f\t",
-						StatTests.WCSSECentroidsFloat(centsr, gen.data));
-				System.gc();
+				//System.out.printf("%.0f\t",
+				//		StatTests.WCSSECentroidsFloat(centsr, gen.data));
+				//System.gc();
 
 			}
 			System.out.printf("%.0f\n", avgrealwcss / count);
