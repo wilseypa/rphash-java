@@ -12,6 +12,7 @@ import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.clustering.DoublePoint;
 import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
+import org.apache.commons.math3.ml.distance.EuclideanDistance;
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
 //import org.apache.commons.math3.userguide.ExampleUtils.ExampleFrame; 
@@ -20,6 +21,9 @@ import org.apache.commons.math3.util.FastMath;
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.generators.GenerateData;
+
+import org.apache.commons.math3.ml.distance.ManhattanDistance;
+
 
 public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 	public KMeansPlusPlus() {
@@ -81,11 +85,16 @@ public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 	public List<Centroid> getCentroids() { // to be completed
 
 		KMeansPlusPlusClusterer<DoublePoint> km = new KMeansPlusPlusClusterer<DoublePoint>(
-				this.k);
+				this.k ,50000 );
 
 		List<Centroid> C = new ArrayList<Centroid>(); 
-
+	//	System.out.println(" Entering getCentroids 1");
+		
+	//	System.out.println("The whole  list for the gen1 is :" + gen1);
+		
 		List<CentroidCluster<DoublePoint>> clusters = km.cluster(this.gen1);
+		
+	//	System.out.println(" Entering getCentroids done the clustering ");
 
 		for (Cluster<DoublePoint> c : clusters) // from Class clusterable to
 												// centroid
@@ -132,7 +141,7 @@ public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 			for (int i = 0; i < c.length; i++)
 				tmp[i] = c[i];// for centroid type c.Centroid[i];
 			gen1.add(new DoublePoint(tmp));
-
+			//System.out.println("The Raw data is coverted in setRawData ");
 		}
 		// to be completed
 		/*
@@ -153,6 +162,7 @@ public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 		for (Centroid c : centroids)
 			data.add(c.centroid());
 		setRawData(data);
+		System.out.println("The Raw data is set in setdata ");
 	}
 
 	public void setK(int k) { // to be completed
@@ -198,7 +208,7 @@ public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 
 		List<DoublePoint> data = gen1;
 
-		KMeansPlusPlusClusterer km = new KMeansPlusPlusClusterer<DoublePoint>(3);// TODO
+		KMeansPlusPlusClusterer km = new KMeansPlusPlusClusterer<DoublePoint>(3 ,-1 ,new EuclideanDistance());// TODO
 																					// code
 																					// application
 																					// logic
@@ -209,8 +219,7 @@ public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 
 		List<Cluster> kmc = km.cluster(data);
 		int d = kmc.size();
-		System.out
-				.println("The size of the list i.e no. of clusters are :" + d);
+		System.out.println("The size of the list i.e no. of clusters are :" + d);
 
 		// System.out.println(kmc.getClass());
 
