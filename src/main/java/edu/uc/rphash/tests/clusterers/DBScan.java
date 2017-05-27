@@ -8,6 +8,202 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;  
 import org.apache.commons.math3.distribution.NormalDistribution; 
+import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;  
+import org.apache.commons.math3.ml.clustering.CentroidCluster;
+import org.apache.commons.math3.ml.clustering.Cluster; 
+import org.apache.commons.math3.ml.clustering.Clusterable; 
+import org.apache.commons.math3.ml.clustering.Clusterer; 
+import org.apache.commons.math3.ml.clustering.DoublePoint; 
+import org.apache.commons.math3.random.RandomAdaptor; 
+import org.apache.commons.math3.random.RandomGenerator; 
+import org.apache.commons.math3.random.Well19937c;  
+import org.apache.commons.math3.util.FastMath; 
+import org.apache.commons.math3.util.Pair; 
+import org.apache.commons.math3.ml.distance.DistanceMeasure; 
+import org.apache.commons.math3.ml.distance.EuclideanDistance;
+
+import edu.uc.rphash.Centroid;
+import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.tests.generators.GenerateData;
+
+import java.util.Arrays;
+
+public class DBScan implements edu.uc.rphash.Clusterer{
+
+    
+  public DBScan() {
+	  
+  }
+  
+ /* public DBScan(List<float[]> , double eps , int minPoints) {
+	  
+	  
+	  this.setRawData(data);
+	  this.setEps(eps); 
+	  this.setminpoints(minPoints);
+	   
+	  
+  }
+    */    
+  
+ public DBScan(List<float[]> data ) {
+	   
+	  this.setRawData(data); 
+	  
+  }
+	
+
+ public List<Centroid> getCentroids() { // to be completed
+
+	 double eps = 0.35;
+	 int minPoints = 5;
+	 
+	 DBSCANClusterer<DoublePoint> db = new DBSCANClusterer<DoublePoint>(eps , minPoints );
+
+		List<Centroid> C = new ArrayList<Centroid>(); 
+	//	System.out.println(" Entering getCentroids 1");
+		
+	//	System.out.println("The whole  list for the gen1 is :" + gen1);
+		
+		List<Cluster<DoublePoint>> clusters = db.cluster(this.gen1);
+		
+	//	System.out.println(" Entering getCentroids done the clustering ");
+
+		for (Cluster<DoublePoint> c : clusters) // from Class clusterable to
+												// centroid
+		{
+			float[] floatArray = new float[c.getPoints().get(0).getPoint().length];
+			for (DoublePoint dp : c.getPoints()) {
+				for (int i = 0; i < dp.getPoint().length; i++) {
+					floatArray[i] += (float) dp.getPoint()[i];
+				}
+			}
+			float centsize = c.getPoints().size();
+			int dim = c.getPoints().get(0).getPoint().length;
+			for (int j = 0; j < dim; j++) {
+				floatArray[j] = floatArray[j] / centsize;
+			}
+			C.add(new Centroid(floatArray, 0)); // setting the projection id = 0
+		}
+		return C;
+	}
+	
+	// abstract RPHashObject getParam();
+	@Override
+	public RPHashObject getParam() { // to be completed
+		return null;
+	}
+
+
+	public void setWeights(List<Float> weights) { // to be completed
+		return;
+	}
+
+	
+	private List<DoublePoint> gen1;
+	private int minPoints;
+	private double eps ;
+	
+	
+	
+	@Override
+	public void setRawData(List<float[]> data) {
+
+		gen1 = new ArrayList<DoublePoint>(); // converting the data generated to
+												// DoublePoint
+		for (float[] c : data) {
+			double[] tmp = new double[c.length];
+			for (int i = 0; i < c.length; i++)
+				tmp[i] = c[i];// for centroid type c.Centroid[i];
+			gen1.add(new DoublePoint(tmp));
+			//System.out.println("The Raw data is coverted in setRawData ");
+		}
+		
+
+	}
+	
+	@Override
+	public void setData(List<Centroid> centroids) {
+		ArrayList<float[]> data = new ArrayList<float[]>(centroids.size());
+		for (Centroid c : centroids)
+			data.add(c.centroid());
+		setRawData(data);
+		System.out.println("The Raw data is set in setdata ");
+	}
+	
+	public void setK(int k) { // to be completed
+		return;
+	}
+
+/*	public void setminpoints(int k) { // to be completed
+		this.k = k;
+	}
+	
+	public void seteps(int k) { // to be completed
+		this.k = k;
+	}*/
+	
+	
+	
+	@Override
+	public void reset(int randomseed) {
+
+	}
+
+	@Override
+	public boolean setMultiRun(int runs) {
+		return false;
+	}
+	
+	
+	
+	
+	
+    public static void main(String[] args) {
+      
+  
+    	GenerateData  gen = new GenerateData(3, 1000, 5); // the data generator of rhpash
+
+		DBScan db = new DBScan (gen.data );
+		
+		
+		for (Centroid iter : db.getCentroids()) { // output centroids 
+			float[] toprint = iter.centroid();
+			System.out.println(Arrays.toString(toprint));
+		
+		}													
+		
+		
+    
+}
+}
+
+
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx please ignore this xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx please ignore this xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx please ignore this xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx please ignore this xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+/*package edu.uc.rphash.tests.clusterers;
+
+
+import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
+
+import java.util.List; 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;  
+import org.apache.commons.math3.distribution.NormalDistribution; 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D; 
 import org.apache.commons.math3.ml.clustering.CentroidCluster; 
 import org.apache.commons.math3.ml.clustering.Cluster; 
@@ -33,7 +229,7 @@ import java.util.Arrays;
 public class DBScan implements edu.uc.rphash.Clusterer{
 
     
-  /*    public static Vector2D generateNoiseVector(NormalDistribution distribution) { 
+      public static Vector2D generateNoiseVector(NormalDistribution distribution) { 
         return new Vector2D(distribution.sample(), distribution.sample()); 
     } 
      
@@ -75,7 +271,7 @@ public class DBScan implements edu.uc.rphash.Clusterer{
         return points;    
        
         
-   }     */
+   }     
 	
 	
 	@Override
@@ -255,3 +451,4 @@ public class DBScan implements edu.uc.rphash.Clusterer{
 
     
 }
+*/

@@ -33,9 +33,11 @@ import edu.uc.rphash.projections.SVDProjection;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.AdaptiveMeanShift;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
+import edu.uc.rphash.tests.clusterers.DBScan;
 import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
 import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
+import edu.uc.rphash.tests.clusterers.MultiKMPP;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -46,7 +48,7 @@ public class RPHash {
 	static String[] clusteringmethods = { "simple", "streaming", "multiproj", 
 		"kmeans", "pkmeans","kmeansplusplus", "streamingkmeans", "none", "adaptive" };
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
-		"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "none" };
+		"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "multikmpp" , "dbscan", "none" };
 	static String[] projectionmethods = { "dbf", "fjlt", "rp", "svd", "noproj" };
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 		"numblur", "randomseed", "hashmod", "parallel", "streamduration",
@@ -597,6 +599,7 @@ public class RPHash {
 
 		if (taggedArgs.containsKey("offlineclusterer")) {
 			switch (taggedArgs.get("offlineclusterer").toLowerCase()) {
+			
 			case "singlelink": {
 
 				o.setOfflineClusterer(new Agglomerative3(
@@ -646,6 +649,24 @@ public class RPHash {
 				break;
 			}
 
+			
+			case "multikmpp": {
+
+				o.setOfflineClusterer(new MultiKMPP());
+				so.setOfflineClusterer(new MultiKMPP());
+
+				break;
+			}
+			
+			
+			case "dbscan": {
+
+				o.setOfflineClusterer(new DBScan());
+				so.setOfflineClusterer(new DBScan());
+
+				break;
+			}
+			
 			case "none": {
 
 				o.setOfflineClusterer(null);

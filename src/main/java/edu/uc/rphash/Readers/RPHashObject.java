@@ -21,6 +21,8 @@ import edu.uc.rphash.tests.clusterers.Agglomerative3.ClusteringType;
 import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.KMeans2NoWCSS;
 import edu.uc.rphash.tests.clusterers.Kmeans;
+import edu.uc.rphash.tests.clusterers.MultiKMPP;
+import edu.uc.rphash.tests.clusterers.DBScan;
 
 public interface RPHashObject {
 	final static int DEFAULT_NUM_PROJECTIONS = 1;
@@ -30,7 +32,12 @@ public interface RPHashObject {
 	final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
 	final static Decoder DEFAULT_INNER_DECODER = new Leech();//new DepthProbingLSH(24);//new Spherical(16,2,2);//new MultiDecoder(24, new E8(1f));//new Golay();//new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//
 	final static int DEFAULT_DIM_PARAMETER = DEFAULT_INNER_DECODER.getDimensionality();
+	
 	final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new Agglomerative3(ClusteringType.AVG_LINKAGE);
+	
+	//final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new MultiKMPP();
+	
+	
 	final static Projector DEFAULT_PROJECTOR = new DBFriendlyProjection();
 
 	int getdim();
@@ -78,8 +85,13 @@ public interface RPHashObject {
 	void setDimparameter(int parseInt);
 	int getDimparameter();
 	
-	void setOfflineClusterer(Clusterer agglomerative3);
+//	void setOfflineClusterer(Clusterer agglomerative3);   
+//	Clusterer getOfflineClusterer();
+	
+	
+	void setOfflineClusterer(Clusterer clusterer );   
 	Clusterer getOfflineClusterer();
+	
 	
 	int getk();
 	void setK(int getk);

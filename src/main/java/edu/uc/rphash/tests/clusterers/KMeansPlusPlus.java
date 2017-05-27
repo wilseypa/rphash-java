@@ -25,6 +25,7 @@ import edu.uc.rphash.tests.generators.GenerateData;
 import org.apache.commons.math3.ml.distance.ManhattanDistance;
 
 
+
 public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 	public KMeansPlusPlus() {
 
