@@ -76,10 +76,15 @@ public class RPHashSimple implements Clusterer {
 			is.add(hash);
 			// vec.id.add(hash);
 		}
-		so.setPreviousTopID(is.getTop());
+		
+		List<Long> topids = is.getTop();
+		so.setPreviousTopID(topids);
+		
+		List<Long> topsizes = is.getCounts();
+		System.out.println(topsizes);
 
 		List<Float> countsAsFloats = new ArrayList<Float>();
-		for (long ct : is.getCounts())
+		for (long ct : topsizes)
 			countsAsFloats.add((float) ct);
 		so.setCounts(countsAsFloats);
 		return so;
@@ -142,7 +147,6 @@ public class RPHashSimple implements Clusterer {
 		offlineclusterer.setWeights(so.getCounts());
 		offlineclusterer.setK(so.getk());
 		this.centroids = offlineclusterer.getCentroids();
-		VectorUtil.prettyPrint(this.centroids.get(0).centroid);
 		this.labelmap = VectorUtil.generateIDMap(centroids,this.centroids);
 		so.setCentroids(centroids);
 		return so;
