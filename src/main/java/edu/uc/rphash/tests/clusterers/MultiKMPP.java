@@ -17,21 +17,30 @@ import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
 //import org.apache.commons.math3.userguide.ExampleUtils.ExampleFrame; 
 import org.apache.commons.math3.util.FastMath;
-
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.generators.GenerateData;
 
-import org.apache.commons.math3.ml.distance.ManhattanDistance;
+//import org.apache.commons.math3.ml.distance.ManhattanDistance;
+//import org.apache.commons.math3.exception.ConvergenceException;
+//import org.apache.commons.math3.exception.MathIllegalArgumentException;
+//import org.apache.commons.math3.ml.clustering.evaluation.ClusterEvaluator;
+//import org.apache.commons.math3.ml.clustering.evaluation.SumOfClusterVariances;
+
+import org.apache.commons.math3.stat.descriptive.moment.Variance;
+import org.apache.commons.math3.ml.distance.DistanceMeasure;
 
 
 
-public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
-	public KMeansPlusPlus() {
 
+
+public class MultiKMPP implements edu.uc.rphash.Clusterer {
+	public MultiKMPP() {
+				
+		
 	}
 
-	public KMeansPlusPlus(List<float[]> data, int k) {
+	public MultiKMPP(List<float[]> data, int k) {
 		this.setRawData(data);
 		this.setK(k);
 	}
@@ -84,20 +93,60 @@ public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 	}
 
 	public List<Centroid> getCentroids() { // to be completed
-
-		KMeansPlusPlusClusterer<DoublePoint> km = new KMeansPlusPlusClusterer<DoublePoint>(
-				this.k ,50000 );
-
-		List<Centroid> C = new ArrayList<Centroid>(); 
-	//	System.out.println(" Entering getCentroids 1");
 		
+		List<Centroid> C = new ArrayList<Centroid>(); 
+		
+		List<CentroidCluster<DoublePoint>> bestcluster = null;
+		double bestVarianceSum = Double.POSITIVE_INFINITY;
+		
+		for (int i = 1 ; i <= 10 ; i++) {
+			
+		
+			KMeansPlusPlusClusterer<DoublePoint> km = new KMeansPlusPlusClusterer<DoublePoint>(
+				this.k ,50000 );
+		
+	//	System.out.println(" Entering getCentroids 1");		
 	//	System.out.println("The whole  list for the gen1 is :" + gen1);
 		
 		List<CentroidCluster<DoublePoint>> clusters = km.cluster(this.gen1);
+		 
+		double varianceSum=0.0;	
 		
+		CentroidDBScan n = new CentroidDBScan();        // to compute the centroid of the kmpp clusters 
+				
+	//	final Clusterable center = n.centroidOf(clusters.get(0))	;
+					
+		for (final Cluster<DoublePoint> cluster : clusters) {
+            if (!cluster.getPoints().isEmpty()) {
+
+                final Clusterable center = n.centroidOf(cluster);
+
+   //             System.out.println((center));
+                
+                // compute the distance variance of the current cluster
+                final Variance stat = new Variance();
+                for (final DoublePoint point : cluster.getPoints()) {
+                   
+                	stat.increment(distance(point, center));
+                }
+                varianceSum += stat.getResult();
+
+            }
+        }
+				
+		
+		if (varianceSum < bestVarianceSum ){
+		   bestVarianceSum = varianceSum;
+		   bestcluster = clusters;
+//		   System.out.println((bestVarianceSum));
+				
+		}	
+//		     System.out.println((varianceSum));	
+		}
+	
 	//	System.out.println(" Entering getCentroids done the clustering ");
 
-		for (Cluster<DoublePoint> c : clusters) // from Class clusterable to
+		for (Cluster<DoublePoint> c : bestcluster) // from Class clusterable to
 												// centroid
 		{
 			float[] floatArray = new float[c.getPoints().get(0).getPoint().length];
@@ -115,6 +164,16 @@ public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 		}
 		return C;
 	}
+
+	
+	
+	protected double distance(final Clusterable p1, final Clusterable p2) {
+		
+		DistanceMeasure measure = new EuclideanDistance();
+		
+        return measure.compute(p1.getPoint(), p2.getPoint());
+    }
+	
 
 	// abstract RPHashObject getParam();
 	@Override
@@ -184,104 +243,20 @@ public class KMeansPlusPlus implements edu.uc.rphash.Clusterer {
 
 	public static void main(String[] args) {
 
-		// int nSamples = 1500;
-		// RandomGenerator rng = new Well19937c(0);
-		// List<Vector2D> datasets = makeCircles(nSamples, true, 0.04, 0.5,
-		// rng);
-		// List<DoublePoint> data = normalize(datasets, -1, 1, -1, 1);
 
-		GenerateData gen = new GenerateData(10, 1000, 8); // the data generator
-															// of rhpash
+		GenerateData  gen = new GenerateData(3, 1000, 5); // the data generator of rhpash
 
-		List<DoublePoint> gen1 = new ArrayList<DoublePoint>(); // converting the
-																// data
-																// generated to
-																// DoublePoint
-		for (float[] c : gen.data) {
-			double[] tmp = new double[c.length];
-			for (int i = 0; i < c.length; i++)
-				tmp[i] = c[i];// for centroid type c.Centroid[i];
-			gen1.add(new DoublePoint(tmp));
+		MultiKMPP km = new MultiKMPP (gen.data , 3);
+		
 
-		}
+		
+	//	for (Centroid iter : km.getCentroids()) { // output centroids 
+	//		float[] toprint = iter.centroid();
+	//		System.out.println(Arrays.toString(toprint));
+		
+	//	}													
+		
 
-		// System.out.println("The whole  list for the gen1 is :" + gen1);
-
-		List<DoublePoint> data = gen1;
-
-		KMeansPlusPlusClusterer km = new KMeansPlusPlusClusterer<DoublePoint>(3 ,-1 ,new EuclideanDistance());// TODO
-																					// code
-																					// application
-																					// logic
-																					// here
-
-		int k = km.getK();
-		System.out.println("The Value of k is :" + k);
-
-		List<Cluster> kmc = km.cluster(data);
-		int d = kmc.size();
-		System.out.println("The size of the list i.e no. of clusters are :" + d);
-
-		// System.out.println(kmc.getClass());
-
-		// System.out.println("The cluster id 1 :" + kmc.get(0));
-		// System.out.println("The cluster id 2 :" + kmc.get(1));
-		Cluster clkm1 = kmc.get(0);
-		Cluster clkm2 = kmc.get(1);
-		List<?> clusterkm1 = clkm1.getPoints();
-		List<?> clusterkm2 = clkm2.getPoints();
-		// System.out.println("The points in clusterKM1:" + clusterkm1);
-		// System.out.println("The points in clusterKM2 :" + clusterkm2);
-
-		CentroidDBScan n = new CentroidDBScan(); // though the name is
-													// CentroidDBScan it is a
-													// general class that has
-													// the method to compute the
-													// centroid of a cluster.
-		System.out.println("The centroid in cluster1:" + n.centroidOf(clkm1));
-		System.out.println("The centroid in cluster2:" + n.centroidOf(clkm2));
-
-		List<Clusterable> CentroidsKmpp = new ArrayList<Clusterable>();
-
-		CentroidDBScan iter_obj = new CentroidDBScan(); // creating the list of
-														// all centroids from
-														// the partions of kmpp
-														// .
-		for (int i = 0; i < kmc.size(); i++) {
-
-			Clusterable cent = iter_obj.centroidOf(kmc.get(i));
-			CentroidsKmpp.add(cent);
-
-		}
-
-		System.out.println("The whole  list of  the centroids are :"
-				+ CentroidsKmpp); // output centroids from apache func
-
-		List<Centroid> C = new ArrayList<Centroid>(); // converting to
-														// List<Centroid>
-														// getCentroids() to
-														// match RPHash
-
-		for (Clusterable c : CentroidsKmpp) // from Class clusterable to
-											// centroid
-		{
-			double[] temp = c.getPoint();
-
-			float[] floatArray = new float[temp.length];
-			for (int i = 0; i < temp.length; i++) {
-				floatArray[i] = (float) temp[i];
-			}
-
-			C.add(new Centroid(floatArray, 0)); // setting the projection id = 0
-
-		}
-
-		for (Centroid iter : C) { // output centroids after conversion to RPHash
-									// Centroid
-			float[] toprint = iter.centroid();
-			System.out.println(Arrays.toString(toprint));
-		}
 
 	}
-
 }
