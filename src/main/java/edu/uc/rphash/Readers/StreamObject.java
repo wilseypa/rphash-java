@@ -109,8 +109,14 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 			dim = Integer.parseInt(assin.readLine());
 		} else {
 			binin = new DataInputStream(new BufferedInputStream(inputStream));
-			binin.readInt();
-			dim = binin.readInt();
+			
+			byte[] b = new byte[4];
+			binin.read(b);
+			binin.read(b);
+			dim = java.nio.ByteBuffer.wrap(b)
+					.order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt();
+			//binin.readInt();
+			//dim = binin.readInt();
 		}
 		this.randomSeed = new Random().nextLong();
 		this.hashmod = DEFAULT_HASH_MODULUS;
@@ -137,23 +143,25 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 		this.centroids = null;
 		try {
 			if (filereader) {
+				
 				inputStream.close();
 				if (this.f.endsWith("gz"))
-					inputStream = new GZIPInputStream(new FileInputStream(
-							this.f));
+					inputStream = new GZIPInputStream(new FileInputStream(this.f));
 				else
 					inputStream = new FileInputStream(this.f);
 
 				if (!raw) {
-					assin = new BufferedReader(new InputStreamReader(
-							inputStream));
-					Integer.parseInt(assin.readLine());
+					assin = new BufferedReader(new InputStreamReader(inputStream));
+					 Integer.parseInt(assin.readLine());
 					dim = Integer.parseInt(assin.readLine());
 				} else {
-					binin = new DataInputStream(new BufferedInputStream(
-							inputStream));
-					binin.readInt();
-					dim = binin.readInt();
+					binin = new DataInputStream(new BufferedInputStream(inputStream));
+					
+					byte[] b = new byte[4];
+					binin.read(b);
+					binin.read(b);
+					dim = java.nio.ByteBuffer.wrap(b)
+							.order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt();
 
 				}
 			}
@@ -250,11 +258,11 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public String toString() {
 		String ret = "Decoder:";
 		if (dec != null)
-			ret += dec.getClass().getName();
+			ret += dec.getClass().getSimpleName();
 		ret += ", Blur:" + numBlur;
 		ret += ", Projections:" + numProjections;
 		ret += ", Outer Decoder Multiplier:" + decoderMultiplier;
-		ret += ", Offline Clusterer:" + clusterer.getClass().getName();
+		ret += ", Offline Clusterer:" + clusterer.getClass().getSimpleName();
 		return ret;
 	}
 
@@ -285,6 +293,8 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 
 	@Override
 	public float[] next() {
+		
+		
 		float[] readFloat = new float[dim];
 		try {
 
@@ -292,8 +302,19 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 				for (int i = 0; i < dim; i++)
 					readFloat[i] = Float.parseFloat(assin.readLine());
 			} else {
-				for (int i = 0; i < dim; i++)
-					readFloat[i] = binin.readFloat();
+				byte[] b = new byte[4];
+				byte[] line = new byte[4 * dim];
+				binin.read(line);
+				for (int j = 0; j < dim; j++) {
+					b[0] = line[j * 4];
+					b[1] = line[j * 4 + 1];
+					b[2] = line[j * 4 + 2];
+					b[3] = line[j * 4 + 3];
+					readFloat[j] = java.nio.ByteBuffer.wrap(b)
+							.order(java.nio.ByteOrder.LITTLE_ENDIAN).getFloat();
+				}
+//				for (int i = 0; i < dim; i++)
+//					readFloat[i] = binin.readFloat();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

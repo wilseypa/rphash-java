@@ -1,19 +1,23 @@
 package edu.uc.rphash;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.function.Consumer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.decoders.Decoder;
-import edu.uc.rphash.decoders.DepthProbingLSH;
-import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
@@ -22,14 +26,11 @@ import edu.uc.rphash.lsh.LSH;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.NoHash;
-import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.generators.GenerateData;
-import edu.uc.rphash.tests.generators.GenerateStreamData;
-import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
 import edu.uc.rphash.util.VectorUtil;
 
-public class RPHashSimple implements Clusterer {
+public class RPHashSimpleParallel implements Clusterer {
 	// float variance;
 
 	public ItemSet<Long> is;
@@ -44,6 +45,7 @@ public class RPHashSimple implements Clusterer {
 	}
 
 	public RPHashObject map() {
+		
 
 		// create our LSH Machine
 		HashAlgorithm hal = new NoHash(so.getHashmod());
@@ -76,26 +78,43 @@ public class RPHashSimple implements Clusterer {
 
 		// add to frequent itemset the hashed Decoded randomly projected vector
 
-		if (so.getParallel()) {
-			List<float[]> data = so.getRawData();
-			data.parallelStream().forEach(new Consumer<float[]>() {
+	
+		List<float[]> dat = so.getRawData();
 
-				@Override
-				public void accept(float[] t) {
-					mapfunc(t, lshfunc, is);
+		ExecutorService executor = Executors.newFixedThreadPool(this.threads);
+
+		int chunksize = dat.size() / this.threads;
+
+		ArrayList<Future<ArrayList<Centroid>>> gather = new ArrayList<>(this.threads);
+
+		for (int i = 0; i < this.threads; i++) {
+			int chunk = chunksize* i;
+			gather.add(executor.submit(new Callable< ArrayList<Centroid>>() {
+				public ArrayList<Centroid> call() {
+					
+					ArrayList<Centroid> centroids = new ArrayList<Centroid>();
+					for (int j = chunk; j < chunksize + chunk && j < dat.size(); j++) {
+						mapfunc(dat.get(j), lshfunc, is);
+					}
+					return centroids;
 				}
-			});
+			}));
 		}
-		while (vecs.hasNext()) {
-			mapfunc(vecs.next(), lshfunc, is);
+		
+		
+		for (Future<ArrayList<Centroid>> f : gather){
+			try {
+				f.get();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		// }
-		// while (vecs.hasNext()) {
-		// float[] vec = vecs.next();
-		// long hash = lshfunc.lshHash(vec);
-		// is.add(hash);
-		//
-		// }
+		
+		executor.shutdown();
 
 		List<Long> topids = is.getTop();
 		so.setPreviousTopID(topids);
@@ -161,49 +180,51 @@ public class RPHashSimple implements Clusterer {
 
 		this.labels = new ArrayList<>();
 
-		if (so.getParallel()) {
-			try {
-				List<float[]> data = so.getRawData();
-				ForkJoinPool myPool = new ForkJoinPool(this.threads);
-				myPool.submit(() ->
 
-				data.parallelStream().forEach(new Consumer<float[]>() {
+		while (vecs.hasNext()) {
+			redFunc(vecs.next(), lshfunc, noise, labels, centroids);
+		}
+		
+		
+		List<float[]> dat = so.getRawData();
 
-					@Override
-					public void accept(float[] t) {
-						redFunc(t, lshfunc, noise, labels, centroids);
+		ExecutorService executor = Executors.newFixedThreadPool(this.threads);
+
+		int chunksize = dat.size() / this.threads;
+
+		ArrayList<Future<ArrayList<Centroid>>> gather = new ArrayList<>(this.threads);
+
+		for (int i = 0; i < this.threads; i++) {
+			int chunk = chunksize* i;
+			gather.add(executor.submit(new Callable< ArrayList<Centroid>>() {
+				public ArrayList<Centroid> call() {
+					ArrayList<Centroid> centroids = new ArrayList<Centroid>();
+					for (int j = chunk; j < chunksize + chunk && j < dat.size(); j++) {
+						redFunc(dat.get(j), lshfunc, noise, labels, centroids);
 					}
+					return centroids;
+				}
+			}));
+		}
+		
+		
+		
+		for (Future<ArrayList<Centroid>> f : gather) {
+			ArrayList<Centroid> o;
+			try {
+				o = f.get();
+				centroids.addAll(o);
+			} catch (InterruptedException e) {
 
-				})).get();
-
-			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
 
-		} else {
-			while (vecs.hasNext()) {
-				redFunc(vecs.next(), lshfunc, noise, labels, centroids);
-			}
 		}
 
-		// while (vecs.hasNext())
-		// {
-		//
-		// long[] hash = lshfunc.lshHashRadius(vec, noise);
-		// labels.add(-1l);
-		// //radius probe around the vector
-		// for (Centroid cent : centroids) {
-		// for (long h : hash)
-		// {
-		// if (cent.ids.contains(h)) {
-		// cent.updateVec(vec);
-		// this.labels.set(labels.size()-1,cent.id);
-		// }
-		// }
-		// }
-		// vec = vecs.next();
-		//
-		// }
+		executor.shutdown();
+		
 
 		Clusterer offlineclusterer = so.getOfflineClusterer();
 		offlineclusterer.setData(centroids);
@@ -232,24 +253,24 @@ public class RPHashSimple implements Clusterer {
 	private List<Centroid> centroids = null;
 	private RPHashObject so;
 
-	public RPHashSimple(List<float[]> data, int k) {
+	public RPHashSimpleParallel(List<float[]> data, int k) {
 		so = new SimpleArrayReader(data, k);
 	}
 
 	int threads = 1;
 
-	public RPHashSimple(List<float[]> data, int k, int processors) {
+	public RPHashSimpleParallel(List<float[]> data, int k, int processors) {
 		// System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism",String.valueOf(processors));
 		threads = processors;
 		so = new SimpleArrayReader(data, k);
 		so.setParallel(true);
 	}
 
-	public RPHashSimple(List<float[]> data, int k, int times, int rseed) {
+	public RPHashSimpleParallel(List<float[]> data, int k, int times, int rseed) {
 		so = new SimpleArrayReader(data, k);
 	}
 
-	public RPHashSimple(RPHashObject so) {
+	public RPHashSimpleParallel(RPHashObject so) {
 		this.so = so;
 	}
 
@@ -293,7 +314,8 @@ public class RPHashSimple implements Clusterer {
 			for (int i = 0; i < count; i++) {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
-				RPHashSimple rphit = new RPHashSimple(o);
+				RPHashSimpleParallel rphit = new RPHashSimpleParallel(o);
+				rphit.threads = 4;
 				o.setDecoderType(new Spherical(32, 4, 1));
 				// o.setDimparameter(31);
 				o.setOfflineClusterer(new KMeans2());

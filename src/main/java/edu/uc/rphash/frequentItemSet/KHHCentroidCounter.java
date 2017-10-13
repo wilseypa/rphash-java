@@ -53,8 +53,8 @@ public class KHHCentroidCounter implements Countable {
 	public KHHCentroidCounter(int k) {
 		this.origk = k;
 		this.k = (int) (k * Math.log(k));
-		double epsOfTotalCount = .0005;
-		double confidence = .97;
+		double epsOfTotalCount = .05;
+		double confidence = .95;
 		int seed = (int) System.currentTimeMillis();
 		this.decayRate = null;
 		count = 0;
@@ -70,8 +70,8 @@ public class KHHCentroidCounter implements Countable {
 		this.origk = k;
 		this.k = (int) (k * Math.log(k));
 		this.decayRate = decayRate;
-		double epsOfTotalCount = .00001;
-		double confidence = .99;
+		double epsOfTotalCount = .05;
+		double confidence = .95;
 		int seed = (int) System.currentTimeMillis();
 		count = 0;
 		countlist = new ConcurrentHashMap<>();

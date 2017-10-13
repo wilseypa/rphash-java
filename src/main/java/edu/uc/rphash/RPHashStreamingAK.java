@@ -190,4 +190,9 @@ public class RPHashStreamingAK implements StreamClusterer {
 		return false;
 	}
 
+	@Override
+	public int getProcessors() {
+		return 1;
+	}
+
 }

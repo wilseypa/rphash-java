@@ -10,10 +10,11 @@ import edu.uc.rphash.util.VectorUtil;
 public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 
 	int setsize;
-	HashMap<E,Integer> data = new HashMap<E,Integer>();
+	HashMap<E,Integer> data ;
 	ArrayList<E> ret ;
 	ArrayList<Long> counts ;
 	public SimpleFrequentItemSet(int i) {
+		data = new HashMap<E,Integer>();
 		this.setsize=i;
 		ret=null ;
 		counts=null ;
@@ -21,7 +22,8 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 	}
 
 	@Override
-	public boolean add(Long e) {
+	public synchronized boolean add(Long e) {
+		if(data==null)data = new HashMap<E,Integer>();
 		if(data.containsKey(e))
 		{
 			data.put((E)e,data.get(e)+1);
@@ -30,12 +32,12 @@ public class SimpleFrequentItemSet<E> implements ItemSet<E> {
 			data.put((E)e,1);
 		}
 		return true;
-		
 	}
 	
 	
 	
-	public boolean add(E e) {
+	public synchronized boolean add(E e) {
+		if(data==null)data = new HashMap<E,Integer>();
 		if(data.containsKey(e))
 		{
 			data.put(e,data.get(e)+1);

@@ -519,16 +519,30 @@ public class VectorUtil {
 
 		List<float[]> M = null;
 		try {
-
-			int m = in.readInt();
-			int n = in.readInt();
+			byte[] b = new byte[4];
+			in.read(b);
+			int m = java.nio.ByteBuffer.wrap(b)
+					.order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt();
+			in.read(b);
+			int n = java.nio.ByteBuffer.wrap(b)
+					.order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt();
 
 			M = new ArrayList<float[]>(m);
 			for (int i = 0; i < m; i++) {
 				float[] vec = new float[n];
-				for (int j = 0; j < n; j++)
-					vec[j] = in.readFloat();
+				byte[] line = new byte[4 * n];
+				in.read(line);
+				for (int j = 0; j < n; j++) {
+					b[0] = line[j * 4];
+					b[1] = line[j * 4 + 1];
+					b[2] = line[j * 4 + 2];
+					b[3] = line[j * 4 + 3];
+					vec[j] = java.nio.ByteBuffer.wrap(b)
+							.order(java.nio.ByteOrder.LITTLE_ENDIAN).getFloat();
+				}
+//				if(i%100000==0)System.out.println(i/(float)m);
 				M.add(vec);
+
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -543,63 +557,65 @@ public class VectorUtil {
 		in.close();
 		return M;
 	}
-	
+
 	public static List<float[]> readW2VFile(File f)
 			throws FileNotFoundException, IOException {
 		DataInputStream in;
-		if(f.getName().endsWith(".gz")){
-			in = new DataInputStream(new GZIPInputStream(new FileInputStream(f)));
-		}else{
+		if (f.getName().endsWith(".gz")) {
+			in = new DataInputStream(
+					new GZIPInputStream(new FileInputStream(f)));
+		} else {
 			in = new DataInputStream(new FileInputStream(f));
 		}
 
 		List<float[]> M = null;
 		try {
-			
-			char c = (char)in.readUnsignedByte();
+
+			char c = (char) in.readUnsignedByte();
 			String strm = "";
-			while( c!=' ' ){
-				strm+=c;
-				c = (char)in.readUnsignedByte();
+			while (c != ' ') {
+				strm += c;
+				c = (char) in.readUnsignedByte();
 			}
-			
-			c = (char)in.readUnsignedByte();
+
+			c = (char) in.readUnsignedByte();
 			String strn = "";
-			while( c!='\n' ){
-				strn+=c;
-				c = (char)in.readUnsignedByte();
+			while (c != '\n') {
+				strn += c;
+				c = (char) in.readUnsignedByte();
 			}
-			
+
 			int m = Integer.parseInt(strm);
 			int n = Integer.parseInt(strn);
 			System.out.println(strm + "x" + strn + c);
-			
+
 			M = new ArrayList<float[]>(m);
 			for (int i = 0; i < m; i++) {
-				
-				//the word header, uncomment if we care about the word
-				c = (char)in.readUnsignedByte();
-				//strm = "";
-				while( c!=' ' ){
-					//strm+=c;
-					c = (char)in.readUnsignedByte();
+
+				// the word header, uncomment if we care about the word
+				c = (char) in.readUnsignedByte();
+				// strm = "";
+				while (c != ' ') {
+					// strm+=c;
+					c = (char) in.readUnsignedByte();
 				}
 
-//				if(i%((int)(m/1000.0))==0)
-//					System.out.printf("%.2f%% \n",100*(i/(float)m ));
+				// if(i%((int)(m/1000.0))==0)
+				// System.out.printf("%.2f%% \n",100*(i/(float)m ));
 
 				float[] vec = new float[n];
-				
-				for (int j = 0; j < n; j++){
+
+				for (int j = 0; j < n; j++) {
 					byte[] buffer = new byte[4];
 					in.read(buffer);
-					vec[j] = Float.intBitsToFloat((buffer[3]<<24 )+(buffer[2]<<16)+(buffer[1] << 8)+buffer[0]);
+					vec[j] = Float.intBitsToFloat((buffer[3] << 24)
+							+ (buffer[2] << 16) + (buffer[1] << 8) + buffer[0]);
 				}
-				
+
 				M.add(vec);
-				
-				//the newline
-				c = (char)in.readUnsignedByte();
+
+				// the newline
+				c = (char) in.readUnsignedByte();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -614,10 +630,12 @@ public class VectorUtil {
 		in.close();
 		return M;
 	}
-	
-	public static void main(String[] args) throws FileNotFoundException, IOException{
-		readW2VFile(new File("/home/lee/Desktop/wikipedia-pubmed-and-PMC-w2v.bin"));
-		}
+
+	public static void main(String[] args) throws FileNotFoundException,
+			IOException {
+		readW2VFile(new File(
+				"/home/lee/Desktop/wikipedia-pubmed-and-PMC-w2v.bin"));
+	}
 
 	/**
 	 * Read a simple matrix format of row[newline] col[newline]
@@ -630,14 +648,13 @@ public class VectorUtil {
 	 */
 	public static List<float[]> readFile(String infile, boolean raw)
 			throws FileNotFoundException, IOException {
-		
-		//support word to vec binary formats
+
+		// support word to vec binary formats
 		if (infile.endsWith("bin.gz") || infile.endsWith("bin"))
 			return readW2VFile(new File(infile));
-		
+
 		InputStream freader;
-		
-		
+
 		if (infile.endsWith("gz"))
 			freader = new GZIPInputStream(new FileInputStream(infile));
 		else

@@ -2,11 +2,13 @@ package edu.uc.rphash.tests;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.RPHashMultiProj;
 import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
+import edu.uc.rphash.tests.clusterers.StreamingKmeans2;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -60,17 +62,17 @@ public class testStreamingRPHash {
 	}
 
 	public static void generateAndStream() throws InterruptedException {
-
+		Random r = new Random();
 		int k = 10;
-		int d = 5000;
+		int d = 1000;
 		float var = 1f;
-		int interval = 1000;
+		int interval = 10000;
 		Runtime rt = Runtime.getRuntime();
 
 		GenerateStreamData gen1 = new GenerateStreamData(k, d, var, 11331313);
 		GenerateStreamData noise = new GenerateStreamData(1, d, var*10, 11331313);
 		RPHashStream rphit = new RPHashStream(k, gen1,rt.availableProcessors());
-		StreamingKmeans skmi = new StreamingKmeans(k, gen1);
+		StreamingKmeans2 skmi = new StreamingKmeans2(k, gen1,rt.availableProcessors());
 		System.out.printf("\tStreamingRPHash\t\t\tStreamingKmeans\t\tReal\n");
 		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\t\tTime\tWCSSE\t\tWCSSE\n");
 		
@@ -83,7 +85,8 @@ public class testStreamingRPHash {
 				float[] vec = gen1.generateNext();
 				vecsAndNoiseInThisRound.add(vec);
 				justvecsInThisRound.add(vec);
-				vecsAndNoiseInThisRound.add(noise.generateNext());
+				if(r.nextInt(10)==1)
+					vecsAndNoiseInThisRound.add(noise.generateNext());
 			}
 			
 			timestart = System.nanoTime();
@@ -95,8 +98,6 @@ public class testStreamingRPHash {
 
 			rt.gc();
 			long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
-
-			prettyPrint(cents);
 			
 			double wcsse = StatTests.WCSSECentroidsFloat(cents, justvecsInThisRound);
 			double realwcsse = StatTests.WCSSE(gen1.medoids, justvecsInThisRound);

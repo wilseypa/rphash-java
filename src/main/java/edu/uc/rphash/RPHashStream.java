@@ -19,6 +19,7 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.MurmurHash;
 import edu.uc.rphash.tests.StatTests;
+import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 
@@ -33,20 +34,29 @@ public class RPHashStream implements StreamClusterer {
 	private final int processors;
 	private int concurrentRuns;
 
+	boolean initialized=false;
+	@Override
 	public int getProcessors() {
 		return processors;
 	}
 
 	@Override
 	public long addVectorOnlineStep(final float[] vec) {
-		
+		if(!initialized){
+			System.out.println("Not initialized!");
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
 		for(int i = 0;i<this.concurrentRuns;i++){
 			//execute as future
 			if (so.getParallel()) {
 				VectorLevelConcurrency r = new VectorLevelConcurrency(vec,
 						lshfuncs.get(i),is.get(i),so);
 				executor.execute(r);
-				
 			}//execute sequentially
 			else
 			{
@@ -55,13 +65,12 @@ public class RPHashStream implements StreamClusterer {
 		}
 		//there will always be at least 1 concurrent run
 		return is.get(0).count;
-		
 	}
 
 	public void init() {
 //		System.out.println("init rphash machine");
 		Random r = new Random(so.getRandomSeed());
-		this.vartracker = new StatTests(.01f);
+//		this.vartracker = new StatTests(.01f);
 		
 		
 		if(this.concurrentRuns<1)this.concurrentRuns=1;
@@ -69,11 +78,9 @@ public class RPHashStream implements StreamClusterer {
 		int k = (int) (so.getk()*Math.log(so.getk()));
 		
 		// initialize our counter
-		float decayrate = so.getDecayRate();// 1f;// bottom number is window
-											// size
+//		float decayrate = so.getDecayRate();// 1f bottom number is window
 		is = new ArrayList<>(concurrentRuns);
 		lshfuncs = new ArrayList<LSH[]>(concurrentRuns);
-		
 		for(int i = 0;i<this.concurrentRuns;i++){
 			
 			if(so.getDecayRate()==0.0){
@@ -88,14 +95,12 @@ public class RPHashStream implements StreamClusterer {
 			dec.setCounter(is.get(i));
 			HashAlgorithm hal = new MurmurHash(so.getHashmod());
 			// create projection matrices add to LSH Device
-	
 				for (int projidx = 0; projidx < projections; projidx++) {
 					Projector p = so.getProjectionType();
 					p.setOrigDim(so.getdim());
 					p.setProjectedDim(dec.getDimensionality());
 					p.setRandomSeed(r.nextLong());
 					p.init();
-					
 					
 					List<float[]> noise = LSH.genNoiseTable(dec.getDimensionality(),
 							so.getNumBlur(), r, dec.getErrorRadius()
@@ -104,6 +109,7 @@ public class RPHashStream implements StreamClusterer {
 				}
 			lshfuncs.add(lshfunc);
 		}
+		initialized = true;
 	}
 
 	public RPHashStream(int k, ClusterGenerator c) {
@@ -138,12 +144,14 @@ public class RPHashStream implements StreamClusterer {
 
 	public RPHashStream(int k, GenerateStreamData c, int processors) {
 		so = new SimpleArrayReader(c, k);
+		init();
 		if (so.getParallel())
 			this.processors = processors;
 		else
 			this.processors = 1;
 		executor = Executors.newFixedThreadPool(this.processors);
-		init();
+		
+		
 	}
 
 	@Override
@@ -180,17 +188,20 @@ public class RPHashStream implements StreamClusterer {
 			cents.addAll(is.get(i).getTop());
 		}
 		
+		;
 //		counts = counts.subList(0, i);
-		Clusterer offlineclusterer = so.getOfflineClusterer();
+		Clusterer offlineclusterer = new KMeansPlusPlus();
 		offlineclusterer.setData(cents);
 		offlineclusterer.setK(so.getk());
 		cents = offlineclusterer.getCentroids();
 		
-		while(centroids.size()<so.getk() && cents.size()>so.getk())cents = offlineclusterer.getCentroids();
-		if(cents.size()<so.getk())System.out.println("WARNING: Failed to partition dataset into K clusters");
 		
 		
-		return bestcentroids;
+//		while(centroids.size()<so.getk() && cents.size()>so.getk())cents = offlineclusterer.getCentroids();
+//		if(cents.size()<so.getk())System.out.println("WARNING: Failed to partition dataset into K clusters");
+		
+		
+		return cents;
 	}
 
 	public void run() {
@@ -248,7 +259,8 @@ public class RPHashStream implements StreamClusterer {
 		if (so.getParallel()) {
 			executor.shutdown();
 			try {
-				executor.awaitTermination(10, TimeUnit.SECONDS);
+//				System.out.println("Shutting Down");
+				executor.awaitTermination(1200, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

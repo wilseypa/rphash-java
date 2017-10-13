@@ -114,10 +114,14 @@ public class DBFriendlyProjection implements Projector {
 		float scale = (float) Math.sqrt(3.0f / ((float) t));
 		for (int i = 0; i < t; i++) {
 			sum = 0.0f;
-			for (int col : M[i])
-				sum -= v[col];
-			for (int col : P[i])
-				sum += v[col];
+			for(int j=0;j<M[i].length;j++)
+				sum -= v[M[i][j]];
+//			for (int col : M[i])
+//				sum -= v[col];
+			for(int j=0;j<M[i].length;j++)
+				sum += v[M[i][j]];
+//			for (int col : P[i])
+//				sum += v[col];
 			r[i] = sum * scale;
 		}
 		return r;

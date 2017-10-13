@@ -13,8 +13,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
+import edu.uc.rphash.RPHashSimple;
+import edu.uc.rphash.RPHashStream;
 import edu.uc.rphash.StreamClusterer;
 import edu.uc.rphash.Readers.RPHashObject;
+import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.generators.ClusterGenerator;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
@@ -45,7 +48,7 @@ public class StreamingKmeans implements StreamClusterer {
 	public boolean parallel = false;
 	public ExecutorService executor;
 	private RPHashObject so;
-	final int processors;
+	int processors;
 	List<float[]> data;
 	List<float[]> centroids;
 	
@@ -146,159 +149,6 @@ public class StreamingKmeans implements StreamClusterer {
 		}
 	}
 
-	public StreamingKmeans(List<float[]> X, int numClusters) {
-		this.data = X;
-		centroids = null;
-		// Create initial data structures.
-		facilities = Collections
-				.synchronizedList(new ArrayList<CentroidCluster>());
-		idCounter = new AtomicInteger(1);
-		firstKPoints = new ArrayList<float[]>(numClusters);
-
-		this.alpha = DEFAULT_ALPHA;
-		this.cofl = DEFAULT_COFL;
-		this.kofl = DEFAULT_KOFL;
-
-		if (parallel)
-			this.processors = Runtime.getRuntime().availableProcessors();
-		else
-			this.processors = 1;
-		executor = Executors.newFixedThreadPool(processors);
-
-		// Save the constants.
-		this.numClusters = numClusters;
-
-		this.beta = 2 * alpha * alpha * cofl + 2 * alpha;
-		this.gamma = Math.max(4 * alpha * alpha * alpha * cofl * cofl + 2
-				* alpha * alpha * cofl, beta * kofl + 1);
-		this.logNumPoints = (float) (Math.log(X.size()) / Math.log(2));
-
-		// Precompute the thresholds, which are constants as well.
-		costThreshold = gamma;
-		facilityThreshold = (1 + logNumPoints) * numClusters;
-
-		LCost = 1;
-		facilityCost = LCost / (numClusters * (1 + logNumPoints));
-		totalCost = 0;
-
-	}
-
-	/**
-	 * Creates a new instance of online KMeans clustering.
-	 */
-	public StreamingKmeans(int numClusters, float numPoints, List<float[]> X) {
-
-		this.data = X;
-		centroids = null;
-		// Create initial data structures.
-		facilities = Collections
-				.synchronizedList(new ArrayList<CentroidCluster>());
-		idCounter = new AtomicInteger(1);
-		firstKPoints = new ArrayList<float[]>(numClusters);
-
-		this.alpha = DEFAULT_ALPHA;
-		this.cofl = DEFAULT_COFL;
-		this.kofl = DEFAULT_KOFL;
-
-		if (parallel)
-			this.processors = Runtime.getRuntime().availableProcessors();
-		else
-			this.processors = 1;
-		executor = Executors.newFixedThreadPool(processors);
-
-		// Save the constants.
-		this.numClusters = numClusters;
-
-		this.beta = 2 * alpha * alpha * cofl + 2 * alpha;
-		this.gamma = Math.max(4 * alpha * alpha * alpha * cofl * cofl + 2
-				* alpha * alpha * cofl, beta * kofl + 1);
-		this.logNumPoints = (float) (Math.log(numPoints) / Math.log(2));
-
-		// Precompute the thresholds, which are constants as well.
-		costThreshold = gamma;
-		facilityThreshold = (1 + logNumPoints) * numClusters;
-
-		LCost = 1;
-		facilityCost = LCost / (numClusters * (1 + logNumPoints));
-		totalCost = 0;
-	}
-
-	/**
-	 * Creates a new instance of online KMeans clustering.
-	 */
-	public StreamingKmeans(int numClusters, ClusterGenerator gen) {
-		centroids = null;
-		// Create initial data structures.
-		facilities = Collections
-				.synchronizedList(new ArrayList<CentroidCluster>());
-		idCounter = new AtomicInteger(1);
-		firstKPoints = new ArrayList<float[]>(numClusters);
-		int numPoints = 50000;
-		this.alpha = DEFAULT_ALPHA;
-		this.cofl = DEFAULT_COFL;
-		this.kofl = DEFAULT_KOFL;
-
-		if (parallel)
-			this.processors = Runtime.getRuntime().availableProcessors();
-		else
-			this.processors = 1;
-		executor = Executors.newFixedThreadPool(processors);
-
-		// Save the constants.
-		this.numClusters = numClusters;
-
-		this.beta = 2 * alpha * alpha * cofl + 2 * alpha;
-		this.gamma = Math.max(4 * alpha * alpha * alpha * cofl * cofl + 2
-				* alpha * alpha * cofl, beta * kofl + 1);
-		this.logNumPoints = (float) (Math.log(numPoints) / Math.log(2));
-
-		// Precompute the thresholds, which are constants as well.
-		costThreshold = gamma;
-		facilityThreshold = (1 + logNumPoints) * numClusters;
-
-		LCost = 1;
-		facilityCost = LCost / (numClusters * (1 + logNumPoints));
-		totalCost = 0;
-
-	}
-
-	/**
-	 * Creates a new instance of online KMeans clustering.
-	 */
-	public StreamingKmeans(int numClusters, ClusterGenerator gen, int processors) {
-		centroids = null;
-		// Create initial data structures.
-		facilities = Collections
-				.synchronizedList(new ArrayList<CentroidCluster>());
-		idCounter = new AtomicInteger(1);
-		firstKPoints = new ArrayList<float[]>(numClusters);
-		int numPoints = 2500000;
-		this.alpha = DEFAULT_ALPHA;
-		this.cofl = DEFAULT_COFL;
-		this.kofl = DEFAULT_KOFL;
-
-		if (parallel)
-			this.processors = processors;
-		else
-			this.processors = 1;
-		executor = Executors.newFixedThreadPool(this.processors);
-
-		// Save the constants.
-		this.numClusters = numClusters;
-
-		this.beta = 2 * alpha * alpha * cofl + 2 * alpha;
-		this.gamma = Math.max(4 * alpha * alpha * alpha * cofl * cofl + 2
-				* alpha * alpha * cofl, beta * kofl + 1);
-		this.logNumPoints = (float) (Math.log(numPoints) / Math.log(2));
-
-		// Precompute the thresholds, which are constants as well.
-		costThreshold = gamma;
-		facilityThreshold = (1 + logNumPoints) * numClusters;
-
-		LCost = 1;
-		facilityCost = LCost / (numClusters * (1 + logNumPoints));
-		totalCost = 0;
-	}
 
 	public StreamingKmeans(RPHashObject streamObject) {
 
@@ -338,6 +188,50 @@ public class StreamingKmeans implements StreamClusterer {
 		facilityCost = LCost / (numClusters * (1 + logNumPoints));
 		totalCost = 0;
 	}
+	
+	
+	public StreamingKmeans(int k, GenerateStreamData c, int processors) {
+		so = new SimpleArrayReader(c, k);
+		
+		if (processors>1){
+			so.setParallel(true);
+			this.parallel = true;
+			this.processors = processors;
+		}
+		else{
+			this.processors = 1;
+			so.setParallel(false);
+			this.parallel = false;
+		}
+		executor = Executors.newFixedThreadPool(this.processors);
+		centroids = null;
+		// Create initial data structures.
+		facilities = Collections
+				.synchronizedList(new ArrayList<CentroidCluster>());
+		idCounter = new AtomicInteger(1);
+		firstKPoints = new ArrayList<float[]>(so.getk());
+
+		this.alpha = DEFAULT_ALPHA;
+		this.cofl = DEFAULT_COFL;
+		this.kofl = DEFAULT_KOFL;
+
+		// Save the constants.
+		this.numClusters = so.getk();
+
+		this.beta = 2 * alpha * alpha * cofl + 2 * alpha;
+		this.gamma = Math.max(4 * alpha * alpha * alpha * cofl * cofl + 2
+				* alpha * alpha * cofl, beta * kofl + 1);
+		this.logNumPoints = 30;
+
+		// Precompute the thresholds, which are constants as well.
+		costThreshold = gamma;
+		facilityThreshold = (1 + logNumPoints) * numClusters;
+
+		LCost = 1;
+		facilityCost = LCost / (numClusters * (1 + logNumPoints));
+		totalCost = 0;
+	}
+
 
 	public void run() {
 		for (float[] x : data)
@@ -360,6 +254,8 @@ public class StreamingKmeans implements StreamClusterer {
 		for (CentroidCluster c1 : getClusters())
 			ret.add(c1.centroid());
 
+		//our default is agglomerative, but kmpp is more akin to skm.
+		so.setOfflineClusterer(new KMeansPlusPlus());
 		so.getOfflineClusterer().setRawData(ret);
 		so.getOfflineClusterer().setK(numClusters);
 		return so.getOfflineClusterer().getCentroids();
@@ -504,10 +400,10 @@ public class StreamingKmeans implements StreamClusterer {
 				// data points to the new cluster.
 				for (CentroidCluster cluster : clusters) {
 					int assignment = addDataPoint(cluster.centroid(), 0);
-					synchronized (facilities) {
+					//synchronized (facilities) {
 						CentroidCluster newCluster = facilities.get(assignment);
 						newCluster.dataPointIds().or(cluster.dataPointIds());
-					}
+					//}
 				}
 			}
 			this.id = id;
@@ -517,12 +413,12 @@ public class StreamingKmeans implements StreamClusterer {
 	}
 
 	public long addVectorOnlineStep(float[] value) {
-
-		// if (parallel) {
-		// StreamingkmThread r = new StreamingkmThread(value);
-		// executor.execute(r);
-		// return r.id;
-		// }
+		
+//		 if (this.parallel) {
+//			 StreamingkmThread r = new StreamingkmThread(value);
+//			 executor.execute(r);
+//			 return -1;
+//		 }
 
 		// Get the id of the new data point.
 		int id = idCounter.getAndAdd(1);
@@ -572,38 +468,39 @@ public class StreamingKmeans implements StreamClusterer {
 		int bestClusterId = 0;
 		CentroidCluster bestCluster = null;
 		int i = 0;
-		synchronized (facilities) {
-			Iterator<CentroidCluster> it = facilities.iterator();
-			while (it.hasNext()) {
-				CentroidCluster cluster = it.next();
-				float cost = cluster.compareWithVector(value);
-				// Reverse the scale so that a high similarity corresponds to a
-				// low cost and a low similarity corresponds to a high cost, but
-				// is still from a 0 to 1 range.
-				cost = -1 * cost + 1;
-				if (cost < bestCost) {
-					bestCost = cost;
-					bestCluster = cluster;
-					bestClusterId = i;
-				}
-				++i;
+		Iterator<CentroidCluster> it = facilities.iterator();
+		while (it.hasNext()) {
+			CentroidCluster cluster ;
+
+			cluster = it.next();
+			float cost = cluster.compareWithVector(value);
+			// Reverse the scale so that a high similarity corresponds to a
+			// low cost and a low similarity corresponds to a high cost, but
+			// is still from a 0 to 1 range.
+			cost = -1 * cost + 1;
+			if (cost < bestCost) {
+				bestCost = cost;
+				bestCluster = cluster;
+				bestClusterId = i;
 			}
+			++i;
 		}
+		
 		// Determine whether or not a new facility, or cluster, should be
 		// generated for this data point. This based on the total cost of
 		// serving this data point and the cost of creating a new
 		// facility.
 		float makeFacilityProb = Math.min(bestCost / facilityCost, 1);
 		boolean makeFacility = facilities.size() == 0
-				|| Math.random() < makeFacilityProb;
+				|| Math.random() < makeFacilityProb || facilities.size()<this.so.getk();
 
 		if (makeFacility) {
 
 			CentroidCluster newCluster = new CentroidCluster(value);
 			newCluster.addVector(value, (id > 0) ? id : -1);
-			synchronized (facilities) {
-				facilities.add(newCluster);
-			}
+			
+			facilities.add(newCluster);
+			
 			bestClusterId = facilities.size() - 1;
 		} else {
 			bestCluster.addVector(value, (id > 0) ? id : -1);
@@ -636,6 +533,17 @@ public class StreamingKmeans implements StreamClusterer {
 
 	@Override
 	public List<Centroid> getCentroidsOfflineStep() {
+		
+		if (this.parallel) {
+			executor.shutdown();
+			try {
+				executor.awaitTermination(10, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			executor = Executors.newFixedThreadPool(getProcessors());
+		}
+		
 		List<Centroid> ret = new ArrayList<>();
 
 		synchronized (facilities) {
@@ -649,70 +557,83 @@ public class StreamingKmeans implements StreamClusterer {
 		Clusterer clusterer = so.getOfflineClusterer();
 		clusterer.setData(ret);
 		clusterer.setK(numClusters);
+		
+		
+		
 		return clusterer.getCentroids();
 
 	}
 
 	public static void main(String[] args) throws Exception {
 
-		int k = 10;
-		int d = 5000;
+		int k = 20;
+		int d = 10000;
+		int interval = 100000;
 		float var = 1f;
 
 		int processors = Runtime.getRuntime().availableProcessors();
-		if (args.length > 0)
-			processors = Integer.parseInt(args[0]);
+		
+		if(args.length==0){
+			System.out.println("USAGE: java -jar RPHash.jar [skm,rphash] \n\tOptional Arguments: #threads k n_interval dim");
+			System.exit(2);
+		}
+		
+		boolean rphashflag = true;
+		if(String.valueOf(args[0]).equalsIgnoreCase("skm"))rphashflag = false;
+		
+		if (args.length > 1)
+			processors = Integer.parseInt(args[1]);
+		if (args.length > 2)
+			k = Integer.parseInt(args[2]);
+		if (args.length > 3)
+			interval = Integer.parseInt(args[3]);
+		if (args.length > 4)
+			d = Integer.parseInt(args[4]);
 
 		Runtime rt = Runtime.getRuntime();
-		GenerateStreamData gen = new GenerateStreamData(k, d, var, 1133131);
-		StreamingKmeans rphit = new StreamingKmeans(k, gen, processors);
-		if (processors == 1)
-			rphit.parallel = false;
-
+		GenerateStreamData gen = new GenerateStreamData(k, d, var, 1133131,rt.availableProcessors());
+		
+		StreamClusterer rphit;
+		if(rphashflag){
+			rphit = new RPHashStream(k,gen,processors);
+			System.out
+			.printf("Running Streaming RPHash on %d processors, d=%d,k=%d,n=%d,var=%.0f\n",
+					rphit.getProcessors(), d, k, interval, var);
+		}
+		else{
+			rphit = new StreamingKmeans(k,gen,processors);
+			System.out
+			.printf("Running Streaming Kmeans on %d processors, d=%d,k=%d,n=%d,var=%.0f\n",
+					rphit.getProcessors(), d, k, interval, var);
+		}
+		
 		ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
-		int interval = 50000;
-		System.out
-				.printf("Running Streaming Kmeans on %d processors, d=%d,k=%d,n=%d,var=%.0f\n",
-						rphit.getProcessors(), d, k, interval, var);
-		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\tCentSSE\n");
+		
+		System.out.printf("Vecs\tMem(KB)\tTime\tWCSSE\n");
 		long timestart = System.nanoTime();
-		for (int i = 0; i < 2500000; i++) {
+		for (int i = 0; i < interval*10; i++) {
 			vecsInThisRound.add(gen.generateNext());
 			if (i % interval == interval - 1) {
 
 				timestart = System.nanoTime();
-				for (float[] f : vecsInThisRound)
+				for (float[] f : vecsInThisRound){
 					rphit.addVectorOnlineStep(f);
-
-				if (rphit.parallel) {
-					rphit.executor.shutdown();
-					rphit.executor.awaitTermination(2, TimeUnit.MINUTES);
-					rphit.executor = Executors.newFixedThreadPool(rphit
-							.getProcessors());
 				}
-
+				
 				List<Centroid> cents = rphit.getCentroidsOfflineStep();
 				long time = System.nanoTime() - timestart;
-
 				rt.gc();
 				long usedkB = (rt.totalMemory() - rt.freeMemory()) / 1024;
-
-//				List<float[]> aligned = VectorUtil.alignCentroids(cents,
-//						gen.getMedoids());
-//				double wcsse = StatTests.WCSSE(cents, vecsInThisRound);
-				double wcsse = StatTests.WCSSECentroidsFloat(cents, gen.medoids);
-
+				double wcsse = StatTests.WCSSECentroidsFloat(cents, vecsInThisRound);
 				vecsInThisRound = new ArrayList<float[]>();
-				// recreate vectors at execution time to check average
-
-				System.out.printf("%d\t%d\t%.4f\t%.0f\n", i, usedkB,
+				System.out.printf("%d\t%d\t%.4f\t%.4f\n", i, usedkB,
 						time / 1000000000f, wcsse);
-
 			}
 		}
 	}
 
-	private int getProcessors() {
+	@Override
+	public int getProcessors() {
 		return processors;
 	}
 

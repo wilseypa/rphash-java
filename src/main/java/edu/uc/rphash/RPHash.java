@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+
+
+
 //import org.rosuda.JRI.Rengine;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -33,10 +36,12 @@ import edu.uc.rphash.projections.SVDProjection;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.AdaptiveMeanShift;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
+import edu.uc.rphash.tests.clusterers.DummyClusterer;
 import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
 import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
+import edu.uc.rphash.tests.clusterers.StreamingKmeans2;
 import edu.uc.rphash.util.VectorUtil;
 
 //import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
@@ -44,7 +49,7 @@ import edu.uc.rphash.util.VectorUtil;
 public class RPHash {
 
 	static String[] clusteringmethods = { "simple", "streaming", "multiproj", 
-		"kmeans", "pkmeans","kmeansplusplus", "streamingkmeans", "none", "adaptive" };
+		"kmeans", "pkmeans","kmeansplusplus", "streamingkmeans", "adaptive","dummy" };
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
 		"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "none" };
 	static String[] projectionmethods = { "dbf", "fjlt", "rp", "svd", "noproj" };
@@ -59,6 +64,7 @@ public class RPHash {
 	public static void main(String[] args) throws NumberFormatException,
 			IOException, InterruptedException {
 
+		
 		if (args.length < 3) {
 			System.out
 					.print("Usage: rphash InputFile k OutputFile [CLUSTERING_METHOD ...][OPTIONAL_ARG=value ...]\n");
@@ -91,6 +97,7 @@ public class RPHash {
 		}
 
 		List<String> unmatchedkeywords = new ArrayList<>();
+		
 		for (int i = 3; i < args.length; i++) {
 			args[i] = args[i].toLowerCase();
 			String arg = args[i];
@@ -120,13 +127,16 @@ public class RPHash {
 		int k = Integer.parseInt(args[1]);
 		String outputFile = args[2];
 
-		boolean raw = false;
+		
+		List<String> truncatedArgs = new ArrayList<String>();
+		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
+		boolean raw = Boolean.parseBoolean(taggedArgs.get("raw"));
 		int bestofruns = 1;
 
 		// Rengine re = Rengine.getMainEngine();
 		// if(re == null)
 		// re = new Rengine(new String[] {"--no-save"}, false, null);
-
+		// basic run configuration
 		if (args.length == 3) {
 			data = VectorUtil.readFile(filename, raw);
 			RPHashSimple clusterer = new RPHashSimple(data, k);
@@ -135,30 +145,27 @@ public class RPHash {
 					clusterer.getCentroids(), raw);
 		}
 
-		List<String> truncatedArgs = new ArrayList<String>();
-		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
+		List<Clusterer> runs;
 
 		//non streaming data
 		if (!taggedArgs.containsKey("streamduration")){
 			data = VectorUtil.readFile(filename, raw);
 		}
-
-		List<Clusterer> runs;
-		if (taggedArgs.containsKey("raw")) {
-			raw = Boolean.getBoolean(taggedArgs.get("raw"));
-			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, true);
-		} else {
-			runs = runConfigs(truncatedArgs, taggedArgs, data, filename, false);
-		}
-
+		
 		if (taggedArgs.containsKey("runs")) {
 			bestofruns = Integer.parseInt(taggedArgs.get("runs"));
 		}
 
+		StreamObject so = new StreamObject(filename, k, raw);
+		
+		RPHashObject o = new SimpleArrayReader(data, k);	
+		
+		runs = runConfigs(truncatedArgs, taggedArgs,o,so);
+		
 		if (taggedArgs.containsKey("streamduration")) {
 			runStreamForSetOfClusterers(runs, outputFile,
 					Integer.parseInt(taggedArgs.get("streamduration")), k, raw,
-					bestofruns);
+					bestofruns, filename,so);
 		} else {
 			// run remaining, read file into ram
 			runner(runs, outputFile, raw, bestofruns, data);
@@ -326,21 +333,24 @@ public class RPHash {
 							+ "} \n cpu time \t wcsse \t\t\t mem(kb)\t\tcluster_count\n");
 
 			rt.gc();
-			Thread.sleep(10);
+			Thread.sleep(1000);
 			rt.gc();
 
 			long usedkB = (rt.totalMemory() - rt.freeMemory());
 			long startTime = System.nanoTime() + avgtimeToRead;
 			int i = 1;
+			//this will incur massive memory requrement and is for testing
 			ArrayList<float[]> vecsInThisRound = new ArrayList<float[]>();
 			int count = 0;
 			while (streamer.hasNext()) {
 
 				float[] nxt = streamer.next();
-				vecsInThisRound.add(nxt);
+				
+				if(streamDuration>0)vecsInThisRound.add(nxt);
+				
 				((StreamClusterer) clu).addVectorOnlineStep(nxt);
-
-				if (i % streamDuration == 0) {
+				//-1 for stream duration means do not stop
+				if (streamDuration>0 && i % streamDuration == 0) {
 					List<Centroid> cents = ((StreamClusterer) clu)
 							.getCentroidsOfflineStep();
 
@@ -358,22 +368,40 @@ public class RPHash {
 							+ "\t "
 							+ ((rt.totalMemory() - rt.freeMemory()) - usedkB)
 							/ 1024 + "\t\t\t" + cents.size());
+					
 					VectorUtil.writeCentroidsToFile(new File(outputFile
 							+ "_round" + new Integer(count).toString() + "."
 							+ ClusterHashName[ClusterHashName.length - 1]),
-							cents, raw);
+							cents, false);
 
 					startTime = System.nanoTime() + avgtimeToRead;
 				}
-				if (!streamer.hasNext()) {
-
-					((StreamClusterer) clu).shutdown();
-
-				}
 				i++;
 			}
-			// re.end();
+			if (!streamer.hasNext()) {
+				((StreamClusterer) clu).shutdown();
+
+			}
+			
+			long time = System.nanoTime() - startTime;
 			streamer.reset();
+			List<Centroid> cents = ((StreamClusterer) clu)
+					.getCentroidsOfflineStep();
+			
+			double wcsse = StatTests.WCSSECentroidsFloat(cents,streamer);
+
+			System.out.println( time / 1000000000f + "\t" + wcsse
+					+ "\t "
+					+ ((rt.totalMemory() - rt.freeMemory()) - usedkB)
+					/ 1024 + "\t\t\t" + cents.size());
+			
+			VectorUtil.writeCentroidsToFile(new File(outputFile
+					+ "_round" + new Integer(count).toString() + "."
+					+ ClusterHashName[ClusterHashName.length - 1]),
+					cents, false);
+
+
+			
 		}
 
 	}
@@ -393,32 +421,33 @@ public class RPHash {
 	 */
 	public static void runStreamForSetOfClusterers(List<Clusterer> runitems,
 			String outputFile, Integer streamDuration, int k, boolean raw,
-			int bestofruns) throws IOException, InterruptedException {
+			int bestofruns,String input, StreamObject so) throws IOException, InterruptedException {
 
 		Iterator<Clusterer> cluit = runitems.iterator();
 		// needs work, just use for both to be more accurate
 		long avgtimeToRead = 0;// computeAverageReadTime(streamDuration,f,streamDuration);
+
 		Runtime rt = Runtime.getRuntime();
 
 		while (cluit.hasNext()) {
 			Clusterer clu = cluit.next();
-
 			// due to the memoryless nature of stream clusterers
 			// all stream clusterers must run in multi clustering
 			// in parallel
 			clu.setMultiRun(bestofruns);
-
-			StreamObject streamer = (StreamObject) clu.getParam();
+//TODO second creation
+			//StreamObject streamer = new StreamObject(input, k, raw);//(StreamObject) clu.getParam();
+			
 			runStreamForAClusterer(outputFile, streamDuration, k, raw, clu,
-					avgtimeToRead, rt, streamer);
+					avgtimeToRead, rt, so);
 			cluit.remove();
 		}
 
 	}
 
 	public static List<Clusterer> runConfigs(List<String> untaggedArgs,
-			Map<String, String> taggedArgs, List<float[]> data, String f,
-			boolean raw/* , Rengine re */) throws IOException {
+			Map<String, String> taggedArgs
+			,RPHashObject o,StreamObject so) throws IOException {
 
 		List<Clusterer> runitems = new ArrayList<>();
 		int i = 3;
@@ -427,13 +456,9 @@ public class RPHash {
 		// float variance = StatTests.varianceSample(data, .01f);
 
 		int k = Integer.parseInt(untaggedArgs.get(1));
-
-		RPHashObject o = new SimpleArrayReader(data, k);
-		RPHashObject so = o;
-		if(data==null){
-			so = new StreamObject(f, k, raw);
-		}
 		
+		o.setK(k);
+		so.setK(k);
 		
 		if (taggedArgs.containsKey("numprojections")) {
 			so.setNumProjections(Integer.parseInt(taggedArgs
@@ -491,8 +516,8 @@ public class RPHash {
 				break;
 			}
 			case "svd": {
-				o.setProjectionType(new SVDProjection(data));
-				so.setProjectionType(new SVDProjection(data));
+				o.setProjectionType(new SVDProjection(o.getRawData()));
+				so.setProjectionType(new DBFriendlyProjection());
 				break;
 			}
 			case "noproj": {
@@ -678,23 +703,23 @@ public class RPHash {
 				break;
 
 			case "kmeans": {
-				runitems.add(new KMeans2(k, data));
+				runitems.add(new KMeans2(k, o.getRawData()));
 				break;
 			}
 			case "pkmeans":
-				runitems.add(new LloydIterativeKmeans(k, data, o
+				runitems.add(new LloydIterativeKmeans(k, o.getRawData(), o
 						.getNumProjections()));
 				break;
 
 			case "kmeansplusplus":
-				runitems.add(new KMeansPlusPlus(data, k));
+				runitems.add(new KMeansPlusPlus(o.getRawData(), k));
 				break;
 
 			case "streamingkmeans": {
 				if (taggedArgs.containsKey("streamduration"))
-					runitems.add(new StreamingKmeans(so));
+					runitems.add(new StreamingKmeans2(so));
 				else
-					runitems.add(new StreamingKmeans(o));
+					runitems.add(new StreamingKmeans2(o));
 				break;
 			}
 			case "adaptivemeanshift": {
@@ -703,6 +728,10 @@ public class RPHash {
 			}
 			case "adaptive": {
 				runitems.add(new RPHashAdaptive2Pass(o));
+				break;
+			}
+			case "dummy": {
+				runitems.add(new DummyClusterer(so));
 				break;
 			}
 
@@ -728,6 +757,7 @@ public class RPHash {
 		Map<String, String> cmdMap = new HashMap<String, String>();
 		for (String s : args) {
 			String[] cmd = s.split("=");
+			
 			if (cmd.length > 1)
 				cmdMap.put(cmd[0].toLowerCase(), cmd[1].toLowerCase());
 			else
@@ -736,6 +766,7 @@ public class RPHash {
 		args = new String[truncatedArgs.size()];
 		for (int i = 0; i < truncatedArgs.size(); i++)
 			args[i] = truncatedArgs.get(i);
+
 		return cmdMap;
 	}
 

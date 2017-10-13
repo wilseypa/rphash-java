@@ -289,12 +289,12 @@ public class SimpleArrayReader implements RPHashObject {
 	@Override
 	public String toString() {
 		String ret = "Decoder:";
-		if(dec!=null)ret += dec.getClass().getName();
+		if(dec!=null)ret += dec.getClass().getSimpleName();
 		ret+=", Blur:"+numBlur;
 		ret+=", Projections:"+numProjections;
 		ret+=", Outer Decoder Multiplier:"+decoderMultiplier;
 		ret += ", Offline Clusterer:";
-		ret += clusterer==null?"none":clusterer.getClass().getName();
+		ret += clusterer==null?"none":clusterer.getClass().getSimpleName();
 		return ret;
 	}
 

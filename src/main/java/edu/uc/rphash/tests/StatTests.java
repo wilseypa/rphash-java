@@ -114,6 +114,17 @@ public class StatTests {
 		}
 		return count;
 	}
+
+	public static double WCSSECentroidsFloat(List<Centroid> estCentroids, StreamObject so){
+		double count = 0.0 ;
+		while (so.hasNext()) {
+			float[] nxt = so.next();
+			count+=VectorUtil.distance(nxt,estCentroids.get(VectorUtil.findNearestDistance(new Centroid(nxt,0), estCentroids)).centroid()) ;
+		}
+		so.reset();
+		return count;
+	}
+	
 	
 	public static double WCSSEFloatCentroid(List<float[]> estCentroids, List<float[]> data){
 		double count = 0.0 ;
