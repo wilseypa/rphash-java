@@ -8,9 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -38,15 +41,17 @@ public class RPHashSimpleParallel implements Clusterer {
 	List<Long> labels;
 	HashMap<Long, Long> labelmap;
 
-	public static void mapfunc(float[] vec, LSH lshfunc, ItemSet<Long> is) {
+	private int processors = 1;
 
-		long hash = lshfunc.lshHash(vec);
-		is.add(hash);
-	}
+	public static long mapfunc(float[] vec, LSH lshfunc) {
 
-	public RPHashObject map() {
+		return lshfunc.lshHash(vec);
 		
-
+	}
+	
+	public RPHashObject mapreduce1() {
+		
+		//------------This is Setup Code-------------
 		// create our LSH Machine
 		HashAlgorithm hal = new NoHash(so.getHashmod());
 		Iterator<float[]> vecs = so.getVectorIterator();
@@ -80,47 +85,35 @@ public class RPHashSimpleParallel implements Clusterer {
 
 	
 		List<float[]> dat = so.getRawData();
-
-		ExecutorService executor = Executors.newFixedThreadPool(this.threads);
-
-		int chunksize = dat.size() / this.threads;
-
-		ArrayList<Future<ArrayList<Centroid>>> gather = new ArrayList<>(this.threads);
-
-		for (int i = 0; i < this.threads; i++) {
-			int chunk = chunksize* i;
-			gather.add(executor.submit(new Callable< ArrayList<Centroid>>() {
-				public ArrayList<Centroid> call() {
-					
-					ArrayList<Centroid> centroids = new ArrayList<Centroid>();
-					for (int j = chunk; j < chunksize + chunk && j < dat.size(); j++) {
-						mapfunc(dat.get(j), lshfunc, is);
-					}
-					return centroids;
-				}
-			}));
+		
+		//Dey
+		//-------------------------
+		//------------This is the actual map function-------------
+		
+		//this is the actual map
+		ForkJoinPool forkJoinPool = new ForkJoinPool(this.processors );
+		try {
+			forkJoinPool.submit(() ->
+			dat.parallelStream().map(s->mapfunc(s,lshfunc)).forEach(s->is.add(s))
+					).get();
+		} catch (ExecutionException|InterruptedException e) {
+			e.printStackTrace();
 		}
-		
-		
-		for (Future<ArrayList<Centroid>> f : gather){
-			try {
-				f.get();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		executor.shutdown();
+		forkJoinPool.shutdown();
 
+		//-------------------------
+		
+		
+		//------------This is clean up code-------------
 		List<Long> topids = is.getTop();
 		so.setPreviousTopID(topids);
 
 		List<Long> topsizes = is.getCounts();
 
+		
+		// this is where the parallel reduce function would be
+		// to sum up the counts that correspond to hash_ids
+		// so very much the word count example
 		List<Float> countsAsFloats = new ArrayList<Float>();
 		for (long ct : topsizes)
 			countsAsFloats.add((float) ct);
@@ -142,13 +135,18 @@ public class RPHashSimpleParallel implements Clusterer {
 			}
 		}
 	}
+	
+	public static long[] redFunc(float[] vec, LSH lshfunc, List<float[]> noise) {
+		return lshfunc.lshHashRadius(vec, noise);
+	}
 
 	/*
 	 * This is the second phase after the top ids have been in the reduce phase
 	 * aggregated
 	 */
-	public RPHashObject reduce() {
+	public RPHashObject mapreduce2() {
 
+		//------------This is Setup Code-------------
 		Iterator<float[]> vecs = so.getVectorIterator();
 		if (!vecs.hasNext())
 			return so;
@@ -172,67 +170,60 @@ public class RPHashSimpleParallel implements Clusterer {
 								.getDimensionality()));
 
 		LSH lshfunc = new LSH(dec, p, hal, noise, so.getNormalize());
-		List<Centroid> centroids = new ArrayList<Centroid>();
+		ArrayList<Centroid> centroids = new ArrayList<Centroid>();
 
 		for (long id : so.getPreviousTopID()) {
 			centroids.add(new Centroid(so.getdim(), id, -1));
 		}
 
-		this.labels = new ArrayList<>();
-
-
-		while (vecs.hasNext()) {
-			redFunc(vecs.next(), lshfunc, noise, labels, centroids);
-		}
-		
+		//DEY
+		//-------------------------------------------------
+		//------------This is the parallel map-------------
 		
 		List<float[]> dat = so.getRawData();
-
-		ExecutorService executor = Executors.newFixedThreadPool(this.threads);
-
-		int chunksize = dat.size() / this.threads;
-
-		ArrayList<Future<ArrayList<Centroid>>> gather = new ArrayList<>(this.threads);
-
-		for (int i = 0; i < this.threads; i++) {
-			int chunk = chunksize* i;
-			gather.add(executor.submit(new Callable< ArrayList<Centroid>>() {
-				public ArrayList<Centroid> call() {
-					ArrayList<Centroid> centroids = new ArrayList<Centroid>();
-					for (int j = chunk; j < chunksize + chunk && j < dat.size(); j++) {
-						redFunc(dat.get(j), lshfunc, noise, labels, centroids);
+		
+		
+		ForkJoinPool forkJoinPool = new ForkJoinPool(this.processors );
+		try {
+			//parallel map
+			forkJoinPool.submit(() ->
+			dat.parallelStream().map(s->redFunc(s,lshfunc,noise)).forEach(hashes -> {
+			//end parallel map
+				
+			//parallel reduce
+				//local centroids is what would need to be implemented
+				// to update in parallel in each node
+				// currently this thing shares the centroids list, which is a bottleneck
+				// the reducer would need to use this to reduce centroids with the same id
+				// Centroid.merge(ctcent1, cent1,wcsscent1,ctcent2, cent2,wcsscent2);
+//				List<Centroid> localcentroids = centroids.stream().map(Centroid::new).collect(Centroid.toArrayList());
+				for (Centroid cent : centroids) {
+					for (long h : hashes) 
+					{
+						if (cent.ids.contains(h)) 
+						{
+							cent.updateVec(vec);
+						}
 					}
-					return centroids;
 				}
-			}));
-		}
-		
-		
-		
-		for (Future<ArrayList<Centroid>> f : gather) {
-			ArrayList<Centroid> o;
-			try {
-				o = f.get();
-				centroids.addAll(o);
-			} catch (InterruptedException e) {
+				})).get();
+		} catch (InterruptedException|ExecutionException e) {
+			e.printStackTrace();
+		} 
 
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			}
-
-		}
-
-		executor.shutdown();
+		forkJoinPool.shutdown();
+		//-------------------------------------------------
 		
-
-		Clusterer offlineclusterer = so.getOfflineClusterer();
-		offlineclusterer.setData(centroids);
+		//------------This is the cleanup code-------------
+		//Sequential
+		
+		Clusterer offlineclusterer = new KMeans2();//so.getOfflineClusterer();
+		offlineclusterer.setData(centroids.stream().collect(Centroid.toArrayList()));
 		offlineclusterer.setWeights(so.getCounts());
 		offlineclusterer.setK(so.getk());
-		this.centroids = offlineclusterer.getCentroids();
-		this.labelmap = VectorUtil.generateIDMap(centroids, this.centroids);
-		so.setCentroids(centroids);
+		
+//		this.labelmap = VectorUtil.generateIDMap(centroids, this.centroids);
+		so.setCentroids(offlineclusterer.getCentroids());
 		return so;
 	}
 
@@ -257,11 +248,11 @@ public class RPHashSimpleParallel implements Clusterer {
 		so = new SimpleArrayReader(data, k);
 	}
 
-	int threads = 1;
+//	int threads = 1;
 
 	public RPHashSimpleParallel(List<float[]> data, int k, int processors) {
-		// System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism",String.valueOf(processors));
-		threads = processors;
+
+		this.processors = processors;
 		so = new SimpleArrayReader(data, k);
 		so.setParallel(true);
 	}
@@ -290,9 +281,9 @@ public class RPHashSimpleParallel implements Clusterer {
 	}
 
 	private void run() {
-		map();
-		reduce();
-		this.centroids = so.getCentroids();
+		mapreduce1();
+		mapreduce2();
+		//this.centroids = so.getCentroids();
 	}
 
 	public static void main(String[] args) {
@@ -315,7 +306,7 @@ public class RPHashSimpleParallel implements Clusterer {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
 				RPHashSimpleParallel rphit = new RPHashSimpleParallel(o);
-				rphit.threads = 4;
+//				rphit.threads = 4;
 				o.setDecoderType(new Spherical(32, 4, 1));
 				// o.setDimparameter(31);
 				o.setOfflineClusterer(new KMeans2());

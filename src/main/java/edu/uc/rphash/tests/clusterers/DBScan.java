@@ -128,7 +128,7 @@ public class DBScan implements edu.uc.rphash.Clusterer{
 		for (Centroid c : centroids)
 			data.add(c.centroid());
 		setRawData(data);
-		System.out.println("The Raw data is set in setdata ");
+		//System.out.println("The Raw data is set in setdata ");
 	}
 	
 	public void setK(int k) { // to be completed

@@ -14,6 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ public class RPHashAdaptive2PassParallel implements Clusterer, Runnable {
 	private float[] rngvec;
 	private List<Centroid> centroids = null;
 	private RPHashObject so;
-	int threads = 1;
+	int threads = 4;
 
 	public RPHashAdaptive2PassParallel(RPHashObject so) {
 		this.threads = 4;
@@ -138,17 +139,27 @@ public class RPHashAdaptive2PassParallel implements Clusterer, Runnable {
 
 		List<float[]> dat = so.getRawData();
 
+		//this counter gets shared
 		AtomicInteger ct = new AtomicInteger(0);
 
-		ExecutorService executor = Executors.newFixedThreadPool(this.threads);
+		ForkJoinPool executor = new ForkJoinPool(this.threads);
 
 		int chunksize = dat.size() / this.threads;
 
+		//This is the array of essentially thread objets that process in parallel
 		ArrayList<Future<Map<Long, ArrayList<float[]>>>> gather = new ArrayList<>(this.threads);
 
 		for (int i = 0; i < this.threads; i++) {
+			
 			int chunk = chunksize* i;
 			gather.add(executor.submit(new Callable<Map<Long, ArrayList<float[]>>>() {
+				
+				// this is the mapper function. the dataset is split among the processing threads
+				// each thread performs the projections and counter adds. 
+				// this method is sequentially bottlenecked in regard to the add part
+				// there are some ways to fix this, but ultimately each thread needs to maintain 
+				// its own count-sketch. then those sketch must be merged, via the binary
+				// operation
 				public Map<Long, ArrayList<float[]>> call() {
 					Map<Long, ArrayList<float[]>> IDAndCent = new HashMap<>();
 					Map<Long, ArrayList<Integer>> IDAndID = new HashMap<>();
@@ -172,6 +183,11 @@ public class RPHashAdaptive2PassParallel implements Clusterer, Runnable {
 		}
 
 		executor.shutdown();
+		
+		
+		// this function merges the centroid sets in parallel.
+		// it would be the basis of the reduce part
+		// even though the functions are called map, the return is a collection/gather operation
 		Map<Long, List> IDAndCent = gatheredCent
 				.stream()
 				.parallel()
@@ -186,6 +202,8 @@ public class RPHashAdaptive2PassParallel implements Clusterer, Runnable {
 							    }
 								));
 
+		
+		//this is sequential...
 		// next we want to prune the tree by parent count comparison
 		// follows breadthfirst search
 		HashMap<Long, Long> denseSetOfIDandCount = new HashMap<Long, Long>();
@@ -272,7 +290,7 @@ public class RPHashAdaptive2PassParallel implements Clusterer, Runnable {
 		int k = 10;
 		int d = 1000;
 		int n = 10000;
-		float var = 0.1f;
+		float var = 1.1f;
 		int count = 10;
 		System.out.printf("ClusterVar\t");
 		for (int i = 0; i < count; i++)
@@ -284,7 +302,7 @@ public class RPHashAdaptive2PassParallel implements Clusterer, Runnable {
 			float avgtime = 0;
 			System.out.printf("%f\t", f);
 			for (int i = 0; i < count; i++) {
-				GenerateData gen = new GenerateData(k, n / k, d, f, true, .5f);
+				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				// gen.writeCSVToFile(new
 				// File("/home/lee/Desktop/reclsh/in.csv"));
 				RPHashObject o = new SimpleArrayReader(gen.data, k);

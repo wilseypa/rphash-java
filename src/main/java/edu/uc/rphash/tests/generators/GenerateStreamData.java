@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -13,8 +14,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.function.IntToDoubleFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class GenerateStreamData implements ClusterGenerator {
@@ -149,9 +152,17 @@ public class GenerateStreamData implements ClusterGenerator {
 		float[] dat = new float[dimension];
 		if (this.parallel != 0) {
 			Random r[] = new Random[this.parallel];
-			for(int i =0; i< this.parallel;i++)r[i] = new Random();
-			IntStream.range(0, dat.length).parallel().forEach(i ->
-				{ dat[i] =  medoid[i] + (float) r[i%this.parallel].nextGaussian() * variance[i] ; });
+			for (int i = 0; i < this.parallel; i++)
+				r[i] = new Random();
+			IntStream
+					.range(0, dat.length)
+					.parallel()
+					.forEach(
+							i -> {
+								dat[i] = medoid[i]
+										+ (float) r[i % this.parallel]
+												.nextGaussian() * variance[i];
+							});
 		} else {
 			for (int k = 0; k < dimension; k++) {
 				if (r.nextInt() % (int) (1.0f / sparseness) == 0)
@@ -294,6 +305,62 @@ public class GenerateStreamData implements ClusterGenerator {
 
 		gen.writeToFile(outputFile, lblFile, 30000);
 		;
+	}
+
+	public ArrayList<float[]> genParallel(int n) {
+
+		float[][] retvecs = new float[n][];
+		ArrayList<Integer> ls = new ArrayList<Integer>();
+		int cores = ForkJoinPool.getCommonPoolParallelism();
+		int chnk = (int) (n / cores);
+
+		for (int j = 0; j < cores; j++) {
+			ls.add(j);
+		}
+
+		ls.parallelStream()
+				.forEach(
+						s -> {
+							Random r = new Random();
+							if (s <cores-1 ) {
+								
+								
+								
+								for (int i = s*chnk; i < (s+1)*chnk ; i++) {
+									float[] variance = variances.get(r
+											.nextInt(numClusters));
+									float[] medoid = medoids.get(r
+											.nextInt(numClusters));
+									float[] dat = new float[dimension];
+									for (int k = 0; k < dimension; k++) {
+										if (r.nextInt()
+												% (int) (1.0f / sparseness) == 0)
+											dat[k] = medoid[k]
+													+ (float) r.nextGaussian()
+													* variance[k];
+									}
+									retvecs[i] = dat;
+								}
+							} else {
+								for (int i = s*chnk; i < n; i++) {
+									float[] variance = variances.get(r
+											.nextInt(numClusters));
+									float[] medoid = medoids.get(r
+											.nextInt(numClusters));
+									float[] dat = new float[dimension];
+									for (int k = 0; k < dimension; k++) {
+										if (r.nextInt()
+												% (int) (1.0f / sparseness) == 0)
+											dat[k] = medoid[k]
+													+ (float) r.nextGaussian()
+													* variance[k];
+									}
+									retvecs[i] = dat;
+								}
+							}
+						});
+
+		return new ArrayList<float[]>(Arrays.asList(retvecs));
 	}
 
 	private void writeToFile(File datafile, File lblfile, int numofvecs) {

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import java.util.concurrent.TimeUnit;
 
 import edu.uc.rphash.Readers.RPHashObject;
@@ -25,7 +26,7 @@ import edu.uc.rphash.tests.generators.GenerateStreamData;
 
 public class RPHashStream implements StreamClusterer {
 	public List<KHHCentroidCounter> is;
-	private List<LSH[]> lshfuncs;
+	public List<LSH[]> lshfuncs;
 	private StatTests vartracker;
 	private List<List<Centroid>> centroids = null;
 	private List<Centroid> bestcentroids = null;
@@ -49,14 +50,11 @@ public class RPHashStream implements StreamClusterer {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			
 		}
 		for(int i = 0;i<this.concurrentRuns;i++){
 			//execute as future
 			if (so.getParallel()) {
-				VectorLevelConcurrency r = new VectorLevelConcurrency(vec,
-						lshfuncs.get(i),is.get(i),so);
-				executor.execute(r);
+				executor.execute(new VectorLevelConcurrency(vec,lshfuncs.get(i),is.get(i),so));
 			}//execute sequentially
 			else
 			{
@@ -64,7 +62,7 @@ public class RPHashStream implements StreamClusterer {
 			}
 		}
 		//there will always be at least 1 concurrent run
-		return is.get(0).count;
+		return 1;//is.get(0).count;
 	}
 
 	public void init() {
@@ -118,7 +116,7 @@ public class RPHashStream implements StreamClusterer {
 			this.processors = Runtime.getRuntime().availableProcessors();
 		else
 			this.processors = 1;
-		executor = Executors.newFixedThreadPool(this.processors);
+		executor = Executors.newFixedThreadPool(this.processors );
 		init();
 	}
 
@@ -128,7 +126,7 @@ public class RPHashStream implements StreamClusterer {
 			this.processors = Runtime.getRuntime().availableProcessors();
 		else
 			this.processors = 1;
-		executor = Executors.newFixedThreadPool(this.processors);
+		executor = Executors.newFixedThreadPool(this.processors );
 		init();
 	}
 
@@ -138,20 +136,18 @@ public class RPHashStream implements StreamClusterer {
 			this.processors = Runtime.getRuntime().availableProcessors();
 		else
 			this.processors = 1;
-		executor = Executors.newFixedThreadPool(this.processors);
+		executor = Executors.newFixedThreadPool(this.processors );
 		init();
 	}
 
 	public RPHashStream(int k, GenerateStreamData c, int processors) {
 		so = new SimpleArrayReader(c, k);
-		init();
 		if (so.getParallel())
 			this.processors = processors;
 		else
 			this.processors = 1;
-		executor = Executors.newFixedThreadPool(this.processors);
-		
-		
+		executor = Executors.newFixedThreadPool(this.processors );
+		init();
 	}
 
 	@Override
@@ -172,7 +168,7 @@ public class RPHashStream implements StreamClusterer {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			executor = Executors.newFixedThreadPool(getProcessors());
+			executor = Executors.newFixedThreadPool(this.processors);
 		}
 
 		bestcentroids = new ArrayList<Centroid>();
@@ -264,7 +260,7 @@ public class RPHashStream implements StreamClusterer {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			executor = Executors.newFixedThreadPool(getProcessors());
+			executor = Executors.newFixedThreadPool(this.processors );
 		}
 	}
 	

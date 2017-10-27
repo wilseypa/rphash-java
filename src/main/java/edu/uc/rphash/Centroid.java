@@ -1,10 +1,13 @@
 package edu.uc.rphash;
 
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import edu.uc.rphash.Readers.RPVector;
 
-public class Centroid {
+public class Centroid implements Comparable<Centroid>{
 	public float[] centroid;
 	public float count;
 	public int dimensions;
@@ -13,7 +16,22 @@ public class Centroid {
 	public int projectionID;
 //	private float[] M2;
 	public float[] wcss;
-
+	
+	public Centroid(Centroid c) {
+		this.dimensions = c.dimensions;
+		System.arraycopy(c.centroid, 0, this.centroid, 0, c.dimensions);
+		System.arraycopy(c.wcss, 0, this.wcss, 0, c.dimensions);
+		this.count = 0;
+		this.id = c.id;
+		this.ids = c.ids.clone();
+		this.projectionID = c.projectionID;
+	}
+	
+	
+	public static <T> Collector<T, ?, ArrayList<T>> toArrayList() {
+	    return Collectors.toCollection(ArrayList::new);
+	}
+	
 	public Centroid(int dim, long id, int projectionID) {
 		this.centroid = new float[dim];
 		this.dimensions = dim;
@@ -207,6 +225,13 @@ public class Centroid {
 	
 	public void setWCSS(float[] d) {	
 		this.wcss =  d;
+	}
+
+
+	@Override
+	public int compareTo(Centroid o) {
+		
+		return (int) (o.id - this.id);
 	}
 
 }

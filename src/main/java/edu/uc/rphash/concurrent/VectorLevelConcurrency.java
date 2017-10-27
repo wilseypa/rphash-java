@@ -43,7 +43,6 @@ public class VectorLevelConcurrency implements Runnable {
 					c.addID(h);
 					is.addLong(h, 1);
 				}
-				
 			}
 			else 
 			{
@@ -51,7 +50,6 @@ public class VectorLevelConcurrency implements Runnable {
 				c.addID(hash);
 				is.addLong(hash, 1);
 			}
-			
 		}
 		is.add(c);
 		return is.count;
