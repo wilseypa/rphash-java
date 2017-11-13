@@ -4,11 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.mahout.common.distance.EuclideanDistanceMeasure;
-import org.apache.mahout.knn.cluster.StreamingKMeans;
-import org.apache.mahout.math.DenseVector;
-import org.apache.mahout.math.Vector;
-
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.StreamClusterer;
