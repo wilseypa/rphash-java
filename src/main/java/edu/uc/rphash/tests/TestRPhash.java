@@ -5,7 +5,7 @@ import java.util.List;
 
 import edu.uc.rphash.Centroid;
 import edu.uc.rphash.RPHashSimple;
-import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
+
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -25,7 +25,7 @@ public class TestRPhash {
 		
 		
 		long startTime = System.nanoTime();
-		List<Centroid> M = ( new LloydIterativeKmeans(k,gen.data(),projdim)).getCentroids();
+		
 		long duration = (System.nanoTime() - startTime);
 
 //		List<float[]> aligned = VectorUtil.alignCentroids(M,gen.medoids());

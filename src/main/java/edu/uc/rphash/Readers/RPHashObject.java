@@ -8,20 +8,21 @@ import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.DepthProbingLSH;
 import edu.uc.rphash.decoders.E8;
-import edu.uc.rphash.decoders.Golay;
+
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
-import edu.uc.rphash.decoders.PsdLSH;
+
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.projections.DBFriendlyProjection;
+import edu.uc.rphash.projections.GaussianProjection;
 import edu.uc.rphash.projections.Projector;
-import edu.uc.rphash.tests.clusterers.Agglomerative;
+
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.clusterers.Agglomerative3.ClusteringType;
 import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.KMeans2NoWCSS;
 import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
-import edu.uc.rphash.tests.clusterers.Kmeans;
+
 import edu.uc.rphash.tests.clusterers.MultiKMPP;
 import edu.uc.rphash.tests.clusterers.DBScan;
 
@@ -41,8 +42,9 @@ public interface RPHashObject {
 	
 	//final static Clusterer DEFAULT_OFFLINE_CLUSTERER = new MultiKMPP();
 
-	final static Projector DEFAULT_PROJECTOR = new DBFriendlyProjection();
-
+	final static Projector DEFAULT_PROJECTOR = new DBFriendlyProjection(); 
+	//final static Projector DEFAULT_PROJECTOR = new GaussianProjection(); 
+	
 	int getdim();
 	
 	Iterator<float[]> getVectorIterator();
