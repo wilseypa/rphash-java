@@ -108,6 +108,7 @@ public class DBFriendlyProjection implements Projector {
 	// -sqrt(3/t)
 	// n: original dimension
 	// t: target OR projected dimension
+	
 	static float[] projectN(float[] v, int[][] P, int[][] M, int t) {
 		float[] r = new float[t];
 		float sum;
@@ -117,10 +118,10 @@ public class DBFriendlyProjection implements Projector {
 			
 //-------------------------------------------------
 			// this is what is there in spark code:
-			for (int col : M[i])
-				sum -= v[col];
-			for (int col : P[i])
-				sum += v[col];
+//			for (int col : M[i])
+//				sum -= v[col];
+//			for (int col : P[i])
+//				sum += v[col];
 			
 //---------------------------------------------------			
 			
@@ -129,13 +130,10 @@ public class DBFriendlyProjection implements Projector {
 			
 			for(int j=0;j<M[i].length;j++)
 				sum -= v[M[i][j]];
-//			for (int col : M[i])
-//				sum -= v[col];
-			for(int j=0;j<M[i].length;j++)
-				sum += v[M[i][j]];
-//			for (int col : P[i])
-//				sum += v[col];
-			
+
+			for(int j=0;j<P[i].length;j++)
+				sum += v[P[i][j]];
+
 //-------------------------------------------------------			
 			
 			

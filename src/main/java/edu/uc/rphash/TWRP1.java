@@ -369,13 +369,7 @@ public class TWRP1 implements Clusterer, Runnable {
 		return new ArrayList<>(estcents.values());
 	}
 
-	
-	
-	
-	
-	
-	
-	
+
 	
 	
 	
@@ -605,9 +599,7 @@ public class TWRP1 implements Clusterer, Runnable {
 	
 }
 	
-	
-	
-	
+
 	
 	
 	public void run() {
@@ -682,16 +674,16 @@ public class TWRP1 implements Clusterer, Runnable {
 			IOException {
 
 		int k = 6;//6;
-		int d = 64;//16;
-		int n = 700;
-		float var = .5f;
+		int d = 100;//16;
+		int n = 5000;
+		float var = 1.5f;
 		int count = 1;
 	//	System.out.printf("ClusterVar\t");
 	//	for (int i = 0; i < count; i++)
 	//		System.out.printf("Trial%d\t", i);
 	//	System.out.printf("RealWCSS\n");
 
-		for (float f = var; f < 1.01; f += 1.5f) {
+		for (float f = var; f < 1.51; f += 1.5f) {
 			float avgrealwcss = 0;
 			float avgtime = 0;
 	//		System.out.printf("%f\t", f);
@@ -700,7 +692,7 @@ public class TWRP1 implements Clusterer, Runnable {
 				// gen.writeCSVToFile(new
 				// File("/home/lee/Desktop/reclsh/in.csv"));
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
-				o.setDimparameter(4);
+				o.setDimparameter(8);
 				TWRP1 rphit = new TWRP1(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
@@ -710,9 +702,8 @@ public class TWRP1 implements Clusterer, Runnable {
 				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),
 						gen.getData());
 				
-	//			System.out.printf("%.0f\t",
-	//					StatTests.WCSSECentroidsFloat(centsr, gen.data));
-	//			System.gc();
+				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
+				System.gc();
 			}
 			System.out.printf("%.0f\n", avgrealwcss / count);
 			

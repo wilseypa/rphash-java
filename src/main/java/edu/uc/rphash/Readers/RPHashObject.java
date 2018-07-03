@@ -29,7 +29,7 @@ import edu.uc.rphash.tests.clusterers.DBScan;
 public interface RPHashObject {
 	final static int DEFAULT_NUM_PROJECTIONS = 1;
 	public final static int DEFAULT_NUM_BLUR = 1;
-	final static long DEFAULT_NUM_RANDOM_SEED = 38006359550206753L;
+	final static long DEFAULT_NUM_RANDOM_SEED = 3800635955020675334L;
 	final static int DEFAULT_NUM_DECODER_MULTIPLIER = 1;
 	final static long DEFAULT_HASH_MODULUS = Long.MAX_VALUE;
 	final static Decoder DEFAULT_INNER_DECODER = new Spherical(32,4,1);//new DepthProbingLSH(24);//new Leech();//new Spherical(16,2,2);//new MultiDecoder(24, new E8(1f));//new Golay();//new Spherical(64,2,1);//new Leech(3);//new PsdLSH();//

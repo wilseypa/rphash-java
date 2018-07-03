@@ -170,32 +170,22 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		}
 		
 		
-		for (Long name: IDAndCent.keySet()){
-
-            String key =name.toString();
-            
-            
-            	String value = IDAndCent.get(name).toString() ; 
-            	
-    //        	String value1 = Arrays.toString(value.toString());
-            	
-                System.out.println(key + " " + value);	
-            
-              
-
-
-} 
-		
-		for (Long name: IDAndID.keySet()){
-
-            String key =name.toString();
-            String value = IDAndID.get(name).toString();  
-            System.out.println(key + " " + value);  
-
-
-}
-		
-		
+//		for (Long name: IDAndCent.keySet()){
+//
+//            String key =name.toString();                        
+//     //       	String value = IDAndCent.get(name).toString() ;       	
+//    //        	String value1 = Arrays.toString(value.toString());            	
+//                System.out.println(key )  ;//+ " " + value);	           
+//} 
+	
+		System.out.println("NumberOfMicroClustersBeforePruning = "+ IDAndCent.size());
+//		for (Long name: IDAndID.keySet()){
+//            String key =name.toString();
+//            String value = IDAndID.get(name).toString();  
+//            System.out.println(key + " " + value);  
+//
+//
+//}
 		
 		// next we want to prune the tree by parent count comparison
 		// follows breadthfirst search
@@ -249,6 +239,8 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 //			System.out.println(sortedIDList.get(i) + ":"+VectorUtil.longToString(sortedIDList.get(i))+":"+IDAndCent.get(sortedIDList.get(i)).size());
 //		}
 		
+//		System.out.println("NumberOfMicroClusters_AfterPruning = "+ denseSetOfIDandCount.size());
+		System.out.println("NumberOfMicroClusters_AfterPruning = "+ estcents.size());	
 		
 		
 		return new ArrayList<>(estcents.values());
@@ -271,7 +263,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 			centroids.add(medoid(clustermembers.get(i)));
 		}
 		Agglomerative3 aggloOffline =  new Agglomerative3(centroids, so.getk());
-		System.out.println(centroids.size());
+//		System.out.println(centroids.size());
 		aggloOffline.setWeights(weights);
 		this.centroids = aggloOffline.getCentroids();
 	}
@@ -279,17 +271,17 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException {
 
-		int k = 3;
+		int k = 6;
 		int d = 100;
-		int n = 2000;
-		float var = 1.0f;//0.5f;
+		int n = 5000;
+		float var = 1.5f;//0.5f;
 		int count = 1;
 	//	System.out.printf("ClusterVar\t");
 	//	for (int i = 0; i < count; i++)
 	//		System.out.printf("Trial%d\t", i);
 	//	System.out.printf("RealWCSS\n");
 
-		for (float f = var; f < 1.01; f += 1.5f) {
+		for (float f = var; f < 1.51; f += 1.5f) {
 			float avgrealwcss = 0;
 			float avgtime = 0;
 	//		System.out.printf("%f\t", f);
@@ -298,7 +290,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 				// gen.writeCSVToFile(new
 				// File("/home/lee/Desktop/reclsh/in.csv"));
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
-				o.setDimparameter(4);
+				o.setDimparameter(8);
 				RPHashAdaptive2Pass rphit = new RPHashAdaptive2Pass(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
@@ -312,11 +304,10 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 				String Output = "/C:/Users/user/Desktop/temp/OutputTwrpCents" ;   	
 				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);
 				
-	//			System.out.printf("%.0f\t",
-	//					StatTests.WCSSECentroidsFloat(centsr, gen.data));
-	//			System.gc();
+				System.out.printf("%.0f\n\t",StatTests.WCSSECentroidsFloat(centsr, gen.data));
+				System.gc();
 			}
-	//		System.out.printf("%.0f\n", avgrealwcss / count);
+			System.out.printf("%.0f\n", avgrealwcss / count);
 			
 
 			
