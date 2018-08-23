@@ -223,8 +223,10 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 
 		List<Long> sortedIDList= new ArrayList<>();
 		// sort and limit the list
-		stream.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(so.getk()*4)
+		stream.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(so.getk()*6)
 				.forEachOrdered(x -> sortedIDList.add(x.getKey()));
+		
+		System.out.println("NumberOfMicroClustersAfterPruning = "+ sortedIDList.size());
 		
 		// compute centroids
 
@@ -233,6 +235,8 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		{
 			estcents.put(sortedIDList.get(i), IDAndCent.get(sortedIDList.get(i)));
 		}
+		
+		
 //		System.out.println();
 //		for (int i =0; i<sortedIDList.size();i++)
 //		{
@@ -257,7 +261,8 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		List<float[]>centroids = new ArrayList<>();
 		
 		List<Float> weights =new ArrayList<>();
-		int k = clustermembers.size()>200+so.getk()?200+so.getk():clustermembers.size();
+	//	int k = clustermembers.size()>200+so.getk()?200+so.getk():clustermembers.size();
+		int k = clustermembers.size();
 		for(int i=0;i<k;i++){
 			weights.add(new Float(clustermembers.get(i).size()));
 			centroids.add(medoid(clustermembers.get(i)));
@@ -271,9 +276,9 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException {
 
-		int k = 6;
-		int d = 100;
-		int n = 5000;
+		int k = 80;
+		int d = 500;
+		int n = 10000;
 		float var = 1.5f;//0.5f;
 		int count = 1;
 	//	System.out.printf("ClusterVar\t");
@@ -290,7 +295,7 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 				// gen.writeCSVToFile(new
 				// File("/home/lee/Desktop/reclsh/in.csv"));
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
-				o.setDimparameter(8);
+				o.setDimparameter(32);
 				RPHashAdaptive2Pass rphit = new RPHashAdaptive2Pass(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();

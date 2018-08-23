@@ -7,13 +7,13 @@ import java.util.ArrayList;
 //import java.util.Arrays;
 import java.util.HashMap;
 //import java.util.Iterator;
+//import java.util.LinkedHashMap;
 import java.util.List;
+//import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeSet;
 import java.util.stream.Stream;
-//import java.util.Map;
-
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -22,6 +22,12 @@ import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
+
+//import org.apache.commons.collections.map.MultiValueMap;
+//import org.apache.commons.collections.map.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 
 
 public class TWRPv2 implements Clusterer, Runnable {
@@ -49,7 +55,6 @@ public class TWRPv2 implements Clusterer, Runnable {
 			run();
 		return centroids;
 	}
-	
 	
 	/*
 	 * X - set of vectors compute the medoid of a vector set
@@ -88,8 +93,7 @@ public class TWRPv2 implements Clusterer, Runnable {
 	}
 		
 	//float[] rngvec; the range vector is moot if incoming data has been normalized
-	//post normalization it should all be zero centered, with variance 1
-	
+	//post normalization it should all be zero centered, with variance 1	
 	/*
 	 * super simple hash algorithm, reminiscient of pstable lsh
 	 */
@@ -127,7 +131,6 @@ public class TWRPv2 implements Clusterer, Runnable {
 //			s <<= 1;
 			s = s << 1 ;                             // left shift the bits of s by 1.
 			if (xt[i] > rngvec[i])
-//				s +=  1;
 				s= s+1;
 							
 			if (MapOfIDAndCent.containsKey(s)) {
@@ -203,8 +206,8 @@ public class TWRPv2 implements Clusterer, Runnable {
 	 * density mode via iterative deepening hash counting
 	 */
 	
-	
-	public HashMap<Long, float[]>  findDensityModes2() {
+	public Multimap<Long, float[]>  findDensityModes2() {
+	//public Map<Long, float[]>  findDensityModes2() {
 	HashMap<Long, float[]> MapOfIDAndCent = new HashMap<>();  
 	HashMap<Long, Long> MapOfIDAndCount = new HashMap<>();
 	// #create projector matrixs
@@ -213,6 +216,7 @@ public class TWRPv2 implements Clusterer, Runnable {
 	projector.setProjectedDim(so.getDimparameter());
 	projector.setRandomSeed(so.getRandomSeed());
 	projector.init();
+	int cutoff = so.getCutoff();
 	
 	int ct = 0;
 //	if(znorm == true){
@@ -299,31 +303,68 @@ public class TWRPv2 implements Clusterer, Runnable {
 	}
 	
 	
-	//remove keys with support less than 1
+	System.out.println("NumberOfMicroClustersAfterPruning&beforesortingLimit = "+ denseSetOfIDandCount2.size());
 	
+	//remove keys with support less than 1
 	Stream<Entry<Long, Long>> stream2 = denseSetOfIDandCount2.entrySet().stream().filter(p -> p.getValue() > 1);
 	//64 so 6 bits?
 	//stream = stream.filter(p -> p.getKey() > 64);
-
+	
+//	Stream<Entry<Long, Long>> stream3 = denseSetOfIDandCount2.entrySet().stream().filter(p -> p.getValue() > 1);
+//	long counter= stream3.count();
+//	System.out.println("NumberOfMicroClustersAfterPruning&limit_the_1s = "+ counter);
+	
+//	int cutoff= so.getk()*8;
+//	if (so.getk()*6 < 210) {   cutoff=210+so.getk();}  else { cutoff = so.getk()*8;}	
+//	int cutoff = clustermembers.size()>200+so.getk()?200+so.getk():clustermembers.size();
+//	System.out.println("Cutoff = "+ cutoff);
+	
 	List<Long> sortedIDList2= new ArrayList<>();
 	// sort and limit the list
-	stream2.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(so.getk()*6)
+	stream2.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(cutoff)
 			.forEachOrdered(x -> sortedIDList2.add(x.getKey()));
-	
-	HashMap<Long, float[]> KeyAndCent = new HashMap<>();
-	HashMap<Long, Long> KeyAndCount = new HashMap<>();
-	HashMap<Long, float[]> WeightAndCent = new HashMap<>();
-	
-	for (int i =0; i<sortedIDList2.size();i++)
-	{
-		KeyAndCent.put(sortedIDList2.get(i), MapOfIDAndCent.get(sortedIDList2.get(i)));
-		KeyAndCount.put(sortedIDList2.get(i), MapOfIDAndCount.get(sortedIDList2.get(i)));
 		
-		WeightAndCent.put(MapOfIDAndCount.get(sortedIDList2.get(i)), MapOfIDAndCent.get(sortedIDList2.get(i)));		
+//	HashMap<Long, float[]> KeyAndCent = new HashMap<>();
+//	HashMap<Long, Long> KeyAndCount = new HashMap<>();
+//	Map<Long, float[]> WeightAndCent = new HashMap<>();
+//	Map<Long, float[]> WeightAndCent = new LinkedHashMap<>();
+	Multimap<Long, float[]> multimapWeightAndCent = ArrayListMultimap.create();
+
+	
+//	for (int i =0; i<sortedIDList2.size(); i++)
+//		
+//	{
+//		KeyAndCent.put(sortedIDList2.get(i), MapOfIDAndCent.get(sortedIDList2.get(i)));
+//		
+//		KeyAndCount.put(sortedIDList2.get(i), MapOfIDAndCount.get(sortedIDList2.get(i)));
+//	
+//	  WeightAndCent.put(MapOfIDAndCount.get(sortedIDList2.get(i)), MapOfIDAndCent.get(sortedIDList2.get(i)));	
+//		
+//	}
+//	  
+	for (Long keys: sortedIDList2)
 		
-	}
+		{
+//		  WeightAndCent.put((Long)(MapOfIDAndCount.get(keys)), (float[]) (MapOfIDAndCent.get(keys)));
+		  
+		  multimapWeightAndCent.put((Long)(MapOfIDAndCount.get(keys)), (float[]) (MapOfIDAndCent.get(keys)));
 			
-	return WeightAndCent;
+//		  KeyAndCent.put(keys, MapOfIDAndCent.get(keys));			
+//		  KeyAndCount.put(keys, MapOfIDAndCount.get(keys));
+				
+		}
+		
+	
+//	for (Long name: KeyAndCount.keySet()){
+//      String key =name.toString(); 
+//	    String value = KeyAndCount.get(name).toString();
+    // System.out.println(key + " " + value); 
+     
+//  }
+	
+	// System.out.println("NumberOfMicroClustersAfterPruning = "+ multimapWeightAndCent.size());	
+		
+	return multimapWeightAndCent;
 	
 }
 	
@@ -331,37 +372,67 @@ public class TWRPv2 implements Clusterer, Runnable {
 	public void run() {
 		rngvec = new float[so.getDimparameter()];
 		counter = 0;
-		Random r = new Random(so.getRandomSeed());
+		boolean randVect = so.getRandomVector();
+		
+	//  Random r = new Random(so.getRandomSeed());
+	//	Random r = new Random(3800635955020675334L) ;
+		Random r = new Random();
+		
+		if (randVect==true){
 		for (int i = 0; i < so.getDimparameter(); i++)
 			rngvec[i] = (float) r.nextGaussian();
-		
-		
-		HashMap<Long, float[]> WeightAndClusters = findDensityModes2();
-		
+		    } else {
+			for (int i = 0; i < so.getDimparameter(); i++)
+			rngvec[i] = (float) 0;
+			   }
+	
+		Multimap<Long, float[]> WeightAndClusters = findDensityModes2();
+		//Map<Long, float[]> WeightAndClusters = findDensityModes2();
 		
 		List<float[]>centroids2 = new ArrayList<>();
 		List<Float> weights2 =new ArrayList<>();
 		
 		
-		System.out.println("NumberOfMicroClusters_AfterPruning = "+ WeightAndClusters.size());
+		System.out.println("NumberOfMicroClusters_AfterPruning = "+ WeightAndClusters.size());		
+		System.out.println("getRandomVector = "+ randVect);
 		
 	//	int k = NumberOfMicroClusters>200+so.getk()?200+so.getk():NumberOfMicroClusters;
 		
 	// have to prune depending  NumberOfMicroClusters returned.
-		
-		for (Long weights : new TreeSet<Long>(WeightAndClusters.keySet()))
-			
-		{	
+	//	int i = 1;
+	//	int j=1;
+	//	for (Long weights : new TreeSet<Long>(WeightAndClusters.keySet()))
+		for (Long weights : WeightAndClusters.keys())						
+		{
+	//		System.out.println("NumberOfTreesetkeys = "+ i);			
+	//		String key =weights.toString(); 
+	//      System.out.println(weights); 			
 		weights2.add((float)weights);
-		centroids2.add(WeightAndClusters.get(weights));
+		//	centroids2.add(WeightAndClusters.get(weights));
+		//	centroids2.addAll(WeightAndClusters.get(weights));			
+	//	i=i+1;
 		}
-				
+	//	System.out.println("done printing keys for weights");
+		
+		for (Long weight : WeightAndClusters.keySet())	
+			
+		{
+	//		System.out.println(weight);
+	//		System.out.println("NumberOfTreesetkeys = "+ j);
+		    centroids2.addAll(WeightAndClusters.get(weight));
+					
+	//	j=j+1;
+		}	
+	//	System.out.println("done printing keys for centroids");
+		
+	//	System.out.println(weights2.size());
+	//	System.out.println(centroids2.size());
+		
 		//System.out.printf("\tvalueofK is ");
 		//System.out.println( so.getk());
 		
 		Agglomerative3 aggloOffline =  new Agglomerative3(centroids2, so.getk());
 		
-		//System.out.println(centroids2.size());
 		aggloOffline.setWeights(weights2);
 		
 		this.centroids = aggloOffline.getCentroids();
@@ -372,9 +443,9 @@ public class TWRPv2 implements Clusterer, Runnable {
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException {
 
-		int k = 20;//6;
-		int d = 500;//16;
-		int n = 500000;
+		int k = 10;//6;
+		int d = 700;//16;
+		int n = 10000;
 		float var = 1.5f;
 		int count = 1;
 	//	System.out.printf("ClusterVar\t");
@@ -396,7 +467,13 @@ public class TWRPv2 implements Clusterer, Runnable {
 						
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
 						
-				o.setDimparameter(28);
+				o.setDimparameter(20);
+	
+				o.setCutoff(100);
+				o.setRandomVector(true);
+				
+//				System.out.println("cutoff = "+ o.getCutoff());
+//				System.out.println("get_random_Vector = "+ o.getRandomVector());			
 								
 				TWRPv2 rphit = new TWRPv2(o);
 				long startTime = System.nanoTime();
@@ -458,4 +535,16 @@ public class TWRPv2 implements Clusterer, Runnable {
 	public boolean setMultiRun(int runs) {
 		return false;
 	}
+	
+	//@Override
+	public void setCutoff(int getCutoff) {
+		this.so.setCutoff(getCutoff);
+	}
+	
+	//@Override
+	public void setRandomVector(boolean getRandomVector) {
+		this.so.setRandomVector(getRandomVector);
+	}
+	
+	
 }

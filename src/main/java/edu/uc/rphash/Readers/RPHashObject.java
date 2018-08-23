@@ -90,6 +90,13 @@ public interface RPHashObject {
 	void setDimparameter(int parseInt);
 	int getDimparameter();
 	
+	void setCutoff(int parseInt);
+	int getCutoff();
+	
+	void setRandomVector(boolean parseBoolean);
+	boolean getRandomVector();
+	
+	
 //	void setOfflineClusterer(Clusterer agglomerative3);   
 //	Clusterer getOfflineClusterer();
 	
@@ -99,7 +106,7 @@ public interface RPHashObject {
 	
 	
 	int getk();
-	void setK(int getk);
+	void setK(int k);
 	
 	String toString();
 	void reset();//TODO rename to resetDataStream

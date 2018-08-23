@@ -24,6 +24,7 @@ import edu.uc.rphash.standardhash.HashAlgorithm;
 import edu.uc.rphash.standardhash.NoHash;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.KMeans2;
+import edu.uc.rphash.tests.clusterers.MultiKMPP;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.tests.generators.GenerateStreamData;
 import edu.uc.rphash.tests.kmeanspp.KMeansPlusPlus;
@@ -54,8 +55,8 @@ public class RPHashSimple implements Clusterer {
 		int logk = (int) (.5 + Math.log(so.getk()) / Math.log(2));// log k and
 																	// round to
 																	// integer
-		int k = so.getk() * logk;
-		is = new SimpleFrequentItemSet<Long>(k);
+		int k1 = so.getk() * logk;
+		is = new SimpleFrequentItemSet<Long>(k1);
 		Decoder dec = so.getDecoderType();
 		dec.setCounter(is);
 
@@ -205,13 +206,27 @@ public class RPHashSimple implements Clusterer {
 		//
 		// }
 
+		
 		Clusterer offlineclusterer = so.getOfflineClusterer();
 		offlineclusterer.setData(centroids);
 		offlineclusterer.setWeights(so.getCounts());
 		offlineclusterer.setK(so.getk());
+		
+	//	System.out.println("\n k sent to offline  = "+ so.getk());
+		
 		this.centroids = offlineclusterer.getCentroids();
+		
+		//System.out.println("\n cents in reduce from offline cluster  = "+ this.centroids.size());
+		
+		//System.out.println("\n cents in reduce after label mapping = "+ centroids.size());
+		
 		this.labelmap = VectorUtil.generateIDMap(centroids, this.centroids);
-		so.setCentroids(centroids);
+		
+		//so.setCentroids(centroids);
+		so.setCentroids(this.centroids);
+		
+		
+		
 		return so;
 	}
 
@@ -272,12 +287,14 @@ public class RPHashSimple implements Clusterer {
 		map();
 		reduce();
 		this.centroids = so.getCentroids();
+		
+		
 	}
 
 	public static void main(String[] args) {
 		int k = 10;
-		int d = 1000;
-		int n = 10000;
+		int d = 200;
+		int n = 1000;
 		float var = 1f;
 		int count = 5;
 		System.out.printf("Decoder: %s\n", "Sphere");
@@ -296,9 +313,17 @@ public class RPHashSimple implements Clusterer {
 				RPHashSimple rphit = new RPHashSimple(o);
 				o.setDecoderType(new Spherical(32, 4, 1));
 				// o.setDimparameter(31);
-				o.setOfflineClusterer(new KMeans2());
+				//o.setOfflineClusterer(new KMeans2());
+				o.setOfflineClusterer(new MultiKMPP());
+				
+				//System.out.println("\n k sent to offline in MAIN = "+ o.getk());
+				
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
+				
+				//System.out.println("\n no of final cents : " + centsr.size());
+			
+				
 				avgtime += (System.nanoTime() - startTime) / 100000000;
 
 				// avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),

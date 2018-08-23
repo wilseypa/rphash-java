@@ -41,6 +41,9 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	Decoder dec;
 	float decayrate=0;
 	boolean parallel = true;
+	boolean RandomVector;
+	int Cutoff;
+	
 
 	ExecutorService executor;
 	InputStream inputStream;
@@ -425,4 +428,25 @@ public class StreamObject implements RPHashObject, Iterator<float[]> {
 	public Projector getProjectionType() {
 		return this.projector;
 	}
+
+
+	
+	@Override
+	public void setCutoff(int parseInt) {
+		this.Cutoff = parseInt;
+	}
+	@Override
+	public int getCutoff() {
+		return this.Cutoff;
+	}
+	
+	
+	@Override
+	public void setRandomVector(boolean parseBoolean) {
+		this.RandomVector = parseBoolean;		
+	}
+	public boolean getRandomVector() {
+		return this.RandomVector;		
+	}
+	
 }

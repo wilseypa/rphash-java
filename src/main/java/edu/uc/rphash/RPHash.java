@@ -52,16 +52,24 @@ public class RPHash {
 
 	static String[] clusteringmethods = { "simple", "streaming", "multiproj", 
 		"kmeans", "pkmeans","kmeansplusplus", "streamingkmeans", "adaptive","dummy" ,"twrp"};
+	
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
 		"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "multikmpp" , "dbscan", "none" };
+	
 	static String[] projectionmethods = { "dbf", "fjlt", "rp", "svd", "noproj" };
+	
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 		"numblur", "randomseed", "hashmod", "parallel", "streamduration",
 		"raw", "decayrate", "dimparameter", "decodertype",
 		"offlineclusterer", "runs", "normalize", "projection" };
+	
 	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
 			"multileech", "sphere", "levypstable", "cauchypstable",
 			"gaussianpstable", "adaptive", "origin" };
+	
+	static String[] twrp_options = { "cutoff", "randomvector" };
+	
+	
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException, InterruptedException {
@@ -95,6 +103,12 @@ public class RPHash {
 				System.out.print(s + " ,");
 			System.out.print("]\n");
 
+			System.out.print("\t twrp_options" + "\t:[");
+			for (String s : twrp_options)
+				System.out.print(s + " ,");
+			System.out.print("]\n");
+			
+			
 			System.exit(0);
 		}
 
@@ -114,6 +128,9 @@ public class RPHash {
 				matched |= keyword.equals(match);
 			for (String match : decoders)
 				matched |= keyword.equals(match);
+			for (String match : twrp_options)
+				matched |= keyword.equals(match);
+			
 			if (!matched)
 				unmatchedkeywords.add(keyword);
 		}
@@ -503,6 +520,20 @@ public class RPHash {
 			o.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
 			so.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
 		}
+		
+		
+		if (taggedArgs.containsKey("cutoff")) {
+			o.setCutoff(Integer.parseInt(taggedArgs.get("cutoff")));
+			so.setCutoff(Integer.parseInt(taggedArgs.get("cutoff")));
+		}
+		
+		
+		if (taggedArgs.containsKey("randomvector")) {
+			o.setRandomVector(Boolean.parseBoolean(taggedArgs.get("randomvector")));
+			so.setRandomVector(Boolean.parseBoolean(taggedArgs.get("randomvector")));
+		}
+		
+		
 
 		if (taggedArgs.containsKey("projection")) {
 			switch (taggedArgs.get("projection")) {
