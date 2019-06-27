@@ -72,7 +72,7 @@ public class TWRPv2 implements Clusterer, Runnable {
 		return ret;
 	}
 	
-	
+// this updates the map two cents with different weigths are merged into one.
 	public static float[][] UpdateHashMap(float cnt_1, float[] x_1, 
 			float cnt_2, float[] x_2) {
 		

@@ -15,6 +15,7 @@ import edu.uc.rphash.decoders.Decoder;
 import edu.uc.rphash.decoders.DepthProbingLSH;
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.Spherical;
+import edu.uc.rphash.decoders.SphericalRandom;
 import edu.uc.rphash.frequentItemSet.ItemSet;
 import edu.uc.rphash.frequentItemSet.SimpleFrequentItemSet;
 import edu.uc.rphash.lsh.LSH;
@@ -311,7 +312,8 @@ public class RPHashSimple implements Clusterer {
 				GenerateData gen = new GenerateData(k, n / k, d, f, true, 1f);
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
 				RPHashSimple rphit = new RPHashSimple(o);
-				o.setDecoderType(new Spherical(32, 4, 1));
+				o.setDecoderType(new SphericalRandom(32, 4, 1)); 
+				//o.setDecoderType(new Spherical(32, 4, 1));
 				// o.setDimparameter(31);
 				//o.setOfflineClusterer(new KMeans2());
 				o.setOfflineClusterer(new MultiKMPP());
@@ -326,12 +328,11 @@ public class RPHashSimple implements Clusterer {
 				
 				avgtime += (System.nanoTime() - startTime) / 100000000;
 
-				// avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),
-				// gen.getData());
+				 avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),gen.getData());
 
-				// System.out.printf("%.0f\t",
-				// StatTests.WCSSECentroidsFloat(centsr, gen.data));
-				// System.gc();
+				 System.out.printf("%.0f\t",
+				 StatTests.WCSSECentroidsFloat(centsr, gen.data));
+				 System.gc();
 
 			}
 			System.out.printf("%.0f\n", avgrealwcss / count);
