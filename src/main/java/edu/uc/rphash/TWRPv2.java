@@ -473,7 +473,7 @@ public class TWRPv2 implements Clusterer, Runnable {
 				o.setRandomVector(true);
 				
 //				System.out.println("cutoff = "+ o.getCutoff());
-//				System.out.println("get_random_Vector = "+ o.getRandomVector());			
+				System.out.println("get_random_Vector = "+ o.getRandomVector());			
 								
 				TWRPv2 rphit = new TWRPv2(o);
 				long startTime = System.nanoTime();
