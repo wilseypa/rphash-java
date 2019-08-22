@@ -1,8 +1,10 @@
 package edu.uc.rphash;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -16,11 +18,12 @@ import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.generators.GenerateData;
+import edu.uc.rphash.util.VectorUtil;
 
 
 public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 
-	boolean znorm = true;
+	boolean znorm = false;
 	
 	
 	private int counter;
@@ -63,17 +66,21 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	//float[] rngvec; the range vector is moot if incoming data has been normalized
 	//post normalization it should all be zero centered, with variance 1
 
-
 	/*
 	 * super simple hash algorithm, reminiscient of pstable lsh
 	 */
+	// xt is the projected vector and x is the original vector , rngvec is the randomly generated vector of projected dim.
+	
 	public long hashvec(float[] xt, float[] x,
 			HashMap<Long, List<float[]>> IDAndCent, HashMap<Long, List<Integer>> IDAndLabel,int ct) {
-		long s = 1;//fixes leading 0's bug
+		long s = 1;                                  //fixes leading 0's bug
 		for (int i = 0; i < xt.length; i++) {
-			s <<= 1;
+//			s <<= 1;
+			s = s << 1 ;                             // left shift the bits of s by 1.
 			if (xt[i] > rngvec[i])
-				s += 1;
+//				s +=  1;
+				s= s+1;
+			
 			if (IDAndCent.containsKey(s)) {
 				IDAndLabel.get(s).add(ct);
 				IDAndCent.get(s).add(x);
@@ -143,16 +150,17 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		projector.init();
 		
 		int ct = 0;
-		if(znorm == true){
-			float[] variance = StatTests.varianceCol(so.getRawData());
-			float[] mean = StatTests.meanCols(so.getRawData());
-			// #process data by adding to the counter
-			for (float[] x : so.getRawData()) 
-			{
-				addtocounter(x, projector, IDAndCent,IDAndID,ct++,mean,variance);
-			}
-		}
-		else
+//		if(znorm == true){
+//			float[] variance = StatTests.varianceCol(so.getRawData());
+//			float[] mean = StatTests.meanCols(so.getRawData());
+//			// #process data by adding to the counter
+//			for (float[] x : so.getRawData()) 
+//			{
+//				addtocounter(x, projector, IDAndCent,IDAndID,ct++,mean,variance);
+//			}
+//		}
+//		
+//		else
 		{
 			
 			for (float[] x : so.getRawData()) 
@@ -160,6 +168,24 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 				addtocounter(x, projector, IDAndCent, IDAndID,ct++);
 			}
 		}
+		
+		
+//		for (Long name: IDAndCent.keySet()){
+//
+//            String key =name.toString();                        
+//     //       	String value = IDAndCent.get(name).toString() ;       	
+//    //        	String value1 = Arrays.toString(value.toString());            	
+//                System.out.println(key )  ;//+ " " + value);	           
+//} 
+	
+		System.out.println("NumberOfMicroClustersBeforePruning = "+ IDAndCent.size());
+//		for (Long name: IDAndID.keySet()){
+//            String key =name.toString();
+//            String value = IDAndID.get(name).toString();  
+//            System.out.println(key + " " + value);  
+//
+//
+//}
 		
 		// next we want to prune the tree by parent count comparison
 		// follows breadthfirst search
@@ -197,8 +223,10 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 
 		List<Long> sortedIDList= new ArrayList<>();
 		// sort and limit the list
-		stream.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(so.getk()*4)
+		stream.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(so.getk()*6)
 				.forEachOrdered(x -> sortedIDList.add(x.getKey()));
+		
+		System.out.println("NumberOfMicroClustersAfterPruning = "+ sortedIDList.size());
 		
 		// compute centroids
 
@@ -207,12 +235,16 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		{
 			estcents.put(sortedIDList.get(i), IDAndCent.get(sortedIDList.get(i)));
 		}
+		
+		
 //		System.out.println();
 //		for (int i =0; i<sortedIDList.size();i++)
 //		{
 //			System.out.println(sortedIDList.get(i) + ":"+VectorUtil.longToString(sortedIDList.get(i))+":"+IDAndCent.get(sortedIDList.get(i)).size());
 //		}
 		
+//		System.out.println("NumberOfMicroClusters_AfterPruning = "+ denseSetOfIDandCount.size());
+		System.out.println("NumberOfMicroClusters_AfterPruning = "+ estcents.size());	
 		
 		
 		return new ArrayList<>(estcents.values());
@@ -229,12 +261,14 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 		List<float[]>centroids = new ArrayList<>();
 		
 		List<Float> weights =new ArrayList<>();
-		int k = clustermembers.size()>200+so.getk()?200+so.getk():clustermembers.size();
+	//	int k = clustermembers.size()>200+so.getk()?200+so.getk():clustermembers.size();
+		int k = clustermembers.size();
 		for(int i=0;i<k;i++){
 			weights.add(new Float(clustermembers.get(i).size()));
 			centroids.add(medoid(clustermembers.get(i)));
 		}
 		Agglomerative3 aggloOffline =  new Agglomerative3(centroids, so.getk());
+//		System.out.println(centroids.size());
 		aggloOffline.setWeights(weights);
 		this.centroids = aggloOffline.getCentroids();
 	}
@@ -242,22 +276,22 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException {
 
-		int k = 10;
-		int d = 1000;
+		int k = 80;
+		int d = 500;
 		int n = 10000;
-		float var = 0.1f;
-		int count = 10;
-		System.out.printf("ClusterVar\t");
-		for (int i = 0; i < count; i++)
-			System.out.printf("Trial%d\t", i);
-		System.out.printf("RealWCSS\n");
+		float var = 1.5f;//0.5f;
+		int count = 1;
+	//	System.out.printf("ClusterVar\t");
+	//	for (int i = 0; i < count; i++)
+	//		System.out.printf("Trial%d\t", i);
+	//	System.out.printf("RealWCSS\n");
 
-		for (float f = var; f < 5.01; f += .05f) {
+		for (float f = var; f < 1.51; f += 1.5f) {
 			float avgrealwcss = 0;
 			float avgtime = 0;
-			System.out.printf("%f\t", f);
+	//		System.out.printf("%f\t", f);
 			for (int i = 0; i < count; i++) {
-				GenerateData gen = new GenerateData(k, n / k, d, f, true, .5f);
+				GenerateData gen = new GenerateData(k, n/k, d, f, true, .5f);
 				// gen.writeCSVToFile(new
 				// File("/home/lee/Desktop/reclsh/in.csv"));
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
@@ -271,12 +305,21 @@ public class RPHashAdaptive2Pass implements Clusterer, Runnable {
 				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),
 						gen.getData());
 				
-				System.out.printf("%.0f\t",
-						StatTests.WCSSECentroidsFloat(centsr, gen.data));
+				
+				String Output = "/C:/Users/user/Desktop/temp/OutputTwrpCents" ;   	
+				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);
+				
+				System.out.printf("%.0f\n\t",StatTests.WCSSECentroidsFloat(centsr, gen.data));
 				System.gc();
 			}
 			System.out.printf("%.0f\n", avgrealwcss / count);
+			
+
+			
 		}
+		
+		
+		
 	}
 
 	@Override

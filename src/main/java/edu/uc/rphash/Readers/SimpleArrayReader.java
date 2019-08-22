@@ -33,6 +33,11 @@ public class SimpleArrayReader implements RPHashObject {
 	private Clusterer clusterer;
 	private boolean normalize = false;
 	private Projector projector;
+	
+	boolean RandomVector = false;
+	int Cutoff;
+	
+	
 
 	public void setRandomSeed(long randomSeed) {
 		this.randomSeed = randomSeed;
@@ -397,4 +402,31 @@ public class SimpleArrayReader implements RPHashObject {
 	public Projector getProjectionType(){
 		return this.projector;
 	}
+	
+	
+	
+	@Override
+	public void setCutoff(int parseInt) {
+		this.Cutoff = parseInt;
+		
+	}
+
+	@Override
+	public int getCutoff() {
+
+		return this.Cutoff;
+	}
+	
+	
+	
+	@Override
+	public void setRandomVector(boolean parseBoolean) {
+		this.RandomVector = parseBoolean;		
+	}
+	public boolean getRandomVector() {
+		return this.RandomVector;		
+	}
+	
+	
+	
 }

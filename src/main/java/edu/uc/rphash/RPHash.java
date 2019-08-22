@@ -22,11 +22,11 @@ import edu.uc.rphash.Readers.StreamObject;
 import edu.uc.rphash.decoders.DepthProbingLSH;
 import edu.uc.rphash.decoders.Dn;
 import edu.uc.rphash.decoders.E8;
-import edu.uc.rphash.decoders.Golay;
+
 import edu.uc.rphash.decoders.Leech;
 import edu.uc.rphash.decoders.MultiDecoder;
 import edu.uc.rphash.decoders.OriginDecoder;
-import edu.uc.rphash.decoders.PsdLSH;
+
 import edu.uc.rphash.decoders.Spherical;
 import edu.uc.rphash.projections.DBFriendlyProjection;
 import edu.uc.rphash.projections.FJLTProjection;
@@ -34,13 +34,13 @@ import edu.uc.rphash.projections.GaussianProjection;
 import edu.uc.rphash.projections.NoProjection;
 import edu.uc.rphash.projections.SVDProjection;
 import edu.uc.rphash.tests.StatTests;
-import edu.uc.rphash.tests.clusterers.AdaptiveMeanShift;
+
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.clusterers.DummyClusterer;
 import edu.uc.rphash.tests.clusterers.DBScan;
 import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.KMeansPlusPlus;
-import edu.uc.rphash.tests.clusterers.LloydIterativeKmeans;
+
 import edu.uc.rphash.tests.clusterers.MultiKMPP;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans;
 import edu.uc.rphash.tests.clusterers.StreamingKmeans2;
@@ -51,17 +51,25 @@ import edu.uc.rphash.util.VectorUtil;
 public class RPHash {
 
 	static String[] clusteringmethods = { "simple", "streaming", "multiproj", 
-		"kmeans", "pkmeans","kmeansplusplus", "streamingkmeans", "adaptive","dummy" };
+		"kmeans", "pkmeans","kmeansplusplus", "streamingkmeans", "adaptive","dummy" ,"twrp"};
+	
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
 		"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "multikmpp" , "dbscan", "none" };
+	
 	static String[] projectionmethods = { "dbf", "fjlt", "rp", "svd", "noproj" };
+	
 	static String[] ops = { "numprojections", "innerdecodermultiplier",
 		"numblur", "randomseed", "hashmod", "parallel", "streamduration",
 		"raw", "decayrate", "dimparameter", "decodertype",
 		"offlineclusterer", "runs", "normalize", "projection" };
+	
 	static String[] decoders = { "dn", "e8", "golay", "multie8", "leech",
 			"multileech", "sphere", "levypstable", "cauchypstable",
 			"gaussianpstable", "adaptive", "origin" };
+	
+	static String[] twrp_options = { "cutoff", "randomvector" };
+	
+	
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException, InterruptedException {
@@ -95,6 +103,12 @@ public class RPHash {
 				System.out.print(s + " ,");
 			System.out.print("]\n");
 
+			System.out.print("\t twrp_options" + "\t:[");
+			for (String s : twrp_options)
+				System.out.print(s + " ,");
+			System.out.print("]\n");
+			
+			
 			System.exit(0);
 		}
 
@@ -114,6 +128,9 @@ public class RPHash {
 				matched |= keyword.equals(match);
 			for (String match : decoders)
 				matched |= keyword.equals(match);
+			for (String match : twrp_options)
+				matched |= keyword.equals(match);
+			
 			if (!matched)
 				unmatchedkeywords.add(keyword);
 		}
@@ -503,6 +520,20 @@ public class RPHash {
 			o.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
 			so.setNormalize(Boolean.parseBoolean(taggedArgs.get("normalize")));
 		}
+		
+		
+		if (taggedArgs.containsKey("cutoff")) {
+			o.setCutoff(Integer.parseInt(taggedArgs.get("cutoff")));
+			so.setCutoff(Integer.parseInt(taggedArgs.get("cutoff")));
+		}
+		
+		
+		if (taggedArgs.containsKey("randomvector")) {
+			o.setRandomVector(Boolean.parseBoolean(taggedArgs.get("randomvector")));
+			so.setRandomVector(Boolean.parseBoolean(taggedArgs.get("randomvector")));
+		}
+		
+		
 
 		if (taggedArgs.containsKey("projection")) {
 			switch (taggedArgs.get("projection")) {
@@ -552,11 +583,7 @@ public class RPHash {
 				so.setDecoderType(new E8(2f));
 				break;
 			}
-			case "golay": {
-				o.setDecoderType(new Golay());
-				so.setDecoderType(new Golay());
-				break;
-			}
+			
 			case "multie8": {
 				o.setDecoderType(new MultiDecoder(
 						o.getInnerDecoderMultiplier() * 8, new E8(2f)));
@@ -576,23 +603,9 @@ public class RPHash {
 						.getInnerDecoderMultiplier() * 24, new Leech()));
 				break;
 			}
-			case "levypstable": {
-				o.setDecoderType(new PsdLSH(PsdLSH.LEVY, o.getDimparameter()));
-				so.setDecoderType(new PsdLSH(PsdLSH.LEVY, o.getDimparameter()));
-				break;
-			}
-			case "cauchypstable": {
-				o.setDecoderType(new PsdLSH(PsdLSH.CAUCHY, o.getDimparameter()));
-				so.setDecoderType(new PsdLSH(PsdLSH.CAUCHY, o.getDimparameter()));
-				break;
-			}
-			case "gaussianpstable": {
-				o.setDecoderType(new PsdLSH(PsdLSH.GAUSSIAN, o
-						.getDimparameter()));
-				so.setDecoderType(new PsdLSH(PsdLSH.GAUSSIAN, o
-						.getDimparameter()));
-				break;
-			}
+			
+				
+			
 			case "sphere": {// pad to ~32 bits
 				// int ctsofsphere =
 				// (int)(Math.log(o.getDimparameter()*2)/Math.log(2.0)) /2;
@@ -659,13 +672,7 @@ public class RPHash {
 				o.setOfflineClusterer(new KMeansPlusPlus());
 				so.setOfflineClusterer(new KMeansPlusPlus());
 				break;
-			case "adaptivemeanshift": {
-
-				o.setOfflineClusterer(new AdaptiveMeanShift());
-				so.setOfflineClusterer(new AdaptiveMeanShift());
-
-				break;
-			}
+			
 			case "kmpp": {
 
 				o.setOfflineClusterer(new KMeansPlusPlus());
@@ -727,11 +734,7 @@ public class RPHash {
 				runitems.add(new KMeans2(k, o.getRawData()));
 				break;
 			}
-			case "pkmeans":
-				runitems.add(new LloydIterativeKmeans(k, o.getRawData(), o
-						.getNumProjections()));
-				break;
-
+			
 			case "kmeansplusplus":
 				runitems.add(new KMeansPlusPlus(o.getRawData(), k));
 				break;
@@ -743,14 +746,17 @@ public class RPHash {
 					runitems.add(new StreamingKmeans2(o));
 				break;
 			}
-			case "adaptivemeanshift": {
-				runitems.add(new AdaptiveMeanShift());
-				break;
-			}
+			
 			case "adaptive": {
 				runitems.add(new RPHashAdaptive2Pass(o));
 				break;
 			}
+			
+			case "twrp": {
+				runitems.add(new TWRPv2(o));
+				break;
+			}
+			
 			case "dummy": {
 				runitems.add(new DummyClusterer(so));
 				break;
