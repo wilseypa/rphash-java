@@ -30,7 +30,7 @@ import com.google.common.collect.Multimap;
 
 
 
-public class TWRPv3 implements Clusterer, Runnable {
+public class TWRPv5_WCSS implements Clusterer, Runnable {
 
 	boolean znorm = false;
 	
@@ -43,7 +43,7 @@ public class TWRPv3 implements Clusterer, Runnable {
 	
 	private RPHashObject so;
 
-	public TWRPv3(RPHashObject so) {
+	public TWRPv5_WCSS(RPHashObject so) {
 		this.so = so;
 	}
 
@@ -72,6 +72,8 @@ public class TWRPv3 implements Clusterer, Runnable {
 		 // new empty map
 		HashMap<Long, float[]> combined = new HashMap<>();  
 		combined.putAll( partidandcent1);
+		
+		
 
 		for(Long key :  partidandcent2.keySet()) {
 		    if(combined.containsKey(key)) {
@@ -167,18 +169,28 @@ public class TWRPv3 implements Clusterer, Runnable {
 		for (int i = 0; i < x_1.length; i++) {
 			x_r[i] = (cnt_1 * x_1[i] + cnt_2 * x_2[i]) / cnt_r;
 			
+			
+			x_diff_sq[i]= (x_1[i]- x_2[i])*(x_1[i]- x_2[i]);
+			
+			
 		}
 
+		
+		
 		float[][] ret = new float[2][];
 		ret[0] = new float[1];
 		ret[0][0] = cnt_r;
 		ret[1] = x_r;
 		return ret;
+		
+		
+		
+		
 	}
 		
 
 	public long hashvec2( float[] xt, float[] x,
-			HashMap<Long, float[]>  MapOfIDAndCent, HashMap<Long, Long>  MapOfIDAndCount,int ct, float[] rngvec) {
+			HashMap<Long, float[]>  MapOfIDAndCent, HashMap<Long, Long>  MapOfIDAndCount,  int ct, float[] rngvec, HashMap<Long, Float> MapOfIDAndWCSS) {
 		long s = 1;                                  //fixes leading 0's bug
 		for (int i = 0; i < xt.length; i++) {
 //			s <<= 1;
@@ -224,20 +236,13 @@ public class TWRPv3 implements Clusterer, Runnable {
 	 * maps
 	 */
 	void addtocounter(float[] x, Projector p,
-			HashMap<Long, float[]> IDAndCent,HashMap<Long, Long> IDandID,int ct, float[] rngvec) {
+			HashMap<Long, float[]> IDAndCent,HashMap<Long, Long> IDandID,int ct, float[] rngvec , HashMap<Long, Float> IDandWCSS) {
 		float[] xt = p.project(x);
 		
-		hashvec2(xt,x,IDAndCent, IDandID,ct,rngvec );
+		hashvec2(xt,x,IDAndCent, IDandID, ct,rngvec , IDandWCSS);
 	}
 	
-	void addtocounter(float[] x, Projector p,
-			HashMap<Long,float[]> IDAndCent,HashMap<Long, Long> IDandID,int ct,float[] mean,float[] variance, float[] rngvec )
-	{
-		float[] xt = p.project(StatTests.znormvec(x, mean, variance));
 
-		
-		hashvec2(xt,x,IDAndCent, IDandID,ct, rngvec);
-	}
 
 	static boolean isPowerOfTwo(long num) {
 		return (num & -num) == num;
@@ -269,6 +274,16 @@ public class TWRPv3 implements Clusterer, Runnable {
 	HashMap<Long, Long> MapOfIDAndCount = new HashMap<>();
 	
 	
+	HashMap<Long, Float> MapOfIDAndWCSS1 = new HashMap<>();  
+	HashMap<Long, Float> MapOfIDAndWCSS2 = new HashMap<>();
+	HashMap<Long, Float> MapOfIDAndWCSS3 = new HashMap<>();
+	HashMap<Long, Float> MapOfIDAndWCSS =  new HashMap<>();
+	
+	
+	
+	
+	
+	
 	// #create projector matrixs
 	Projector projector = so.getProjectionType();
 	projector.setOrigDim(so.getdim());
@@ -283,9 +298,9 @@ public class TWRPv3 implements Clusterer, Runnable {
 		
 		for (float[] x : so.getRawData()) 
 		{
-			addtocounter(x, projector, MapOfIDAndCent1, MapOfIDAndCount1,ct++, rngvec);
-			addtocounter(x, projector, MapOfIDAndCent2, MapOfIDAndCount2,ct++, rngvec2);
-			addtocounter(x, projector, MapOfIDAndCent3, MapOfIDAndCount3,ct++, rngvec3);
+			addtocounter(x, projector, MapOfIDAndCent1, MapOfIDAndCount1,ct++, rngvec, MapOfIDAndWCSS1);
+			addtocounter(x, projector, MapOfIDAndCent2, MapOfIDAndCount2,ct++, rngvec2,MapOfIDAndWCSS2);
+			addtocounter(x, projector, MapOfIDAndCent3, MapOfIDAndCount3,ct++, rngvec3,MapOfIDAndWCSS3);
 			
 			
 		}
@@ -531,7 +546,7 @@ public class TWRPv3 implements Clusterer, Runnable {
 //				System.out.println("cutoff = "+ o.getCutoff());
 //				System.out.println("get_random_Vector = "+ o.getRandomVector());			
 								
-				TWRPv3 rphit = new TWRPv3(o);
+				TWRPv5_WCSS rphit = new TWRPv5_WCSS(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
 

@@ -4,12 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-//import java.util.Arrays;
 import java.util.HashMap;
-//import java.util.Iterator;
-//import java.util.LinkedHashMap;
 import java.util.List;
-//import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeSet;
@@ -23,27 +19,21 @@ import edu.uc.rphash.tests.clusterers.Agglomerative3;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
-//import org.apache.commons.collections.map.MultiValueMap;
-//import org.apache.commons.collections.map.*;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 
-
-public class TWRPv3 implements Clusterer, Runnable {
+public class TWRPv4 implements Clusterer, Runnable {
 
 	boolean znorm = false;
 	
 	private int counter;
-	private float[] rngvec;
-	private float[] rngvec2;
-	private float[] rngvec3;
-	
 	private List<Centroid> centroids = null;
+	private float[] bisectionVector;
 	
 	private RPHashObject so;
 
-	public TWRPv3(RPHashObject so) {
+	public TWRPv4(RPHashObject so) {
 		this.so = so;
 	}
 
@@ -58,87 +48,6 @@ public class TWRPv3 implements Clusterer, Runnable {
 			run();
 		return centroids;
 	}
-	
-	
-	
-	// combines two hashmaps of idsandcents
-	
-	public static HashMap<Long, float[]> mergehmapsidsandcents(
-			HashMap<Long,  float[]> partidandcent1,
-			HashMap<Long,  float[]> partidandcent2,
-			HashMap<Long, Long> partidandcount1,
-			HashMap<Long, Long> partidandcount2) 
-{
-		 // new empty map
-		HashMap<Long, float[]> combined = new HashMap<>();  
-		combined.putAll( partidandcent1);
-
-		for(Long key :  partidandcent2.keySet()) {
-		    if(combined.containsKey(key)) {
-		    	
-		    	
-		    	Long weight1= partidandcount1.get(key);
-		    	
-		    	float[] cent1=  combined.get(key);
-		    	
-		    	Long weight2= partidandcount2.get(key);
-		    	
-		    	float [] cent2= partidandcent2.get(key);
-		    	 
-		    	float [][] joined = UpdateHashMap(weight1, cent1 ,weight2 , cent2 );
-		    	float combinedCount =  joined[0][0];
-		    	float [] combinedCent = joined[1];
-		    	
-		    	
-		    	combined.put(key,combinedCent);
-		    	
-		    }
-		    else {
-		    	combined.put(key,partidandcent2.get(key));
-		    }
-		}
-							
-		return (combined);
-		
-}
-	
-	
-	
-	// combines two hashmaps of idsandcounts
-	
-	public static HashMap<Long, Long> mergehmapsidsandcounts(HashMap<Long, Long> partidandcount1,
-			HashMap<Long, Long> partidandcountt2) 
-	{
-		
-		
-		HashMap<Long, Long> combined  = new HashMap<Long, Long> (); // new empty map
-		combined.putAll(partidandcount1);
-		
-		
-		
-		for(Long key : partidandcountt2.keySet()) {
-		    if(combined.containsKey(key)) {
-		    	
-		 	
-		    	long value1 = combined.get(key);
-		    	long value2 = partidandcountt2.get(key);
-		    	long value3 = value1 + value2;
-		  		    	
-		    	combined.put(key,value3);	
-		    	  	
-		    	
-		    } 
-		    else {
-		    	combined.put(key,partidandcountt2.get(key));
-		    }
-		    
-		
-		
-	}
-		return (combined);
-		}
-	
-	
 	
 	/*
 	 * X - set of vectors compute the medoid of a vector set
@@ -176,14 +85,25 @@ public class TWRPv3 implements Clusterer, Runnable {
 		return ret;
 	}
 		
-
-	public long hashvec2( float[] xt, float[] x,
-			HashMap<Long, float[]>  MapOfIDAndCent, HashMap<Long, Long>  MapOfIDAndCount,int ct, float[] rngvec) {
+	//float[] rngvec; the range vector is moot if incoming data has been normalized
+	//post normalization it should all be zero centered, with variance 1	
+	/*
+	 * super simple hash algorithm, reminiscient of pstable lsh
+	 */
+	// xt is the projected vector and x is the original vector , rngvec is the randomly generated vector of projected dim.
+	
+	
+	public long hashvec2(float[] xt, float[] x,
+			HashMap<Long, float[]>  MapOfIDAndCent, HashMap<Long, Long>  MapOfIDAndCount,int ct, float[] bisectionVector) {
+		
+//		for (int i=0 ; i<bisectionVector.length; i++) 
+//		{System.out.println(" bisectionvector in tree building = " + bisectionVector[i]);}	
+		
 		long s = 1;                                  //fixes leading 0's bug
 		for (int i = 0; i < xt.length; i++) {
 //			s <<= 1;
 			s = s << 1 ;                             // left shift the bits of s by 1.
-			if (xt[i] > rngvec[i])
+			if (xt[i] > bisectionVector[i])
 				s= s+1;
 							
 			if (MapOfIDAndCent.containsKey(s)) {
@@ -224,51 +144,26 @@ public class TWRPv3 implements Clusterer, Runnable {
 	 * maps
 	 */
 	void addtocounter(float[] x, Projector p,
-			HashMap<Long, float[]> IDAndCent,HashMap<Long, Long> IDandID,int ct, float[] rngvec) {
+			HashMap<Long, float[]> IDAndCent,HashMap<Long, Long> IDandID,int ct , float[]bisectionVector) {
 		float[] xt = p.project(x);
 		
-		hashvec2(xt,x,IDAndCent, IDandID,ct,rngvec );
+
+		hashvec2(xt,x,IDAndCent, IDandID,ct,bisectionVector);
 	}
 	
-	void addtocounter(float[] x, Projector p,
-			HashMap<Long,float[]> IDAndCent,HashMap<Long, Long> IDandID,int ct,float[] mean,float[] variance, float[] rngvec )
-	{
-		float[] xt = p.project(StatTests.znormvec(x, mean, variance));
-
-		
-		hashvec2(xt,x,IDAndCent, IDandID,ct, rngvec);
-	}
 
 	static boolean isPowerOfTwo(long num) {
 		return (num & -num) == num;
 	}
-	
-
-	
 
 	/*
 	 * X - data set k - canonical k in k-means l - clustering sub-space Compute
 	 * density mode via iterative deepening hash counting
 	 */
 	
-	
 	public Multimap<Long, float[]>  findDensityModes2() {
-	//public Map<Long, float[]>  findDensityModes2() {
-	HashMap<Long, float[]> MapOfIDAndCent1 = new HashMap<>();  
-	HashMap<Long, Long> MapOfIDAndCount1 = new HashMap<>();
-	
-	
-	HashMap<Long, float[]> MapOfIDAndCent2 = new HashMap<>();  
-	HashMap<Long, Long> MapOfIDAndCount2 = new HashMap<>();
-	
-	
-	HashMap<Long, float[]> MapOfIDAndCent3 = new HashMap<>();  
-	HashMap<Long, Long> MapOfIDAndCount3 = new HashMap<>();
-	
 	HashMap<Long, float[]> MapOfIDAndCent = new HashMap<>();  
 	HashMap<Long, Long> MapOfIDAndCount = new HashMap<>();
-	
-	
 	// #create projector matrixs
 	Projector projector = so.getProjectionType();
 	projector.setOrigDim(so.getdim());
@@ -279,39 +174,46 @@ public class TWRPv3 implements Clusterer, Runnable {
 	
 	int ct = 0;
 
+	
+	int countformean=0;
+	for (float[] x : so.getRawData()) 
+	{
+		
+		float[] temp = projector.project(x);
+		
+				for (int i=0 ; i<bisectionVector.length; i++) {
+					
+//					System.out.println("count = " + countformean);
+//					System.out.println(" vectors = " + temp[i]);
+					bisectionVector[i]= (countformean * bisectionVector[i] + 1* temp[i])/(countformean+1);
+//					System.out.println(" vectors mean = " + bisectionVector[i]);
+				
+					}
+		countformean = countformean+1;
+		
+	}
+	
+	
+	
+//	for (int i=0 ; i<bisectionVector.length; i++) 
+//	{System.out.println(" bisection vector after creation = " + bisectionVector[i]);}
+	
+	
 	{
 		
 		for (float[] x : so.getRawData()) 
 		{
-			addtocounter(x, projector, MapOfIDAndCent1, MapOfIDAndCount1,ct++, rngvec);
-			addtocounter(x, projector, MapOfIDAndCent2, MapOfIDAndCount2,ct++, rngvec2);
-			addtocounter(x, projector, MapOfIDAndCent3, MapOfIDAndCount3,ct++, rngvec3);
-			
-			
+			addtocounter(x, projector, MapOfIDAndCent, MapOfIDAndCount,ct++,bisectionVector);
 		}
 	}
 	
 	
-	MapOfIDAndCount=mergehmapsidsandcounts(MapOfIDAndCount1, MapOfIDAndCount2);
-	
-	MapOfIDAndCent = mergehmapsidsandcents(MapOfIDAndCent1,MapOfIDAndCent2,MapOfIDAndCount1, MapOfIDAndCount2 );
 
-	MapOfIDAndCent = mergehmapsidsandcents(MapOfIDAndCent,MapOfIDAndCent3,MapOfIDAndCount, MapOfIDAndCount3 );
 	
-	MapOfIDAndCount=mergehmapsidsandcounts(MapOfIDAndCount, MapOfIDAndCount3);
-	
-	
-	
-	
-	
-		
 	System.out.println("NumberOfMicroClustersBeforePruning = "+ MapOfIDAndCent.size());
 	
 	// next we want to prune the tree by parent count comparison
 	// follows breadthfirst search
-	
-	
-	
 	
 	HashMap<Long, Long> denseSetOfIDandCount2 = new HashMap<Long, Long>();
 	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount.keySet())) 
@@ -327,12 +229,8 @@ public class TWRPv3 implements Clusterer, Runnable {
 					denseSetOfIDandCount2.put(parent_id, 0L);
 				//	IDAndCent.put(parent_id, new ArrayList<>());
 					
-//HashMap<Long, List<float[]>> IDAndCent = new HashMap<>(); and HashMap<Long, float[]> MapOfIDAndCent = new HashMap<Long, float[]>();
-					
 					MapOfIDAndCent.put(parent_id, new float[]{});
-					
-		//			MapOfIDAndCount.put(parent_id, new Long (0));
-					
+	
 					denseSetOfIDandCount2.put(cur_id, (long) cur_count);
 					
 	            }
@@ -373,29 +271,21 @@ public class TWRPv3 implements Clusterer, Runnable {
 	// sort and limit the list
 	stream2.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(cutoff)
 			.forEachOrdered(x -> sortedIDList2.add(x.getKey()));
-		
-//	HashMap<Long, float[]> KeyAndCent = new HashMap<>();
-//	HashMap<Long, Long> KeyAndCount = new HashMap<>();
-//	Map<Long, float[]> WeightAndCent = new HashMap<>();
-//	Map<Long, float[]> WeightAndCent = new LinkedHashMap<>();
+
 	Multimap<Long, float[]> multimapWeightAndCent = ArrayListMultimap.create();
 
-	
 
-//	  
 	for (Long keys: sortedIDList2)
 		
 		{
-//		  WeightAndCent.put((Long)(MapOfIDAndCount.get(keys)), (float[]) (MapOfIDAndCent.get(keys)));
+
 		  
 		  multimapWeightAndCent.put((Long)(MapOfIDAndCount.get(keys)), (float[]) (MapOfIDAndCent.get(keys)));
 			
-//		  KeyAndCent.put(keys, MapOfIDAndCent.get(keys));			
-//		  KeyAndCount.put(keys, MapOfIDAndCount.get(keys));
-				
+
 		}
 		
-	
+
 		
 	return multimapWeightAndCent;
 	
@@ -403,89 +293,34 @@ public class TWRPv3 implements Clusterer, Runnable {
 	
 	
 	public void run() {
-		rngvec = new float[so.getDimparameter()];
 		
-		rngvec2 = new float[so.getDimparameter()];
-		
-		rngvec3 = new float[so.getDimparameter()];
-		
+		bisectionVector = new float[so.getDimparameter()];
 		counter = 0;
-		boolean randVect = so.getRandomVector();
-		
-	//  Random r = new Random(so.getRandomSeed());
-	//	Random r = new Random(3800635955020675334L) ;
-		Random r = new Random();
-		Random r2 = new Random();
-		Random r3 = new Random();
-		
-		if (randVect==true){
-		for (int i = 0; i < so.getDimparameter(); i++)
-			rngvec[i] = (float) r.nextGaussian();
-		
-		for (int i = 0; i < so.getDimparameter(); i++)
-		    rngvec2[i] = (float) r2.nextGaussian();
-		
-		for (int i = 0; i < so.getDimparameter(); i++)
-		    rngvec3[i] = (float) r3.nextGaussian();
-			
-		
-		    } else {
-			for (int i = 0; i < so.getDimparameter(); i++)
-			rngvec[i] = (float) 0;
-			   }
-		
-		
-		
-		
-		
 	
 		Multimap<Long, float[]> WeightAndClusters = findDensityModes2();
-		//Map<Long, float[]> WeightAndClusters = findDensityModes2();
-		
-		
-		
 		
 		List<float[]>centroids2 = new ArrayList<>();
 		List<Float> weights2 =new ArrayList<>();
 		
-		
 		System.out.println("NumberOfMicroClusters_AfterPruning = "+ WeightAndClusters.size());		
-		System.out.println("getRandomVector = "+ randVect);
-		
-	//	int k = NumberOfMicroClusters>200+so.getk()?200+so.getk():NumberOfMicroClusters;
-		
-	// have to prune depending  NumberOfMicroClusters returned.
-	//	int i = 1;
-	//	int j=1;
-	//	for (Long weights : new TreeSet<Long>(WeightAndClusters.keySet()))
+
+
 		for (Long weights : WeightAndClusters.keys())						
 		{
-	//		System.out.println("NumberOfTreesetkeys = "+ i);			
-	//		String key =weights.toString(); 
-	//      System.out.println(weights); 			
+				
 		weights2.add((float)weights);
-		//	centroids2.add(WeightAndClusters.get(weights));
-		//	centroids2.addAll(WeightAndClusters.get(weights));			
-	//	i=i+1;
+	
 		}
-	//	System.out.println("done printing keys for weights");
+
 		
 		for (Long weight : WeightAndClusters.keySet())	
 			
 		{
-	//		System.out.println(weight);
-	//		System.out.println("NumberOfTreesetkeys = "+ j);
+
 		    centroids2.addAll(WeightAndClusters.get(weight));
 					
-	//	j=j+1;
 		}	
-	//	System.out.println("done printing keys for centroids");
-		
-	//	System.out.println(weights2.size());
-	//	System.out.println(centroids2.size());
-		
-		//System.out.printf("\tvalueofK is ");
-		//System.out.println( so.getk());
+
 		
 		Agglomerative3 aggloOffline =  new Agglomerative3(centroids2, so.getk());
 		
@@ -500,7 +335,7 @@ public class TWRPv3 implements Clusterer, Runnable {
 			IOException {
 
 		int k = 10;//6;
-		int d = 700;//16;
+		int d = 500;//16;
 		int n = 10000;
 		float var = 1.5f;
 		int count = 1;
@@ -509,7 +344,7 @@ public class TWRPv3 implements Clusterer, Runnable {
 	//		System.out.printf("Trial%d\t", i);
 	//	System.out.printf("RealWCSS\n");
 		
-		String Output = "/C:/Users/deysn/Desktop/temp/OutputTwrpCents1" ;  
+		String Output = "/C:/Users/deysn/Desktop/temp/OutputTwrpCents1" ; 
 
 		    float f = var;
 			float avgrealwcss = 0;
@@ -523,15 +358,14 @@ public class TWRPv3 implements Clusterer, Runnable {
 						
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
 						
-				o.setDimparameter(20);
+				o.setDimparameter(16);
 	
 				o.setCutoff(100);
-				o.setRandomVector(true);
-				
+				o.setRandomVector(true);				
 //				System.out.println("cutoff = "+ o.getCutoff());
-//				System.out.println("get_random_Vector = "+ o.getRandomVector());			
+				System.out.println("get_random_Vector = "+ o.getRandomVector());			
 								
-				TWRPv3 rphit = new TWRPv3(o);
+				TWRPv4 rphit = new TWRPv4(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
 
