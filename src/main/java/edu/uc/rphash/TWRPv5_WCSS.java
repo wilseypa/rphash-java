@@ -61,86 +61,7 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 	
 	
 	
-	// combines two hashmaps of idsandcents
-	
-	public static HashMap<Long, float[]> mergehmapsidsandcents(
-			HashMap<Long,  float[]> partidandcent1,
-			HashMap<Long,  float[]> partidandcent2,
-			HashMap<Long, Long> partidandcount1,
-			HashMap<Long, Long> partidandcount2) 
-{
-		 // new empty map
-		HashMap<Long, float[]> combined = new HashMap<>();  
-		combined.putAll( partidandcent1);
-		
-		
-
-		for(Long key :  partidandcent2.keySet()) {
-		    if(combined.containsKey(key)) {
-		    	
-		    	
-		    	Long weight1= partidandcount1.get(key);
-		    	
-		    	float[] cent1=  combined.get(key);
-		    	
-		    	Long weight2= partidandcount2.get(key);
-		    	
-		    	float [] cent2= partidandcent2.get(key);
-		    	 
-		    	float [][] joined = UpdateHashMap(weight1, cent1 ,weight2 , cent2 );
-		    	float combinedCount =  joined[0][0];
-		    	float [] combinedCent = joined[1];
-		    	
-		    	
-		    	combined.put(key,combinedCent);
-		    	
-		    }
-		    else {
-		    	combined.put(key,partidandcent2.get(key));
-		    }
-		}
-							
-		return (combined);
-		
-}
-	
-	
-	
-	// combines two hashmaps of idsandcounts
-	
-	public static HashMap<Long, Long> mergehmapsidsandcounts(HashMap<Long, Long> partidandcount1,
-			HashMap<Long, Long> partidandcountt2) 
-	{
-		
-		
-		HashMap<Long, Long> combined  = new HashMap<Long, Long> (); // new empty map
-		combined.putAll(partidandcount1);
-		
-		
-		
-		for(Long key : partidandcountt2.keySet()) {
-		    if(combined.containsKey(key)) {
-		    	
-		 	
-		    	long value1 = combined.get(key);
-		    	long value2 = partidandcountt2.get(key);
-		    	long value3 = value1 + value2;
-		  		    	
-		    	combined.put(key,value3);	
-		    	  	
-		    	
-		    } 
-		    else {
-		    	combined.put(key,partidandcountt2.get(key));
-		    }
-		    
-		
-		
-	}
-		return (combined);
-		}
-	
-	
+	/*
 	
 	/*
 	 * X - set of vectors compute the medoid of a vector set
@@ -159,32 +80,49 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 	}
 	
 // this updates the map two cents with different weigths are merged into one.
-	public static float[][] UpdateHashMap(float cnt_1, float[] x_1, 
-			float cnt_2, float[] x_2) {
+	public static float[][] UpdateHashMap(float cnt_1, float[] x_1, float wcss_1,
+			float cnt_2, float[] x_2 , float wcss_2) {
 		
 		float cnt_r = cnt_1 + cnt_2;
 		
 		float[] x_r = new float[x_1.length];
 		
+		float[] var_r1 = new float[x_1.length];
+		float[] var_r2 = new float[x_1.length];
+		
+		double var1=0;
+		double var2=0;
+				
+
 		for (int i = 0; i < x_1.length; i++) {
 			x_r[i] = (cnt_1 * x_1[i] + cnt_2 * x_2[i]) / cnt_r;
 			
-			
-			x_diff_sq[i]= (x_1[i]- x_2[i])*(x_1[i]- x_2[i]);
-			
-			
+			var_r1[i] = ((-x_r[i] + x_1[i]) * (-x_r[i] + x_1[i]))/1000000000;
+					
+			var_r2[i] =(((-x_r[i] + x_2[i]) * (-x_r[i] + x_2[i])))/1000000000;
+					
 		}
+		
+		for (int i = 0; i < var_r1.length; i++) {
+		var1 = var1 + var_r1[i];
 
-		
-		
-		float[][] ret = new float[2][];
+		var2 = var2 + var_r2[i];
+							}
+		double wcsse=0;
+	    wcsse = (  cnt_1*(wcss_1*wcss_1 + (var1)) + var2 / (cnt_1 + cnt_2 ) ) ;
+	    
+	//    System.out.println("wcsse = " + wcsse);
+	    
+	    float wcss = (float) wcsse;
+	    
+		float[][] ret = new float[3][];
 		ret[0] = new float[1];
 		ret[0][0] = cnt_r;
 		ret[1] = x_r;
+		ret[2]= new float [1];
+		ret[2][0]= wcss;
 		return ret;
-		
-		
-		
+			
 		
 	}
 		
@@ -204,16 +142,24 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 				float CurrentCent [] = MapOfIDAndCent.get(s);
 				float CountForIncomingVector = 1;
 				float IncomingVector [] = x;
+				float currentWcss= MapOfIDAndWCSS.get(s);
+				float incomingWcss= 0;
 				
-				float[][] MergedValues = UpdateHashMap(CurrentCount , CurrentCent, CountForIncomingVector, IncomingVector );
+				
+				float[][] MergedValues = UpdateHashMap(CurrentCount , CurrentCent, currentWcss, CountForIncomingVector, IncomingVector, incomingWcss );
 				
 			  	Long UpdatedCount = (long) MergedValues[0][0] ;
 			  	
 				float[] MergedVector = MergedValues[1] ;
 				
+				float wcss= MergedValues[2][0];
+				
 				MapOfIDAndCount.put(s , UpdatedCount);
 				
 				MapOfIDAndCent.put(s, MergedVector);
+				
+				MapOfIDAndWCSS.put(s, wcss);
+				
 						
 			} 
 				
@@ -222,6 +168,7 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 				float[] xlist = x;
 				MapOfIDAndCent.put(s, xlist);
 				MapOfIDAndCount.put(s, (long)1);
+				MapOfIDAndWCSS.put(s, (float)0);
 			}
 		}
 		return s;
@@ -243,12 +190,10 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 	}
 	
 
-
 	static boolean isPowerOfTwo(long num) {
 		return (num & -num) == num;
 	}
 	
-
 	
 
 	/*
@@ -261,27 +206,20 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 	//public Map<Long, float[]>  findDensityModes2() {
 	HashMap<Long, float[]> MapOfIDAndCent1 = new HashMap<>();  
 	HashMap<Long, Long> MapOfIDAndCount1 = new HashMap<>();
-	
+	HashMap<Long, Float> MapOfIDAndWCSS1 = new HashMap<>();
 	
 	HashMap<Long, float[]> MapOfIDAndCent2 = new HashMap<>();  
 	HashMap<Long, Long> MapOfIDAndCount2 = new HashMap<>();
-	
+	HashMap<Long, Float> MapOfIDAndWCSS2 = new HashMap<>();
 	
 	HashMap<Long, float[]> MapOfIDAndCent3 = new HashMap<>();  
 	HashMap<Long, Long> MapOfIDAndCount3 = new HashMap<>();
+	HashMap<Long, Float> MapOfIDAndWCSS3 = new HashMap<>();
 	
 	HashMap<Long, float[]> MapOfIDAndCent = new HashMap<>();  
 	HashMap<Long, Long> MapOfIDAndCount = new HashMap<>();
-	
-	
-	HashMap<Long, Float> MapOfIDAndWCSS1 = new HashMap<>();  
-	HashMap<Long, Float> MapOfIDAndWCSS2 = new HashMap<>();
-	HashMap<Long, Float> MapOfIDAndWCSS3 = new HashMap<>();
 	HashMap<Long, Float> MapOfIDAndWCSS =  new HashMap<>();
-	
-	
-	
-	
+		
 	
 	
 	// #create projector matrixs
@@ -305,26 +243,55 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 			
 		}
 	}
+		
+	
+	float WCSS1 = 0;
+	float WCSS2 = 0;
+	float WCSS3 = 0;
 	
 	
-	MapOfIDAndCount=mergehmapsidsandcounts(MapOfIDAndCount1, MapOfIDAndCount2);
+	for (Long cur_id : (MapOfIDAndWCSS1.keySet()))
+		
+	{  // System.out.println("wcss1 = " + MapOfIDAndWCSS1.get(cur_id));
+		WCSS1 = WCSS1 + MapOfIDAndWCSS1.get(cur_id);}
 	
-	MapOfIDAndCent = mergehmapsidsandcents(MapOfIDAndCent1,MapOfIDAndCent2,MapOfIDAndCount1, MapOfIDAndCount2 );
+	for (Long cur_id : (MapOfIDAndWCSS2.keySet()))
+		
+	{  WCSS2 = WCSS2 + MapOfIDAndWCSS2.get(cur_id);}
+	
+	for (Long cur_id : (MapOfIDAndWCSS3.keySet()))
+		
+	{  WCSS3 = WCSS3 + MapOfIDAndWCSS3.get(cur_id);}
+	
+//	System.out.println("wcss1 = " + WCSS1);
+//	System.out.println("wcss2 = " + WCSS2);	
+//	System.out.println("wcss3 = " + WCSS3);
+	
+	if ((WCSS1 >= WCSS2) && (WCSS1>=WCSS3))
+	{MapOfIDAndCount = MapOfIDAndCount1;
+	MapOfIDAndCent = MapOfIDAndCent1;
+	MapOfIDAndWCSS = MapOfIDAndWCSS1;
+	System.out.println("winner = tree1");
+	}
+	else if ((WCSS2 >= WCSS1) && (WCSS2>=WCSS3))
+	{MapOfIDAndCount = MapOfIDAndCount2;
+	MapOfIDAndCent = MapOfIDAndCent2;
+	MapOfIDAndWCSS = MapOfIDAndWCSS2;
+	System.out.println("winner = tree2");
+	}
+	else
+	{MapOfIDAndCount = MapOfIDAndCount3;
+	MapOfIDAndCent = MapOfIDAndCent3;
+	MapOfIDAndWCSS = MapOfIDAndWCSS3;
+	System.out.println("winner = tree3");
 
-	MapOfIDAndCent = mergehmapsidsandcents(MapOfIDAndCent,MapOfIDAndCent3,MapOfIDAndCount, MapOfIDAndCount3 );
-	
-	MapOfIDAndCount=mergehmapsidsandcounts(MapOfIDAndCount, MapOfIDAndCount3);
-	
-	
-	
-	
+	}	
 	
 		
 	System.out.println("NumberOfMicroClustersBeforePruning = "+ MapOfIDAndCent.size());
 	
 	// next we want to prune the tree by parent count comparison
 	// follows breadthfirst search
-	
 	
 	
 	
@@ -341,8 +308,6 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 	            if(cur_count == parent_count) {
 					denseSetOfIDandCount2.put(parent_id, 0L);
 				//	IDAndCent.put(parent_id, new ArrayList<>());
-					
-//HashMap<Long, List<float[]>> IDAndCent = new HashMap<>(); and HashMap<Long, float[]> MapOfIDAndCent = new HashMap<Long, float[]>();
 					
 					MapOfIDAndCent.put(parent_id, new float[]{});
 					
@@ -372,45 +337,27 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 	
 	//remove keys with support less than 1
 	Stream<Entry<Long, Long>> stream2 = denseSetOfIDandCount2.entrySet().stream().filter(p -> p.getValue() > 1);
-	//64 so 6 bits?
-	//stream = stream.filter(p -> p.getKey() > 64);
-	
-//	Stream<Entry<Long, Long>> stream3 = denseSetOfIDandCount2.entrySet().stream().filter(p -> p.getValue() > 1);
-//	long counter= stream3.count();
-//	System.out.println("NumberOfMicroClustersAfterPruning&limit_the_1s = "+ counter);
-	
-//	int cutoff= so.getk()*8;
-//	if (so.getk()*6 < 210) {   cutoff=210+so.getk();}  else { cutoff = so.getk()*8;}	
-//	int cutoff = clustermembers.size()>200+so.getk()?200+so.getk():clustermembers.size();
-//	System.out.println("Cutoff = "+ cutoff);
+
 	
 	List<Long> sortedIDList2= new ArrayList<>();
 	// sort and limit the list
 	stream2.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(cutoff)
 			.forEachOrdered(x -> sortedIDList2.add(x.getKey()));
 		
-//	HashMap<Long, float[]> KeyAndCent = new HashMap<>();
-//	HashMap<Long, Long> KeyAndCount = new HashMap<>();
-//	Map<Long, float[]> WeightAndCent = new HashMap<>();
-//	Map<Long, float[]> WeightAndCent = new LinkedHashMap<>();
+
 	Multimap<Long, float[]> multimapWeightAndCent = ArrayListMultimap.create();
 
-	
-
-//	  
+  
 	for (Long keys: sortedIDList2)
 		
 		{
-//		  WeightAndCent.put((Long)(MapOfIDAndCount.get(keys)), (float[]) (MapOfIDAndCent.get(keys)));
+
 		  
 		  multimapWeightAndCent.put((Long)(MapOfIDAndCount.get(keys)), (float[]) (MapOfIDAndCent.get(keys)));
-			
-//		  KeyAndCent.put(keys, MapOfIDAndCent.get(keys));			
-//		  KeyAndCount.put(keys, MapOfIDAndCount.get(keys));
+
 				
 		}
 		
-	
 		
 	return multimapWeightAndCent;
 	
@@ -451,13 +398,8 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 		
 		
 		
-		
-		
 	
 		Multimap<Long, float[]> WeightAndClusters = findDensityModes2();
-		//Map<Long, float[]> WeightAndClusters = findDensityModes2();
-		
-		
 		
 		
 		List<float[]>centroids2 = new ArrayList<>();
@@ -467,40 +409,23 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 		System.out.println("NumberOfMicroClusters_AfterPruning = "+ WeightAndClusters.size());		
 		System.out.println("getRandomVector = "+ randVect);
 		
-	//	int k = NumberOfMicroClusters>200+so.getk()?200+so.getk():NumberOfMicroClusters;
-		
-	// have to prune depending  NumberOfMicroClusters returned.
-	//	int i = 1;
-	//	int j=1;
-	//	for (Long weights : new TreeSet<Long>(WeightAndClusters.keySet()))
+
 		for (Long weights : WeightAndClusters.keys())						
 		{
-	//		System.out.println("NumberOfTreesetkeys = "+ i);			
-	//		String key =weights.toString(); 
-	//      System.out.println(weights); 			
+			
 		weights2.add((float)weights);
-		//	centroids2.add(WeightAndClusters.get(weights));
-		//	centroids2.addAll(WeightAndClusters.get(weights));			
-	//	i=i+1;
+
 		}
-	//	System.out.println("done printing keys for weights");
+
 		
 		for (Long weight : WeightAndClusters.keySet())	
 			
 		{
-	//		System.out.println(weight);
-	//		System.out.println("NumberOfTreesetkeys = "+ j);
+
 		    centroids2.addAll(WeightAndClusters.get(weight));
 					
-	//	j=j+1;
 		}	
-	//	System.out.println("done printing keys for centroids");
-		
-	//	System.out.println(weights2.size());
-	//	System.out.println(centroids2.size());
-		
-		//System.out.printf("\tvalueofK is ");
-		//System.out.println( so.getk());
+	
 		
 		Agglomerative3 aggloOffline =  new Agglomerative3(centroids2, so.getk());
 		
@@ -515,8 +440,8 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 			IOException {
 
 		int k = 10;//6;
-		int d = 700;//16;
-		int n = 10000;
+		int d = 200;//16;
+		int n = 100000;
 		float var = 1.5f;
 		int count = 1;
 	//	System.out.printf("ClusterVar\t");
@@ -538,7 +463,7 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 						
 				RPHashObject o = new SimpleArrayReader(gen.data, k);
 						
-				o.setDimparameter(20);
+				o.setDimparameter(16);
 	
 				o.setCutoff(100);
 				o.setRandomVector(true);

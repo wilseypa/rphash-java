@@ -51,7 +51,7 @@ import edu.uc.rphash.util.VectorUtil;
 public class RPHash {
 
 	static String[] clusteringmethods = { "simple", "streaming", "multiproj", 
-		"kmeans", "pkmeans","kmeansplusplus", "streamingkmeans", "adaptive","dummy" ,"twrp"};
+		"kmeans", "pkmeans","kmeansplusplus", "streamingkmeans", "adaptive","dummy" ,"twrp" , "twrpbisect", "twrpbest", "twrpmergetree" };
 	
 	static String[] offlineclusteringmethods = { "singlelink", "completelink",
 		"averagelink", "kmeans", "adaptivemeanshift", "kmpp", "multikmpp" , "dbscan", "none" };
@@ -756,6 +756,23 @@ public class RPHash {
 				runitems.add(new TWRPv2(o));
 				break;
 			}
+			
+			case "twrpmergetree": {
+				runitems.add(new TWRPv3(o));
+				break;
+			}
+			
+			case "twrpbisect": {
+				runitems.add(new TWRPv4(o));
+				break;
+			}
+			
+			case "twrpbest": {
+				runitems.add(new TWRPv5_WCSS(o));
+				break;
+			}
+			
+		
 			
 			case "dummy": {
 				runitems.add(new DummyClusterer(so));
