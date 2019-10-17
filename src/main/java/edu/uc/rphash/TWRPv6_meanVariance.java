@@ -30,7 +30,7 @@ import com.google.common.collect.Multimap;
 
 
 
-public class TWRPv5_WCSS implements Clusterer, Runnable {
+public class TWRPv6_meanVariance implements Clusterer, Runnable {
 
 	boolean znorm = false;
 	
@@ -43,7 +43,7 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 	
 	private RPHashObject so;
 
-	public TWRPv5_WCSS(RPHashObject so) {
+	public TWRPv6_meanVariance(RPHashObject so) {
 		this.so = so;
 	}
 
@@ -108,7 +108,11 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 		var2 = var2 + var_r2[i];
 							}
 		double wcsse=0;
-	    wcsse = (  cnt_1*(wcss_1*wcss_1 + (var1)) + var2 / (cnt_1 + cnt_2 ) ) ;
+//	    wcsse = (  cnt_1*(wcss_1*wcss_1 + (var1)) + var2 / (cnt_1 + cnt_2 ) ) ;
+	    
+	    wcsse = (  cnt_1*(wcss_1 + (var1)) + var2 / (cnt_1 + cnt_2 ) ) ;
+	    
+	    wcsse = wcsse/cnt_r;
 	    
 	//    System.out.println("wcsse = " + wcsse);
 	    
@@ -470,7 +474,7 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 //				System.out.println("cutoff = "+ o.getCutoff());
 //				System.out.println("get_random_Vector = "+ o.getRandomVector());			
 								
-				TWRPv5_WCSS rphit = new TWRPv5_WCSS(o);
+				TWRPv6_meanVariance rphit = new TWRPv6_meanVariance(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
 

@@ -30,7 +30,7 @@ import com.google.common.collect.Multimap;
 
 
 
-public class TWRPv5_WCSS implements Clusterer, Runnable {
+public class TWRPv6_COV implements Clusterer, Runnable {
 
 	boolean znorm = false;
 	
@@ -43,7 +43,7 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 	
 	private RPHashObject so;
 
-	public TWRPv5_WCSS(RPHashObject so) {
+	public TWRPv6_COV(RPHashObject so) {
 		this.so = so;
 	}
 
@@ -96,9 +96,9 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 		for (int i = 0; i < x_1.length; i++) {
 			x_r[i] = (cnt_1 * x_1[i] + cnt_2 * x_2[i]) / cnt_r;
 			
-			var_r1[i] = ((-x_r[i] + x_1[i]) * (-x_r[i] + x_1[i]))/1000000000;
+			var_r1[i] = ((-x_r[i] + x_1[i]) * (-x_r[i] + x_1[i]))/(x_r[i]*1000000000);
 					
-			var_r2[i] =(((-x_r[i] + x_2[i]) * (-x_r[i] + x_2[i])))/1000000000;
+			var_r2[i] =(((-x_r[i] + x_2[i]) * (-x_r[i] + x_2[i])))/(x_r[i]*1000000000);
 					
 		}
 		
@@ -108,7 +108,11 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 		var2 = var2 + var_r2[i];
 							}
 		double wcsse=0;
-	    wcsse = (  cnt_1*(wcss_1*wcss_1 + (var1)) + var2 / (cnt_1 + cnt_2 ) ) ;
+//	    wcsse = (  cnt_1*(wcss_1*wcss_1 + (var1)) + var2 / (cnt_1 + cnt_2 ) ) ;
+	    
+	    wcsse = (  cnt_1*(wcss_1 + (var1)) + var2 / (cnt_1 + cnt_2 ) ) ;
+	    
+	    wcsse = wcsse/(cnt_r);
 	    
 	//    System.out.println("wcsse = " + wcsse);
 	    
@@ -470,7 +474,7 @@ public class TWRPv5_WCSS implements Clusterer, Runnable {
 //				System.out.println("cutoff = "+ o.getCutoff());
 //				System.out.println("get_random_Vector = "+ o.getRandomVector());			
 								
-				TWRPv5_WCSS rphit = new TWRPv5_WCSS(o);
+				TWRPv6_COV rphit = new TWRPv6_COV(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
 
