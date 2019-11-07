@@ -110,7 +110,7 @@ public class StatTests {
 		double count = 0.0 ;
 		for(int i = 0; i< data.size();i++)
 		{
-			count+=VectorUtil.distance(data.get(i),estCentroids.get(VectorUtil.findNearestDistance(new Centroid(data.get(i),0), estCentroids)).centroid()) ;
+			count+=VectorUtil.distancesq(data.get(i),estCentroids.get(VectorUtil.findNearestDistance(new Centroid(data.get(i),0), estCentroids)).centroid()) ;
 		}
 		return count;
 	}

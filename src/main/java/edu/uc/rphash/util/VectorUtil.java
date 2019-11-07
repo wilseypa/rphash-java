@@ -44,6 +44,17 @@ public class VectorUtil {
 			dist += ((x[i] - y[i]) * (x[i] - y[i]));
 		return (float) Math.sqrt(dist);
 	}
+	
+	public static float distancesq(float[] x, float[] y) {
+		if (x.length < 1)
+			return Float.MAX_VALUE;
+		if (y.length < 1)
+			return Float.MAX_VALUE;
+		float dist = (x[0] - y[0]) * (x[0] - y[0]);
+		for (int i = 1; i < x.length; i++)
+			dist += ((x[i] - y[i]) * (x[i] - y[i]));
+		return (float)(dist);
+	}
 
 	/**
 	 * Resturns the euclidean distance between a vector region {i-k} of x with a

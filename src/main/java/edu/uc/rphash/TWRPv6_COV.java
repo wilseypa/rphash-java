@@ -59,6 +59,21 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		return centroids;
 	}
 	
+	
+	
+// This function returns the square of the euclidean distance.	
+	public static float distancesq(float[] x, float[] y) {
+		if (x.length < 1)
+			return Float.MAX_VALUE;
+		if (y.length < 1)
+			return Float.MAX_VALUE;
+		float dist = (x[0] - y[0]) * (x[0] - y[0]);
+		for (int i = 1; i < x.length; i++)
+			dist += ((x[i] - y[i]) * (x[i] - y[i]));
+//		return (float) Math.sqrt(dist);
+		return dist;
+	}
+
 
 	/*
 	
@@ -78,7 +93,7 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		return ret;
 	}
 	
-// this updates the map two cents with different weigths are merged into one.
+// this updates the map two cents with different weights are merged into one.
 	public static float[][] UpdateHashMap(float cnt_1, float[] x_1, float wcss_1,
 			float cnt_2, float[] x_2 , float wcss_2) {
 		
@@ -86,44 +101,23 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		
 		float[] x_r = new float[x_1.length];
 		
-		float[] var_r1 = new float[x_1.length];
-		float[] var_r2 = new float[x_1.length];
-		
-		double var1=0;
-		double var2=0;
-				
 
 		for (int i = 0; i < x_1.length; i++) {
 			x_r[i] = (cnt_1 * x_1[i] + cnt_2 * x_2[i]) / cnt_r;
-			
-			var_r1[i] = ((-x_r[i] + x_1[i]) * (-x_r[i] + x_1[i]))/(x_r[i]*1000000000);
-					
-			var_r2[i] =(((-x_r[i] + x_2[i]) * (-x_r[i] + x_2[i])))/(x_r[i]*1000000000);
-					
+								
 		}
-		
-		for (int i = 0; i < var_r1.length; i++) {
-		var1 = var1 + var_r1[i];
 
-		var2 = var2 + var_r2[i];
-							}
-		double wcsse=0;
-//	    wcsse = (  cnt_1*(wcss_1*wcss_1 + (var1)) + var2 / (cnt_1 + cnt_2 ) ) ;
-	    
-	    wcsse = (  cnt_1*(wcss_1 + (var1)) + var2 / (cnt_1 + cnt_2 ) ) ;
-	    
-	    wcsse = wcsse/(cnt_r);
-	    
-	//    System.out.println("wcsse = " + wcsse);
-	    
-	    float wcss = (float) wcsse;
+		
+		float wcss_cov =  ( ( ( cnt_1*(wcss_1 + distancesq(x_r,x_1)) ) + distancesq(x_r,x_2) ) / (cnt_r) );
+//		wcss_cov =  wcss_cov/;
+//	    System.out.println("wcsse = " + wcss);
 	    
 		float[][] ret = new float[3][];
 		ret[0] = new float[1];
 		ret[0][0] = cnt_r;
 		ret[1] = x_r;
 		ret[2]= new float [1];
-		ret[2][0]= wcss;
+		ret[2][0]= wcss_cov;
 		return ret;
 			
 		
@@ -219,10 +213,6 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 	HashMap<Long, Long> MapOfIDAndCount3 = new HashMap<>();
 	HashMap<Long, Float> MapOfIDAndWCSS3 = new HashMap<>();
 	
-	HashMap<Long, float[]> MapOfIDAndCent = new HashMap<>();  
-	HashMap<Long, Long> MapOfIDAndCount = new HashMap<>();
-	HashMap<Long, Float> MapOfIDAndWCSS =  new HashMap<>();
-		
 	
 	
 	// #create projector matrixs
@@ -247,88 +237,45 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		}
 	}
 		
-	
-	float WCSS1 = 0;
-	float WCSS2 = 0;
-	float WCSS3 = 0;
-	
-	
-	for (Long cur_id : (MapOfIDAndWCSS1.keySet()))
 		
-	{  // System.out.println("wcss1 = " + MapOfIDAndWCSS1.get(cur_id));
-		WCSS1 = WCSS1 + MapOfIDAndWCSS1.get(cur_id);}
-	
-	for (Long cur_id : (MapOfIDAndWCSS2.keySet()))
-		
-	{  WCSS2 = WCSS2 + MapOfIDAndWCSS2.get(cur_id);}
-	
-	for (Long cur_id : (MapOfIDAndWCSS3.keySet()))
-		
-	{  WCSS3 = WCSS3 + MapOfIDAndWCSS3.get(cur_id);}
-	
-//	System.out.println("wcss1 = " + WCSS1);
-//	System.out.println("wcss2 = " + WCSS2);	
-//	System.out.println("wcss3 = " + WCSS3);
-	
-	if ((WCSS1 >= WCSS2) && (WCSS1>=WCSS3))
-	{MapOfIDAndCount = MapOfIDAndCount1;
-	MapOfIDAndCent = MapOfIDAndCent1;
-	MapOfIDAndWCSS = MapOfIDAndWCSS1;
-	System.out.println("winner = tree1");
-	}
-	else if ((WCSS2 >= WCSS1) && (WCSS2>=WCSS3))
-	{MapOfIDAndCount = MapOfIDAndCount2;
-	MapOfIDAndCent = MapOfIDAndCent2;
-	MapOfIDAndWCSS = MapOfIDAndWCSS2;
-	System.out.println("winner = tree2");
-	}
-	else
-	{MapOfIDAndCount = MapOfIDAndCount3;
-	MapOfIDAndCent = MapOfIDAndCent3;
-	MapOfIDAndWCSS = MapOfIDAndWCSS3;
-	System.out.println("winner = tree3");
-
-	}	
-	
-		
-	System.out.println("NumberOfMicroClustersBeforePruning = "+ MapOfIDAndCent.size());
+	System.out.println("NumberOfMicroClustersBeforePruning = "+ MapOfIDAndCent1.size());
 	
 	// next we want to prune the tree by parent count comparison
 	// follows breadthfirst search
 	
 	
 	
-	HashMap<Long, Long> denseSetOfIDandCount2 = new HashMap<Long, Long>();
-	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount.keySet())) 
+	HashMap<Long, Long> denseSetOfIDandCount2_1 = new HashMap<Long, Long>();
+	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount1.keySet())) 
 	{
 		if (cur_id >so.getk()){
-            int cur_count = (int) (MapOfIDAndCount.get(cur_id).longValue());
+            int cur_count = (int) (MapOfIDAndCount1.get(cur_id).longValue());
             long parent_id = cur_id>>>1;
-            int parent_count = (int) (MapOfIDAndCount.get(parent_id).longValue());
+            int parent_count = (int) (MapOfIDAndCount1.get(parent_id).longValue());
             
             if(cur_count!=0 && parent_count!=0)
             {
 	            if(cur_count == parent_count) {
-					denseSetOfIDandCount2.put(parent_id, 0L);
+					denseSetOfIDandCount2_1.put(parent_id, 0L);
 				//	IDAndCent.put(parent_id, new ArrayList<>());
 					
-					MapOfIDAndCent.put(parent_id, new float[]{});
+					MapOfIDAndCent1.put(parent_id, new float[]{});
 					
-		//			MapOfIDAndCount.put(parent_id, new Long (0));
+		//			MapOfIDAndCount1.put(parent_id, new Long (0));
 					
-					denseSetOfIDandCount2.put(cur_id, (long) cur_count);
+					denseSetOfIDandCount2_1.put(cur_id, (long) cur_count);
 					
 	            }
 	            else
 	            {
 					if(2 * cur_count > parent_count) {
-						denseSetOfIDandCount2.remove(parent_id);
+						denseSetOfIDandCount2_1.remove(parent_id);
 						
 					//	IDAndCent.put(parent_id, new ArrayList<>());
-						MapOfIDAndCent.put(parent_id, new float[]{});
+						MapOfIDAndCent1.put(parent_id, new float[]{});
 				//			MapOfIDAndCount.put(parent_id, new Long (0));	
 						
-						denseSetOfIDandCount2.put(cur_id, (long) cur_count);
+						denseSetOfIDandCount2_1.put(cur_id, (long) cur_count);
 					}
 	            }
             }
@@ -336,11 +283,167 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 	}
 	
 	
+	
+	
+	HashMap<Long, Long> denseSetOfIDandCount2_2 = new HashMap<Long, Long>();
+	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount2.keySet())) 
+	{
+		if (cur_id >so.getk()){
+            int cur_count = (int) (MapOfIDAndCount2.get(cur_id).longValue());
+            long parent_id = cur_id>>>1;
+            int parent_count = (int) (MapOfIDAndCount2.get(parent_id).longValue());
+            
+            if(cur_count!=0 && parent_count!=0)
+            {
+	            if(cur_count == parent_count) {
+					denseSetOfIDandCount2_2.put(parent_id, 0L);
+				//	IDAndCent.put(parent_id, new ArrayList<>());
+					
+					MapOfIDAndCent2.put(parent_id, new float[]{});
+					
+		//			MapOfIDAndCount2.put(parent_id, new Long (0));
+					
+					denseSetOfIDandCount2_2.put(cur_id, (long) cur_count);
+					
+	            }
+	            else
+	            {
+					if(2 * cur_count > parent_count) {
+						denseSetOfIDandCount2_2.remove(parent_id);
+						
+					//	IDAndCent.put(parent_id, new ArrayList<>());
+						MapOfIDAndCent2.put(parent_id, new float[]{});
+				//			MapOfIDAndCount2.put(parent_id, new Long (0));	
+						
+						denseSetOfIDandCount2_2.put(cur_id, (long) cur_count);
+					}
+	            }
+            }
+		}
+	}
+	
+	
+	
+	HashMap<Long, Long> denseSetOfIDandCount2_3 = new HashMap<Long, Long>();
+	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount3.keySet())) 
+	{
+		if (cur_id >so.getk()){
+            int cur_count = (int) (MapOfIDAndCount3.get(cur_id).longValue());
+            long parent_id = cur_id>>>1;
+            int parent_count = (int) (MapOfIDAndCount3.get(parent_id).longValue());
+            
+            if(cur_count!=0 && parent_count!=0)
+            {
+	            if(cur_count == parent_count) {
+					denseSetOfIDandCount2_3.put(parent_id, 0L);
+				//	IDAndCent.put(parent_id, new ArrayList<>());
+					
+					MapOfIDAndCent3.put(parent_id, new float[]{});
+					
+		//			MapOfIDAndCount.put(parent_id, new Long (0));
+					
+					denseSetOfIDandCount2_3.put(cur_id, (long) cur_count);
+					
+	            }
+	            else
+	            {
+					if(2 * cur_count > parent_count) {
+						denseSetOfIDandCount2_3.remove(parent_id);
+						
+					//	IDAndCent.put(parent_id, new ArrayList<>());
+						MapOfIDAndCent3.put(parent_id, new float[]{});
+				//			MapOfIDAndCount.put(parent_id, new Long (0));	
+						
+						denseSetOfIDandCount2_3.put(cur_id, (long) cur_count);
+					}
+	            }
+            }
+		}
+	}	
+	
+	
+	
+	//remove keys with support less than 1
+	Stream<Entry<Long, Long>> stream2_1 = denseSetOfIDandCount2_1.entrySet().stream().filter(p -> p.getValue() > 1);
+		
+	List<Long> sortedIDList2_1= new ArrayList<>();
+	// sort and limit the list
+	stream2_1.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(cutoff)
+			.forEachOrdered(x -> sortedIDList2_1.add(x.getKey()));
+		
+	
+	
+	Stream<Entry<Long, Long>> stream2_2 = denseSetOfIDandCount2_2.entrySet().stream().filter(p -> p.getValue() > 1);
+	
+	List<Long> sortedIDList2_2= new ArrayList<>();
+	// sort and limit the list
+	stream2_2.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(cutoff)
+			.forEachOrdered(x -> sortedIDList2_2.add(x.getKey()));
+		
+	
+	
+	Stream<Entry<Long, Long>> stream2_3 = denseSetOfIDandCount2_3.entrySet().stream().filter(p -> p.getValue() > 1);
+	
+	List<Long> sortedIDList2_3= new ArrayList<>();
+	// sort and limit the list
+	stream2_3.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(cutoff)
+			.forEachOrdered(x -> sortedIDList2_3.add(x.getKey()));
+		
+	
+	float WCSS1 = 0;
+	float WCSS2 = 0;
+	float WCSS3 = 0;
+	HashMap<Long, Long> denseSetOfIDandCount2 = new HashMap<Long, Long>();
+	HashMap<Long, float[]> MapOfIDAndCent = new HashMap<>();  
+	HashMap<Long, Long> MapOfIDAndCount = new HashMap<>();
+	HashMap<Long, Float> MapOfIDAndWCSS =  new HashMap<>();
+	
+
+	for (Long keys: sortedIDList2_1)
+//	for (Long cur_id : (((HashMap<Long,Long>) stream2_1).keySet()))
+		
+	{  // System.out.println("wcss1 = " + MapOfIDAndWCSS1.get(cur_id));
+		WCSS1 = WCSS1 + MapOfIDAndWCSS1.get(keys);}
+	
+//	for (Long cur_id : (denseSetOfIDandCount2_2.keySet()))
+	for (Long keys: sortedIDList2_2)	
+	{  WCSS2 = WCSS2 + MapOfIDAndWCSS2.get(keys);}
+	
+//	for (Long cur_id : (denseSetOfIDandCount2_3.keySet()))
+	for (Long keys: sortedIDList2_3)	
+	{  WCSS3 = WCSS3 + MapOfIDAndWCSS3.get(keys);}
+	
+	System.out.println("wcss1 = " + WCSS1);
+	System.out.println("wcss2 = " + WCSS2);	
+	System.out.println("wcss3 = " + WCSS3);
+	
+	if ((WCSS1 <= WCSS2) && (WCSS1 <= WCSS3))
+	{MapOfIDAndCount = MapOfIDAndCount1;
+	MapOfIDAndCent = MapOfIDAndCent1;
+	MapOfIDAndWCSS = MapOfIDAndWCSS1;
+	denseSetOfIDandCount2 = denseSetOfIDandCount2_1;
+	System.out.println("winner = tree1");
+	}
+	else if ((WCSS2<= WCSS1) && (WCSS2<=WCSS3))
+	{MapOfIDAndCount = MapOfIDAndCount2;
+	MapOfIDAndCent = MapOfIDAndCent2;
+	MapOfIDAndWCSS = MapOfIDAndWCSS2;
+	denseSetOfIDandCount2 = denseSetOfIDandCount2_2;
+	System.out.println("winner = tree2");
+	}
+	else
+	{MapOfIDAndCount = MapOfIDAndCount3;
+	MapOfIDAndCent = MapOfIDAndCent3;
+	MapOfIDAndWCSS = MapOfIDAndWCSS3;
+	denseSetOfIDandCount2 = denseSetOfIDandCount2_3;
+	System.out.println("winner = tree3");
+
+	}	
+	
 	System.out.println("NumberOfMicroClustersAfterPruning&beforesortingLimit = "+ denseSetOfIDandCount2.size());
 	
 	//remove keys with support less than 1
 	Stream<Entry<Long, Long>> stream2 = denseSetOfIDandCount2.entrySet().stream().filter(p -> p.getValue() > 1);
-
 	
 	List<Long> sortedIDList2= new ArrayList<>();
 	// sort and limit the list
@@ -444,7 +547,7 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 
 		int k = 10;//6;
 		int d = 200;//16;
-		int n = 100000;
+		int n = 10000;
 		float var = 1.5f;
 		int count = 1;
 	//	System.out.printf("ClusterVar\t");
@@ -474,7 +577,7 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 //				System.out.println("cutoff = "+ o.getCutoff());
 //				System.out.println("get_random_Vector = "+ o.getRandomVector());			
 								
-				TWRPv6_COV rphit = new TWRPv6_COV(o);
+				TWRPv6_WCSS2 rphit = new TWRPv6_WCSS2(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
 

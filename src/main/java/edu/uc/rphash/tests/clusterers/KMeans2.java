@@ -1,7 +1,7 @@
 package edu.uc.rphash.tests.clusterers;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.List;
 import java.util.Random;
 
@@ -10,7 +10,7 @@ import edu.uc.rphash.Clusterer;
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.generators.GenerateData;
-import edu.uc.rphash.util.VectorUtil;
+
 
 public class KMeans2 implements Clusterer {
 
