@@ -20,6 +20,8 @@ import edu.uc.rphash.Readers.SimpleArrayReader;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
+import edu.uc.rphash.tests.clusterers.KMeans2;
+import edu.uc.rphash.tests.clusterers.Agglomerative3.ClusteringType;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
 
@@ -30,7 +32,9 @@ import com.google.common.collect.Multimap;
 
 
 
-public class TWRPv6_COV implements Clusterer, Runnable {
+// this algorithm runs twrp 3 times : (only the random bisection vector varies, the Projection matrix remains same)
+// and selects the one which hass the best wcss  offline for the 10X candidate centroids.
+public class TWRPv6_wcss_offline implements Clusterer, Runnable {
 
 	boolean znorm = false;
 	
@@ -43,7 +47,7 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 	
 	private RPHashObject so;
 
-	public TWRPv6_COV(RPHashObject so) {
+	public TWRPv6_wcss_offline(RPHashObject so) {
 		this.so = so;
 	}
 
@@ -60,7 +64,6 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 	}
 	
 	
-	
 // This function returns the square of the euclidean distance.	
 	public static float distancesq(float[] x, float[] y) {
 		if (x.length < 1)
@@ -73,7 +76,6 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 //		return (float) Math.sqrt(dist);
 		return dist;
 	}
-
 
 	/*
 	
@@ -101,15 +103,18 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		
 		float[] x_r = new float[x_1.length];
 		
-
 		for (int i = 0; i < x_1.length; i++) {
 			x_r[i] = (cnt_1 * x_1[i] + cnt_2 * x_2[i]) / cnt_r;
 								
 		}
-
+//		float wcss = (distancesq(x_r,x_2)/cnt_r) + wcss_1;
 		
-		float wcss_cov =  ( ( ( cnt_1*(wcss_1 + distancesq(x_r,x_1)) ) + distancesq(x_r,x_2) ) / (cnt_r) );
-//		wcss_cov =  wcss_cov/;
+//		float wcss = ( ( cnt_1*(wcss_1 + distancesq(x_r,x_1)) ) + distancesq(x_r,x_2) ) / (cnt_1);
+		
+		float wcss = ( ((wcss_1 + distancesq(x_r,x_1)) ) + distancesq(x_r,x_2) );		
+		
+//		float wcss =  ( ( ( cnt_1*(wcss_1 + distancesq(x_r,x_1)) ) + distancesq(x_r,x_2) ) / (cnt_r) );
+		
 //	    System.out.println("wcsse = " + wcss);
 	    
 		float[][] ret = new float[3][];
@@ -117,14 +122,30 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		ret[0][0] = cnt_r;
 		ret[1] = x_r;
 		ret[2]= new float [1];
-		ret[2][0]= wcss_cov;
-//		ret[3][0]= distance;
+		ret[2][0]= wcss;
 		return ret;
-			
-		
+					
 	}
 		
-
+// this method is used to calculate the offline wcss	
+//	UpdateHashMap_offlineWcss( CurrentCent, currentWcss, IncomingVector, incomingWcss );
+	
+	public static float[][] UpdateHashMap_offlineWcss(float[] x_1, float wcss_1,float[] x_2 ) {
+		
+		float wcss = wcss_1 + distancesq(x_1,x_2);
+	    
+//	    System.out.println("wcsse = " + wcss);
+	    
+		float[][] ret = new float[3][];
+		ret[0] = new float[1];
+//		ret[0][0] = cnt_r;
+//		ret[1] = x_r;
+		ret[2]= new float [1];
+		ret[2][0]= wcss;
+		return ret;		
+		
+	}
+	
 	public long hashvec2( float[] xt, float[] x,
 			HashMap<Long, float[]>  MapOfIDAndCent, HashMap<Long, Long>  MapOfIDAndCount,  int ct, float[] rngvec, HashMap<Long, Float> MapOfIDAndWCSS) {
 		long s = 1;                                  //fixes leading 0's bug
@@ -142,8 +163,7 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 				float IncomingVector [] = x;
 				float currentWcss= MapOfIDAndWCSS.get(s);
 				float incomingWcss= 0;
-				
-				
+							
 				float[][] MergedValues = UpdateHashMap(CurrentCount , CurrentCent, currentWcss, CountForIncomingVector, IncomingVector, incomingWcss );
 				
 			  	Long UpdatedCount = (long) MergedValues[0][0] ;
@@ -156,8 +176,7 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 				
 				MapOfIDAndCent.put(s, MergedVector);
 				
-				MapOfIDAndWCSS.put(s, wcss);
-				
+				MapOfIDAndWCSS.put(s, wcss);				
 						
 			} 
 				
@@ -171,7 +190,41 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		}
 		return s;
 	}
-	
+		
+// this hash is to calculate the wcss
+//	 hashvec2_forwcss(xt,x,IDAndCent,rngvec ,IDandWCSS);
+	 
+	 public long hashvec2_forwcss( float[] xt, float[] x, HashMap<Long, float[]>  MapOfIDAndCent,  float[] rngvec, HashMap<Long, Float>IDandWCSS_offline) {
+			long s = 1;                                  //fixes leading 0's bug
+			for (int i = 0; i < xt.length; i++) {
+				s = s << 1 ;                             // left shift the bits of s by 1.
+				if (xt[i] > rngvec[i])
+					s= s+1;
+								
+				if (MapOfIDAndCent.containsKey(s)) {
+					
+					float CurrentCent [] = MapOfIDAndCent.get(s);
+					float IncomingVector [] = x;
+					
+					
+					float currentWcss= 0;
+					
+					if (IDandWCSS_offline.containsKey(s)) {
+						currentWcss= IDandWCSS_offline.get(s);						
+					}		
+					
+		        float[][] MergedValues = UpdateHashMap_offlineWcss( CurrentCent, currentWcss, IncomingVector );
+										
+					float wcss= MergedValues[2][0];
+					
+							
+					IDandWCSS_offline.put(s, wcss);				
+								
+					
+				} 					
+			}
+			return s;
+		}	
 	
 	/*
 	 * x - input vector IDAndCount - ID->count map IDAndCent - ID->centroid
@@ -187,18 +240,25 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		hashvec2(xt,x,IDAndCent, IDandID, ct,rngvec , IDandWCSS);
 	}
 	
-
+	// this method is used to compute the offline WCSS to choose the best of the clusters 
+	//calcWCSSoffline(x, projector, MapOfIDAndCent1, rngvec, MapOfIDAandWCSS1_offline);
+	
+	void calcWCSSoffline(float[] x, Projector p, HashMap<Long, float[]> MapOfIDAndCent, float[] rngvec , HashMap<Long, Float> MapOfIDAandWCSS_offline) {
+		
+		float[] xt = p.project(x);
+		
+	   hashvec2_forwcss(xt,x,MapOfIDAndCent,rngvec ,MapOfIDAandWCSS_offline);
+				
+	}
+		
 	static boolean isPowerOfTwo(long num) {
 		return (num & -num) == num;
 	}
 	
-	
-
 	/*
 	 * X - data set k - canonical k in k-means l - clustering sub-space Compute
 	 * density mode via iterative deepening hash counting
 	 */
-	
 	
 	public Multimap<Long, float[]>  findDensityModes2() {
 	//public Map<Long, float[]>  findDensityModes2() {
@@ -215,12 +275,13 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 	HashMap<Long, Float> MapOfIDAndWCSS3 = new HashMap<>();
 	
 	
-	
 	// #create projector matrixs
 	Projector projector = so.getProjectionType();
 	projector.setOrigDim(so.getdim());
 	projector.setProjectedDim(so.getDimparameter());
 	projector.setRandomSeed(so.getRandomSeed());
+//	projector.setRandomSeed(535247432);
+	
 	projector.init();
 	int cutoff = so.getCutoff();
 	
@@ -233,18 +294,14 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 			addtocounter(x, projector, MapOfIDAndCent1, MapOfIDAndCount1,ct++, rngvec, MapOfIDAndWCSS1);
 			addtocounter(x, projector, MapOfIDAndCent2, MapOfIDAndCount2,ct++, rngvec2,MapOfIDAndWCSS2);
 			addtocounter(x, projector, MapOfIDAndCent3, MapOfIDAndCount3,ct++, rngvec3,MapOfIDAndWCSS3);
-			
-			
+					
 		}
-	}
-		
+	}	
 		
 	System.out.println("NumberOfMicroClustersBeforePruning = "+ MapOfIDAndCent1.size());
 	
 	// next we want to prune the tree by parent count comparison
 	// follows breadthfirst search
-	
-	
 	
 	HashMap<Long, Long> denseSetOfIDandCount2_1 = new HashMap<Long, Long>();
 	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount1.keySet())) 
@@ -282,9 +339,7 @@ public class TWRPv6_COV implements Clusterer, Runnable {
             }
 		}
 	}
-	
-	
-	
+		
 	
 	HashMap<Long, Long> denseSetOfIDandCount2_2 = new HashMap<Long, Long>();
 	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount2.keySet())) 
@@ -322,7 +377,6 @@ public class TWRPv6_COV implements Clusterer, Runnable {
             }
 		}
 	}
-	
 	
 	
 	HashMap<Long, Long> denseSetOfIDandCount2_3 = new HashMap<Long, Long>();
@@ -363,7 +417,6 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 	}	
 	
 	
-	
 	//remove keys with support less than 1
 	Stream<Entry<Long, Long>> stream2_1 = denseSetOfIDandCount2_1.entrySet().stream().filter(p -> p.getValue() > 1);
 		
@@ -394,18 +447,44 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 	float WCSS1 = 0;
 	float WCSS2 = 0;
 	float WCSS3 = 0;
+	
+	float WCSS_off_1 = 0;
+	float WCSS_off_2 = 0;
+	float WCSS_off_3 = 0;
+	
+	
 	HashMap<Long, Long> denseSetOfIDandCount2 = new HashMap<Long, Long>();
+	
+	
 	HashMap<Long, float[]> MapOfIDAndCent = new HashMap<>();  
 	HashMap<Long, Long> MapOfIDAndCount = new HashMap<>();
 	HashMap<Long, Float> MapOfIDAndWCSS =  new HashMap<>();
 	
+	HashMap<Long, Float> MapOfIDAandWCSS_offline_1 =  new HashMap<>();
+	HashMap<Long, Float> MapOfIDAandWCSS_offline_2 =  new HashMap<>();
+	HashMap<Long, Float> MapOfIDAandWCSS_offline_3 =  new HashMap<>();
+	
+	// calculate the real wcss in offline fashion, so for the keys , hash the points into those buckets
+	// and calculate the wcss as we know their centroids :
+	
 
+		for (float[] x : so.getRawData()) 
+		{
+			
+			calcWCSSoffline(x, projector, MapOfIDAndCent1, rngvec, MapOfIDAandWCSS_offline_1);
+			calcWCSSoffline(x, projector, MapOfIDAndCent2, rngvec2, MapOfIDAandWCSS_offline_2);
+			calcWCSSoffline(x, projector, MapOfIDAndCent3, rngvec3, MapOfIDAandWCSS_offline_3);
+			
+		}	
+	
+	
+ //* THIS IS THE RUNTIME CALCULATION OF WCSS STATISTICS WHICH IS DONE ONLINE: 
+  
 	for (Long keys: sortedIDList2_1)
 //	for (Long cur_id : (((HashMap<Long,Long>) stream2_1).keySet()))
-		
 	{  // System.out.println("wcss1 = " + MapOfIDAndWCSS1.get(cur_id));
 		WCSS1 = WCSS1 + MapOfIDAndWCSS1.get(keys);}
-	
+		
 //	for (Long cur_id : (denseSetOfIDandCount2_2.keySet()))
 	for (Long keys: sortedIDList2_2)	
 	{  WCSS2 = WCSS2 + MapOfIDAndWCSS2.get(keys);}
@@ -414,18 +493,40 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 	for (Long keys: sortedIDList2_3)	
 	{  WCSS3 = WCSS3 + MapOfIDAndWCSS3.get(keys);}
 	
-	System.out.println("wcss1 = " + WCSS1);
-	System.out.println("wcss2 = " + WCSS2);	
-	System.out.println("wcss3 = " + WCSS3);
+//* THIS IS THE RUNTIME CALCULATION OF WCSS STATISTICS WHICH REQUIRES ANOTHER PASS OVER THE DATA: 	
+		for (Long keys: sortedIDList2_1)
+//		for (Long cur_id : (((HashMap<Long,Long>) stream2_1).keySet()))
+		{  // System.out.println("wcss1 = " + MapOfIDAndWCSS1.get(cur_id));
+		WCSS_off_1  = WCSS_off_1  + MapOfIDAandWCSS_offline_1.get(keys);}
+			
+//		for (Long cur_id : (denseSetOfIDandCount2_2.keySet()))
+		for (Long keys: sortedIDList2_2)	
+		{  WCSS_off_2  = WCSS_off_2  + MapOfIDAandWCSS_offline_2.get(keys);}
+		
+//		for (Long cur_id : (denseSetOfIDandCount2_3.keySet()))
+		for (Long keys: sortedIDList2_3)	
+		{  WCSS_off_3  = WCSS_off_3  + MapOfIDAandWCSS_offline_3.get(keys);}
 	
-	if ((WCSS1 <= WCSS2) && (WCSS1 <= WCSS3))
+	
+	
+	System.out.print("wcss1 = " + WCSS1);
+	System.out.println("          wcss_ofline_1 = " + WCSS_off_1);
+	
+	System.out.print("wcss2 = " + WCSS2);	
+	System.out.println("          wcss_ofline_2 = " + WCSS_off_2);
+	
+	System.out.print("wcss3 = " + WCSS3);
+	System.out.println("          wcss_ofline_3 = " + WCSS_off_3);
+	
+	
+	if ((WCSS_off_1 <= WCSS_off_2) && (WCSS_off_1 <= WCSS_off_3))
 	{MapOfIDAndCount = MapOfIDAndCount1;
 	MapOfIDAndCent = MapOfIDAndCent1;
 	MapOfIDAndWCSS = MapOfIDAndWCSS1;
 	denseSetOfIDandCount2 = denseSetOfIDandCount2_1;
 	System.out.println("winner = tree1");
 	}
-	else if ((WCSS2<= WCSS1) && (WCSS2<=WCSS3))
+	else if ((WCSS_off_2<= WCSS_off_1) && (WCSS_off_2<=WCSS_off_3))
 	{MapOfIDAndCount = MapOfIDAndCount2;
 	MapOfIDAndCent = MapOfIDAndCent2;
 	MapOfIDAndWCSS = MapOfIDAndWCSS2;
@@ -468,6 +569,15 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		
 	return multimapWeightAndCent;
 	
+	
+	
+	
+	// this is to be taken out . only done for hypothesis testing.
+	
+	
+	
+	
+	
 }
 	
 	
@@ -503,8 +613,6 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 			rngvec[i] = (float) 0;
 			   }
 		
-		
-		
 	
 		Multimap<Long, float[]> WeightAndClusters = findDensityModes2();
 		
@@ -534,11 +642,18 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 		}	
 	
 		
-		Agglomerative3 aggloOffline =  new Agglomerative3(centroids2, so.getk());
-		
+		Agglomerative3 aggloOffline =  new Agglomerative3(ClusteringType.AVG_LINKAGE,centroids2, so.getk());
 		aggloOffline.setWeights(weights2);
-		
 		this.centroids = aggloOffline.getCentroids();
+		
+		
+/*
+		KMeans2 aggloOffline2 = new KMeans2();
+		aggloOffline2.setK(so.getk());
+		aggloOffline2.setRawData(centroids2);
+		aggloOffline2.setWeights(weights2);
+		this.centroids = aggloOffline2.getCentroids();
+*/
 			
 	}
 	
@@ -562,34 +677,41 @@ public class TWRPv6_COV implements Clusterer, Runnable {
 			float avgrealwcss = 0;
 			float avgtime = 0;
 	//		System.out.printf("%f\t", f);
-				GenerateData gen = new GenerateData(k, n/k, d, f, true, .5f);
+	//			GenerateData gen = new GenerateData(k, n/k, d, f, true, .5f);
 				
-				// gen.writeCSVToFile(new File("/home/lee/Desktop/reclsh/in.csv"));
+					// gen.writeCSVToFile(new File("/home/lee/Desktop/reclsh/in.csv"));	
+					//	List<Float[]> data = "/C:/Users/user/Desktop/temp/OutputTwrpCents1" 
 				
-			//	List<Float[]> data = "/C:/Users/user/Desktop/temp/OutputTwrpCents1" 
-						
-				RPHashObject o = new SimpleArrayReader(gen.data, k);
-						
+			//	RPHashObject o = new SimpleArrayReader(gen.data, k);
+				
+				boolean raw = Boolean.parseBoolean(("raw"));
+				List<float[]> data = null;
+				data = VectorUtil.readFile("/C:/Users/deysn/Desktop/temp/1D.txt", raw);
+				k = 6;
+				RPHashObject o = new SimpleArrayReader(data, 6);
+					
+				
 				o.setDimparameter(16);
-	
-				o.setCutoff(100);
+				o.setCutoff(60);
 				o.setRandomVector(true);
 				
 //				System.out.println("cutoff = "+ o.getCutoff());
 //				System.out.println("get_random_Vector = "+ o.getRandomVector());			
 								
-				TWRPv6_WCSS2 rphit = new TWRPv6_WCSS2(o);
+				TWRPv6_wcss_offline rphit = new TWRPv6_wcss_offline(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
 
 				avgtime += (System.nanoTime() - startTime) / 100000000;
 				
-				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),
-						gen.getData());
+//				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),gen.getData());
 				
+								
 				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);	
 
-				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
+//				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
+				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, data));
+				
 				System.gc();
 			
 			    System.out.printf("%.0f\n", avgrealwcss / count);
