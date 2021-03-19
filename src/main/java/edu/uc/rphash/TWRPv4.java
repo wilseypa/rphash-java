@@ -70,6 +70,48 @@ public class TWRPv4 implements Clusterer, Runnable {
 			float cnt_2, float[] x_2) {
 		
 		float cnt_r = cnt_1 + cnt_2;
+
+		float[] x_r = new float[x_1.length];
+
+		float[] var_r1 = new float[x_1.length];
+		float[] var_r2 = new float[x_1.length];
+
+		double var1=0;
+		double var2=0;
+		
+
+		for (int i = 0; i < x_1.length; i++) {
+			x_r[i] = (cnt_1 * x_1[i] + cnt_2 * x_2[i]) / cnt_r;
+
+			var_r1[i] = ((-x_r[i] + x_1[i]) * (-x_r[i] + x_1[i]))/1000000000;
+
+			var_r2[i] =(((-x_r[i] + x_2[i]) * (-x_r[i] + x_2[i])))/1000000000;
+			
+		}
+
+		for (int i = 0; i < var_r1.length; i++) {
+		var1 = var1 + var_r1[i];
+
+		var2 = var2 + var_r2[i];
+							}
+
+
+	//    System.out.println("wcsse = " + wcsse);
+
+
+	    float[][] ret = new float[3][];
+		ret[0] = new float[1];
+		ret[0][0] = cnt_r;
+		ret[1] = x_r;
+		ret[2]= new float [1];
+		return ret;
+	}
+	
+	
+	public static float[][] UpdateHashMap_actual(float cnt_1, float[] x_1, 
+			float cnt_2, float[] x_2) {
+		
+		float cnt_r = cnt_1 + cnt_2;
 		
 		float[] x_r = new float[x_1.length];
 		

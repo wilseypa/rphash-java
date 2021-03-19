@@ -861,7 +861,7 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 	//		System.out.printf("Trial%d\t", i);
 	//	System.out.printf("RealWCSS\n");
 
-		String Output = "/C:/Users/deysn/OneDrive - University of Cincinnati/Documents/temp/run_results/3runs/rnaseq_k4/OutputTwrpCents_dbscan" ;  
+	//	String Output = "/C:/Users/deysn/OneDrive - University of Cincinnati/Documents/temp/run_results/3runs/rnaseq_k4/OutputTwrpCents_dbscan" ;  
 
 	//	    float f = var;
 		//	float avgrealwcss = 0;
@@ -916,7 +916,7 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 				rt.gc();
 				
 //				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),gen.getData());
-				
+				String Output = "/C:/Users/deysn/OneDrive - University of Cincinnati/Documents/temp/run_results/3runs/rnaseq_k4/OutputTwrpCents_dbscan" ;
 				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);	
 
 //				System.out.printf("WCSS for generated data = "+ "%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
