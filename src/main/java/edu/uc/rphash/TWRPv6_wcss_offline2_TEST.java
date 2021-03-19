@@ -909,7 +909,7 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 			
 				float usedMB = ((rt.totalMemory() - rt.freeMemory()) - startmemory) / (1024*1024);
 				
-				System.out.println(" Time( in sec) " + avgtime + ", Mem_Used(MB): " + usedMB/3 );
+				System.out.println(" Time(in sec) " + avgtime + ", Mem_Used(MB): " + usedMB/3 );
 				
 				rt.gc();
 				Thread.sleep(10);
