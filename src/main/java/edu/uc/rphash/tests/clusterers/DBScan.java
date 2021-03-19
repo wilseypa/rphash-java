@@ -35,16 +35,15 @@ public class DBScan implements edu.uc.rphash.Clusterer{
 	  
   }
   
- /* public DBScan(List<float[]> , double eps , int minPoints) {
+  public DBScan(List<float[]> data , double eps , int minPoints) {
 	  
 	  
 	  this.setRawData(data);
-	  this.setEps(eps); 
-	  this.setminpoints(minPoints);
-	   
+	  this.eps = eps;
+	  this.minPoints = minPoints;
 	  
   }
-    */    
+       
   
  public DBScan(List<float[]> data ) {
 	   
@@ -55,8 +54,8 @@ public class DBScan implements edu.uc.rphash.Clusterer{
 
  public List<Centroid> getCentroids() { // to be completed
 
-	 double eps = 2;
-	 int minPoints = 3;
+	 //double eps = 6;
+	 //int minPoints = 4;
 	 
 	 DBSCANClusterer<DoublePoint> db = new DBSCANClusterer<DoublePoint>(eps , minPoints );
 
@@ -168,7 +167,10 @@ public class DBScan implements edu.uc.rphash.Clusterer{
     	GenerateData  gen = new GenerateData(20,500,5); // the data generator of rhpash
     	
 
-		DBScan db = new DBScan (gen.data );
+		DBScan db = new DBScan (gen.data, 1 , 2 );
+		
+		System.out.println("minpoints  = "+ (db.minPoints));
+		System.out.println("eps  = "+ (db.eps));
 		System.out.println("number of centroids  = "+ (db.getCentroids()).size());
 		
 		

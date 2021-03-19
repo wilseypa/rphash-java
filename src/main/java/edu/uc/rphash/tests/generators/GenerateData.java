@@ -569,11 +569,11 @@ public class GenerateData implements ClusterGenerator {
 		List<String> truncatedArgs = new ArrayList<String>();
 		Map<String, String> taggedArgs = argsUI(args, truncatedArgs);
 
-		int k = 10;
-		int d = 1000;
-		int n = 20000;
-		float var = 1f;
-		float sparseness = 1f;
+		int k = 20;
+		int d = 200;
+		int n = 10000;
+		float var = 0.8f;       		//1.0f; 
+		float sparseness = 1.0f;			//1f;
 		boolean shuffle = true;
 		boolean raw = false;
 		
@@ -585,7 +585,8 @@ public class GenerateData implements ClusterGenerator {
 		if(taggedArgs.containsKey("shuffled"))shuffle = Boolean.parseBoolean(taggedArgs.get("shuffled"));
 		if(taggedArgs.containsKey("raw"))raw = Boolean.parseBoolean(taggedArgs.get("raw"));
 		
-		File outputFile = new File(args[0]+"_"+k+"x"+d+"x"+n+".mat");
+		//File outputFile = new File(args[0]+"_"+k+"x"+d+"x"+n+".txt");   // ".mat"
+		File outputFile = new File(args[0] +"1D"+".txt"); 
 		File lblFile = new File(args[0]+"_"+k+"x"+d+"x"+n+".lbl");
 
 		System.out.printf("k=%d, n=%d, d=%d, var=%f, sparseness=%f %s > %s",k,n,
