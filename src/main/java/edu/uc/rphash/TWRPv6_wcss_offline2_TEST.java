@@ -36,13 +36,30 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 
+// https://www.javatips.net/api/webofneeds-master/webofneeds/won-matcher-solr/src/main/java/won/matcher/solr/utils/Kneedle.java
+// https://github.com/lukehb/137-stopmove/blob/master/src/main/java/onethreeseven/stopmove/algorithm/Kneedle.java
 
 // this algorithm runs twrp 3 times : (only the random bisection vector varies, the Projection matrix remains same)
 // and selects the one which has the best wcss  offline for the 10X candidate centroids.
 public class TWRPv6_wcss_offline2_TEST implements Clusterer, Runnable {
 
-	boolean znorm = false;
 	
+	List<Long> labels;                           // to directly output labels
+	HashMap<Long, Long> labelmap;				// to directly output labels	
+	public List<Long> getLabels() {
+		for (int i = 0; i < labels.size(); i++) {
+			if (labelmap.containsKey(labels.get(i))) {
+				labels.set(i, labelmap.get(labels.get(i)));
+			} else {
+				labels.set(i, -1l);
+			}
+		}
+		return this.labels;
+	}
+	
+		
+	
+	boolean znorm = false;
 	private int counter;
 	private float[] rngvec;
 	private float[] rngvec2;
@@ -363,7 +380,7 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 		}
 	}	
 		
-	System.out.println("\nNumberOfMicroClustersBeforePruning = "+ MapOfIDAndCent1.size());
+	System.out.println("\nNumberOfMicroClustersBeforePruning = , "+ MapOfIDAndCent1.size());
 	//printHashmap(MapOfIDAndCount1);
 	
 	// next we want to prune the tree by parent count comparison
@@ -572,13 +589,13 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 		{  WCSS_off_3  = WCSS_off_3  + MapOfIDAandWCSS_offline_3.get(keys);}     
 */	
 	
-	System.out.println("wcss1(online calc) of candidate cents = " + WCSS1);
+	System.out.println("wcss1(online calc) of candidate cents = , " + WCSS1);
 //	System.out.println("          wcss_ofline_calc_1 = " + WCSS_off_1);
 	
-	System.out.println("wcss1(online calc) of candidate cents = " + WCSS2);	
+	System.out.println("wcss1(online calc) of candidate cents = , " + WCSS2);	
 //	System.out.println("          wcss_ofline_calc_2 = " + WCSS_off_2);
 	
-	System.out.println("wcss1(online calc) of candidate cents = " + WCSS3);
+	System.out.println("wcss1(online calc) of candidate cents = , " + WCSS3);
 //	System.out.println("          wcss_ofline_calc_3 = " + WCSS_off_3);	
 	
 	if ((WCSS1 <= WCSS2) && (WCSS1 <= WCSS3))
@@ -604,7 +621,7 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 
 	}	
 	
-	System.out.println("NumberOfMicroClusters_AfterPruning_&_beforesortingLimit = "+ denseSetOfIDandCount2.size());
+	System.out.println("NumberOfMicroClusters_AfterPruning_&_beforesortingLimit = , "+ denseSetOfIDandCount2.size());
 	
 	//remove keys with support less than 1
 	Stream<Entry<Long, Long>> stream2 = denseSetOfIDandCount2.entrySet().stream().filter(p -> p.getValue() > 2);
@@ -807,7 +824,7 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 		List<float[]>centroids2 = new ArrayList<>();
 		List<Float> weights2 =new ArrayList<>();
 		
-		System.out.println("\tNumberOfMicroClusters_AfterPruning = "+ WeightAndClusters.size());		
+		System.out.println("\tNumberOfMicroClusters_AfterPruning = , "+ WeightAndClusters.size());		
 //		System.out.println("getRandomVector = "+ randVect);
 		
 		for (Long weights : WeightAndClusters.keys())						
@@ -826,15 +843,15 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 					
 		}	
 			
-		Agglomerative3 aggloOffline =  new Agglomerative3(ClusteringType.AVG_LINKAGE,centroids2, so.getk());
-		aggloOffline.setWeights(weights2);
-		this.centroids = aggloOffline.getCentroids();
-	/*		
+//		Agglomerative3 aggloOffline =  new Agglomerative3(ClusteringType.AVG_LINKAGE,centroids2, so.getk());
+//		aggloOffline.setWeights(weights2);
+//		this.centroids = aggloOffline.getCentroids();
+			
 	    KMeans2 aggloOffline2 = new KMeans2();
 		aggloOffline2.setK(so.getk());
 		aggloOffline2.setRawData(centroids2);
 //		aggloOffline2.setWeights(weights2);
-		this.centroids = aggloOffline2.getCentroids();       */
+		this.centroids = aggloOffline2.getCentroids();       
 		
 //		MultiKMPP aggloOffline3  = new MultiKMPP(centroids2,so.getk());
 //		this.centroids = aggloOffline3.getCentroids();
@@ -877,16 +894,20 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 				boolean raw = Boolean.parseBoolean(("raw"));
 				List<float[]> data = null;
 				// "/C:/Users/deysn/Desktop/temp/har/1D.txt" ;  C:/Users/deysn/Documents/temp/covtype/1D.txt	
-				data = VectorUtil.readFile("/C:/Users/deysn/OneDrive - University of Cincinnati/Documents/temp/covtype/covtype_5clus_1D.csv", raw);
-				for (int k=3; k<=3;k++)
+				// C:/Users/dey.sn/Downloads/temp/covtype/1D.csv ; "C:/Users/dey.sn/Downloads/temp/run_results/3runs/har_k6/1D.txt" 
+				String inputfile = "C:/Users/dey.sn/Downloads/temp/crop_mapping/1D.csv" ;
+				System.out.println(inputfile);
+				data = VectorUtil.readFile( inputfile , raw);
+				for (int k=4; k<=11;k++)
 				{
-				for (int i = 0; i < 1; i++)
+				for (int i = 1; i <= 3; i++)
 				{
 				//k = 7;
+					
 				RPHashObject o = new SimpleArrayReader(data, k);
-				
+			
 				o.setDimparameter(16);
-				o.setCutoff(100); //230
+				o.setCutoff(130); //230
 				o.setRandomVector(true);
 				
 //				System.out.println("cutoff = "+ o.getCutoff());
@@ -906,22 +927,26 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 				List<Centroid> centsr = rphit.getCentroids();
 				
 				avgtime += (System.nanoTime() - startTime) / 1000000000f ;
-			
+				
 				float usedMB = ((rt.totalMemory() - rt.freeMemory()) - startmemory) / (1024*1024);
 				
-				System.out.println(" Time(in sec) " + avgtime + ", Mem_Used(MB): " + usedMB/3 );
+				System.out.println(" Time(in sec), " + avgtime + ", Mem_Used(MB):, " + (usedMB/3) );
 				
 				rt.gc();
 				Thread.sleep(10);
 				rt.gc();
 				
 //				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),gen.getData());
-				String Output = "/C:/Users/deysn/OneDrive - University of Cincinnati/Documents/temp/run_results/3runs/rnaseq_k4/OutputTwrpCents_dbscan" ;
-				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);	
+//				String Output = "/C:/Users/deysn/OneDrive - University of Cincinnati/Documents/temp/run_results/3runs/rnaseq_k4/OutputTwrpCents_dbscan" ;
+				String Output =  "C:/Users/dey.sn/Downloads/work/output/cropmap_k7/cropmap_k7_kmeans_130_cutoff"+"_" +k+"_"+i+".csv" ;
+				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);
+				
+//				VectorUtil.writeVectorFile(new File(Output+"_"+"labels"+".txt"), centsr.getLabels());
+			
 
 //				System.out.printf("WCSS for generated data = "+ "%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
-				System.out.printf("WCSS for Winning Kmeans = "+ "%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, data));
-				System.out.println("k is: "+k);
+				System.out.printf(",WCSS for Winning Kmeans, = , "+ "%.0f  ",	StatTests.WCSSECentroidsFloat(centsr, data));
+				System.out.println(",k, is: ,  "+k);
 //				
 				System.gc();
 				}
