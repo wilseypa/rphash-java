@@ -2,7 +2,7 @@ package edu.uc.rphash.util;
 
 import java.util.*;
 
-// taken from " https://github.com/lukehb/137-common/blob/master/src/main/java/onethreeseven/common/util/Maths.java   by  Luke Bermingham "
+// taken from " https://github.com/lukehb/137-common/blob/master/src/main/java/onethreeseven/common/util/Maths.java   by  Luke Bermingham  "
 /**
  * A utility of mathematical methods.
  */

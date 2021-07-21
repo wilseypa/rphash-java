@@ -6,7 +6,7 @@ import edu.uc.rphash.util.Maths;
 import java.util.ArrayList;
 
 
-// to find the knee, taken from " https://github.com/lukehb/137-stopmove/blob/master/src/main/java/onethreeseven/stopmove/algorithm/Kneedle.java   by   Luke Bermingham"
+// to find the knee, taken from " https://github.com/lukehb/137-stopmove/blob/master/src/main/java/onethreeseven/stopmove/algorithm/Kneedle.java   by   Luke Bermingham "
 
 /**
  * Given set of values look for the elbow/knee points.
