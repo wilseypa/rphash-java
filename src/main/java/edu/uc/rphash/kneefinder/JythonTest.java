@@ -17,7 +17,6 @@ import java.util.Arrays;
  * See paper: "Finding a Kneedle in a Haystack: Detecting Knee Points in System Behavior"
  */
 
-
 public class JythonTest {
 
     /**
