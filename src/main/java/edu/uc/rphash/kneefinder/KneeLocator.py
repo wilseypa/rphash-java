@@ -699,6 +699,7 @@ print(df)
 
 conv_arr= df.values
 
+
  
 
 #split matrix into 3 columns each into 1d array
