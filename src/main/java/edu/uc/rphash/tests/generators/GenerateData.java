@@ -517,6 +517,7 @@ public class GenerateData implements ClusterGenerator {
 		return data;
 	}
 
+
 	@Override
 	public List<Integer> getLabels() {
 		// TODO Auto-generated method stub
