@@ -101,7 +101,7 @@ public class Kneedle {
             return 0;
         }
 
-        double[] normalisedData = Maths.minmaxNormalise1d(Maths.gaussianSmooth(data, 3));
+        double[] normalisedData = Maths.minmaxNormalise1d(Maths.gaussianSmooth(data, 1));
 
         //do kneedle y'-x' (in this case x' is normalised index value)
         for (int i = 0; i < normalisedData.length; i++) {

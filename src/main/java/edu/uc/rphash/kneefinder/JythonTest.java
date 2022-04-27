@@ -71,10 +71,11 @@ public class JythonTest {
     private double[][] prepare(double[][] data, int smoothingWindow){
 
         //smooth the data to make local minimum/maximum easier to find (this is Step 1 in the paper)
-        double[][] smoothedData = Maths.gaussianSmooth2d(data, smoothingWindow);
+       // double[][] smoothedData = Maths.gaussianSmooth2d(data, smoothingWindow);
 
         //prepare the data into the unit range (step 2 of paper)
-        double[][] normalisedData = Maths.minmaxNormalise(smoothedData);
+       // double[][] normalisedData = Maths.minmaxNormalise(smoothedData);
+        double[][] normalisedData = Maths.minmaxNormalise(data);
 
         //subtract normalised x from normalised y (this is step 3 in the paper)
         for (int i = 0; i < normalisedData.length; i++) {
@@ -105,7 +106,9 @@ public class JythonTest {
         }
 
         // double[] normalisedData = Maths.minmaxNormalise1d(Maths.gaussianSmooth(data, 3));  // original parameter
-        double[] normalisedData = Maths.minmaxNormalise1d(Maths.gaussianSmooth(data, 1));
+        double[] normalisedData = Maths.minmaxNormalise1d(Maths.gaussianSmooth(data, 0));
+        
+
         //do kneedle y'-x' (in this case x' is normalised index value)
         for (int i = 0; i < normalisedData.length; i++) {
             double normalisedIndex = (double)i / data.length;
@@ -139,9 +142,11 @@ public class JythonTest {
         ArrayList<double[]> localMinMaxPts = new ArrayList<>();
         //do steps 1,2,3 of the paper in the prepare method
         double[][] normalisedData = prepare(data, smoothingWindow);
+        
         //find candidate indices (this is step 4 in the paper)
         {
             ArrayList<Integer> candidateIndices = findCandidateIndices(normalisedData, findElbows);
+            //ArrayList<Integer> candidateIndices = findCandidateIndices(data, findElbows);
             //go through each candidate index, i, and see if the indices after i are satisfy the threshold requirement
             //(this is step 5 in the paper)
             double step = computeAverageVarianceX(normalisedData);
@@ -194,117 +199,68 @@ public class JythonTest {
 			    2308, 2262, 2235, 2259, 2221, 2202, 2184, 2170, 2160,
 			    2127, 2134, 2101, 2101, 2066, 2074, 2063, 2048, 2031    };
 */		
-		double elbowdata2[] = {272445.84,
-				139828.64,
-				219647.36,
-				149900.52,
-				101875.555,
-				90592.31,
-				94776.5,
-				59097.977,
-				54506.95,
-				70813.1,
-				51619.59,
-				72024.32,
-				42364.402,
-				49209.64,
-				43121.777,
-				58519.363,
-				42506.32,
-				53575.184,
-				48930.42,
-				67386.4,
-				27424.889,
-				58791.652,
-				47980.53,
-				57721.895,
-				28586.846,
-				47117.207,
-				34060.79,
-				46765.35,
-				36411.176,
-				38203.29,
-				41664.164,
-				30040.643,
-				23410.227,
-				37810.92,
-				44158.805,
-				36570.363,
-				38791.527,
-				26255.09,
-				34368.848,
-				33185.074,
-				23464.494,
-				58085.137,
-				19323.424,
-				28164.77,
-				31947.02,
-				34020.324,
-				31572.951,
-				40708.703,
-				27046.771,
-				37988.094,
-				104162.72,
-				33381.24,
-				20126.354,
-				23565.26,
-				35915.094,
-				34402.164,
-				23505.94,
-				25535.15,
-				33915.32,
-				25169.93,
-				20888.271,
-				36341.01,
-				26020.947,
-				29645.568,
-				27043.643,
-				24310.191,
-				23757.668,
-				19005.96,
-				22007.072,
-				17633.865,
-				22680.45,
-				11766.091,
-				12725.509,
-				34868.617,
-				22989.531,
-				23386.334,
-				17618.283,
-				22736.342,
-				18922.049,
-				24434.168,
-				13263.041,
-				9256.854,
-				18594.143,
-				21928.807,
-				29263.688,
-				16141.0205,
-				14283.08,
-				16031.739,
-				14628.732,
-				19026.465,
-				16398.363,
-				22941.205,
-				25078.521,
-				16121.506,
-				10316.715,
-				24983.184,
-				17508.658,
-				16489.285,
-				9556.006,
-				10829.478,
+		double elbowdata2[] = {5000,
+				4000,
+				3000,
+				2000,
+				1000,
+				900,
+				800,
+				700,
+				600,
+				500,
+				450,
+				400,
+				350,
+				300,
+				250,
+				225,
+				200,
+				175,
+				150,
+				125,
+				100,
+				75,
+				50,
+				25,
+				24,
+				23,
+				22,
+				21,
+				20,
+				19,
+				18,
+				17,
+				16,
+				15,
+				14,
+				13,
+				12,
+				11,
+				10,
+				10,
+				9,
+				9,
+				9,
+				9,
+				9,
+				9,
+				9,
+				9,
+				9,
+				9,	
     } ;
 		
-		double elbow_point = elbowcalculator.findElbowQuick(elbowdata2);		
+		double elbow_point = elbowcalculator.findElbowQuick(elbowdata2);	
+		
     	System.out.print("elbow point value form 1D data : "+ elbow_point);
     	
-	      double[][] elbowdata3 = new double[100][2] ;
-	      for (int i= 0;i<=99;i++) {
+	      double[][] elbowdata3 = new double[50][2] ;
+	      for (int i= 0;i<=49;i++) {
 	    	  
-	    	  elbowdata3[i][1]= 99-i;}
+	    	  elbowdata3[i][1]= 49-i;}
 	    	  
-	      for (int i= 0;i<=99;i++)
+	      for (int i= 0;i<=49;i++)
 	      {
 	    	  elbowdata3[i][0]= elbowdata2[i];
 	      }
@@ -312,7 +268,7 @@ public class JythonTest {
 	      
 	   //                  public ArrayList<double[]>  run(double[][] data, double s, int smoothingWindow, boolean findElbows)
 	      
-	      ArrayList<double[]> elbows = elbowcalculator.run ( elbowdata3,      0 ,          1 ,                false);
+	      ArrayList<double[]> elbows = elbowcalculator.run ( elbowdata3,      1 ,          1,                false);
 	      
 	      System.out.print("\n" + "number of elbow points : " + elbows.size());
 	      for (double[] point : elbows) {

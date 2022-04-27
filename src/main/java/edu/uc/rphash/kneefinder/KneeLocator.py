@@ -1,47 +1,20 @@
-#package edu.uc.rphash.kneefinder;
-
-import edu.uc.rphash.Centroid;
-import edu.uc.rphash.Readers.RPHashObject;
-import edu.uc.rphash.frequentItemSet.KHHCentroidCounter;
-import edu.uc.rphash.lsh.LSH;
-import java.util.ArrayList;
-#import org.python.util.PythonInterpreter;
-#import org.python.core.*;
-
-        
-
 import sys
-
 from scipy.constants import convert_temperature
 
- 
-
 import numpy as np
-
 from scipy import interpolate
-
 from scipy.signal import argrelextrema
-
 from sklearn.preprocessing import PolynomialFeatures
-
 from sklearn.linear_model import LinearRegression
-
 import warnings
-
 from typing import Tuple, Optional, Iterable
-
 import matplotlib.pyplot as plt
-
 import pandas as pd
-
- 
 
 import warnings  # did not install
 
+#from edu.uc.rphash.kneefinder import JythonTest2
 
- 
-
- 
 
 def my_test(name, age, file):
 
@@ -735,6 +708,11 @@ kn2 = KneeLocator(list(x), y , S=1.0, curve='convex', direction='decreasing',onl
 print(kn.knee)
 
 print(kn2.knee)
+
+print("success")
+
+
+
 
 #print(kn.norm_knee)
 
