@@ -71,11 +71,24 @@ public class JythonTest {
     private double[][] prepare(double[][] data, int smoothingWindow){
 
         //smooth the data to make local minimum/maximum easier to find (this is Step 1 in the paper)
-       // double[][] smoothedData = Maths.gaussianSmooth2d(data, smoothingWindow);
+        double[][] smoothedData = Maths.gaussianSmooth2d(data, smoothingWindow);
+        double[][] smoothedData2 = Maths.Smooth2d(data);
+    	System.out.println("this is the smoothed out  data using gaussian kernal -------------------");
+    	System.out.println(Arrays.deepToString(smoothedData));
+    	System.out.println(data.length);
+    	
+    	System.out.println(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+   
+    	System.out.println("this is the smoothed out  data using linear interpolation -------------------");
+    	System.out.println(Arrays.deepToString(smoothedData2));
+    	
 
         //prepare the data into the unit range (step 2 of paper)
-       // double[][] normalisedData = Maths.minmaxNormalise(smoothedData);
-        double[][] normalisedData = Maths.minmaxNormalise(data);
+        double[][] normalisedData = Maths.minmaxNormalise(smoothedData2 );
+    	
+    	
+    	
+       // double[][] normalisedData = Maths.minmaxNormalise(data);
 
         //subtract normalised x from normalised y (this is step 3 in the paper)
         for (int i = 0; i < normalisedData.length; i++) {

@@ -2,6 +2,11 @@ package edu.uc.rphash.util;
 
 import java.util.*;
 
+
+//import org.apache.commons.math.*;
+import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+
 // taken from " https://github.com/lukehb/137-common/blob/master/src/main/java/onethreeseven/common/util/Maths.java   by  Luke Bermingham  "
 /**
  * A utility of mathematical methods.
@@ -537,6 +542,43 @@ public final class Maths {
         return smoothed;
     }
 
+    public static double[][] Smooth2d(double[][] data){
+    	// double linearInterp(double[] x, double[] y, double xi)
+    	
+    		int size  = data.length;                                //50
+    		double x[] = new double[size];
+    		double xi[] = new double[size];
+    		double y[] = new double[size];
+    		double smooth_xy[][] =new double[size][2];
+    		
+    		for ( int i=0 ;   i<=size-1 ;  i++) {
+    			 x[i] = data[(size-1)-i][1];
+    			 y[i] = data[i][0]; 
+    			
+    		}
+    	
+    	 // return linear interpolation of (x,y) on xi
+    	   LinearInterpolator li = new LinearInterpolator();
+    	 // 
+    	   
+    	   PolynomialSplineFunction psf = li.interpolate(x,y);
+    	   
+    	   for ( int i=0 ;   i<=size-1 ;  i++) {
+    		   
+   			smooth_xy[(size-1)-i][1]= x[i];
+   			
+   			smooth_xy[i][0]= psf.value(x[i]); 
+   			
+   			}	   		
+    	       	   
+    	   
+    	   return smooth_xy;
+    		
+    	
+    }
+    	
+    
+    
     /**
      * Normalise the 1d data using min-max normalisation.
      * @see <a href="https://en.wikipedia.org/wiki/Feature_scaling#Rescaling">Wikipedia article about feature re-scaling.</a>

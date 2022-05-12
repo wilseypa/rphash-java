@@ -155,6 +155,9 @@ class KneeLocator(object):
             uspline = interpolate.interp1d(self.x, self.y)
 
             self.Ds_y = uspline(self.x)
+            print("this is the smoothed data---------------------------")
+            print(self.Ds_y)
+            
 
         elif interp_method == "polynomial":
 
@@ -658,9 +661,9 @@ class KneeLocator(object):
 
  
 
-nameoffile = my_test(sys.argv[1], sys.argv[2], sys.argv[3])                                      # this is for the java calling
+#nameoffile = my_test(sys.argv[1], sys.argv[2], sys.argv[3])                                      # this is for the java calling
 
-#nameoffile = my_test("sam","25", "C:/Users/sayan/Documents/testdata/data.xlsx")                 # this is for the python test
+nameoffile = my_test("sam","25", "C:/Users/sayan/Documents/testdata/data.xlsx")                 # this is for the python test
 
  
 
