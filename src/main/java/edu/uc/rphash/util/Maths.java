@@ -542,6 +542,8 @@ public final class Maths {
         return smoothed;
     }
 
+    
+    
     public static double[][] Smooth2d(double[][] data){
     	// double linearInterp(double[] x, double[] y, double xi)
     	
