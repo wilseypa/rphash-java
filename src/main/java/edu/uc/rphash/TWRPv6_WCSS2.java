@@ -558,9 +558,9 @@ public class TWRPv6_WCSS2 implements Clusterer, Runnable {
 			IOException {
 
 		int k = 10;//6;
-		int d = 200;//16;
-		int n = 10000;
-		float var = 1.5f;
+		int d = 100;//16;
+		int n = 1000;
+		float var = 1f;
 		int count = 1;
 	//	System.out.printf("ClusterVar\t");
 	//	for (int i = 0; i < count; i++)
@@ -573,7 +573,7 @@ public class TWRPv6_WCSS2 implements Clusterer, Runnable {
 			float avgrealwcss = 0;
 			float avgtime = 0;
 	//		System.out.printf("%f\t", f);
-				GenerateData gen = new GenerateData(k, n/k, d, f, true, .5f);
+				GenerateData gen = new GenerateData(k, n/k, d, f, true, 1f);
 				
 				// gen.writeCSVToFile(new File("/home/lee/Desktop/reclsh/in.csv"));
 				
@@ -598,12 +598,12 @@ public class TWRPv6_WCSS2 implements Clusterer, Runnable {
 				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),
 						gen.getData());
 				
-				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);	
+//				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);	
 
 				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
 				System.gc();
 			
-			    System.out.printf("%.0f\n", avgrealwcss / count);
+//			    System.out.printf("%.0f\n", avgrealwcss / count);
 			
 		
 	}

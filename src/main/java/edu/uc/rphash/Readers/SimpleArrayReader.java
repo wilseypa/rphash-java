@@ -99,6 +99,37 @@ public class SimpleArrayReader implements RPHashObject {
 //			topIDs.add((long) 0);
 	}
 
+	public SimpleArrayReader(List<float[]> X) {
+
+		this.randomSeed = new Random().nextLong();
+		this.hashmod = DEFAULT_HASH_MODULUS;
+		this.decoderMultiplier = DEFAULT_NUM_DECODER_MULTIPLIER;
+		if(this.decoderMultiplier>1)
+			this.dec = new MultiDecoder(this.decoderMultiplier*DEFAULT_INNER_DECODER.getDimensionality(),DEFAULT_INNER_DECODER);
+		else
+			this.dec = DEFAULT_INNER_DECODER;
+		this.numProjections = DEFAULT_NUM_PROJECTIONS;
+		this.numBlur = DEFAULT_NUM_BLUR;
+		this.data = X;
+		if(data!=null)
+			this.dim = data.get(0).length;
+		else 
+			this.dim = null;
+		// this.k = k;
+		this.centroids = new ArrayList<Centroid>();
+		this.topIDs = new ArrayList<Long>();
+		this.decayrate = 0;
+		this.dimparameter = DEFAULT_DIM_PARAMETER;
+		this.clusterer = DEFAULT_OFFLINE_CLUSTERER;
+		this.projector = DEFAULT_PROJECTOR;
+//		for (int i = 0; i < k; i++)
+//			topIDs.add((long) 0);
+	}	
+	
+	
+	
+	
+	
 //	public SimpleArrayReader(List<float[]> X, int k, int blur) {
 //
 //		this.randomSeed = DEFAULT_NUM_RANDOM_SEED;

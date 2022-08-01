@@ -32,7 +32,7 @@ import com.google.common.collect.Multimap;
 
 
 
-// this algorithm runs twrp 5 times : (only the random bisection vector varies, the Projection matrix remains same)
+// this algorithm runs twrp 10 times : (only the random bisection vector varies, the Projection matrix remains same)
 // and selects the one which has the best wcss  offline for the 10X candidate centroids.
 public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 

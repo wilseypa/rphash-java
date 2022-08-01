@@ -1,5 +1,7 @@
 package edu.uc.rphash;
 
+
+/* This class uses the bisection vector as the lsh partition vector */
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;

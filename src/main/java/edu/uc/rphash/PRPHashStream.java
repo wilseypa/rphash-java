@@ -1,5 +1,7 @@
 package edu.uc.rphash;
-
+/*
+This class will run the Parameter-free Random Projection Hash Stream Clustering 
+*/
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

@@ -9,6 +9,8 @@ import edu.uc.rphash.util.VectorUtil;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 // to find the knee, modified from " https://github.com/lukehb/137-stopmove/blob/master/src/main/java/onethreeseven/stopmove/algorithm/Kneedle.java   by   Luke Bermingham "
 
@@ -73,11 +75,11 @@ public class JythonTest {
         //smooth the data to make local minimum/maximum easier to find (this is Step 1 in the paper)
         double[][] smoothedData = Maths.gaussianSmooth2d(data, smoothingWindow);
         double[][] smoothedData2 = Maths.Smooth2d(data);
-    	System.out.println("this is the smoothed out  data using gaussian kernal -------------------");
-    	System.out.println(Arrays.deepToString(smoothedData));
-    	System.out.println(data.length);
+    //	System.out.println("this is the smoothed out  data using gaussian kernal -------------------");
+    //	System.out.println(Arrays.deepToString(smoothedData));
+    //	System.out.println(data.length);
     	
-    	System.out.println(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+    //	System.out.println(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
    
     	System.out.println("this is the smoothed out  data using linear interpolation -------------------");
     	System.out.println(Arrays.deepToString(smoothedData2));
@@ -187,6 +189,62 @@ public class JythonTest {
     }
     
 
+// method to call to find elbow 
+    
+    public int find_elbow( List<Long> counts ){    
+    
+    	int first_elbow;
+    	int size_of_list = counts.size();
+    	int cutoff = 0;
+ //   	System.out.print("\n" + " size_of_list : " + size_of_list);
+    	
+    	if(size_of_list >= 100){
+            cutoff = 100;
+        }
+    	if(size_of_list < 100){
+            cutoff = size_of_list ;
+        }
+    	
+    	System.out.print("\n" + " cutoff : " + cutoff + "\n");
+    	
+    	List<Long> counts1 = counts;
+    	
+    	 double[][] elbowdata = new double[cutoff][2] ;
+    	 
+	      for (int i= 0;i<(cutoff-1);i++) {
+	    	  
+	    	  elbowdata[i][1]= (cutoff-1)-i;}       // index
+	    	  
+	      for (int i= 0;i<cutoff;i++)
+	      {
+	    	  elbowdata[i][0]= counts1.get(i).doubleValue();   // value
+	      }
+    	
+    	
+//  public ArrayList<double[]>  run(double[][] data, double s, int smoothingWindow, boolean findElbows)
+	    List<Double> list_of_elbows= new ArrayList<>();
+    
+ArrayList<double[]> elbows = run ( elbowdata,      1 ,          1,                false);
+
+System.out.print("\n" + "number of elbow points : " + elbows.size());
+for (double[] point : elbows) {
+//System.out.print("\n" +"Knee point:" + Arrays.toString(point));
+//System.out.println("\n" +"No. of clusters complement = " +  point[1] );   
+//System.out.println("\n" + "No. of clusters = " +  (elbowdata.length - point[1])); 
+
+list_of_elbows.add(elbowdata.length - point[1]);
+            }
+
+
+first_elbow = (int) list_of_elbows.get(0).intValue();
+
+return  first_elbow  ;  
+    
+  }  
+    
+    
+    
+    
 // to test the funtion :
     public static void main(String[] args){
     	
@@ -261,7 +319,7 @@ public class JythonTest {
 				9,
 				9,
 				9,
-				9,	
+				8,	
     } ;
 		
 		double elbow_point = elbowcalculator.findElbowQuick(elbowdata2);	
