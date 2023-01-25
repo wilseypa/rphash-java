@@ -44,6 +44,8 @@ public interface RPHashObject {
 
 	final static Projector DEFAULT_PROJECTOR = new DBFriendlyProjection(); 
 	//final static Projector DEFAULT_PROJECTOR = new GaussianProjection(); 
+
+
 	
 	int getdim();
 	

@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 //import java.util.Arrays;
 import java.util.HashMap;
 //import java.util.Iterator;
@@ -13,7 +15,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.Collections;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
@@ -25,17 +29,20 @@ import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.Agglomerative3.ClusteringType;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
+import edu.uc.rphash.aging.ageCentriods;
 
 //import org.apache.commons.collections.map.MultiValueMap;
 //import org.apache.commons.collections.map.*;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import java.lang.*;
+
 
 
 // this algorithm runs twrp 10 times : (only the random bisection vector varies, the Projection matrix remains same)
 // and selects the one which has the best wcss  offline for the 10X candidate centroids.
-public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
+public class TWRPv6_wcss_offline2_TEST2_10runs_agingmicroclusters implements Clusterer, Runnable {
 
 	boolean znorm = false;
 	int [] num_of_clusters_stage1 = new int[12];
@@ -61,7 +68,7 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 	
 	private RPHashObject so;
 
-	public TWRPv6_wcss_offline2_TEST2_10runs(RPHashObject so) {
+	public TWRPv6_wcss_offline2_TEST2_10runs_agingmicroclusters(RPHashObject so) {
 		this.so = so;
 	}
 
@@ -76,6 +83,14 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 			run();
 		return centroids;
 	}
+	
+	//private Multimap<Long, float[]> WeightsandCents ;
+	
+	
+//	public  Multimap<Long, float[]> getMicroclusterWeightsandCents (RPHashObject so) {
+//		this.so = so;
+//		return getCentroids();
+//	}
 	
 	
 // This function returns the square of the euclidean distance.	
@@ -224,7 +239,7 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 	 * density mode via iterative deepening hash counting
 	 */
 	
-	public Multimap<Long, float[]>  findDensityModes2() {
+	public Multimap<Long, float[]>  findDensityModes2(List<float[]> data_in_round) {
 
 	HashMap<Long, float[]> MapOfIDAndCent1 = new HashMap<>();  
 	HashMap<Long, Long> MapOfIDAndCount1 = new HashMap<>();
@@ -305,7 +320,10 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 
 	{
 		
-		for (float[] x : so.getRawData()) 
+		for (float[] x : data_in_round) 
+			
+			
+			
 		{
 			addtocounter(x, projector, MapOfIDAndCent1, MapOfIDAndCount1,ct++, rngvec, MapOfIDAndWCSS1);
 			addtocounter(x, projector, MapOfIDAndCent2, MapOfIDAndCount2,ct++, rngvec2,MapOfIDAndWCSS2);
@@ -826,12 +844,12 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
         for (int i=0 ; i<12; i++) {
 		
 		//int num_of_clusters_2= elbowcalculator.find_elbow(counts);
-		System.out.println("\n" + "No. of clusters_stage1 = " +  num_of_clusters_stage1[i]); 
+////		System.out.println("\n" + "No. of clusters_stage1 = " +  num_of_clusters_stage1[i]); 
 		//System.out.println(       "No. of clusters_by_COUNT = " +  num_of_clusters_2); 
-		System.out.println( "************************************************************" ); 
+////		System.out.println( "************************************************************" ); 
 		sum_jt = sum_jt + num_of_clusters_stage1[i];
         }
-		System.out.println("\n" + "sum of No. of clusters_stage1 = " +  sum_jt);
+////		System.out.println("\n" + "sum of No. of clusters_stage1 = " +  sum_jt);
        
 	    double avg_clus_stage1 =   Math.ceil(sum_jt / 12.0) ;
 	    System.out.println("\n" + "Average of No. of clusters_stage1 = " + avg_clus_stage1 );
@@ -1043,15 +1061,72 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 
 	return multimapWeightAndCent;
 	
+	
 }
 	
+	
+	// this method gets the hashmap of ids and counts for the top n(cutoff) microclusters
+//	public static HashMap<Long, Long> getmicroclusterIDandCount
+	
+	
+	
+	// this method gets the hashmap of ids and centroids for the top n(cutoff) microclusters
+	
+//	public static HashMap<Long, float[]>  getmicroclusterIDandCents
+	
+	
+	
+	// this method gets the multihashmap of counts and centroids for the top n(cutoff) microclusters
+	
+	
 	public void run() {
+		
+		
+	    List<float[]> data_in_round = new ArrayList<float[]>() ;
+	    int count1=0;
+	    int count2=0;
+	   // List<Centroid> cents_aged = null ;          /// may required to be initialized
+	   // List<Centroid> cents_prev_round = null ;  /// may required to be properly initialized
+	    
+	    boolean flag = true;    // indicates first round if true  else is false
+	    Multimap<Long, float[]> WeightAndClusters =    ArrayListMultimap.create()      ;                                  // null;
+	    Multimap<Long, float[]> WeightAndClusters_prev = ArrayListMultimap.create()    ;                             // null;
+	 //   Multimap<Long, float[]> WeightAndClusters_aged = ArrayListMultimap.create()    ;                            // null;	
+	    
+	  	List<float[]>centroids_prev = new ArrayList<>();
+	  	List<Float> weights_prev =new ArrayList<>();
+	  	
+	  	List<float[]>centroids2 = new ArrayList<>();
+		List<Float> weights2 =new ArrayList<>();
+			
+	  	List<float[]>centroids3 = new ArrayList<>();
+		List<Float> weights3 =new ArrayList<>();
+		
+		//System.out.println(count2);
+		
+	    for (float[] x : so.getRawData()) {
+			
+	    count1 = count1+1;
+		//System.out.println(count1);
+		//System.out.println(element);	
+		//data_in_round.add(so.getRawData().get(count1));
+	
+	    data_in_round.add(x);
+		count1 = count1+1;
+		count2 = count2 +1;
+		
+		//System.out.println(count2);
+		
+		if (count2 >= 2500) {
+	
+			System.out.println(count2);
+
+		
 		rngvec  = new float[so.getDimparameter()];
 		rngvec2 = new float[so.getDimparameter()];
 		rngvec3 = new float[so.getDimparameter()];
 		rngvec4 = new float[so.getDimparameter()];
-		rngvec5 = new float[so.getDimparameter()];
-		
+		rngvec5 = new float[so.getDimparameter()];	
 		rngvec6  = new float[so.getDimparameter()];
 		rngvec7 = new float[so.getDimparameter()];
 		rngvec8 = new float[so.getDimparameter()];
@@ -1112,44 +1187,138 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 			
 			   }
 		
-		Multimap<Long, float[]> WeightAndClusters = findDensityModes2();
+	      WeightAndClusters = findDensityModes2(data_in_round);
 		
-		List<float[]>centroids2 = new ArrayList<>();
-		List<Float> weights2 =new ArrayList<>();
+		if ( flag == true)  {
+			WeightAndClusters_prev = WeightAndClusters;
+			flag = false ;
+		    }
 		
+	 //	WeightAndClusters_prev=WeightAndClusters_aged;
+	 	
+	 //	WeightAndClusters_aged.clear();
 		
-		System.out.println("\tNumberOfMicroClusters_AfterPruning = "+ WeightAndClusters.size());		
-		System.out.println("getRandomVector = "+ randVect);
+	//  System.out.println("multimap = "+  WeightAndClusters);
 		
-
+     //  System.out.println("\tNumberOfMicroClusters_AfterPruning = "+ WeightAndClusters.size());		
+	//	 System.out.println("getRandomVector = "+ randVect);
+	//	System.out.println("getRandomVector = "+ randVect);
+		  
+		
 		for (Long weights : WeightAndClusters.keys())						
-		{
-			
+		{			
 		weights2.add((float)weights);
-
 		}
-
+		System.out.println("curr_keys     = "+  weights2);
 		
 		for (Long weight : WeightAndClusters.keySet())	
 			
 		{
-
-		    centroids2.addAll(WeightAndClusters.get(weight));
-					
+		    centroids2.addAll(WeightAndClusters.get(weight));					
 		}	
 					
+	
+		weights_prev.clear();
+		
+		for (Long weights : WeightAndClusters_prev.keys())	
+		
+		{
+			float temp  = (float) (0.25 * weights); 
+			weights_prev.add((float)temp);
+		}
+		
+			System.out.println("kweighted_prev= "+  weights_prev);	
+			
+			
+			centroids_prev.clear();
+			for (Long weights : WeightAndClusters_prev.keySet())	
+				
+			{
+			    centroids_prev.addAll(WeightAndClusters_prev.get(weights));						
+			}	
+					
+			
+			
+			
+			for ( float w : weights_prev)	
+				
+			{
+				weights2.add(w);
+				}
+				
+			System.out.println("keys_joined   = "+  weights2);
+			
+			for (float[] c : centroids_prev)	
+				
+			{
+
+			    centroids2.add(c);
+						
+			}
+			
+		//	System.out.println("merged weights size = "+  weights2.size());	
+		//	System.out.println("merged cents size = "+  centroids2.size());	
+			
+		//	trim the weights2 and centroids2 to fix size :
+		//	logic: select the top n weights and its index from weights2 , then select the centroids from those index in centroids2
+
+		//	Collections.sort(weights2, Collections.reverseOrder());
+		//	weights2.sort(Comparator.reverseOrder());
+
+
+			int[] sortedIndices = IntStream.range(0, weights2.size())
+	                .boxed().sorted((i, j) ->  weights2.get(j).compareTo( weights2.get(i)) )
+	                .mapToInt(ele -> ele).toArray();
+			System.out.println("sorted_index= "+ Arrays. toString(sortedIndices));	
+			
+			// create weights3 and centroid3 and then select the top 60 or cutoff elements.
+			
+	      int  limit=so.getCutoff() + 10;
+	      
+			for (int i=0; i<= limit ;i++)
+				
+			{
+				int indx = sortedIndices[i] ;     // check
+				
+				 Float key_in_indx = weights2.get(indx);         // weights2 is list  of floats
+				
+				 weights3.add( key_in_indx);
+				 
+				  float[] cent_in_indx = centroids2.get(indx);
+				
+				centroids3.add(cent_in_indx);
+						
+				}
+				
+			System.out.println("keys_joined   = "+  weights3);
+			
+			System.out.println("size of weights3   = "+  weights3.size());
+			
+			System.out.println("size of centroids3   = "+  centroids3.size());
+			
+			// create a multimap and add the weights 3 and centriods3 and set it as agedmultimap	
+			
+		// also create the multimap aged from this weights2 and cents2.
+			
+	   	Multimap<Long, float[]> WeightAndClusters_aged = ArrayListMultimap.create();
+			
+			WeightAndClusters_aged.clear();
+				
+				for (int i=0; i< weights3.size(); i++)
+							
+				{
+				WeightAndClusters_aged.put((weights3.get(i).longValue()), (float[]) (centroids3.get(i)));				
+				}
+				
 		
 //		Agglomerative3 aggloOffline =  new Agglomerative3(ClusteringType.AVG_LINKAGE,centroids2, so.getk());
 //		aggloOffline.setWeights(weights2);
 //		this.centroids = aggloOffline.getCentroids();
 
 		KMeans2 aggloOffline2 = new KMeans2();
-		aggloOffline2.setRawData(centroids2);
-		aggloOffline2.setWeights(weights2);
+		aggloOffline2.setRawData(centroids3);
+		aggloOffline2.setWeights(weights3);
 		
-		
-		List<float[]> data1 = null;
-		data1 = so.getRawData();
 		
 		List<Long> elbow_wcss = new ArrayList<>();
 		
@@ -1157,8 +1326,8 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 			
 		aggloOffline2.setK(k);
 		List<Centroid> cent1 = aggloOffline2.getCentroids();
-		System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(cent1, data1));
-		long tempu = (long) StatTests.WCSSECentroidsFloat(cent1, data1);
+		System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(cent1, data_in_round));
+		long tempu = (long) StatTests.WCSSECentroidsFloat(cent1, data_in_round);
 		elbow_wcss.add(tempu);
 		}
 			
@@ -1169,7 +1338,10 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 	   
 	     	int num_of_clusters_stage2 = min_k + elbowcalculator.find_elbow(elbow_wcss);
 	     	
-	     	System.out.println("\n" + "No. of clusters_stage_2_Final = " + num_of_clusters_stage2 );
+	     	
+	     	System.out.println("\n" + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx "  );
+	     	System.out.println("\n" + " No. of clusters_stage_2_Final = " + num_of_clusters_stage2 );
+	     	System.out.println("\n" + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx "  );
 	     	
 	     	System.out.println("\n" + "No. of Data Points = " + so.getRawData().size() );
 
@@ -1177,39 +1349,45 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 	    //  final choice of centroids :		( repetative calculation , please optimize )
 	     	aggloOffline2.setK(num_of_clusters_stage2);
 	     	
-	     	this.centroids = aggloOffline2.getCentroids();
+	     	this.centroids = aggloOffline2.getCentroids();  
+	     	
+	     	count2=0;
+	     	data_in_round.clear();
+	     	weights2.clear();
+	     	centroids2.clear();
+	     	
+	     	weights3.clear();
+	     	centroids3.clear();
+	     	
+	     	WeightAndClusters.clear();
+	     	
+	     	WeightAndClusters_prev.clear();
+	     	
+	     	WeightAndClusters_prev = WeightAndClusters_aged;
+ 	
+		       }   // end of the if loop
+	     
+	
+		} // end of the for loop
+	     	
 			
-	}
+	}  // end of run method
 	
 
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException , InterruptedException {
-
-	//	int k = 10;//6;
-	//	int d = 200;//16;
-	//	int n = 10000;
-	//	float var = 1.5f;
-	//	int count = 1;
-	//	System.out.printf("ClusterVar\t");
-	//	for (int i = 0; i < count; i++)
-	//		System.out.printf("Trial%d\t", i);
-	//	System.out.printf("RealWCSS\n");
 		
-	//	String Output = "/C:/Users/deysn/Desktop/temp/har/run_results/10runs/OutputTwrpCents_mainfunc_1" ;  
 
-	//	    float f = var;
-			float avgrealwcss = 0;
 			float avgtime = 0;
 	//		System.out.printf("%f\t", f);
-	//			GenerateData gen = new GenerateData(k, n/k, d, f, true, .5f);
 				
-					// gen.writeCSVToFile(new File("/home/lee/Desktop/reclsh/in.csv"));	
 					//	List<Float[]> data = "/C:/Users/user/Desktop/temp/OutputTwrpCents1" 
 				
 			//	RPHashObject o = new SimpleArrayReader(gen.data, k);
 				
 				boolean raw = Boolean.parseBoolean(("raw"));
-				List<float[]> data = null;
+ 			    List<float[]> data = null;
+			
 				// "C:\Users\sayan\OneDrive - University of Cincinnati\Documents\downloaded\run_results\run_results\3runs\har_k6\1D.txt"
 				
 				String inputfile = "C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/run_results/run_results/3runs/har_k6/1D.txt" ;
@@ -1220,31 +1398,19 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 				int dummyk = 8;
 				RPHashObject o = new SimpleArrayReader(data, dummyk);
 					
-				
 				o.setDimparameter(16);
 				o.setCutoff(60);
-				o.setRandomVector(true);
-				
-//				System.out.println("cutoff = "+ o.getCutoff());
-//				System.out.println("get_random_Vector = "+ o.getRandomVector());			
+				o.setRandomVector(true);			
 								
-				TWRPv6_wcss_offline2_TEST2_10runs rphit = new TWRPv6_wcss_offline2_TEST2_10runs(o);
+				TWRPv6_wcss_offline2_TEST2_10runs_agingmicroclusters rphit = new TWRPv6_wcss_offline2_TEST2_10runs_agingmicroclusters(o);
 				long startTime = System.nanoTime();
-				List<Centroid> centsr = rphit.getCentroids();
+			   // rphit.getCentroids();
+			    rphit.run();
 
-				avgtime += (System.nanoTime() - startTime) / 100000000;
+//				avgtime += (System.nanoTime() - startTime) / 100000000;
 				
-//				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),gen.getData());
-				
-				String Output =  "/C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/results/har_6clus/har_k6_kmeans_130_cutoff"+"_" +"_"+".csv"  ;
-				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);					
-
-//				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
-				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, data));
-				
+		
 				System.gc();
-			
-//			    System.out.printf("%.0f\n", avgrealwcss / count);
 			
 		
 	}

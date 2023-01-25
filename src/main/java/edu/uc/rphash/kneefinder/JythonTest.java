@@ -73,24 +73,29 @@ public class JythonTest {
     private double[][] prepare(double[][] data, int smoothingWindow){
 
         //smooth the data to make local minimum/maximum easier to find (this is Step 1 in the paper)
-        double[][] smoothedData = Maths.gaussianSmooth2d(data, smoothingWindow);
+     //   double[][] smoothedData = Maths.gaussianSmooth2d(data, smoothingWindow);
         double[][] smoothedData2 = Maths.Smooth2d(data);
+        
     //	System.out.println("this is the smoothed out  data using gaussian kernal -------------------");
     //	System.out.println(Arrays.deepToString(smoothedData));
     //	System.out.println(data.length);
     	
     //	System.out.println(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
    
-    	System.out.println("this is the smoothed out  data using linear interpolation -------------------");
-    	System.out.println(Arrays.deepToString(smoothedData2));
+ ////   	System.out.println("this is the smoothed out data using linear interpolation -------------------");
+ ////   	System.out.println(Arrays.deepToString(smoothedData2));
     	
 
         //prepare the data into the unit range (step 2 of paper)
+    	
+        //double[][] normalisedData = Maths.minmaxNormalise(smoothedData );
+    	
         double[][] normalisedData = Maths.minmaxNormalise(smoothedData2 );
     	
-    	
-    	
-       // double[][] normalisedData = Maths.minmaxNormalise(data);
+        //double[][] normalisedData = Maths.minmaxNormalise(data);
+        
+////     	System.out.println("this is the normalized elbow data -------------------");
+////    	System.out.println(Arrays.deepToString(normalisedData));
 
         //subtract normalised x from normalised y (this is step 3 in the paper)
         for (int i = 0; i < normalisedData.length; i++) {
@@ -119,17 +124,14 @@ public class JythonTest {
         if(data.length <= 1){
             return 0;
         }
-
         // double[] normalisedData = Maths.minmaxNormalise1d(Maths.gaussianSmooth(data, 3));  // original parameter
         double[] normalisedData = Maths.minmaxNormalise1d(Maths.gaussianSmooth(data, 0));
         
-
         //do kneedle y'-x' (in this case x' is normalised index value)
         for (int i = 0; i < normalisedData.length; i++) {
             double normalisedIndex = (double)i / data.length;
             normalisedData[i] = normalisedData[i] - normalisedIndex;
         }
-
         int elbowIdx = findElbowIndex(normalisedData);
         return data[elbowIdx];
     }
@@ -198,16 +200,19 @@ public class JythonTest {
     	int cutoff = 0;
  //   	System.out.print("\n" + " size_of_list : " + size_of_list);
     	
-    	if(size_of_list >= 100){
-            cutoff = 100;
-        }
-    	if(size_of_list < 100){
-            cutoff = size_of_list ;
-        }
-    	
-    	System.out.print("\n" + " cutoff : " + cutoff + "\n");
+ //   	if(size_of_list >= 100){
+ //           cutoff = 100;
+ //       }
+ //   	if(size_of_list < 100){
+ //           cutoff = size_of_list ;
+ //       }
+    	 
+    	cutoff =size_of_list;
+    	//System.out.print("\n" + " cutoff : " + cutoff + "\n");
+ ////   	System.out.print(" cutoff : " + cutoff + "\n");
     	
     	List<Long> counts1 = counts;
+////    	System.out.print("\n" + " elbow values before smoothing : "+"\n" + counts1 + "\n");
     	
     	 double[][] elbowdata = new double[cutoff][2] ;
     	 
@@ -224,9 +229,12 @@ public class JythonTest {
 //  public ArrayList<double[]>  run(double[][] data, double s, int smoothingWindow, boolean findElbows)
 	    List<Double> list_of_elbows= new ArrayList<>();
     
-ArrayList<double[]> elbows = run ( elbowdata,      1 ,          1,                false);
+ArrayList<double[]> elbows = run ( elbowdata,      1 ,          0,                false);
 
-System.out.print("\n" + "number of elbow points : " + elbows.size());
+
+
+
+//// System.out.print("\n" + "number of elbow points : " + elbows.size());
 for (double[] point : elbows) {
 //System.out.print("\n" +"Knee point:" + Arrays.toString(point));
 //System.out.println("\n" +"No. of clusters complement = " +  point[1] );   
@@ -339,7 +347,7 @@ return  first_elbow  ;
 	      
 	   //                  public ArrayList<double[]>  run(double[][] data, double s, int smoothingWindow, boolean findElbows)
 	      
-	      ArrayList<double[]> elbows = elbowcalculator.run ( elbowdata3,      1 ,          1,                false);
+	      ArrayList<double[]> elbows = elbowcalculator.run ( elbowdata3,      1 ,          0,                false);
 	      
 	      System.out.print("\n" + "number of elbow points : " + elbows.size());
 	      for (double[] point : elbows) {

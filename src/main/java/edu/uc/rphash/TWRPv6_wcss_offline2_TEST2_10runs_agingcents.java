@@ -25,6 +25,7 @@ import edu.uc.rphash.tests.clusterers.KMeans2;
 import edu.uc.rphash.tests.clusterers.Agglomerative3.ClusteringType;
 import edu.uc.rphash.tests.generators.GenerateData;
 import edu.uc.rphash.util.VectorUtil;
+import edu.uc.rphash.aging.ageCentriods;
 
 //import org.apache.commons.collections.map.MultiValueMap;
 //import org.apache.commons.collections.map.*;
@@ -35,7 +36,7 @@ import com.google.common.collect.Multimap;
 
 // this algorithm runs twrp 10 times : (only the random bisection vector varies, the Projection matrix remains same)
 // and selects the one which has the best wcss  offline for the 10X candidate centroids.
-public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
+public class TWRPv6_wcss_offline2_TEST2_10runs_agingcents implements Clusterer, Runnable {
 
 	boolean znorm = false;
 	int [] num_of_clusters_stage1 = new int[12];
@@ -61,7 +62,7 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 	
 	private RPHashObject so;
 
-	public TWRPv6_wcss_offline2_TEST2_10runs(RPHashObject so) {
+	public TWRPv6_wcss_offline2_TEST2_10runs_agingcents(RPHashObject so) {
 		this.so = so;
 	}
 
@@ -826,9 +827,9 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
         for (int i=0 ; i<12; i++) {
 		
 		//int num_of_clusters_2= elbowcalculator.find_elbow(counts);
-		System.out.println("\n" + "No. of clusters_stage1 = " +  num_of_clusters_stage1[i]); 
+////	System.out.println("\n" + "No. of clusters_stage1 = " +  num_of_clusters_stage1[i]); 
 		//System.out.println(       "No. of clusters_by_COUNT = " +  num_of_clusters_2); 
-		System.out.println( "************************************************************" ); 
+////		System.out.println( "************************************************************" ); 
 		sum_jt = sum_jt + num_of_clusters_stage1[i];
         }
 		System.out.println("\n" + "sum of No. of clusters_stage1 = " +  sum_jt);
@@ -1040,7 +1041,6 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 		
 		}
 		
-
 	return multimapWeightAndCent;
 	
 }
@@ -1119,7 +1119,7 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 		
 		
 		System.out.println("\tNumberOfMicroClusters_AfterPruning = "+ WeightAndClusters.size());		
-		System.out.println("getRandomVector = "+ randVect);
+	//	System.out.println("getRandomVector = "+ randVect);
 		
 
 		for (Long weights : WeightAndClusters.keys())						
@@ -1150,6 +1150,8 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 		
 		List<float[]> data1 = null;
 		data1 = so.getRawData();
+     	//System.out.println("\n" + "No. of Data Points = " + so.getRawData().size() );
+     	System.out.println("\n" + "No. of Data Points = " + data1.size() );
 		
 		List<Long> elbow_wcss = new ArrayList<>();
 		
@@ -1171,8 +1173,6 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 	     	
 	     	System.out.println("\n" + "No. of clusters_stage_2_Final = " + num_of_clusters_stage2 );
 	     	
-	     	System.out.println("\n" + "No. of Data Points = " + so.getRawData().size() );
-
 		
 	    //  final choice of centroids :		( repetative calculation , please optimize )
 	     	aggloOffline2.setK(num_of_clusters_stage2);
@@ -1210,44 +1210,158 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 				
 				boolean raw = Boolean.parseBoolean(("raw"));
 				List<float[]> data = null;
+				List<float[]> data_in_round = new ArrayList<float[]>() ;
 				// "C:\Users\sayan\OneDrive - University of Cincinnati\Documents\downloaded\run_results\run_results\3runs\har_k6\1D.txt"
 				
 				String inputfile = "C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/run_results/run_results/3runs/har_k6/1D.txt" ;
 				System.out.println(inputfile);
 				
 				data = VectorUtil.readFile( inputfile , raw);
+			    int count1=0;
+			    int count2=0;
+			 //   List<Centroid> cents_aged = null ; //new ArrayList<Centroid>();            /// may required to be initialized
+			 //   List<Centroid> cents_prev_round = null ;  /// may required to be properly initialized
 
-				int dummyk = 8;
-				RPHashObject o = new SimpleArrayReader(data, dummyk);
-					
-				
-				o.setDimparameter(16);
-				o.setCutoff(60);
-				o.setRandomVector(true);
-				
-//				System.out.println("cutoff = "+ o.getCutoff());
-//				System.out.println("get_random_Vector = "+ o.getRandomVector());			
+			    boolean flag = true;    // indicates first round if true  else is false
+			    
+			    
+				 List<Centroid> cents_aged = null;                                 //null ; //new ArrayList<Centroid>();  /// may required to be initialized
+				 List<Centroid> cents_prev_round = new ArrayList<Centroid>() ;   //null ;  /// may required to be properly initialized
+				 	    
+			    int round = 0;
+						for (float[] element : data) 
+						
+							
+						{
+							count1 = count1+1;
+							//System.out.println(count1);
+							//System.out.println(element);	
+							data_in_round.add(data.get(count1-1));
+							count2 = count2 +1;
+							
+							//System.out.println(count2);
+							
+							if (count2 >= 1000) {
+							//if (count2 == 10299) {	
+								System.out.println(count2);
 								
-				TWRPv6_wcss_offline2_TEST2_10runs rphit = new TWRPv6_wcss_offline2_TEST2_10runs(o);
-				long startTime = System.nanoTime();
-				List<Centroid> centsr = rphit.getCentroids();
-
-				avgtime += (System.nanoTime() - startTime) / 100000000;
-				
-//				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),gen.getData());
-				
-				String Output =  "/C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/results/har_6clus/har_k6_kmeans_130_cutoff"+"_" +"_"+".csv"  ;
-				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);					
-
-//				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
-				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, data));
-				
-				System.gc();
-			
-//			    System.out.printf("%.0f\n", avgrealwcss / count);
-			
+								round = round + 1;
+								System.out.println("round is :  "   +	round + "\n" );
+								int dummyk = 8;
+								RPHashObject o = new SimpleArrayReader(data_in_round, dummyk);
+									
+								
+								o.setDimparameter(16);
+								o.setCutoff(70);
+								o.setRandomVector(true);
+								
+//								System.out.println("cutoff = "+ o.getCutoff());
+//								System.out.println("get_random_Vector = "+ o.getRandomVector());			
+												
+								TWRPv6_wcss_offline2_TEST2_10runs_agingcents rphit = new TWRPv6_wcss_offline2_TEST2_10runs_agingcents(o);
+								long startTime = System.nanoTime();
+								
+								 
+								List<Centroid> centsr =  null ;         //null; // new ArrayList<Centroid>();								
+								centsr = rphit.getCentroids();    // check if overwritten ? otherwise clear
+					
+								avgtime += (System.nanoTime() - startTime) / 100000000;
+								
+//								avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),gen.getData());
+								
+//								System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
+								System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, data_in_round));
+								System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+//								System.gc();
+							
+//							    System.out.printf("%.0f\n", avgrealwcss / count);
+								// if prev round cents are null i.e. 1st round aged cents = cents of this round i.e no aging
+								// if prev round cents are there then merge aged cents with this round cents
+								//System.out.println(centsr);
+								//System.out.println(centsr.size()         );
+								
+								if (flag == true) {
+									
+									//System.out.println(cents_prev_round);
+									//System.out.println(centsr);
+									 cents_prev_round = centsr ;
+									 cents_aged = centsr;   // have to modify
+								//	 Centroid.removeallobjects(cents_aged);   // have to modify									 
+									 flag=false ;
+									 
+									 }
+								
+							//	cents_prev_round.clear();
+							    cents_prev_round = cents_aged;	
+						 
+			            //	System.out.println(centsr);
+			            //	System.out.println(cents_aged);
+			            //	System.out.println(cents_prev_round);
+			            	
+										int pos=0;
+										List<float[]> test1  = new ArrayList<float[]>();
+								for (Centroid vector : centsr) {
+										// System.out.println(vector.dimensions + " dimensions " + "\n"); 
+									    pos=pos+1;
+										int index1 = VectorUtil.findNearestDistance(vector, cents_prev_round);
+								//		System.out.println( " nearest one : " + index1  + "\n");                       
 		
-	}
+										// call weighted_merge(float cnt_1, float[] x_1, float cnt_2, float[] x_2)
+										float[] current_cent = vector.centroid();
+										float[] prev_mapped_cent= cents_prev_round.get(index1).centroid();
+										double weight1= 1.0;
+										double weight2= 0.25;
+									float[][] ret = ageCentriods.weighted_merge( weight1 ,current_cent,  weight2, prev_mapped_cent);    
+									float[] cent_merge = ret[1] ;
+									Centroid test = new Centroid(cent_merge);            //Centroid(float[] data)
+									test1.add(cent_merge);
+									
+								      }
+								
+									cents_aged.clear();
+									
+						            int  size =	test1.size();
+						            for (int i=0; i<= size-1; i++ ) {
+						            	Centroid c = new Centroid(test1.get(i));
+						            	cents_aged.add(c);            };
+						            	
+						         System.out.println(cents_aged);
+								
+//					
+							System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(cents_aged, data_in_round));
+							System.out.println("xxxxxxxxxxxxxxxx this is aged cents xxxxxxxxxxxxxxxxxxxxx");
+							
+//	input:	"C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/run_results/run_results/3runs/har_k6/1D.txt"
+							
+	String Output =  "/C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/to_del/har_k6_kmeans_70_cutoff"+"_"+round+"_"+".csv"  ;
+							
+							VectorUtil.writeCentroidsToFile(new File(Output),cents_aged, false);	
+							
+//						    System.out.printf("%.0f\n", avgrealwcss / count);     
+								
+							data_in_round.clear();
+							count2=0;
+							
+						//	cents_prev_round.clear();
+						//  cents_prev_round = cents_aged;
+						    
+						//    System.out.println("ccccccccccccccccccccc this issize cccccccccccccccccccc : " + cents_prev_round.size() );
+							 
+							System.gc();
+							
+						  }  // end if
+							
+							System.gc();
+							
+				}// end for   
+		
+						
+						    System.gc();
+	} // end main 
+	
+	
+	
+	
 
 	@Override
 	public RPHashObject getParam() {

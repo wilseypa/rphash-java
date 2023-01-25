@@ -21,6 +21,7 @@ import java.util.Collections;
 
 import edu.uc.rphash.Readers.RPHashObject;
 import edu.uc.rphash.Readers.SimpleArrayReader;
+import edu.uc.rphash.kneefinder.JythonTest;
 import edu.uc.rphash.projections.Projector;
 import edu.uc.rphash.tests.StatTests;
 import edu.uc.rphash.tests.clusterers.Agglomerative3;
@@ -234,7 +235,8 @@ public void printStream(Stream<Entry<Long, Long>> stream) {
 public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, HashMap<Long, float[]> MapOfIDAndCent, HashMap<Long, Float> MapOfIDAndWCSS) {
 	
 	List<Long> counts =  new ArrayList<>();
-	List<Float> wcsseprint = new ArrayList<>();
+//	List<Float> wcsseprint = new ArrayList<>();
+	List<Long> wcsseprint = new ArrayList<>();
 //	float temp = 0; 
 	int elements=0;
 	float avg=0;
@@ -244,11 +246,13 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 		 elements=elements+1;
 ////	 System.out.println(MapOfIDAndCount.get(keys));
 		 counts.add(MapOfIDAndCount.get(keys));
-		 wcsseprint.add(MapOfIDAndWCSS.get(keys));
+		 wcsseprint.add(MapOfIDAndWCSS.get(keys).longValue());
 		 
 	}	
 //	 System.out.println();
 	 System.out.print(counts);
+	 
+	 
 	 
 //		for (Long keys: setofKeys)	
 //		{
@@ -271,6 +275,14 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 		 System.out.println();
 		 System.out.println(wcsseprint);
 		 System.out.println();
+		 
+		 JythonTest elbowcalculator = new JythonTest();
+			int num_of_clusters= elbowcalculator.find_elbow(wcsseprint);
+			//int num_of_clusters_2= elbowcalculator.find_elbow(counts);
+			System.out.println("\n" + "No. of clusters_by_WCSS = " +  num_of_clusters); 
+			//System.out.println(       "No. of clusters_by_COUNT = " +  num_of_clusters_2); 
+			System.out.println( "************************************************************" );
+		 
 		 
 		return (avg);
 	}
@@ -315,13 +327,13 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 		for (float[] x : so.getRawData()) 
 		{
 			addtocounter(x, projector, MapOfIDAndCent1, MapOfIDAndCount1,ct++, rngvec, MapOfIDAndWCSS1);
-			addtocounter(x, projector, MapOfIDAndCent2, MapOfIDAndCount2,ct++, rngvec2,MapOfIDAndWCSS2);
-			addtocounter(x, projector, MapOfIDAndCent3, MapOfIDAndCount3,ct++, rngvec3,MapOfIDAndWCSS3);
+			addtocounter(x, projector, MapOfIDAndCent2, MapOfIDAndCount2,ct2++, rngvec2,MapOfIDAndWCSS2);
+			addtocounter(x, projector, MapOfIDAndCent3, MapOfIDAndCount3,ct3++, rngvec3,MapOfIDAndWCSS3);
 					
 		}
 	}	
 	
-	System.out.println("\nNumberOfVertors = , "+ ct);
+	System.out.println("\nNumberOfVectors = , "+ ct);
 	System.out.println("\nNumberOfMicroClustersBeforePruning = , "+ MapOfIDAndCent1.size());
 	//printHashmap(MapOfIDAndCount1);
 	
@@ -331,7 +343,8 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 	HashMap<Long, Long> denseSetOfIDandCount2_1 = new HashMap<Long, Long>();
 	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount1.keySet())) 
 	{
-		if (cur_id >so.getk()){
+		//if (cur_id >so.getk()){
+		if (cur_id > Long.valueOf(3)){	
             int cur_count = (int) (MapOfIDAndCount1.get(cur_id).longValue());
             long parent_id = cur_id>>>1;
             int parent_count = (int) (MapOfIDAndCount1.get(parent_id).longValue());
@@ -369,7 +382,8 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount2.keySet())) 
 	{
 
-		if (cur_id >so.getk()){
+		//if (cur_id >so.getk()){
+		if (cur_id > Long.valueOf(7)){		
             int cur_count = (int) (MapOfIDAndCount2.get(cur_id).longValue());
             long parent_id = cur_id>>>1;
             int parent_count = (int) (MapOfIDAndCount2.get(parent_id).longValue());
@@ -407,7 +421,8 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 	HashMap<Long, Long> denseSetOfIDandCount2_3 = new HashMap<Long, Long>();
 	for (Long cur_id : new TreeSet<Long>(MapOfIDAndCount3.keySet())) 
 	{
-		if (cur_id >so.getk()){
+		//if (cur_id >so.getk()){
+		if (cur_id > Long.valueOf(11)){		
             int cur_count = (int) (MapOfIDAndCount3.get(cur_id).longValue());
             long parent_id = cur_id>>>1;
             int parent_count = (int) (MapOfIDAndCount3.get(parent_id).longValue());
@@ -443,16 +458,15 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 	
 	
 	//remove keys with support less than 1
-	Stream<Entry<Long, Long>> stream2_1 = denseSetOfIDandCount2_1.entrySet().stream().filter(p -> p.getValue() > 1);
-		
+	Stream<Entry<Long, Long>> stream2_1 = denseSetOfIDandCount2_1.entrySet().stream().filter(p -> p.getValue() > 1);	
 	List<Long> sortedIDList2_1= new ArrayList<>();
 	// sort and limit the list
 	stream2_1.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(cutoff)
 			.forEachOrdered(x -> sortedIDList2_1.add(x.getKey()));
 	// printHashmap(denseSetOfIDandCount2_1);
 	
-	Stream<Entry<Long, Long>> stream2_2 = denseSetOfIDandCount2_2.entrySet().stream().filter(p -> p.getValue() > 1);
 	
+	Stream<Entry<Long, Long>> stream2_2 = denseSetOfIDandCount2_2.entrySet().stream().filter(p -> p.getValue() > 1);
 	List<Long> sortedIDList2_2= new ArrayList<>();
 	// sort and limit the list
 	stream2_2.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(cutoff)
@@ -461,7 +475,6 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 	
 	
 	Stream<Entry<Long, Long>> stream2_3 = denseSetOfIDandCount2_3.entrySet().stream().filter(p -> p.getValue() > 1);
-	
 	List<Long> sortedIDList2_3= new ArrayList<>();
 	// sort and limit the list
 	stream2_3.sorted(Entry.<Long, Long> comparingByValue().reversed()).limit(cutoff)
@@ -543,7 +556,9 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 	//printHashmap(denseSetOfIDandCount2);
 	float eps= printInfo(sortedIDList2,denseSetOfIDandCount2, MapOfIDAndCent,MapOfIDAndWCSS);
 //	seteps(eps);
-
+	
+		
+		
 	Multimap<Long, float[]> multimapWeightAndCent = ArrayListMultimap.create();
   
 	for (Long keys: sortedIDList2)
@@ -671,25 +686,28 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 				List<float[]> data = null;
 				// "/C:/Users/deysn/Desktop/temp/har/1D.txt" ;  C:/Users/deysn/Documents/temp/covtype/1D.txt	
 				// C:/Users/dey.sn/Downloads/temp/covtype/1D.csv ; "C:/Users/dey.sn/Downloads/temp/run_results/3runs/har_k6/1D.txt" 
-				String inputfile = "C:/Users/dey.sn/Downloads/temp/crop_mapping/1D.csv" ;
+				//String inputfile = "C:/Users/dey.sn/Downloads/temp/crop_mapping/1D.csv" ;
+				String inputfile = "C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/sensorless_drive/1D.csv" ;
 				System.out.println(inputfile);
 				data = VectorUtil.readFile( inputfile , raw);
-				for (int k=4; k<=11;k++)
+				for (int k=10; k<=10 ;k++)
 				{
-				for (int i = 1; i <= 3; i++)
+				for (int i = 1; i <= 5; i++)
 				{
 				//k = 7;
 					
 				RPHashObject o = new SimpleArrayReader(data, k);
 			
 				o.setDimparameter(16);
-				o.setCutoff(130); //230
+				o.setCutoff(250); //230
 				o.setRandomVector(true);
 				
 //				System.out.println("cutoff = "+ o.getCutoff());
 //				System.out.println("get_random_Vector = "+ o.getRandomVector());
 				
-				TWRPv6_wcss_offline2_TEST rphit = new TWRPv6_wcss_offline2_TEST(o);
+//				TWRPv6_wcss_offline2_TEST rphit = new TWRPv6_wcss_offline2_TEST(o);
+				PPAHStream rphit = new PPAHStream(o);
+				
 				
 				System.gc();
 				
@@ -714,7 +732,8 @@ public float printInfo(List<Long>setofKeys, HashMap<Long,Long> MapOfIDAndCount, 
 				
 //				avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),gen.getData());
 //				String Output = "/C:/Users/deysn/OneDrive - University of Cincinnati/Documents/temp/run_results/3runs/rnaseq_k4/OutputTwrpCents_dbscan" ;
-				String Output =  "C:/Users/dey.sn/Downloads/work/output/cropmap_k7/cropmap_k7_kmeans_130_cutoff"+"_" +k+"_"+i+".csv" ;
+				//String Output =  "C:/Users/dey.sn/Downloads/work/output/cropmap_k7/cropmap_k7_kmeans_130_cutoff"+"_" +k+"_"+i+".csv" ;
+				String Output =  "/C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/results/har_6clus/har_k6_kmeans_130_cutoff"+"_" +k+"_"+i+".csv"  ;
 				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);
 				
 //				VectorUtil.writeVectorFile(new File(Output+"_"+"labels"+".txt"), centsr.getLabels());

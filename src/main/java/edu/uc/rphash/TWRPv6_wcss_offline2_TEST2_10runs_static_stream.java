@@ -35,7 +35,7 @@ import com.google.common.collect.Multimap;
 
 // this algorithm runs twrp 10 times : (only the random bisection vector varies, the Projection matrix remains same)
 // and selects the one which has the best wcss  offline for the 10X candidate centroids.
-public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
+public class TWRPv6_wcss_offline2_TEST2_10runs_static_stream implements Clusterer, Runnable {
 
 	boolean znorm = false;
 	int [] num_of_clusters_stage1 = new int[12];
@@ -61,7 +61,7 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 	
 	private RPHashObject so;
 
-	public TWRPv6_wcss_offline2_TEST2_10runs(RPHashObject so) {
+	public TWRPv6_wcss_offline2_TEST2_10runs_static_stream(RPHashObject so) {
 		this.so = so;
 	}
 
@@ -1210,15 +1210,75 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 				
 				boolean raw = Boolean.parseBoolean(("raw"));
 				List<float[]> data = null;
+				List<float[]> data_in_round = new ArrayList<float[]>() ;
 				// "C:\Users\sayan\OneDrive - University of Cincinnati\Documents\downloaded\run_results\run_results\3runs\har_k6\1D.txt"
 				
 				String inputfile = "C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/run_results/run_results/3runs/har_k6/1D.txt" ;
 				System.out.println(inputfile);
 				
 				data = VectorUtil.readFile( inputfile , raw);
+			    int count1=0;
+			    int count2=0;
+			    boolean flag = true;
+				
+						for (float[] element : data) 
+							
+						{
+							count1 = count1+1;
+							//System.out.println(count1);
+							//System.out.println(element);	
+							data_in_round.add(data.get(count1-1));
+							count2 = count2 +1;
+							
+							//System.out.println(count2);
+							
+							//if (count2 >= 1000) {
+							if (count2 == 10299) {	
+								System.out.println(count2);
+								
+								int dummyk = 8;
+								RPHashObject o = new SimpleArrayReader(data_in_round, dummyk);
+									
+								
+								o.setDimparameter(16);
+								o.setCutoff(70);
+								o.setRandomVector(true);
+								
+//								System.out.println("cutoff = "+ o.getCutoff());
+//								System.out.println("get_random_Vector = "+ o.getRandomVector());			
+												
+								TWRPv6_wcss_offline2_TEST2_10runs_static_stream rphit = new TWRPv6_wcss_offline2_TEST2_10runs_static_stream(o);
+								long startTime = System.nanoTime();
+								List<Centroid> centsr = rphit.getCentroids();
+
+								avgtime += (System.nanoTime() - startTime) / 100000000;
+								
+//								avgrealwcss += StatTests.WCSSEFloatCentroid(gen.getMedoids(),gen.getData());
+								
+								String Output =  "/C:/Users/sayan/OneDrive - University of Cincinnati/Documents/downloaded/results/har_6clus/har_k6_kmeans_130_cutoff"+"_" +"_"+".csv"  ;
+								VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);					
+
+//								System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
+								System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, data_in_round));
+								System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+								System.gc();
+							
+//							    System.out.printf("%.0f\n", avgrealwcss / count);
+								
+								
+								data_in_round.clear();
+								count2=0;
+								centsr.clear();
+								
+												} 
+							
+							//System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+							
+							
+						}
 
 				int dummyk = 8;
-				RPHashObject o = new SimpleArrayReader(data, dummyk);
+				RPHashObject o = new SimpleArrayReader(data_in_round, dummyk);
 					
 				
 				o.setDimparameter(16);
@@ -1228,7 +1288,7 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 //				System.out.println("cutoff = "+ o.getCutoff());
 //				System.out.println("get_random_Vector = "+ o.getRandomVector());			
 								
-				TWRPv6_wcss_offline2_TEST2_10runs rphit = new TWRPv6_wcss_offline2_TEST2_10runs(o);
+				TWRPv6_wcss_offline2_TEST2_10runs_static_stream rphit = new TWRPv6_wcss_offline2_TEST2_10runs_static_stream(o);
 				long startTime = System.nanoTime();
 				List<Centroid> centsr = rphit.getCentroids();
 
@@ -1240,8 +1300,8 @@ public class TWRPv6_wcss_offline2_TEST2_10runs implements Clusterer, Runnable {
 				VectorUtil.writeCentroidsToFile(new File(Output),centsr, false);					
 
 //				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, gen.data));
-				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, data));
-				
+				System.out.printf("%.0f\t",	StatTests.WCSSECentroidsFloat(centsr, data_in_round));
+				System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 				System.gc();
 			
 //			    System.out.printf("%.0f\n", avgrealwcss / count);

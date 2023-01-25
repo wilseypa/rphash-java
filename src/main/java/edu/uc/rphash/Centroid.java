@@ -1,6 +1,7 @@
 package edu.uc.rphash;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -233,5 +234,21 @@ public class Centroid implements Comparable<Centroid>{
 		
 		return (int) (o.id - this.id);
 	}
+	
+	
+	
+	
+	public static void removeallobjects(List<Centroid> DB) {
+		// float[] tmp;
+		for (int i = 0; i < DB.size(); i++) {
+			//tmp = DB.get(i).centroid();
+			DB.remove(i);
+			
+			}
+		
+		
+	}
+	
+	
 
 }
